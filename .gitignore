@@ -1,0 +1,14 @@
+tmp
+*.tmp.*
+*.tmp
+dist
+node_modules
+.cursor
+CRITICAL.md
+PLAN.md
+coverage
+coverage-tmp
+.DS_Store
+docs/api
+docs/.vitepress/cache
+docs/.vitepress/dist
