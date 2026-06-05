@@ -1,9 +1,15 @@
 {
   "name": "fundamentool",
-  "version": "0.0.0",
-  "description": "utils",
+  "version": "1.0.0",
+  "description": "TypeScript utility library — strings, objects, arrays, async, type predicates, RPC, JSONL, Node.js and browser utilities",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "README.ru.md"
+  ],
+  "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -51,10 +57,31 @@
     }
   },
   "keywords": [
-    "utils"
+    "typescript",
+    "utils",
+    "utilities",
+    "rpc",
+    "async",
+    "jsonl",
+    "browser",
+    "node",
+    "string",
+    "object",
+    "array"
   ],
-  "author": "Аmir Absaliamov",
+  "author": "Amir Absaliamov",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mr-amirka/fundamentool.git"
+  },
+  "homepage": "https://github.com/mr-amirka/fundamentool#readme",
+  "bugs": {
+    "url": "https://github.com/mr-amirka/fundamentool/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "docs:api": "typedoc --options ./typedoc.json",
     "docs:dev": "npm run docs:api && vitepress dev docs",
@@ -64,7 +91,8 @@
     "lint:fix": "eslint . --ext .ts,.tsx,.js --fix --quiet",
     "test": "jest --config=./jest.config.js",
     "validate": "npm run lint && npm run test",
-    "build": "tsc"
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",

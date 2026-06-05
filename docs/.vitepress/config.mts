@@ -1,13 +1,13 @@
 import { defineConfig } from 'vitepress';
 
 export default defineConfig({
-  title: 'mn-utils',
+  title: 'fundamentool',
   description: 'TypeScript utility library',
   base: '/',
 
   themeConfig: {
     logo: null,
-    siteTitle: 'mn-utils',
+    siteTitle: 'fundamentool',
 
     nav: [
       { text: 'Guide', link: '/guide/' },
@@ -21,7 +21,7 @@ export default defineConfig({
           link: '/api/',
         },
         {
-          text: 'mn-utils',
+          text: 'fundamentool',
           link: '/api/index/',
           collapsed: false,
           items: [
@@ -29,31 +29,31 @@ export default defineConfig({
           ],
         },
         {
-          text: 'mn-utils/async',
+          text: 'fundamentool/async',
           link: '/api/async',
         },
         {
-          text: 'mn-utils/is',
+          text: 'fundamentool/is',
           link: '/api/is',
         },
         {
-          text: 'mn-utils/browser',
+          text: 'fundamentool/browser',
           link: '/api/browser',
         },
         {
-          text: 'mn-utils/jsonl',
+          text: 'fundamentool/jsonl',
           link: '/api/jsonl',
         },
         {
-          text: 'mn-utils/join',
+          text: 'fundamentool/join',
           link: '/api/join',
         },
         {
-          text: 'mn-utils/split',
+          text: 'fundamentool/split',
           link: '/api/split',
         },
         {
-          text: 'mn-utils/node',
+          text: 'fundamentool/node',
           link: '/api/node/',
           collapsed: true,
           items: [
@@ -68,15 +68,15 @@ export default defineConfig({
           ],
         },
         {
-          text: 'mn-utils/rpc',
+          text: 'fundamentool/rpc',
           link: '/api/rpc',
         },
         {
-          text: 'mn-utils/rpc/browser',
+          text: 'fundamentool/rpc/browser',
           link: '/api/rpc/browser',
         },
         {
-          text: 'mn-utils/rpc/node',
+          text: 'fundamentool/rpc/node',
           link: '/api/rpc/node',
         },
       ],
@@ -97,7 +97,7 @@ export default defineConfig({
 
     footer: {
       message: 'MIT License',
-      copyright: 'mn-utils',
+      copyright: 'fundamentool',
     },
 
     outline: {
