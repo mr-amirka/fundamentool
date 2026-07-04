@@ -12,9 +12,18 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "tsc -p tsconfig.json && tsc -p tsconfig.esm.json",
-    "test": "jest",
-    "test:coverage": "jest --coverage"
+    "docs:api": "typedoc --options ./typedoc.json",
+    "docs:dev": "npm run docs:api && vitepress dev docs",
+    "docs:build": "npm run docs:api && vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "lint": "eslint . --ext .ts,.tsx,.js",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js --fix --quiet",
+    "test": "jest --config=./jest.config.js",
+    "test:watch": "jest --watch --no-coverage --config=./jest.config.js",
+    "test:coverage": "jest --coverage --config=./jest.config.js",
+    "validate": "npm run lint && npm run test",
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
   },
   "exports": {
     ".": {
@@ -93,21 +102,8 @@
   "engines": {
     "node": ">=18"
   },
-  "scripts": {
-    "docs:api": "typedoc --options ./typedoc.json",
-    "docs:dev": "npm run docs:api && vitepress dev docs",
-    "docs:build": "npm run docs:api && vitepress build docs",
-    "docs:preview": "vitepress preview docs",
-    "lint": "eslint . --ext .ts,.tsx,.js",
-    "lint:fix": "eslint . --ext .ts,.tsx,.js --fix --quiet",
-    "test": "jest --config=./jest.config.js",
-    "test:watch": "jest --watch --no-coverage --config=./jest.config.js",
-    "test:coverage": "jest --coverage --config=./jest.config.js",
-    "validate": "npm run lint && npm run test",
-    "build": "tsc",
-    "prepublishOnly": "npm run build"
-  },
   "devDependencies": {
+    "@stylistic/eslint-plugin": "^5.10.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.11.0",
     "@types/react": "^18.3.0",

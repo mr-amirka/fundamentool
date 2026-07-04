@@ -147,6 +147,7 @@ export * from './some';
 export * from './someIn';
 export * from './sort';
 export * from './sortBy';
+export * from './SparseCodec';
 export * from './stackProvider';
 export * from './startsWith';
 export * from './Store';
