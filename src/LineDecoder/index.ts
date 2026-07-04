@@ -1,51 +1,7 @@
-import { noopHandle } from "./noopHandle";
+import { noopHandle } from '../noopHandle';
+import type { ILineDecoderOptions, ILineDecoderBaseOptions, ILineDecoderConstructor } from './types';
 
-export interface ILineDecoderBaseOptions {
-  /**
-   * Whether to skip empty lines.
-   * 
-   * @default false
-   */
-  skipEmptyLines?: boolean;
-}
-export interface ILineDecoderOptions<T = any> extends ILineDecoderBaseOptions {
-  /**
-   * Parses a line of text into a value.
-   * 
-   * @param line - The line of text to parse.
-   * @returns The value.
-   */
-  parse?: (line: string) => T;
-}
-
-export interface ILineDecoderConstructor<T = any> {
-  /**
-   * Creates a new line decoder.
-   *
-   * @param options - The options for the line decoder.
-   * @returns The line decoder.
-   */
-  new (options?: ILineDecoderBaseOptions): BaseLineDecoder<T>;
-}
-
-export interface BaseLineDecoder<T = any> {
-  /**
-   * Writes a chunk of text to the decoder.
-   * 
-   * @param chunk - The chunk of text to write.
-   * @param output - The output array to write the chunk to.
-   * @returns The output array.
-   */
-  write(chunk: string, output?: T[] | null): T[];
-  /**
-   * Ends the decoder.
-   * 
-   * @param chunk - The chunk of text to end the decoder with.
-   * @param output - The output array to end the decoder with.
-   * @returns The output array.
-   */
-  end(chunk?: string, output?: T[] | null): T[];
-}
+export * from './types';
 
 const CODE_LF = 10;
 const CODE_CR = 13;
@@ -60,50 +16,20 @@ const CODE_CR = 13;
  * decoder.end('2}');              // => [{ b: 2 }]
  */
 export class LineDecoder<T = any> {
-  /**
-   * Writes a chunk of text to the decoder.
-   * 
-   * @param chunk - The chunk of text to write.
-   * @param output - The output array to write the chunk to.
-   * @returns The output array.
-   */
   write!: (chunk: string, output?: T[] | null) => T[];
-  /**
-   * Ends the decoder.
-   * 
-   * @param chunk - The chunk of text to end the decoder with.
-   * @param output - The output array to end the decoder with.
-   * @returns The output array.
-   */
   end!: (chunk?: string, output?: T[] | null) => T[];
 
-  /**
-   * Creates a new line decoder.
-   * 
-   * @param options - The options for the line decoder.
-   * @returns The line decoder.
-   */
   static create<T = any>(options: ILineDecoderOptions<T>): LineDecoder<T> {
     return new LineDecoder<T>(options);
   }
 
-  /**
-   * Creates a new line decoder provider.
-   * 
-   * @param parse - The function to parse a line of text into a value.
-   * @returns The line decoder provider.
-   */
   static provider<T = any>(parse: (line: string) => T): ILineDecoderConstructor<T> {
     class Decoder {
       write!: (chunk: string, output?: T[] | null) => T[];
       end!: (chunk?: string, output?: T[] | null) => T[];
 
       constructor(options: ILineDecoderBaseOptions = {}) {
-        const lineDecoder = new LineDecoder({
-          ...options,
-          parse,
-        });
-
+        const lineDecoder = new LineDecoder({ ...options, parse });
         this.write = lineDecoder.write;
         this.end = lineDecoder.end;
       }
@@ -111,12 +37,6 @@ export class LineDecoder<T = any> {
     return Decoder;
   }
 
-  /**
-   * Creates a new line decoder.
-   * 
-   * @param options - The options for the line decoder.
-   * @returns The line decoder.
-   */
   constructor(options: ILineDecoderOptions = {}) {
     const parse = options.parse || noopHandle;
     const skipEmpty = options.skipEmptyLines !== false;

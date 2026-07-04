@@ -22,8 +22,8 @@ export const unparamBase = (query: string, output?: any): TParams => {
 
   for (; i < length; i++) {
     halfParts = half(parts[i], '=');
-    value = halfParts[1];
-    normalizedValue = tryJsonParse(decodeURIComponent(value.replace(REGEXP_SPACE, ' ')));
+    value = decodeURIComponent(halfParts[1].replace(REGEXP_SPACE, ' '));
+    normalizedValue = tryJsonParse(value);
     result = set(
       result,
       halfParts[0],

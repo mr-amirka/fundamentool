@@ -115,7 +115,27 @@ MIT
 - **tryJsonParse** (`tryJsonParse.ts`): безопасный `JSON.parse` с возвратом исходного значения при ошибке.
 - **getUniqId** (`getUniqId.ts`): генерация уникального строкового ID с опциональным префиксом.
 
+### Стор
+
+- **createStore** / **createApi** (`Store/`): минималистичный реактивный стор. Типы (`Store<T>`, `StoreWritable<T>`, `TStoreAdapter`) вынесены в `Store/types.ts` и отдельно импортируемы.
+- **TStoreAdapter**: тип-адаптер для пары фабрик — позволяет подставить любую совместимую реализацию (effector и т.п.).
+
 ### Хранилища и cookie
 
-- **localStorageProvider** (`localStorageProvider.ts`): адаптер под localStorage.
-- **cookieStorageProvider** (`cookieStorageProvider.ts`): адаптер под cookie‑хранилище.
+- **localStorageProvider** (`localStorageProvider.ts`): реактивный адаптер под localStorage. Второй параметр `deps: Partial<TStoreAdapter>` — опциональная замена стора.
+- **cookieStorageProvider** (`cookieStorageProvider.ts`): реактивный адаптер под cookie‑хранилище. Аналогичный `deps`-параметр.
+
+#### DI в сторе
+
+Все провайдеры, работающие через стор, принимают необязательный параметр `deps`:
+
+```ts
+import { localStorageProvider, TStoreAdapter } from 'fundamentool';
+
+// по умолчанию — встроенный стор
+const ls = localStorageProvider(window);
+
+// кастомный адаптер — например, effector-обёртка
+const myAdapter: TStoreAdapter = { createStore: effector.createStore, createApi: myEffectorApi };
+const ls2 = localStorageProvider(window, myAdapter);
+```

@@ -40,7 +40,7 @@ const ENCODED_NAN: TRpcEncodedValue = [
 function storeProvider<A = any>(): [
     indexOf: (value: A) => number | undefined,
     add: (value: A) => number,
-    ] {
+] {
   const valueMap = new Map<A, number>();
 
   return [

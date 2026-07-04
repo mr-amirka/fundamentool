@@ -1,4 +1,5 @@
 import { cookieStorageProvider, storageInit } from '../src/cookieStorageProvider';
+import { createStore, createApi } from '../src/Store';
 
 describe('storageInit', () => {
   test('parses cookie string into object', () => {
@@ -59,5 +60,22 @@ describe('cookieStorageProvider', () => {
     storage.set('a', 1);
     storage.set('b', 2);
     expect(storage.getKeys().sort()).toEqual(['a', 'b']);
+  });
+
+  test('deps — custom createStore is called', () => {
+    const win = makeWindow();
+    let called = false;
+    cookieStorageProvider(win, {
+      createStore: (initial) => { called = true; return createStore(initial); },
+      createApi,
+    });
+    expect(called).toBe(true);
+  });
+
+  test('deps — default store works when no deps provided', () => {
+    const win = makeWindow();
+    const storage = cookieStorageProvider(win);
+    storage.set('key', 'value');
+    expect(storage.get('key')).toBe('value');
   });
 });

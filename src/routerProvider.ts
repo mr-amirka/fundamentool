@@ -1,5 +1,10 @@
-import type React from 'react';
-import type { Store, StoreWritable } from './store';
+import type { Store, TStoreAdapter } from './Store/types';
+
+type TElementType = any;
+type TAnchorProps = Record<string, any>;
+type TClickEvent = { preventDefault?: () => void } & Record<string, any>;
+type TEffectCallback = () => void | (() => void | undefined);
+type TDependencyList = ReadonlyArray<unknown>;
 
 import { wait } from './wait';
 import { wrapper } from './wrapper';
@@ -44,12 +49,12 @@ export type TLocationOptions = TLocationNavigationOptions & {
 
 export type TLinkProps = {
   options?: Partial<TUrlProps>;
-  onClick?: (event: React.MouseEvent<any, MouseEvent>) => void | boolean | Promise<void | boolean>;
+  onClick?: (event: TClickEvent) => void | boolean | Promise<void | boolean>;
   timeout?: number;
   active?: boolean;
   activeAsParent?: boolean;
-  component?: React.ElementType;
-} & React.HTMLProps<HTMLAnchorElement>;
+  component?: TElementType;
+} & TAnchorProps;
 
 export type TPushLocation = (
   extendsLocation: Partial<TUrlProps>,
@@ -244,15 +249,12 @@ export function routerByLocationProviderProvider<A extends TRouterState>($state:
  * @example
  * routerProviderBase({ window: window, Component: Component, useEffect: useEffect, createElement: createElement, forwardRef: forwardRef, createStore: createStore, createApi: createApi }); // => <Router />
  */
-export type TRouterProviderOptions = {
+export type TRouterProviderDeps = TStoreAdapter & {
   window: Window;
-  Component: React.ElementType;
+  Component: TElementType;
   useEffect: (...args: any[]) => void;
   createElement: (...args: any[]) => any;
   forwardRef: (...args: any[]) => any;
-  createStore: <T>(initial: T) => StoreWritable<T>;
-  createApi: <T, E extends Record<string, (state: T, payload: any)
-    => T>>(store: StoreWritable<T>, shape: E) => { [K in keyof E]: (payload: Parameters<E[K]>[1]) => void; }
 };
 
 /**
@@ -271,7 +273,7 @@ function routerProviderBase({
   useEffect,
   createStore,
   createApi,
-}: TRouterProviderOptions) {
+}: TRouterProviderDeps) {
   const { location, history } = window;
   let _skipPop = 0;
   let _quiet = false;
@@ -792,7 +794,7 @@ function routerProviderBase({
   }: {
     pushLocation: TPushLocation;
     hasHash?: boolean | number;
-  }): React.ElementType {
+  }): TElementType {
     return forwardRef((props: TLinkProps, ref: any) => {
       const {
         options: _originOptions,
@@ -841,7 +843,7 @@ function routerProviderBase({
       );
     });
   }
-  function NavLinkProvider(Link: React.ElementType, $location: Store<any>): React.ElementType {
+  function NavLinkProvider(Link: TElementType, $location: Store<any>): TElementType {
     return childClassOfReact(Component, (self) => {
       let subscription: (() => any) | 0;
       const setState = self.setState.bind(self);
@@ -936,7 +938,7 @@ function routerProviderBase({
     return instance;
   }
 
-  const useRouteIsFocus = (effect: React.EffectCallback, deps?: React.DependencyList) => {
+  const useRouteIsFocus = (effect: TEffectCallback, deps?: TDependencyList) => {
     const freezeDepth = $historyDepth.getState();
     (useEffect as any)(() => {
       let _cancel: any = noop;
@@ -1044,8 +1046,8 @@ function debounceLocation<A extends any[]>(callback: (...args: A) => Promise<voi
   };
 }
 
-export function routerProvider(options: TRouterProviderOptions) {
-  const instance = routerProviderBase(options);
+export function routerProvider(deps: TRouterProviderDeps) {
+  const instance = routerProviderBase(deps);
   const {
     pushLocation,
     replaceLocation,
@@ -1066,8 +1068,8 @@ export function routerProvider(options: TRouterProviderOptions) {
   };
 }
 
-export function hashRouterProvider(options: TRouterProviderOptions) {
-  const instance = routerProviderBase(options);
+export function hashRouterProvider(deps: TRouterProviderDeps) {
+  const instance = routerProviderBase(deps);
   const {
     pushHashLocation: pushLocation,
     replaceHashLocation: replaceLocation,

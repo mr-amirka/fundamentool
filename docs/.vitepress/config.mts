@@ -5,8 +5,21 @@ export default defineConfig({
   description: 'TypeScript utility library',
   base: '/',
 
+  // typedoc-plugin-markdown generates README.md as directory index files;
+  // VitePress expects index.md. These rewrites map each README.md to index.md
+  // so directory URLs like /api/ resolve correctly without renaming generated files.
+  rewrites: {
+    'api/README.md': 'api/index.md',
+    'api/index/README.md': 'api/index/index.md',
+    'api/node/README.md': 'api/node/index.md',
+    'api/node/namespaces/file/README.md': 'api/node/namespaces/file/index.md',
+    'api/node/namespaces/file/namespaces/csv/README.md': 'api/node/namespaces/file/namespaces/csv/index.md',
+    'api/node/namespaces/file/namespaces/json/README.md': 'api/node/namespaces/file/namespaces/json/index.md',
+    'api/node/namespaces/jsonl/README.md': 'api/node/namespaces/jsonl/index.md',
+  },
+
   themeConfig: {
-    logo: null,
+
     siteTitle: 'fundamentool',
 
     nav: [

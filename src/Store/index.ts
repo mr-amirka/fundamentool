@@ -1,68 +1,13 @@
-import { forIn } from "./forIn";
-
-/**
- * A function that unsubscribes from a store.
- * 
- * @returns A function that unsubscribes from a store.
- */
-export type Unsubscribe = () => void;
-
-/**
- * A function that watches a store.
- * 
- * @param state - The state of the store.
- */
-export type Watcher<T> = (state: T) => void;
-
-/**
- * A store.
- * 
- * @param T - The type of the state.
- */
-export interface Store<T> {
-  /**
-   * Gets the state of the store.
-   * 
-   * @returns The state of the store.
-   */
-  getState(): T;
-
-  /**
-   * Watches the store.
-   * 
-   * @param fn - The function to watch the store.
-   * @returns A function that unsubscribes from the store.
-   */
-  watch(fn: Watcher<T>): Unsubscribe;
-
-  /**
-   * Maps the store.
-   * 
-   * @param fn - The function to map the store.
-   * @returns The mapped store.
-   */
-  map<U>(fn: (state: T) => U): Store<U>;
-}
-
-/**
- * A writable store.
- * 
- * @param T - The type of the state.
- */
-export type StoreWritable<T> = Store<T> & {
-  /**
-   * Sets the state of the store.
-   * 
-   * @param next - The next state.
-   */
-  setState(next: T): void;
-};
+import { forIn } from "../forIn";
+import type { Unsubscribe, Watcher, Store, StoreWritable } from "./types";
 
 /**
  * Creates a new store.
- * 
- * @param initial - The initial state.
- * @returns The store.
+ *
+ * @example
+ * const store = createStore(0);
+ * store.watch((v) => console.log(v));
+ * store.setState(1); // => logs 1
  */
 export function createStore<T>(initial: T): StoreWritable<T> {
   let state = initial;
@@ -96,11 +41,8 @@ export function createStore<T>(initial: T): StoreWritable<T> {
 }
 
 /**
- * Creates a new api for the store.
- * 
- * @param store - The store to create the api for.
- * @param shape - The shape of the api.
- * @returns The api.
+ * Creates action handlers that update a store via reducers.
+ *
  * @example
  * const store = createStore({ a: 1, b: 2 });
  * const api = createApi(store, {
@@ -128,3 +70,4 @@ export function createApi<
   return api as { [K in keyof E]: (payload: Parameters<E[K]>[1]) => void };
 }
 
+export * from "./types";

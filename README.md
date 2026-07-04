@@ -57,12 +57,28 @@ npm run docs:api
 ### Universal (`fundamentool`)
 
 **Events:** `attachEvent`, `EventEmitter`, `subscribe`, `Unsubscriber`  
+**Store:** `createStore`, `createApi`, `TStoreAdapter` — reactive store with optional DI (swap implementation via `deps`)  
 **Timers:** `wait`, `createTimeout`, `createInterval`, `createAnimationFrame`, `queueProvider`, `sendingQueue`  
 **URL:** `urlParse`, `urlExtend`, `unparam`, `param`, `routeParseProvider`  
 **Strings:** `half`, `trim`, `toLower`, `toUpper`, `lowerFirst`, `upperFirst`, `repeat`, `escapeRegExp`, case converters (`kebabToCamelCase`, `snakeToCamelCase`, …)  
 **Objects & arrays:** `merge`, `extend`, `without`, `withoutEmpty`, `pick`, `set`, `get`, `keys`, `values`, `entries`, `fromPairs`, `push`, `pushArray`, `find`, `findIndex`, `indexOf`, `includes`, `some`, `every`, `sort`, `sortBy`, `uniqWith`  
 **Templates:** `templateProvider`, `convertToBreakLineHTML`, `formatTime`, `dateToUTCString`  
 **Misc:** `noop`, `getUniqId`, `tryJsonParse`, `cloneDepth`, `globalContext`, `variants`, `variantsProvider`
+
+#### Store DI
+
+All store-backed providers (`localStorageProvider`, `cookieStorageProvider`, `routerProvider`) accept an optional `deps` parameter so you can substitute the store implementation — e.g. pass effector-compatible factories:
+
+```ts
+import { createStore, createApi, TStoreAdapter } from 'fundamentool';
+
+// default — uses built-in store
+const storage = localStorageProvider(window);
+
+// custom adapter — e.g. an effector wrapper
+const effectorAdapter: TStoreAdapter = { createStore: effector.createStore, createApi: myAdapter };
+const storage2 = localStorageProvider(window, effectorAdapter);
+```
 
 ### Async (`fundamentool/async`)
 

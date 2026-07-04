@@ -34,4 +34,4 @@ export * from './isRegExp';
 export * from './isSafeNumber';
 export * from './isStandardObject';
 export * from './isString';
-export * from './isVisibleInViewport';
+export * from './isVisibleInViewportProvider';

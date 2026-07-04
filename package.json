@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "TypeScript utility library — strings, objects, arrays, async, type predicates, RPC, JSONL, Node.js and browser utilities",
   "main": "dist/index.js",
+  "module": "dist/esm/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist",
@@ -10,9 +11,15 @@
     "README.ru.md"
   ],
   "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.esm.json",
+    "test": "jest",
+    "test:coverage": "jest --coverage"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "import": "./dist/esm/index.js",
       "default": "./dist/index.js"
     },
     "./async": {
@@ -34,6 +41,10 @@
     "./jsonl": {
       "types": "./dist/jsonl/index.d.ts",
       "default": "./dist/jsonl/index.js"
+    },
+    "./scheduler": {
+      "types": "./dist/scheduler/index.d.ts",
+      "default": "./dist/scheduler/index.js"
     },
     "./rpc": {
       "types": "./dist/rpc/index.d.ts",
@@ -90,6 +101,8 @@
     "lint": "eslint . --ext .ts,.tsx,.js",
     "lint:fix": "eslint . --ext .ts,.tsx,.js --fix --quiet",
     "test": "jest --config=./jest.config.js",
+    "test:watch": "jest --watch --no-coverage --config=./jest.config.js",
+    "test:coverage": "jest --coverage --config=./jest.config.js",
     "validate": "npm run lint && npm run test",
     "build": "tsc",
     "prepublishOnly": "npm run build"
@@ -101,6 +114,7 @@
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "eslint": "^8.57.1",
+    "fast-check": "^4.8.0",
     "jest": "^29.7.0",
     "node-notifier": "^10.0.1",
     "ts-jest": "^29.4.6",

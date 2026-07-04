@@ -1,4 +1,5 @@
-import { createStore, createApi, StoreWritable as Store } from './store';
+import { createStore as _createStore, createApi as _createApi, StoreWritable as Store } from './Store';
+import type { TStoreAdapter } from './Store';
 
 import { tryJsonParse } from './tryJsonParse';
 import { attachEvent } from './attachEvent';
@@ -73,7 +74,11 @@ export type TLocalStorageEvent = {
  * storage.get('user'); // => { name: 'Alice' }
  * storage.remove('user');
  */
-export const localStorageProvider = (win: TLocalStorageWindowContext): TLocalStorage => {
+export const localStorageProvider = (
+  win: TLocalStorageWindowContext,
+  deps: Partial<TStoreAdapter> = {},
+): TLocalStorage => {
+  const { createStore = _createStore, createApi = _createApi } = deps;
   let locked = false;
   const $instance = createStore<TLocalStorageEvent>({ key: '' });
   const { emit } = createApi($instance, {

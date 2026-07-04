@@ -1,4 +1,5 @@
-import { createStore, createApi, StoreWritable } from './store';
+import { createStore as _createStore, createApi as _createApi, StoreWritable } from './Store';
+import type { TStoreAdapter } from './Store';
 import { tryJsonParse } from './tryJsonParse';
 
 export type TCookieWindowContext = {
@@ -48,7 +49,11 @@ export const storageInit = (cookie: string): any => {
  * storage.get('token'); // => 'abc123'
  * storage.remove('token');
  */
-export const cookieStorageProvider = (ctx: TCookieWindowContext): TCookieStorage => {
+export const cookieStorageProvider = (
+  ctx: TCookieWindowContext,
+  deps: Partial<TStoreAdapter> = {},
+): TCookieStorage => {
+  const { createStore = _createStore, createApi = _createApi } = deps;
   const $instance = createStore<any>({} as any);
   const { emit } = createApi($instance, {
     emit: (_: any, payload: any) => payload,

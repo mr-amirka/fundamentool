@@ -1,4 +1,14 @@
-import { isVisibleInViewport } from '../../src/is/isVisibleInViewport';
+import { isVisibleInViewportProvider } from '../../src/is/isVisibleInViewportProvider';
+
+function makeCtx(innerWidth: number, innerHeight: number) {
+  return {
+    window: {
+      innerWidth,
+      innerHeight,
+      document: { documentElement: { clientWidth: innerWidth, clientHeight: innerHeight } },
+    },
+  };
+}
 
 function makeElement(rect: Partial<DOMRect>): HTMLElement {
   return {
@@ -17,37 +27,42 @@ function makeElement(rect: Partial<DOMRect>): HTMLElement {
   } as unknown as HTMLElement;
 }
 
-describe('isVisibleInViewport', () => {
-  const originalWindow = global.window;
-  const originalDocument = global.document;
+describe('isVisibleInViewportProvider', () => {
+  const isVisible = isVisibleInViewportProvider(makeCtx(1024, 768));
 
-  beforeEach(() => {
-    (global as any).window = { innerWidth: 1024, innerHeight: 768 };
-    (global as any).document = { documentElement: { clientWidth: 1024, clientHeight: 768 } };
+  test('returns false for null element', () => {
+    expect(isVisible(null)).toBe(false);
   });
 
-  afterEach(() => {
-    (global as any).window = originalWindow;
-    (global as any).document = originalDocument;
-  });
-
-  test('returns false for null/undefined element', () => {
-    expect(isVisibleInViewport(null)).toBe(false);
-    expect(isVisibleInViewport(undefined)).toBe(false);
+  test('returns false for undefined element', () => {
+    expect(isVisible(undefined)).toBe(false);
   });
 
   test('returns true for element fully within viewport', () => {
     const el = makeElement({ top: 10, left: 10, bottom: 200, right: 200 });
-    expect(isVisibleInViewport(el)).toBe(true);
+    expect(isVisible(el)).toBe(true);
   });
 
   test('returns false for element below viewport bottom', () => {
     const el = makeElement({ top: 10, left: 10, bottom: 900, right: 200 });
-    expect(isVisibleInViewport(el)).toBe(false);
+    expect(isVisible(el)).toBe(false);
   });
 
   test('returns false for element beyond viewport right edge', () => {
     const el = makeElement({ top: 10, left: 10, bottom: 200, right: 1200 });
-    expect(isVisibleInViewport(el)).toBe(false);
+    expect(isVisible(el)).toBe(false);
+  });
+
+  test('falls back to documentElement dimensions when window size is 0', () => {
+    const ctx = {
+      window: {
+        innerWidth: 0,
+        innerHeight: 0,
+        document: { documentElement: { clientWidth: 1024, clientHeight: 768 } },
+      },
+    };
+    const isVisibleFallback = isVisibleInViewportProvider(ctx);
+    const el = makeElement({ top: 10, left: 10, bottom: 200, right: 200 });
+    expect(isVisibleFallback(el)).toBe(true);
   });
 });

@@ -1,4 +1,5 @@
 import { localStorageProvider } from '../src/localStorageProvider';
+import { createStore, createApi } from '../src/Store';
 
 function makeLocalStorageMock() {
   const store: Record<string, string> = {};
@@ -19,6 +20,12 @@ function makeLocalStorageMock() {
     },
     store,
   };
+}
+
+function makeLocalStorageWin() {
+  const { storage, win } = makeLocalStorageMock();
+  win._storage = storage;
+  return win as any;
 }
 
 describe('localStorageProvider', () => {
@@ -56,5 +63,22 @@ describe('localStorageProvider', () => {
     ls.set('b', 2);
     ls.clear();
     expect(ls.getKeys()).toEqual([]);
+  });
+
+  test('deps — custom createStore is called', () => {
+    const win = makeLocalStorageWin();
+    let called = false;
+    localStorageProvider(win, {
+      createStore: (initial) => { called = true; return createStore(initial); },
+      createApi,
+    });
+    expect(called).toBe(true);
+  });
+
+  test('deps — default store works when no deps provided', () => {
+    const win = makeLocalStorageWin();
+    const ls = localStorageProvider(win);
+    ls.set('k', 'v');
+    expect(ls.get('k')).toBe('v');
   });
 });
