@@ -31,15 +31,17 @@ const base = cloneDepth.base = <T>(src: T, depth: number): T => {
     if (isArray(src)) {
       const arr = src as any[];
       const dst: any[] = new Array(arr.length);
-      for (let k = arr.length; k--;) {
+      let k = arr.length;
+      while (k--) {
         dst[k] = base(arr[k], depth);
       }
       return dst as any;
     }
     const srcObj = src as any;
     const dst: any = {};
+    let k: string;
     // eslint-disable-next-line guard-for-in
-    for (const k in srcObj) {
+    for (k in srcObj) {
       dst[k] = base(srcObj[k], depth);
     }
     return dst;

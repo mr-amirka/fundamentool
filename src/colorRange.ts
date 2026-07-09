@@ -19,7 +19,8 @@ export interface IColorRange {
 export const colorRange: IColorRange = (colors: Array<[number, number, number, number]>,
   precision: number = 0): string[] => {
   const output = base(colors, precision);
-  for (let i = output.length; i--;) {
+  let i = output.length;
+  while (i--) {
     (output as any)[i] = rgba(output[i]);
   }
   return output as unknown as string[];
