@@ -29,9 +29,11 @@ export class EventEmitter<T = any> implements IEventEmitter<T> {
       listeners
     } = this;
     if (listeners) {
-      for (const listener of listeners) {
+      let i = 0;
+      const len = listeners.length;
+      for (; i < len; i++) {
         try {
-          listener(data);
+          listeners[i](data);
         } catch(error) {
           console.error('EventEmitter:listener:error', error);
         }
