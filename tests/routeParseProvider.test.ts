@@ -239,5 +239,34 @@ describe('routeParseProvider (TRouteMapper)', () => {
     expect(match('/post/1', params)).toBe(false);
     expect(Object.keys(params).length).toBe(0);
   });
+
+  test('nested alternations with :name rename (minotation PATTERN_COLOR)', () => {
+    // ^((camel):camel|(hex):color|(var):vv):value
+    const match = routeParseProvider(
+      '^(([A-Z][a-z][A-Za-z]+):camel|([A-Fa-f0-9]+):color|(-?--[^;]+):vv):value',
+    );
+
+    // Hex color → p.value + p.color
+    const hex: Record<string, any> = {};
+    expect(match('F00', hex)).toBe(true);
+    expect(hex.value).toBe('F00');
+    expect(hex.color).toBe('F00');
+    expect(hex.camel).toBeUndefined();
+    expect(hex.vv).toBeUndefined();
+
+    // Named color → p.value + p.camel
+    const named: Record<string, any> = {};
+    expect(match('Red', named)).toBe(true);
+    expect(named.value).toBe('Red');
+    expect(named.camel).toBe('Red');
+    expect(named.color).toBeUndefined();
+
+    // CSS var → p.value + p.vv
+    const cssVar: Record<string, any> = {};
+    expect(match('--mycolor', cssVar)).toBe(true);
+    expect(cssVar.value).toBe('--mycolor');
+    expect(cssVar.vv).toBe('--mycolor');
+    expect(cssVar.color).toBeUndefined();
+  });
 });
 

@@ -101,6 +101,7 @@ export * from './map';
 export * from './mapIn';
 export * from './mapperProvider';
 export * from './merge';
+export * from './mergeDepth';
 export * from './noop';
 export * from './noopHandle';
 export * from './normalizeStep';

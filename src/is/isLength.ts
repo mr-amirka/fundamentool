@@ -1,6 +1,6 @@
 /**
  * @overview isLength
- * @author Amir Absaliamov <mr.amirka@ya.ru>
+ * @author Amir Absaliamov <amir.absolutely@gmail.com>
  */
 
 const MAX_SAFE_INTEGER = 9007199254740991;
