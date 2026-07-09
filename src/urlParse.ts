@@ -2,9 +2,15 @@
  * @overview url — разбирает URL в структурированный объект.
  */
 
-import { unparam } from './unparam';
-import { isDefined } from './is/isDefined';
-import { half, halfLast } from './half';
+import {
+  unparam, 
+} from './unparam';
+import {
+  isDefined, 
+} from './is/isDefined';
+import {
+  half, halfLast, 
+} from './half';
 
 export type TUrlOptions = {
   hostname: string;
@@ -63,13 +69,17 @@ export const urlParse = (href: string): TUrlProps => {
 
   const query = unparam(search);
   const child = hash ? urlParse(hash) : null;
-  const protocol = (parts = half(unsearch, '://', 1))[0];
+  const protocol = (parts = half(
+    unsearch, '://', 1,
+  ))[0];
   const basePath = parts[1];
 
   parts = protocol ? half(basePath, '/') : ['', basePath];
 
   const path = (parts[2] ? '/' : '') + parts[1];
-  const userpart = (parts = half(parts[0], '@', true))[0];
+  const userpart = (parts = half(
+    parts[0], '@', true,
+  ))[0];
   const userParts = half(userpart, ':');
   const username = userParts[0];
   const password = userParts[1];
@@ -80,7 +90,9 @@ export const urlParse = (href: string): TUrlProps => {
   const login = userpart ? userpart + '@' + host : '';
   const unpath = login ? protocol + '://' + login : host ? protocol + '://' + host : '';
 
-  parts = halfLast(path, '/', true);
+  parts = halfLast(
+    path, '/', true,
+  );
   const dirname = parts[0] + (parts[2] ? '/' : '');
   const filename = parts[1];
   const unalias = unpath + dirname;

@@ -9,10 +9,8 @@
  * const cancel = cancelProvider(clearTimeout, id);
  * cancel(); // clears the timeout
  */
-export const cancelProvider = (
-  clearFn: (id: any) => void,
-  id: any,
-): () => void => {
+export const cancelProvider = (clearFn: (id: any) => void,
+  id: any): () => void => {
   return () => {
     clearFn(id);
   };

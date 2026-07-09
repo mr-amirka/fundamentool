@@ -1,4 +1,6 @@
-import { isNaN } from '../../src/is/isNaN';
+import {
+  isNaN, 
+} from '../../src/is/isNaN';
 
 describe('isNaN', () => {
   test('returns true for NaN', () => {

@@ -1,6 +1,12 @@
-import { isFunction } from './is/isFunction';
-import { isMatch } from './is/isMatch';
-import { find } from './find';
+import {
+  isFunction, 
+} from './is/isFunction';
+import {
+  isMatch, 
+} from './is/isMatch';
+import {
+  find, 
+} from './find';
 
 /**
  * Checks if at least one element in the collection matches the identity.

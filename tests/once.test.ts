@@ -1,9 +1,13 @@
-import { once } from '../src/once';
+import {
+  once, 
+} from '../src/once';
 
 describe('once', () => {
   test('calls function only on first invocation', () => {
     let count = 0;
-    const fn = once(() => { count++; return count; });
+    const fn = once(() => {
+      count++; return count; 
+    });
     fn();
     fn();
     fn();

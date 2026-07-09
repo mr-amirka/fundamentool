@@ -3,8 +3,10 @@ import {
 } from 'node:worker_threads';
 import type {
   TRpcConnectOptionsPostMessage,
-} from "../../types";
-import { RpcConnect } from "../../RpcConnect";
+} from '../../types';
+import {
+  RpcConnect, 
+} from '../../RpcConnect';
 
 /**
  * Server-side RPC handler that runs inside a Node.js `worker_threads` Worker.

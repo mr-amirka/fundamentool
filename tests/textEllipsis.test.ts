@@ -1,4 +1,6 @@
-import { textEllipsis } from '../src/textEllipsis';
+import {
+  textEllipsis, 
+} from '../src/textEllipsis';
 
 describe('textEllipsis', () => {
   test('truncates text exceeding the limit', () => {
@@ -18,7 +20,9 @@ describe('textEllipsis', () => {
   });
 
   test('uses custom suffix', () => {
-    expect(textEllipsis('hello world', 5, ' …')).toBe('hello …');
+    expect(textEllipsis(
+      'hello world', 5, ' …',
+    )).toBe('hello …');
   });
 
   test('handles undefined input', () => {

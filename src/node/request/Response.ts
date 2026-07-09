@@ -49,14 +49,13 @@ export class Response {
   }
 
   bytes() {
-    const self = this;
-    const _promise = self._promiseBytes;
+    const _promise = this._promiseBytes;
     if (_promise) {
       return _promise;
     }
-    const response = self._origin;
+    const response = this._origin;
 
-    return self._promiseBytes = (new Promise((resolve, reject) => {
+    return this._promiseBytes = (new Promise((resolve, reject) => {
       const chunks = [];
       response.setEncoding('binary');
       response
@@ -78,14 +77,13 @@ export class Response {
   }
 
   text() {
-    const self = this;
-    const _promise = self._promiseText;
+    const _promise = this._promiseText;
     if (_promise) {
       return _promise;
     }
-    const contentEncoding = self.headers['content-encoding'];
+    const contentEncoding = this.headers['content-encoding'];
     const skipUnzip = UNZIP_CONTENT.indexOf(contentEncoding) < 0;
-    return self._promiseText = self.bytes().then((body) => {
+    return this._promiseText = this.bytes().then((body) => {
       return skipUnzip ? body.toString('utf8') : new Promise((resolve, reject) => {
         (
           contentEncoding === 'deflate'
@@ -106,8 +104,7 @@ export class Response {
   }
 
   json() {
-    const self = this;
-    return self._promiseJson || (self._promiseJson = self.text().then(toJson).then((v: any) => this._json = v));
+    return this._promiseJson || (this._promiseJson = this.text().then(toJson).then((v: any) => this._json = v));
   }
 
 }

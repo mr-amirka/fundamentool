@@ -1,4 +1,6 @@
-import { routeParseProvider, routeParseProviderBase } from '../src/routeParseProvider';
+import {
+  routeParseProvider, routeParseProviderBase, 
+} from '../src/routeParseProvider';
 
 describe('routeParseProviderBase', () => {
   test('builds regex and keys for static route', () => {
@@ -24,14 +26,23 @@ describe('routeParseProviderBase', () => {
     const re = routeParseProviderBase('/(ru|en):lang/(user/([0-9]+):id)?', keys);
 
     expect(re).toBeInstanceOf(RegExp);
-    expect(keys).toEqual(['all', 'lang', '0', 'id']);
+    expect(keys).toEqual([
+      'all',
+      'lang',
+      '0',
+      'id',
+    ]);
   });
 
   test('collects keys for multiple params /:lang/user/:id', () => {
     const keys: string[] = [];
     routeParseProviderBase('/:lang/user/:id', keys);
 
-    expect(keys).toEqual(['all', 'lang', 'id']);
+    expect(keys).toEqual([
+      'all',
+      'lang',
+      'id',
+    ]);
   });
 
   test('renames unnamed group when followed by :name', () => {
@@ -242,9 +253,7 @@ describe('routeParseProvider (TRouteMapper)', () => {
 
   test('nested alternations with :name rename (minotation PATTERN_COLOR)', () => {
     // ^((camel):camel|(hex):color|(var):vv):value
-    const match = routeParseProvider(
-      '^(([A-Z][a-z][A-Za-z]+):camel|([A-Fa-f0-9]+):color|(-?--[^;]+):vv):value',
-    );
+    const match = routeParseProvider('^(([A-Z][a-z][A-Za-z]+):camel|([A-Fa-f0-9]+):color|(-?--[^;]+):vv):value');
 
     // Hex color → p.value + p.color
     const hex: Record<string, any> = {};

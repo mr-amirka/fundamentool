@@ -1,4 +1,6 @@
-import { extractExportedFn } from './testUtils';
+import {
+  extractExportedFn, 
+} from './testUtils';
 
 describe('browser/script', () => {
   beforeEach(() => {

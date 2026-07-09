@@ -1,6 +1,12 @@
-import { asAsync } from '../asAsync';
-import { noop } from '../noop';
-import { wait } from '../wait';
+import {
+  asAsync, 
+} from '../asAsync';
+import {
+  noop, 
+} from '../noop';
+import {
+  wait, 
+} from '../wait';
 
 /**
  * Ensures that calls to `fn` take at least `requestLatency` ms.
@@ -23,13 +29,10 @@ export function withLatencyProvider(requestLatency: number) {
     return (promise = promise.catch(noop).then(() => {
       let errorBox: [error: any] | undefined;
       return Promise
-        .all([
-          asAsync(() => fn.apply(ctx, args))
-            .catch((error) => {
-              errorBox = [error];
-            }),
-          wait(requestLatency),
-        ])
+        .all([asAsync(() => fn.apply(ctx, args))
+          .catch((error) => {
+            errorBox = [error];
+          }), wait(requestLatency)])
         .then((responses) => {
           if (errorBox) {
             throw errorBox[0];

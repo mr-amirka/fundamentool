@@ -1,4 +1,6 @@
-import { isInvalidStringLength } from '../../src/is/isInvalidStringLength';
+import {
+  isInvalidStringLength, 
+} from '../../src/is/isInvalidStringLength';
 
 describe('isInvalidStringLength', () => {
   test('returns false when string meets minimum length', () => {

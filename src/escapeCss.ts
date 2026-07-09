@@ -1,6 +1,8 @@
-import { executeTry } from "./executeTry";
+import {
+  executeTry, 
+} from './executeTry';
 
-const regexpEscape = /([[\]#.*^$()><+~=|:;,"'`\s@%\\!\/])/g;
+const regexpEscape = /([[\]#.*^$()><+~=|:;,"'`\s@%\\!/])/g;
 
 /**
  * Экранирует строку для безопасного использования в CSS‑селекторе.

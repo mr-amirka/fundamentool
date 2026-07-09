@@ -1,6 +1,12 @@
-import { extend } from '../../extend';
-import { limitStream, ILimitStream } from '../../limitStream';
-import { read } from './read';
+import {
+  extend, 
+} from '../../extend';
+import {
+  limitStream, ILimitStream, 
+} from '../../limitStream';
+import {
+  read, 
+} from './read';
 
 /**
  * Like `read`, but limits the number of JSONL records emitted.
@@ -16,5 +22,5 @@ export function readLimited(path: string, options?: any) {
   const limit = options.limit;
   delete options.limit;
   return limitStream(read(path, options), limit) as ILimitStream;
-};
+}
 

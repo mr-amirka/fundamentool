@@ -1,5 +1,9 @@
-import { loopParallel } from './loopParallel';
-import { checkNoop } from '../checkNoop';
+import {
+  loopParallel, 
+} from './loopParallel';
+import {
+  checkNoop, 
+} from '../checkNoop';
 
 /**
  * Parallel asynchronous forEach over array.
@@ -26,7 +30,9 @@ export function forEachParallel<T>(
     () => index < length && checkFn(),
     () => {
       const i = index++;
-      return fn.call(ctx, items[i], i, items);
+      return fn.call(
+        ctx, items[i], i, items,
+      );
     },
     taskLimit,
   )

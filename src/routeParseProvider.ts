@@ -1,6 +1,12 @@
-import { regexpMapperProvider } from './regexpMapperProvider';
-import { scopeJoin } from './scopeJoin';
-import { scopeSplit, ScopeNode } from './scopeSplit';
+import {
+  regexpMapperProvider, 
+} from './regexpMapperProvider';
+import {
+  scopeJoin, 
+} from './scopeJoin';
+import {
+  scopeSplit, ScopeNode, 
+} from './scopeSplit';
 
 /**
  * Route patterns to RegExp + TRouteMapper converter.
@@ -54,9 +60,16 @@ const REGEXP_KEY = /:([_A-Za-z0-9.]+)/g;
  * @param route - The route to parse.
  * @param keys - The list of keys to populate.
  * @returns A RegExp and a list of keys.
+ * @example
+ * const keys: string[] = [];
+ * const re = routeParseProviderBase('/user/:id', keys);
+ * keys; // => ['all', 'id']
+ * re.exec('/user/42'); // => ['/user/42', '42']
  */
 export const routeParseProviderBase = (route: string, keys: string[]): RegExp => {
-  const scope = scopeSplit(route, '(', ')');
+  const scope = scopeSplit(
+    route, '(', ')',
+  );
   keys.push('all');
   base(scope);
 
@@ -109,7 +122,13 @@ export const routeParseProviderBase = (route: string, keys: string[]): RegExp =>
  * Parses a route and returns a RegExp mapper.
  *
  * @param route - The route to parse.
- * @returns A RegExp mapper.
+ * @returns A `TRouteMapper`: `(path, dst?) => boolean`, filling `dst` with named/positional params on match.
+ * @example
+ * const mapper = routeParseProvider('/user/:id');
+ * const params: any = {};
+ * mapper('/user/42', params); // => true
+ * params; // => { all: '/user/42', id: '42' }
+ * mapper('/nope', params); // => false
  */
 export const routeParseProvider = (route: string) => {
   const keys: string[] = [];

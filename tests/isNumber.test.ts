@@ -1,4 +1,6 @@
-import { isNumber } from '../src/is/isNumber';
+import {
+  isNumber, 
+} from '../src/is/isNumber';
 
 describe('isNumber', () => {
   test('returns true for number', () => {

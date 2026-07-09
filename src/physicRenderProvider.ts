@@ -1,4 +1,6 @@
-import { intervalAsync } from './async/intervalAsync';
+import {
+  intervalAsync, 
+} from './async/intervalAsync';
 
 /**
  * Provides simple "physics" render loop with fixed timestep.

@@ -1,4 +1,6 @@
-import { delimiterToCamelCase } from './delimiterToCamelCase';
+import {
+  delimiterToCamelCase, 
+} from './delimiterToCamelCase';
 
 /**
  * Converts kebab-case string to camelCase.

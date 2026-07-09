@@ -1,4 +1,4 @@
-export const REGEXP_ASCII = /[^A-Za-z0-9_:;\\\-+=|/*.,?&^%$#@!~`"'(){}\[\]<> ]/;
+export const REGEXP_ASCII = /[^A-Za-z0-9_:;\\\-+=|/*.,?&^%$#@!~`"'(){}[\]<> ]/;
 
 /**
  * Checks whether a string contains only ASCII-printable characters.

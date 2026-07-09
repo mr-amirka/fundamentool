@@ -1,5 +1,9 @@
-import { deflags } from './deflags';
-import { joinSpace } from './join/joinSpace';
+import {
+  deflags, 
+} from './deflags';
+import {
+  joinSpace, 
+} from './join/joinSpace';
 
 /**
  * Builds a space‑separated flags string from an object and appends a suffix.
@@ -10,10 +14,8 @@ import { joinSpace } from './join/joinSpace';
  * @example
  * deflagsByString({ a: true, b: false, c: true }, 'extra') === 'a c extra'
  */
-export const deflagsByString = (
-  src: Record<string, any>,
-  suffix?: string,
-): string => {
+export const deflagsByString = (src: Record<string, any>,
+  suffix?: string): string => {
   const prefix = joinSpace(deflags(src));
   return suffix ? `${prefix} ${suffix}` : prefix;
 };

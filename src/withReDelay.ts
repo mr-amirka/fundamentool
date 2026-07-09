@@ -1,5 +1,9 @@
-import { createTimeout } from './createTimeout';
-import { single } from './single';
+import {
+  createTimeout, 
+} from './createTimeout';
+import {
+  single, 
+} from './single';
 
 /**
  * Wraps a function so each invocation resets the delay; previous pending call is cancelled.
@@ -18,6 +22,8 @@ export function withReDelay<T extends (...args: any[]) => any>(
   ctx?: any,
 ): T & { cancel: () => void } {
   return single(function (this: any) {
-    return createTimeout(fn, delayMs, arguments as any, ctx);
+    return createTimeout(
+      fn, delayMs, arguments as any, ctx,
+    );
   }, ctx) as T & { cancel: () => void };
 }

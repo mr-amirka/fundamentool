@@ -1,6 +1,12 @@
-import { addOf } from '../addOf';
-import { isDefined } from '../is/isDefined';
-import { detection } from './detection';
+import {
+  addOf, 
+} from '../addOf';
+import {
+  isDefined, 
+} from '../is/isDefined';
+import {
+  detection, 
+} from './detection';
 
 interface IWindowLike {
   orientation?: any;

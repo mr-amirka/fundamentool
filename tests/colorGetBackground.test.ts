@@ -1,4 +1,6 @@
-import { colorGetBackground } from '../src/colorGetBackground';
+import {
+  colorGetBackground, 
+} from '../src/colorGetBackground';
 
 describe('colorGetBackground', () => {
   test('returns linear gradient for two colors', () => {

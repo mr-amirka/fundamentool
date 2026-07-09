@@ -9,10 +9,8 @@
  */
 export function dynamicModule<
   TOptions extends Record<string, any> = Record<string, any>,
-  TResult = any
->(
-  init: (options?: TOptions) => Promise<TResult> | TResult,
-) {
+  TResult = any,
+>(init: (options?: TOptions) => Promise<TResult> | TResult) {
   let promise: Promise<TResult> | null = null;
   return (options?: TOptions): Promise<TResult> =>
     promise ||

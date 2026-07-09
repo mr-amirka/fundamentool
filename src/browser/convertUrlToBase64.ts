@@ -1,5 +1,9 @@
-import { convertUrlToBlob } from './convertUrlToBlob';
-import { convertBlobToBase64 } from './convertBlobToBase64';
+import {
+  convertUrlToBlob, 
+} from './convertUrlToBlob';
+import {
+  convertBlobToBase64, 
+} from './convertBlobToBase64';
 
 /**
  * Converts a URL to a base64 data URL.

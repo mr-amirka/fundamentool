@@ -1,5 +1,9 @@
-import { checkNoop } from '../checkNoop';
-import { loopParallel } from './loopParallel';
+import {
+  checkNoop, 
+} from '../checkNoop';
+import {
+  loopParallel, 
+} from './loopParallel';
 
 /**
  * Parallel asynchronous map over items.
@@ -28,7 +32,9 @@ export function mapParallel<T, R>(
     () => index < length && checkFn(),
     async () => {
       const i = index++;
-      result[i] = await iteratee.call(ctx, items[i], i, items);
+      result[i] = await iteratee.call(
+        ctx, items[i], i, items,
+      );
     },
     taskLimit,
   ).then(() => result);

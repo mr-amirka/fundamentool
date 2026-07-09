@@ -1,9 +1,9 @@
-import { reduce } from './reduce';
+import {
+  reduce, 
+} from './reduce';
 
-function iterateeBindMethods<T extends Record<string, any>>(
-  self: T,
-  method: keyof T & string,
-): T {
+function iterateeBindMethods<T extends Record<string, any>>(self: T,
+  method: keyof T & string): T {
   self[method] = self[method].bind(self);
   return self;
 }
@@ -23,10 +23,10 @@ function iterateeBindMethods<T extends Record<string, any>>(
  * const foo = new Foo();
  * bindMethods(foo, ['inc']);
  */
-export function bindMethods<T extends Record<string, any>>(
-  self: T,
-  methods: Array<keyof T & string>,
-): T {
-  return reduce(methods, iterateeBindMethods as any, self);
+export function bindMethods<T extends Record<string, any>>(self: T,
+  methods: Array<keyof T & string>): T {
+  return reduce(
+    methods, iterateeBindMethods as any, self,
+  );
 }
 

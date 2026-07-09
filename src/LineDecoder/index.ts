@@ -1,5 +1,9 @@
-import { noopHandle } from '../noopHandle';
-import type { ILineDecoderOptions, ILineDecoderBaseOptions, ILineDecoderConstructor } from './types';
+import {
+  noopHandle, 
+} from '../noopHandle';
+import type {
+  ILineDecoderOptions, ILineDecoderBaseOptions, ILineDecoderConstructor, 
+} from './types';
 
 export * from './types';
 
@@ -29,7 +33,10 @@ export class LineDecoder<T = any> {
       end!: (chunk?: string, output?: T[] | null) => T[];
 
       constructor(options: ILineDecoderBaseOptions = {}) {
-        const lineDecoder = new LineDecoder({ ...options, parse });
+        const lineDecoder = new LineDecoder({
+          ...options,
+          parse, 
+        });
         this.write = lineDecoder.write;
         this.end = lineDecoder.end;
       }

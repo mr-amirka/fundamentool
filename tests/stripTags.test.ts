@@ -1,5 +1,9 @@
-import { stripTags } from '../src/stripTags';
-import { toHTML } from '../src/toHTML';
+import {
+  stripTags, 
+} from '../src/stripTags';
+import {
+  toHTML, 
+} from '../src/toHTML';
 
 describe('stripTags', () => {
   test('removes a single HTML tag', () => {

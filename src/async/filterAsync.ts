@@ -1,5 +1,9 @@
-import { checkNoop } from './checkNoop';
-import { loopAsync } from './loopAsync';
+import {
+  checkNoop, 
+} from './checkNoop';
+import {
+  loopAsync, 
+} from './loopAsync';
 
 /**
  * Asynchronously filters items using the provided `iteratee`.
@@ -23,16 +27,16 @@ export function filterAsync<T>(
   const length = items?.length || 0;
   let index = 0;
   const filtered: T[] = output || [];
-  return loopAsync(
-    () => index < length && checkFn(),
+  return loopAsync(() => index < length && checkFn(),
     async () => {
       const i = index++;
       const item = items[i];
-      if (await iteratee.call(ctx, item, i, items)) {
+      if (await iteratee.call(
+        ctx, item, i, items,
+      )) {
         filtered.push(item);
       }
-    },
-  ).then(() => filtered);
+    }).then(() => filtered);
 }
 
 

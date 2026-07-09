@@ -1,8 +1,16 @@
-import { createStore as _createStore, createApi as _createApi, StoreWritable as Store } from './Store';
-import type { TStoreAdapter } from './Store';
+import {
+  createStore as _createStore, createApi as _createApi, StoreWritable as Store, 
+} from './Store';
+import type {
+  TStoreAdapter, 
+} from './Store';
 
-import { tryJsonParse } from './tryJsonParse';
-import { attachEvent } from './attachEvent';
+import {
+  tryJsonParse, 
+} from './tryJsonParse';
+import {
+  attachEvent, 
+} from './attachEvent';
 
 export type TLocalStorageWindowContext = {
   localStorage: {
@@ -74,38 +82,53 @@ export type TLocalStorageEvent = {
  * storage.get('user'); // => { name: 'Alice' }
  * storage.remove('user');
  */
-export const localStorageProvider = (
-  win: TLocalStorageWindowContext,
-  deps: Partial<TStoreAdapter> = {},
-): TLocalStorage => {
-  const { createStore = _createStore, createApi = _createApi } = deps;
+export const localStorageProvider = (win: TLocalStorageWindowContext,
+  deps: Partial<TStoreAdapter> = {}): TLocalStorage => {
+  const {
+    createStore = _createStore, createApi = _createApi, 
+  } = deps;
   let locked = false;
-  const $instance = createStore<TLocalStorageEvent>({ key: '' });
-  const { emit } = createApi($instance, {
+  const $instance = createStore<TLocalStorageEvent>({
+    key: '', 
+  });
+  const {
+    emit, 
+  } = createApi($instance, {
     emit: (_: TLocalStorageEvent, payload: TLocalStorageEvent) => payload,
   });
   const originLocalStorage = win.localStorage;
   function __set(key: string, value: any) {
-    emit({ key, value });
+    emit({
+      key,
+      value, 
+    });
     return $instance;
   }
   function getKeys() {
     const l = originLocalStorage.length;
     const keys: string[] = [];
     let i = 0;
-    for (; i < l; i++) keys.push(originLocalStorage.key(i) || '');
+    for (; i < l; i++) {
+      keys.push(originLocalStorage.key(i) || '');
+    }
     return keys;
   }
-  attachEvent(win as any, 'storage', (event: any) => {
-    locked = true;
-    emit({
-      key: event.key,
-      value: tryJsonParse(event.newValue),
-    });
-    locked = false;
+  attachEvent(
+win as any, 'storage', (event: any) => {
+  locked = true;
+  emit({
+    key: event.key,
+    value: tryJsonParse(event.newValue),
   });
-  $instance.watch(({ key, value }: TLocalStorageEvent) => {
-    if (locked) return;
+  locked = false;
+},
+  );
+  $instance.watch(({
+    key, value, 
+  }: TLocalStorageEvent) => {
+    if (locked) {
+      return;
+    }
     value === null || value === undefined
       ? originLocalStorage.removeItem(key)
       : originLocalStorage.setItem(key, JSON.stringify(value));
@@ -116,7 +139,10 @@ export const localStorageProvider = (
   ($instance as any).getKeys = getKeys;
   ($instance as any).clear = () => {
     getKeys().forEach((key) => {
-      emit({ key, value: null });
+      emit({
+        key,
+        value: null, 
+      });
     });
     return $instance;
   };

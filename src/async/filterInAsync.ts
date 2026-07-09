@@ -1,7 +1,15 @@
-import { entries } from '../entries';
-import { fromPairs } from '../fromPairs';
-import { checkNoop } from './checkNoop';
-import { filterAsync } from './filterAsync';
+import {
+  entries, 
+} from '../entries';
+import {
+  fromPairs, 
+} from '../fromPairs';
+import {
+  checkNoop, 
+} from './checkNoop';
+import {
+  filterAsync, 
+} from './filterAsync';
 
 /**
  * Asynchronous filter over array or object.
@@ -27,7 +35,9 @@ export function filterInAsync<T>(
 ): Promise<Record<string, T>> {
   return filterAsync(
     entries(collection),
-    (line: [string, T]) => iteratee.call(ctx, line[1], line[0], collection),
+    (line: [string, T]) => iteratee.call(
+      ctx, line[1], line[0], collection,
+    ),
     [],
     ctx,
     checkFn,

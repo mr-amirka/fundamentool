@@ -1,4 +1,6 @@
-import { write } from '../write';
+import {
+  write, 
+} from '../write';
 
 const writer = write(__dirname + '/output.jsonl');
 
@@ -16,7 +18,10 @@ function onDrain() {
   let data;
   do {
     i--;
-    data = {id: i, name: 'name' + i};
+    data = {
+      id: i,
+      name: 'name' + i,
+    };
     if (i === 0) {
       writer.write(data, finish);
     } else {

@@ -1,7 +1,15 @@
-import { isArray } from '../is/isArray';
-import { checkNoop } from './checkNoop';
-import { forEachAsync } from './forEachAsync';
-import { forInAsync } from './forInAsync';
+import {
+  isArray, 
+} from '../is/isArray';
+import {
+  checkNoop, 
+} from './checkNoop';
+import {
+  forEachAsync, 
+} from './forEachAsync';
+import {
+  forInAsync, 
+} from './forInAsync';
   
 /**
  * Chooses async iterator (`forEach` for arrays, `forIn` for objects) and runs it.
@@ -22,7 +30,7 @@ export function eachAsync<A extends (any[] | Record<string, any>)>(
 ): Promise<A> {
 
   return ((isArray(collection) ? forEachAsync : forInAsync) as any)(
-    collection, iteratee, ctx, checkFn
+    collection, iteratee, ctx, checkFn,
   ) as Promise<A>;
 }
 

@@ -3,11 +3,13 @@ import {
 } from 'node:worker_threads';
 import {
   RpcClient,
-} from "../../RpcClient";
+} from '../../RpcClient';
 import {
   TRpcClientOptionsPostMessage,
-} from "../../types";
-import { noop } from "../../../noop";
+} from '../../types';
+import {
+  noop, 
+} from '../../../noop';
 
 /** Options for `NodeRpcClientWorker`. */
 export type TNodeRpcClientWorkerOptions = {

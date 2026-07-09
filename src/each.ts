@@ -1,6 +1,12 @@
-import { forEach } from './forEach';
-import { forIn } from './forIn';
-import { isArray } from './is/isArray';
+import {
+  forEach, 
+} from './forEach';
+import {
+  forIn, 
+} from './forIn';
+import {
+  isArray, 
+} from './is/isArray';
 
 /**
  * Iterates over a collection (array or object) and invokes iteratee for each item.
@@ -17,4 +23,6 @@ export const each = <T = any, C extends T[] | Record<string, T> = T[] | Record<s
   collection: C,
   iteratee: (this: any, value: T, key: keyof C, collection: C) => void,
   ctx?: any,
-): void => (isArray(collection) ? forEach : forIn as any)(collection, iteratee, ctx);
+): void => (isArray(collection) ? forEach : forIn as any)(
+    collection, iteratee, ctx,
+  );

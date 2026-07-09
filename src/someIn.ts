@@ -1,7 +1,13 @@
 
-import { isFunction } from './is/isFunction';
-import { isMatch } from './is/isMatch';
-import { findIn } from './findIn';
+import {
+  isFunction, 
+} from './is/isFunction';
+import {
+  isMatch, 
+} from './is/isMatch';
+import {
+  findIn, 
+} from './findIn';
 
 /**
  * Checks if at least one property in the collection matches the identity.

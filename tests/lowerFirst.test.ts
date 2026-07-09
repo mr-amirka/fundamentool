@@ -1,4 +1,6 @@
-import { lowerFirst } from '../src/lowerFirst';
+import {
+  lowerFirst, 
+} from '../src/lowerFirst';
 
 describe('lowerFirst', () => {
   test('lowercases first char', () => {

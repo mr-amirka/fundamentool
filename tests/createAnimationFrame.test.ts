@@ -1,4 +1,6 @@
-import { createAnimationFrame } from '../src/createAnimationFrame';
+import {
+  createAnimationFrame, 
+} from '../src/createAnimationFrame';
 
 describe('createAnimationFrame', () => {
   let rafId: number;
@@ -27,7 +29,9 @@ describe('createAnimationFrame', () => {
     const fn = jest.fn();
     const stop = createAnimationFrame(fn, 100);
     stop();
-    if (rafCb) rafCb();
+    if (rafCb) {
+      rafCb();
+    }
     expect(fn).not.toHaveBeenCalled();
   });
 });

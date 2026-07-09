@@ -1,4 +1,6 @@
-import { values } from './values';
+import {
+  values, 
+} from './values';
 
 /**
  * Returns the number of enumerable values in a collection.

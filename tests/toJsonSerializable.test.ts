@@ -1,4 +1,6 @@
-import { toSerializableJson } from '../src/toSerializableJson';
+import {
+  toSerializableJson, 
+} from '../src/toSerializableJson';
 
 describe('toSerializableJson', () => {
   test('primitives stay as is', () => {
@@ -10,11 +12,9 @@ describe('toSerializableJson', () => {
 
   test('functions and undefined become null', () => {
     expect(toSerializableJson(undefined)).toBeNull();
-    expect(
-      toSerializableJson({
-        fn: () => 1,
-      }).fn,
-    ).toBeNull();
+    expect(toSerializableJson({
+      fn: () => 1,
+    }).fn).toBeNull();
   });
 
   test('cycles are replaced with null', () => {
@@ -28,13 +28,17 @@ describe('toSerializableJson', () => {
   test('arrays and objects are cloned recursively', () => {
     const src = {
       a: 1,
-      b: [2, { c: 3 }],
+      b: [2, {
+        c: 3, 
+      }],
     };
     const safe = toSerializableJson(src);
 
     expect(safe).toEqual({
       a: 1,
-      b: [2, { c: 3 }],
+      b: [2, {
+        c: 3, 
+      }],
     });
     expect(safe).not.toBe(src);
     expect(safe.b).not.toBe(src.b);

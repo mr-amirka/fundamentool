@@ -8,9 +8,13 @@ export type WeekDay = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 /** Абсолютное расписание события */
 export type ScheduleTime =
   // «каждые N недель в день недели D в H:M»
-  | { everyWeek: number; weekDay: WeekDay; hour: number; minute: number }
+  | { everyWeek: number;
+weekDay: WeekDay;
+hour: number;
+minute: number }
   // «каждый день в H:M» (можно несколько)
-  | { daily: { hour: number; minute: number }[] }
+  | { daily: { hour: number;
+minute: number }[] }
   // «каждые N минут»
   | { everyMinutes: number }
   // Разовый запуск в конкретное время (ISO)
@@ -19,11 +23,16 @@ export type ScheduleTime =
 /** Смещение относительно родительского schedule */
 export type TriggerOffset =
   // «за N минут/часов/дней до события»
-  | { before: { minutes?: number; hours?: number; days?: number } }
+  | { before: { minutes?: number;
+hours?: number;
+days?: number } }
   // «в день события в H:M»
-  | { sameDay: { hour: number; minute: number } }
+  | { sameDay: { hour: number;
+minute: number } }
   // «на неделе события в день D в H:M»
-  | { sameWeek: { weekDay: WeekDay; hour: number; minute: number } };
+  | { sameWeek: { weekDay: WeekDay;
+hour: number;
+minute: number } };
 
 export interface ScheduledEvent {
   /** Уникальное имя (в рамках родителя) */

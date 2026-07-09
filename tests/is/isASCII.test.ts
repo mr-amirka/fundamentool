@@ -1,4 +1,6 @@
-import { isASCII } from '../../src/is/isASCII';
+import {
+  isASCII, 
+} from '../../src/is/isASCII';
 
 describe('isASCII', () => {
   test('returns true for pure ASCII strings', () => {

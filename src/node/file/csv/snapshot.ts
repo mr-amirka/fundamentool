@@ -30,11 +30,15 @@ export const write: (typeof originWriteCsv) = async (path, data) => {
 export const read = (path: string, onInit?: (() => any) | null | undefined) => {
   return originReadCsv(path)
     .catch((error) => {
-      console.warn('Original snapshot in not available', path, error);
+      console.warn(
+        'Original snapshot in not available', path, error,
+      );
       return originReadCsv(path + '.recov');
     })
     .catch((error) => {
-      console.error('Recovery snapshot in not available', path, error);
+      console.error(
+        'Recovery snapshot in not available', path, error,
+      );
       return onInit ? onInit() : null;
     });
 };

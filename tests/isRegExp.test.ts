@@ -1,4 +1,6 @@
-import { isRegExp } from '../src/is/isRegExp';
+import {
+  isRegExp, 
+} from '../src/is/isRegExp';
 
 describe('isRegExp', () => {
   test('returns true for RegExp', () => {

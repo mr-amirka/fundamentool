@@ -1,8 +1,18 @@
-import { noop } from '../noop';
-import { once } from '../once';
-import { stackProvider } from '../stackProvider';
-import { toText } from './blob';
-import { wsConnect } from './wsConnect';
+import {
+  noop, 
+} from '../noop';
+import {
+  once, 
+} from '../once';
+import {
+  stackProvider, 
+} from '../stackProvider';
+import {
+  toText, 
+} from './blob';
+import {
+  wsConnect, 
+} from './wsConnect';
 
 declare const Buffer: any;
 
@@ -30,10 +40,8 @@ export interface IWsSeriesConfigs {
  * const request = wsSeriesRequestProvider('wss://example.com/ws');
  * const response = await request('getUser', { id: 1 });
  */
-export function wsSeriesRequestProvider<TResponse = any>(
-  wsUrl: string,
-  configs?: IWsSeriesConfigs,
-) {
+export function wsSeriesRequestProvider<TResponse = any>(wsUrl: string,
+  configs?: IWsSeriesConfigs) {
   configs = configs || {};
   const _onError = configs.onError || noop;
   const _onMessage = configs.onMessage || noop;
@@ -45,19 +53,19 @@ export function wsSeriesRequestProvider<TResponse = any>(
   const responses = stackProvider<any[]>();
 
   function socketApplyBase(item?: any[], args?: any[]): void {
-    if (!item) return;
+    if (!item) {
+      return;
+    }
     args = item[2];
-    if (!args || !socket) return;
+    if (!args || !socket) {
+      return;
+    }
     responses.push(item);
-    socket.send(
-      Buffer.from(
-        JSON.stringify({
-          method: args[0],
-          data: args[1],
-        }),
-        'utf-8',
-      ),
-    );
+    socket.send(Buffer.from(JSON.stringify({
+      method: args[0],
+      data: args[1],
+    }),
+    'utf-8'));
   }
 
   function destroy(): void {
@@ -74,7 +82,9 @@ export function wsSeriesRequestProvider<TResponse = any>(
   }
 
   function connect(): void {
-    if (reconnection) return;
+    if (reconnection) {
+      return;
+    }
     reconnection = 1;
     const onCatch = once((error: any, item?: any[]) => {
       destroy();
@@ -85,16 +95,14 @@ export function wsSeriesRequestProvider<TResponse = any>(
       (item = responses.pop()) && item[1](error);
       _onError(error);
     });
-    const promise: any = wsConnect(wsUrl).then(
-      (_socket: WebSocket) => {
-        socket = _socket;
-        (socket as any).onmessage = onMessage;
-        (socket as any).onclose = (socket as any).onerror = onCatch;
-        reconnection = 0;
-        socketApplyBase(requests.pop());
-      },
-      onCatch,
-    );
+    const promise: any = wsConnect(wsUrl).then((_socket: WebSocket) => {
+      socket = _socket;
+      (socket as any).onmessage = onMessage;
+      (socket as any).onclose = (socket as any).onerror = onCatch;
+      reconnection = 0;
+      socketApplyBase(requests.pop());
+    },
+    onCatch);
     cancelConnect = promise.cancel || noop;
   }
 
@@ -114,7 +122,11 @@ export function wsSeriesRequestProvider<TResponse = any>(
 
   return (method: string, data?: any): Promise<TResponse> => {
     return new Promise<TResponse>((resolve, reject) => {
-      const item = [resolve, reject, [method, data]];
+      const item = [
+        resolve,
+        reject,
+        [method, data],
+      ];
       if (socket) {
         socketApplyBase(item);
       } else {

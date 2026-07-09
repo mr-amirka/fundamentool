@@ -1,4 +1,6 @@
-import { trimQuote } from '../src/trimQuote';
+import {
+  trimQuote, 
+} from '../src/trimQuote';
 
 describe('trimQuote', () => {
   test('removes double quotes', () => {

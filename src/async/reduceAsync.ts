@@ -1,5 +1,9 @@
-import { checkNoop } from './checkNoop';
-import { loopAsync } from './loopAsync';
+import {
+  checkNoop, 
+} from './checkNoop';
+import {
+  loopAsync, 
+} from './loopAsync';
 
 /**
  * Asynchronously reduces an array-like `items` from left to right.
@@ -25,13 +29,13 @@ export function reduceAsync<T, A>(
   const length = items?.length || 0;
   let index = 0;
 
-  return loopAsync(
-    () => index < length && checkFn(),
+  return loopAsync(() => index < length && checkFn(),
     async () => {
       const i = index++;
-      accumulator = await iteratee.call(ctx, accumulator, items[i], i, items);
-    },
-  )
+      accumulator = await iteratee.call(
+        ctx, accumulator, items[i], i, items,
+      );
+    })
     .then(() => accumulator);
 }
 

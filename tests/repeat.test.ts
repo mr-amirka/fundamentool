@@ -1,4 +1,6 @@
-import { repeat } from '../src/repeat';
+import {
+  repeat, 
+} from '../src/repeat';
 
 describe('repeat', () => {
   test('repeats string count times', () => {

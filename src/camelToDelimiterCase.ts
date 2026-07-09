@@ -1,4 +1,6 @@
-import { toLower } from './toLower';
+import {
+  toLower, 
+} from './toLower';
 
 const REGEXP = /([A-Z])/g;
 

@@ -24,7 +24,7 @@ export type ScopeNode = string | ScopeNode[];
 export function scopeSplit(
   input: string,
   openChar = '(',
-  closeChar = ')'
+  closeChar = ')',
 ): ScopeNode[] {
   const openCharLength = openChar.length;
   const closeCharLength = closeChar.length;

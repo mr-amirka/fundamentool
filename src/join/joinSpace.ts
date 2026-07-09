@@ -1,4 +1,6 @@
-import { joinProvider } from './joinProvider';
+import {
+  joinProvider, 
+} from './joinProvider';
 
 /**
  * Joins array items with space.

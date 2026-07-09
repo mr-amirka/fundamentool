@@ -1,4 +1,6 @@
-import { isFunction } from '../../src/is/isFunction';
+import {
+  isFunction, 
+} from '../../src/is/isFunction';
 
 describe('isFunction', () => {
   test('returns true for functions', () => {

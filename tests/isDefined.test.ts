@@ -1,4 +1,6 @@
-import { isDefined } from '../src/is/isDefined';
+import {
+  isDefined, 
+} from '../src/is/isDefined';
 
 describe('isDefined', () => {
   test('returns false for undefined and null', () => {

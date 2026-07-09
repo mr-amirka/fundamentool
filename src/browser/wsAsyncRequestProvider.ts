@@ -1,9 +1,21 @@
-import { noop } from '../noop';
-import { once } from '../once';
-import { isEmpty } from '../is/isEmpty';
-import { stackProvider } from '../stackProvider';
-import { toText } from './blob';
-import { wsConnect } from './wsConnect';
+import {
+  noop, 
+} from '../noop';
+import {
+  once, 
+} from '../once';
+import {
+  isEmpty, 
+} from '../is/isEmpty';
+import {
+  stackProvider, 
+} from '../stackProvider';
+import {
+  toText, 
+} from './blob';
+import {
+  wsConnect, 
+} from './wsConnect';
 
 declare const Buffer: any;
 
@@ -49,10 +61,8 @@ export interface IWsAsyncConfigs {
  * const request = wsAsyncRequestProvider('wss://example.com/ws');
  * const response = await request('getUser', { id: 1 });
  */
-export function wsAsyncRequestProvider<TResponse = any>(
-  wsUrl: string,
-  configs?: IWsAsyncConfigs,
-) {
+export function wsAsyncRequestProvider<TResponse = any>(wsUrl: string,
+  configs?: IWsAsyncConfigs) {
   configs = configs || {};
   const _reconnect = configs.reconnect;
   const _onMessage = configs.onMessage || noop;
@@ -82,21 +92,19 @@ export function wsAsyncRequestProvider<TResponse = any>(
         socket
       ) {
         messages[id] = item;
-        socket.send(
-          Buffer.from(
-            JSON.stringify({
-              id,
-              method: args[0],
-              data: args[1],
-            }),
-            'utf-8',
-          ),
-        );
+        socket.send(Buffer.from(JSON.stringify({
+          id,
+          method: args[0],
+          data: args[1],
+        }),
+        'utf-8'));
       }
     }
     function each(iteratee: (item: any[]) => void): void {
       // eslint-disable-next-line guard-for-in
-      for (const id in messages) iteratee(messages[id]);
+      for (const id in messages) {
+        iteratee(messages[id]);
+      }
     }
     return {
       each,
@@ -163,18 +171,16 @@ export function wsAsyncRequestProvider<TResponse = any>(
         ]);
         if (!hasAfterRequest) {
           hasAfterRequest = 1;
-          connect(
-            () => {
-              stackAfter.eachPop(expectedAfter.send);
-            },
-            () => {
-              expectedAfter.error(error);
-              stackAfter.eachPop((item) => {
-                item[1](error);
-              });
-              reconnect(error);
-            },
-          );
+          connect(() => {
+            stackAfter.eachPop(expectedAfter.send);
+          },
+          () => {
+            expectedAfter.error(error);
+            stackAfter.eachPop((item) => {
+              item[1](error);
+            });
+            reconnect(error);
+          });
         }
       });
       promises.push(promise);
@@ -193,13 +199,11 @@ export function wsAsyncRequestProvider<TResponse = any>(
         if (hasAfterRequest) {
           Promise.all(promises).then(wrapError).then(() => {
             if (socket) {
-              (socket as any).onclose = (socket as any).onerror = once(
-                (err2: any) => {
-                  destroy();
-                  onError(err2);
-                  _onError(err2);
-                },
-              );
+              (socket as any).onclose = (socket as any).onerror = once((err2: any) => {
+                destroy();
+                onError(err2);
+                _onError(err2);
+              });
               expectedMain.sendAll();
               onOpen();
             }
@@ -249,15 +253,13 @@ export function wsAsyncRequestProvider<TResponse = any>(
       onErrorFn(error);
       _onError(error);
     });
-    const promise: any = wsConnect(wsUrl).then(
-      (_socket: WebSocket) => {
-        socket = _socket;
-        (socket as any).onmessage = onMessage;
-        (socket as any).onclose = (socket as any).onerror = onCatch;
-        onConnect();
-      },
-      onCatch,
-    );
+    const promise: any = wsConnect(wsUrl).then((_socket: WebSocket) => {
+      socket = _socket;
+      (socket as any).onmessage = onMessage;
+      (socket as any).onclose = (socket as any).onerror = onCatch;
+      onConnect();
+    },
+    onCatch);
     cancelConnect = promise.cancel || noop;
   }
 

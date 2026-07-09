@@ -1,5 +1,9 @@
-import { checkNoop } from './checkNoop';
-import { loopAsync } from './loopAsync';
+import {
+  checkNoop, 
+} from './checkNoop';
+import {
+  loopAsync, 
+} from './loopAsync';
 
 /**
  * Asynchronously maps an array-like `items` using `iteratee`.
@@ -22,11 +26,11 @@ export function mapAsync<T, R>(
   let index = 0;
   const result: R[] = new Array(length);
 
-  return loopAsync(
-    () => index < length && checkFn(),
+  return loopAsync(() => index < length && checkFn(),
     async () => {
       const i = index++;
-      result[i] = await iteratee.call(ctx, items[i], i, items);
-    },
-  ).then(() => result);
+      result[i] = await iteratee.call(
+        ctx, items[i], i, items,
+      );
+    }).then(() => result);
 }

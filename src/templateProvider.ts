@@ -1,7 +1,15 @@
-import { getBase } from './get';
-import { push } from './push';
-import { wrapper } from './wrapper';
-import { templatePartsJoin } from './templatePartsJoin';
+import {
+  getBase, 
+} from './get';
+import {
+  push, 
+} from './push';
+import {
+  wrapper, 
+} from './wrapper';
+import {
+  templatePartsJoin, 
+} from './templatePartsJoin';
 
 const REGEXP =
   /\{\{((?:(?:"[^"]*")|(?:'[^']*')|(?:`[^`]*`)|(?:\{\{.*?\}\})|(?:[^}]*?))*?)\}\}/g; // eslint-disable-line
@@ -35,7 +43,9 @@ export function templateProvider(
   const length = template.length;
   const parser = parse || defaultParse;
 
-  template.replace(regexp, (haystack, exp, offset: number) => {
+  template.replace(regexp, (
+    haystack, exp, offset: number,
+  ) => {
     offset > start && push(parts, wrapper(template.slice(start, offset)));
     exp && push(parts, parser(exp));
     start = offset + haystack.length;

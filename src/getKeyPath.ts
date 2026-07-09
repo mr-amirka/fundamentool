@@ -1,6 +1,12 @@
-import { splitDot } from './split/splitDot';
-import { NATIVE_PUSH } from './pushArray';
-import { trimQuote } from './trimQuote';
+import {
+  splitDot, 
+} from './split/splitDot';
+import {
+  NATIVE_PUSH, 
+} from './pushArray';
+import {
+  trimQuote, 
+} from './trimQuote';
 
 const REGEXP_BRACKETS = /\[(.*?)\]/g;
 const KEY_NEW_ITEM_TOKEN = '[]';

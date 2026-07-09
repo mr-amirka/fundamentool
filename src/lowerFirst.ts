@@ -1,4 +1,6 @@
-import { toLower } from './toLower';
+import {
+  toLower, 
+} from './toLower';
 
 /**
  * Lowercases the first character of the string.

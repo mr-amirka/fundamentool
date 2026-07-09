@@ -1,4 +1,6 @@
-import { noop } from './noop';
+import {
+  noop, 
+} from './noop';
 
 /**
  * Wraps async workflow so that `callback` is called when internal counter drops to zero.
@@ -14,23 +16,19 @@ import { noop } from './noop';
  *   inc(); fetch('/b').finally(dec);
  * }, () => console.log('all done'));
  */
-export const finallyAll = (
-  fn: (inc: () => void, dec: () => void) => void,
-  callback?: () => void,
-): void => {
+export const finallyAll = (fn: (inc: () => void, dec: () => void) => void,
+  callback?: () => void): void => {
   let count = 0;
   const done = callback || noop;
 
-  fn(
-    () => {
-      count++;
-    },
-    () => {
-      count--;
-      if (count <= 0) {
-        done();
-      }
-    },
-  );
+  fn(() => {
+    count++;
+  },
+  () => {
+    count--;
+    if (count <= 0) {
+      done();
+    }
+  });
 };
 

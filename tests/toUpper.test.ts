@@ -1,4 +1,6 @@
-import { toUpper } from '../src/toUpper';
+import {
+  toUpper, 
+} from '../src/toUpper';
 
 describe('toUpper', () => {
   test('converts to uppercase', () => {

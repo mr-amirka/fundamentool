@@ -1,4 +1,6 @@
-import { isPhone } from '../../src/is/isPhone';
+import {
+  isPhone, 
+} from '../../src/is/isPhone';
 
 describe('isPhone', () => {
   test('returns true for valid Russian phone format', () => {

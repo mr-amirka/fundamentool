@@ -1,4 +1,6 @@
-import { asAsync } from '../src/asAsync';
+import {
+  asAsync, 
+} from '../src/asAsync';
 
 describe('asAsync', () => {
   test('resolves with sync function result', async () => {

@@ -1,4 +1,6 @@
-import { createTimeout } from './createTimeout';
+import {
+  createTimeout, 
+} from './createTimeout';
 
 /**
  * Debounces a function: only the last call within the delay window is executed.
@@ -23,7 +25,9 @@ export function withDelay<T extends (...args: any[]) => any>(
 
   function exec(): void {
     hasDebounce = false;
-    if (args) fn.apply(ctx, args as any);
+    if (args) {
+      fn.apply(ctx, args as any);
+    }
   }
 
   const wrapper = function (this: any): any {

@@ -1,6 +1,12 @@
-import { filterIn } from './filterIn';
-import { keys } from './keys';
-import { noopHandle } from './noopHandle';
+import {
+  filterIn, 
+} from './filterIn';
+import {
+  keys, 
+} from './keys';
+import {
+  noopHandle, 
+} from './noopHandle';
 
 /**
  * Returns an array of keys for which the flag value is truthy.

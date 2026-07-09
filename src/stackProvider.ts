@@ -1,4 +1,6 @@
-import { isDefined } from './is/isDefined';
+import {
+  isDefined, 
+} from './is/isDefined';
 
 export interface IStack<T> {
   /**

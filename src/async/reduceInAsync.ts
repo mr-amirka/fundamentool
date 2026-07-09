@@ -1,6 +1,12 @@
-import { entries } from '../entries';
-import { checkNoop } from './checkNoop';
-import { loopAsync } from './loopAsync';
+import {
+  entries, 
+} from '../entries';
+import {
+  checkNoop, 
+} from './checkNoop';
+import {
+  loopAsync, 
+} from './loopAsync';
 
 /**
  * Asynchronous reduce over object.
@@ -27,12 +33,12 @@ export function reduceInAsync<T, A>(
   const length = pairs.length;
   let index = 0;
 
-  return loopAsync(
-    () => index < length && checkFn(),
+  return loopAsync(() => index < length && checkFn(),
     async () => {
       const [key, value] = pairs[index++];
-      accumulator = await iteratee.call(ctx, accumulator, value, key, collection);
-    },
-  ).then(() => accumulator);
+      accumulator = await iteratee.call(
+        ctx, accumulator, value, key, collection,
+      );
+    }).then(() => accumulator);
 }
 

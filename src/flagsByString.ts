@@ -1,5 +1,9 @@
-import { flags } from './flags';
-import { splitSpace } from './split/splitSpace';
+import {
+  flags, 
+} from './flags';
+import {
+  splitSpace, 
+} from './split/splitSpace';
 
 /**
  * Parses space-separated flags string into an object with `{ key: 1 }`.

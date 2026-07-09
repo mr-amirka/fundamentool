@@ -1,4 +1,6 @@
-import { joinOnly } from './join/joinOnly';
+import {
+  joinOnly, 
+} from './join/joinOnly';
 
 type ScopeNode = string | ScopeNode[];
 

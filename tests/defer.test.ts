@@ -1,4 +1,6 @@
-import { defer } from '../src/defer';
+import {
+  defer, 
+} from '../src/defer';
 
 describe('defer', () => {
   beforeEach(() => {
@@ -19,18 +21,28 @@ describe('defer', () => {
 
   test('passes args to function', () => {
     const fn = jest.fn();
-    defer(fn, [1, 2, 3]);
+    defer(fn, [
+      1,
+      2,
+      3,
+    ]);
     jest.runAllTimers();
-    expect(fn).toHaveBeenCalledWith(1, 2, 3);
+    expect(fn).toHaveBeenCalledWith(
+      1, 2, 3,
+    );
   });
 
   test('passes ctx to function', () => {
-    const ctx = { x: 42 };
+    const ctx = {
+      x: 42, 
+    };
     let capturedThis: any;
     const fn = function (this: any) {
       capturedThis = this;
     };
-    defer(fn, [], ctx);
+    defer(
+      fn, [], ctx,
+    );
     jest.runAllTimers();
     expect(capturedThis).toBe(ctx);
   });

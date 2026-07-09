@@ -1,13 +1,22 @@
-import { setStyleSheet } from '../src/setStyleSheet';
+import {
+  setStyleSheet, 
+} from '../src/setStyleSheet';
 
 function makeNode(childTexts: string[] = []): any {
-  const children: any[] = childTexts.map((text) => ({ type: 'text', text }));
+  const children: any[] = childTexts.map((text) => ({
+    type: 'text',
+    text, 
+  }));
   return {
     childNodes: children,
-    get length() { return children.length; },
+    get length() {
+      return children.length; 
+    },
     removeChild: jest.fn((child) => {
       const idx = children.indexOf(child);
-      if (idx !== -1) children.splice(idx, 1);
+      if (idx !== -1) {
+        children.splice(idx, 1);
+      }
     }),
     appendChild: jest.fn((child) => children.push(child)),
   };
@@ -15,7 +24,10 @@ function makeNode(childTexts: string[] = []): any {
 
 function makeDocument() {
   return {
-    createTextNode: jest.fn((text: string) => ({ type: 'text', text })),
+    createTextNode: jest.fn((text: string) => ({
+      type: 'text',
+      text, 
+    })),
   };
 }
 
@@ -24,7 +36,9 @@ describe('setStyleSheet', () => {
     const node = makeNode();
     const doc = makeDocument();
 
-    setStyleSheet(node as any, 'body { margin: 0; }', doc as any);
+    setStyleSheet(
+node as any, 'body { margin: 0; }', doc as any,
+    );
 
     expect(doc.createTextNode).toHaveBeenCalledWith('body { margin: 0; }');
     expect(node.appendChild).toHaveBeenCalled();
@@ -34,7 +48,9 @@ describe('setStyleSheet', () => {
     const node = makeNode(['old text']);
     const doc = makeDocument();
 
-    setStyleSheet(node as any, '.new {}', doc as any);
+    setStyleSheet(
+node as any, '.new {}', doc as any,
+    );
 
     expect(node.removeChild).toHaveBeenCalledTimes(1);
     expect(node.appendChild).toHaveBeenCalledTimes(1);
@@ -42,10 +58,14 @@ describe('setStyleSheet', () => {
 
   test('sets cssText directly when styleSheet property exists', () => {
     const node: any = makeNode();
-    node.styleSheet = { cssText: '' };
+    node.styleSheet = {
+      cssText: '', 
+    };
     const doc = makeDocument();
 
-    setStyleSheet(node, '.old { color: red; }', doc as any);
+    setStyleSheet(
+      node, '.old { color: red; }', doc as any,
+    );
 
     expect(node.styleSheet.cssText).toBe('.old { color: red; }');
     expect(doc.createTextNode).not.toHaveBeenCalled();

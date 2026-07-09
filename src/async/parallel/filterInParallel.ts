@@ -1,7 +1,15 @@
-import { entries } from '../../entries';
-import { fromPairs } from '../../fromPairs';
-import { checkNoop } from '../checkNoop';
-import { filterParallel } from './filterParallel';
+import {
+  entries, 
+} from '../../entries';
+import {
+  fromPairs, 
+} from '../../fromPairs';
+import {
+  checkNoop, 
+} from '../checkNoop';
+import {
+  filterParallel, 
+} from './filterParallel';
 
 /**
  * Parallel asynchronous filter over object.
@@ -28,7 +36,9 @@ export function filterInParallel<T>(
 ): Promise<Record<string, T>> {
   return filterParallel(
     entries(collection),
-    (line: [string, T]) => iteratee.call(ctx, line[1], line[0], collection),
+    (line: [string, T]) => iteratee.call(
+      ctx, line[1], line[0], collection,
+    ),
     [],
     ctx,
     taskLimit,

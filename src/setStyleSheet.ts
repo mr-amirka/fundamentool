@@ -16,7 +16,9 @@ export type TSetStyleSheetDocument = {
  * document.head.appendChild(style);
  * setStyleSheet(style, 'body { margin: 0; }', document);
  */
-export function setStyleSheet(node: HTMLElement, text: string, document: TSetStyleSheetDocument): void {
+export function setStyleSheet(
+  node: HTMLElement, text: string, document: TSetStyleSheetDocument,
+): void {
   const styleSheet = (node as any).styleSheet as { cssText: string } | undefined;
   const childNodes = node.childNodes;
   let index = childNodes?.length || 0;

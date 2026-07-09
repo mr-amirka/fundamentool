@@ -19,46 +19,44 @@ export * from './RpcFnCoder';
 export * from './RpcSymbolCoder';
 
 const RE_REGEXP = /^\/(.*)\/(\w*)$/;
-const NON_ENCODABLE_TYPES = ['number', 'string', 'boolean'];
-const ENCODED_UNDEFINED: TRpcEncodedValue = [
-  TRpcEncodedType.Other,
-  TRpcEncodedValueOther.Undefined,
+const NON_ENCODABLE_TYPES = [
+  'number',
+  'string',
+  'boolean',
 ];
-const ENCODED_INFINITY: TRpcEncodedValue = [
-  TRpcEncodedType.Other,
-  TRpcEncodedValueOther.Infinity,
-];
-const ENCODED_NEGATIVE_INFINITY: TRpcEncodedValue = [
-  TRpcEncodedType.Other,
-  TRpcEncodedValueOther.NegativeInfinity,
-];
-const ENCODED_NAN: TRpcEncodedValue = [
-  TRpcEncodedType.Other,
-  TRpcEncodedValueOther.NaN,
-];
+const ENCODED_UNDEFINED: TRpcEncodedValue = [TRpcEncodedType.Other, TRpcEncodedValueOther.Undefined];
+const ENCODED_INFINITY: TRpcEncodedValue = [TRpcEncodedType.Other, TRpcEncodedValueOther.Infinity];
+const ENCODED_NEGATIVE_INFINITY: TRpcEncodedValue = [TRpcEncodedType.Other, TRpcEncodedValueOther.NegativeInfinity];
+const ENCODED_NAN: TRpcEncodedValue = [TRpcEncodedType.Other, TRpcEncodedValueOther.NaN];
 
 function storeProvider<A = any>(): [
     indexOf: (value: A) => number | undefined,
     add: (value: A) => number,
-] {
+    ] {
   const valueMap = new Map<A, number>();
 
-  return [
-    (value: A) => valueMap.get(value),
-    (value: A) => {
-      const index = valueMap.size;
-      valueMap.set(value, index);
-      return index;
-    },
-  ];
+  return [(value: A) => valueMap.get(value), (value: A) => {
+    const index = valueMap.size;
+    valueMap.set(value, index);
+    return index;
+  }];
 }
 
 
-/*
-  Конверитирует данные в вид пригодный для сериализации
-  в JSON и передачи между потоками/процессами/клиентом и сервером
-  вместе с функциями и рекурсивными связями, попутно сжимая
-*/
+/**
+ * Converts arbitrary values (including functions, symbols, cyclic references,
+ * `Error`, `RegExp`, `Date`, `NaN`/`Infinity`) into a compact, JSON-serializable
+ * form and back — for passing data between threads/processes/client and server.
+ *
+ * Repeated strings, objects and arrays are deduplicated by index on encode and
+ * reconstructed (including cycles) on decode. Functions are encoded as callable
+ * references via `RpcFnCoder` when an `extrenalFnProvider` is supplied.
+ *
+ * @example
+ * const coder = new RpcCoder();
+ * const encoded = coder.encode({ a: 1, self: null as any });
+ * const decoded = coder.decode(encoded); // => { a: 1, self: null }
+ */
 export class RpcCoder {
   static NON_ENCODABLE_TYPES = NON_ENCODABLE_TYPES;
 
@@ -76,10 +74,27 @@ export class RpcCoder {
     this.symbolCoder = useSymols ? new RpcSymbolCoder() : null;
   }
 
+  /**
+   * Calls a previously encoded external function by its `RpcFnCoder` index.
+   *
+   * @param index - Function index assigned by `RpcFnCoder` during a prior `encode`.
+   * @param args - Arguments to invoke the function with.
+   * @returns The function's return value (or a `Promise` of it).
+   */
   invoke(index: number, args: any[]): any | Promise<any> {
     return this.fnCoder?.invoke(index, args);
   }
 
+  /**
+   * Encodes a value into a compact, JSON-serializable representation.
+   *
+   * @param value - Value to encode; primitives (`number`/`string`/`boolean`) pass through unchanged.
+   * @param withInternalFns - Whether functions reachable from `value` should be encoded as callable references (default `true`).
+   * @returns Encoded data — pass to `decode` to reconstruct the original value.
+   * @example
+   * const coder = new RpcCoder();
+   * coder.encode({ x: 1 }); // => [Type.Object, [...]]
+   */
   encode(value: any, withInternalFns = true): TRpcEncodedData {
     if (value === null || NON_ENCODABLE_TYPES.includes(typeof value)) {
       return value;
@@ -156,10 +171,7 @@ export class RpcCoder {
       switch (typeof value) {
         case 'symbol':
           return symbolCoder
-            ? [
-              TRpcEncodedType.Symbol,
-              symbolCoder.encode(value, getStringIndex(value.toString()))
-            ]
+            ? [TRpcEncodedType.Symbol, symbolCoder.encode(value, getStringIndex(value.toString()))]
             : ENCODED_UNDEFINED;
 
         case 'undefined':
@@ -185,7 +197,9 @@ export class RpcCoder {
           return [TRpcEncodedType.String, getStringIndex(value)];
 
         case 'function': {
-          const index = fnCoder?.encode(value, context, withInternalFns);
+          const index = fnCoder?.encode(
+            value, context, withInternalFns,
+          );
           return index
             ? [TRpcEncodedType.Function, index]
             : ENCODED_UNDEFINED;
@@ -243,6 +257,16 @@ export class RpcCoder {
     }
   }
 
+  /**
+   * Decodes data previously produced by `encode` back into its original shape.
+   *
+   * @param encodedData - Encoded data as returned by `encode`.
+   * @param withExternalFns - Whether encoded function references should be reconstructed as callables (default `true`).
+   * @returns The decoded value.
+   * @example
+   * const coder = new RpcCoder();
+   * coder.decode(coder.encode({ x: 1 })); // => { x: 1 }
+   */
   decode(encodedData: TRpcEncodedData | undefined | null, withExternalFns = true): any {
     if (!encodedData || typeof encodedData !== 'object') {
       return encodedData;
@@ -324,7 +348,7 @@ export class RpcCoder {
           return error;
         }
 
-        case TRpcEncodedType.Array:
+        case TRpcEncodedType.Array: {
           const valueIndex = encodedValue[1];
           let output = decodedArrays[valueIndex];
           if (output) {
@@ -339,6 +363,7 @@ export class RpcCoder {
           }
 
           return output;
+        }
 
         case TRpcEncodedType.Date:
           return new Date(encodedValue[1]);

@@ -1,4 +1,6 @@
-import { padStart } from '../src/padStart';
+import {
+  padStart, 
+} from '../src/padStart';
 
 describe('padStart', () => {
   test('pads to length', () => {
@@ -10,6 +12,8 @@ describe('padStart', () => {
   });
 
   test('custom pad string', () => {
-    expect(padStart('x', 4, '0')).toBe('000x');
+    expect(padStart(
+      'x', 4, '0',
+    )).toBe('000x');
   });
 });

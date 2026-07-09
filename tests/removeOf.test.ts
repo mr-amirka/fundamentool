@@ -1,19 +1,40 @@
-import { removeOf } from '../src/removeOf';
+import {
+  removeOf, 
+} from '../src/removeOf';
 
 describe('removeOf', () => {
   test('removes all occurrences of value in place', () => {
-    const arr = [1, 2, 3, 2, 4];
+    const arr = [
+      1,
+      2,
+      3,
+      2,
+      4,
+    ];
     removeOf(arr, 2);
-    expect(arr).toEqual([1, 3, 4]);
+    expect(arr).toEqual([
+      1,
+      3,
+      4,
+    ]);
   });
 
   test('returns count of removed elements', () => {
-    const arr = [1, 2, 2, 3];
+    const arr = [
+      1,
+      2,
+      2,
+      3,
+    ];
     expect(removeOf(arr, 2)).toBe(2);
   });
 
   test('returns 0 when value not found', () => {
-    const arr = [1, 2, 3];
+    const arr = [
+      1,
+      2,
+      3,
+    ];
     expect(removeOf(arr, 99)).toBe(0);
   });
 

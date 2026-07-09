@@ -1,4 +1,6 @@
-import { wait } from '../wait';
+import {
+  wait, 
+} from '../wait';
 /**
  * Opens the given URL in a new browser tab using a temporary `<a>` element.
  * Returns a Promise that resolves after a short timeout, useful for tests

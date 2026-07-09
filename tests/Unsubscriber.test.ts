@@ -1,4 +1,6 @@
-import { Unsubscriber } from '../src/Unsubscriber';
+import {
+  Unsubscriber, 
+} from '../src/Unsubscriber';
 
 describe('Unsubscriber', () => {
   test('add returns unsubscribe that removes only added callbacks', () => {

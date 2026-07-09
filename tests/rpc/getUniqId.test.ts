@@ -1,4 +1,6 @@
-import { getUniqId } from '../../src/rpc/getUniqId';
+import {
+  getUniqId, 
+} from '../../src/rpc/getUniqId';
 
 describe('rpc/getUniqId', () => {
   test('returns a non-empty string', () => {
@@ -7,7 +9,9 @@ describe('rpc/getUniqId', () => {
   });
 
   test('returns unique values on each call', () => {
-    const ids = new Set(Array.from({ length: 100 }, () => getUniqId()));
+    const ids = new Set(Array.from({
+      length: 100, 
+    }, () => getUniqId()));
     expect(ids.size).toBe(100);
   });
 });

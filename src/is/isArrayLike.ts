@@ -1,4 +1,6 @@
-import { isLength } from './isLength';
+import {
+  isLength, 
+} from './isLength';
 
 /**
  * Checks whether value is array-like (non-null object with a valid numeric `length`).

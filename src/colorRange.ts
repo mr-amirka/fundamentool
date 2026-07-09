@@ -16,10 +16,8 @@ export interface IColorRange {
  * colorRange([[1, 0, 0, 1], [0, 0, 1, 1]], 1);
  * // => ['rgba(255,0,0,1)', 'rgba(128,0,128,1)', 'rgba(0,0,255,1)']
  */
-export const colorRange: IColorRange = (
-  colors: Array<[number, number, number, number]>,
-  precision: number = 0,
-): string[] => {
+export const colorRange: IColorRange = (colors: Array<[number, number, number, number]>,
+  precision: number = 0): string[] => {
   const output = base(colors, precision);
   for (let i = output.length; i--;) {
     (output as any)[i] = rgba(output[i]);
@@ -34,9 +32,16 @@ export const colorRange: IColorRange = (
  * @returns The converted string.
  */
 const rgba = colorRange.rgba = (rgbaColor: [number, number, number, number]): string => {
-  const output = [0, 0, 0, rgbaColor[3]];
+  const output = [
+    0,
+    0,
+    0,
+    rgbaColor[3],
+  ];
   let i = 3;
-  while (i--) output[i] = Math.round(rgbaColor[i] * 255);
+  while (i--) {
+    output[i] = Math.round(rgbaColor[i] * 255);
+  }
   return 'rgba(' + output.join(',') + ')';
 };
 
@@ -47,10 +52,8 @@ const rgba = colorRange.rgba = (rgbaColor: [number, number, number, number]): st
  * @param precision - The precision of the colors.
  * @returns An array of strings.
  */
-const base = colorRange.base = (
-  input: Array<[number, number, number, number]>,
-  precision: number,
-): Array<[number, number, number, number]> => {
+const base = colorRange.base = (input: Array<[number, number, number, number]>,
+  precision: number): Array<[number, number, number, number]> => {
   const l = input.length;
   const output: Array<[number, number, number, number]> = [];
   let prev = input[l - 1];
@@ -58,7 +61,9 @@ const base = colorRange.base = (
   let i = 0;
   for (; i < l; i++) {
     follow = input[i];
-    NATIVE_PUSH.apply(output as any, __rangeColor(prev, follow, precision));
+    NATIVE_PUSH.apply(output as any, __rangeColor(
+      prev, follow, precision,
+    ));
     output.push((prev = follow));
   }
   return output;

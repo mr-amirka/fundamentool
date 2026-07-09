@@ -12,7 +12,7 @@ export const convertToBreakLineHTML = (input: string): string => {
     .split('\n')
     .map((value, index) => {
       value = value.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      return index ? (value ? `<span><br/>${value}</span>` : `<br/>`) : `<span>${value}</span>`;
+      return index ? (value ? `<span><br/>${value}</span>` : '<br/>') : `<span>${value}</span>`;
     })
     .join('');
 };

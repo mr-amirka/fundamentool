@@ -1,4 +1,6 @@
-import { isFunction } from './is/isFunction';
+import {
+  isFunction, 
+} from './is/isFunction';
 
 /**
  * Wraps node‑style callback function into Promise‑based one.
@@ -21,11 +23,12 @@ export const promisify = <F extends (...args: any[]) => any>(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function wrapped(this: any, ...args: any[]): Promise<any>;
   function wrapped(this: any): Promise<any> {
-    const self = this;
     const l = arguments.length;
     const args = new Array(l + 1);
     let i = 0;
-    for (; i < l; i++) args[i] = arguments[i];
+    for (; i < l; i++) {
+      args[i] = arguments[i];
+    }
     return new _Promise((resolve, reject) => {
       args[l] = (error: any, result: any) => {
         if (error) {
@@ -34,7 +37,7 @@ export const promisify = <F extends (...args: any[]) => any>(
           resolve(result);
         }
       };
-      fn.apply(self, args);
+      fn.apply(this, args);
     });
   }
   return wrapped;

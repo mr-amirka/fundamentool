@@ -1,4 +1,6 @@
-import type { Store, TStoreAdapter } from './Store/types';
+import type {
+  Store, TStoreAdapter, 
+} from './Store/types';
 
 type TElementType = any;
 type TAnchorProps = Record<string, any>;
@@ -6,24 +8,58 @@ type TClickEvent = { preventDefault?: () => void } & Record<string, any>;
 type TEffectCallback = () => void | (() => void | undefined);
 type TDependencyList = ReadonlyArray<unknown>;
 
-import { wait } from './wait';
-import { wrapper } from './wrapper';
-import { urlParse, TUrlProps } from './urlParse';
-import { urlExtend } from './urlExtend';
-import { TParams } from './unparam';
-import { routeParseProvider } from './routeParseProvider';
-import { TRouteMapper } from './regexpMapperProvider';
-import { queueProvider } from './queueProvider';
-import { isPromise } from './is/isPromise';
-import { isMatch } from './is/isMatch';
-import { isEqual } from './is/isEqual';
-import { childClassOfReact } from './childClassOfReact';
-import { noop } from './noop';
-import { extend } from './extend';
-import { isFunction } from './is/isFunction';
-import { once } from './once';
+import {
+  wait, 
+} from './wait';
+import {
+  wrapper, 
+} from './wrapper';
+import {
+  urlParse, TUrlProps, 
+} from './urlParse';
+import {
+  urlExtend, 
+} from './urlExtend';
+import {
+  TParams, 
+} from './unparam';
+import {
+  routeParseProvider, 
+} from './routeParseProvider';
+import {
+  TRouteMapper, 
+} from './regexpMapperProvider';
+import {
+  queueProvider, 
+} from './queueProvider';
+import {
+  isPromise, 
+} from './is/isPromise';
+import {
+  isMatch, 
+} from './is/isMatch';
+import {
+  isEqual, 
+} from './is/isEqual';
+import {
+  childClassOfReact, 
+} from './childClassOfReact';
+import {
+  noop, 
+} from './noop';
+import {
+  extend, 
+} from './extend';
+import {
+  isFunction, 
+} from './is/isFunction';
+import {
+  once, 
+} from './once';
 
-export type { TUrlProps, TParams, TRouteMapper };
+export type {
+  TUrlProps, TParams, TRouteMapper, 
+};
 
 export type TRouteProps = {
   route: TRoute;
@@ -169,10 +205,8 @@ function getQuery(v: Partial<TUrlProps>): TParams {
  * @example
  * routerForObservableMapProvider([['/user', (params, location) => <User />]], (params, location) => <NotFound />); // => <Router />
  */
-export function routerForObservableMapProvider<T>(
-  _routes: TRouteArgs<T>[],
-  notFoundHandler?: TRouteHandler<T>,
-) {
+export function routerForObservableMapProvider<T>(_routes: TRouteArgs<T>[],
+  notFoundHandler?: TRouteHandler<T>) {
   const routes: [TRouteMapper, TRouteHandler<T>][] = _routes.map(([route, render]) => {
     let scopePos = route.indexOf('(');
     const length = route.length;
@@ -182,15 +216,12 @@ export function routerForObservableMapProvider<T>(
 
     const handler = (isFunction(render) ? render : wrapper(render)) as TRouteHandler<T>;
 
-    return [
-      routeParseProvider(
-        route.slice(0, scopePos).replace(/[-_]/gim, '[-_]') + route.slice(scopePos, length),
-      ),
-      handler,
-    ];
+    return [routeParseProvider(route.slice(0, scopePos).replace(/[-_]/gim, '[-_]') + route.slice(scopePos, length)), handler];
   });
   return (state: TRouterState): T & TRoute => {
-    const { location } = state;
+    const {
+      location, 
+    } = state;
     const path = location.path || '';
     const length = routes.length;
     let i = 0,
@@ -227,10 +258,8 @@ export function routerForObservableMapProvider<T>(
  * routerByLocationProviderProvider($state); // => <Router />
  */
 export function routerByLocationProviderProvider<A extends TRouterState>($state: Store<A>) {
-  return function routerByLocationProvider<T>(
-    routes: TRouteArgs<T>[],
-    notFoundHandler?: TRouteHandler<T>,
-  ) {
+  return function routerByLocationProvider<T>(routes: TRouteArgs<T>[],
+    notFoundHandler?: TRouteHandler<T>) {
     return $state.map(routerForObservableMapProvider(routes, notFoundHandler));
   };
 }
@@ -274,7 +303,9 @@ function routerProviderBase({
   createStore,
   createApi,
 }: TRouterProviderDeps) {
-  const { location, history } = window;
+  const {
+    location, history, 
+  } = window;
   let _skipPop = 0;
   let _quiet = false;
   let _hasDurationLink = false;
@@ -295,7 +326,9 @@ function routerProviderBase({
     location: _currentLocation,
     history: [],
   });
-  const { emitState } = createApi($state, {
+  const {
+    emitState, 
+  } = createApi($state, {
     emitState: (_, payload: TRouterState) => payload,
   });
 
@@ -304,16 +337,16 @@ function routerProviderBase({
       const finishCallbacks = _finishCallbacks;
       _finishCallbacks = [];
 
-      return Promise.all(
-        finishCallbacks.map((callback) => {
-          return callback();
-        }),
-      );
+      return Promise.all(finishCallbacks.map((callback) => {
+        return callback();
+      }));
     },
   });
 
   const $trasitionState = createStore<TRouterState>($state.getState());
-  const { emitTransition } = createApi($trasitionState, {
+  const {
+    emitTransition, 
+  } = createApi($trasitionState, {
     emitTransition: (state, payload: Partial<TRouterState>) => ({
       ...state,
       ...payload,
@@ -321,7 +354,9 @@ function routerProviderBase({
   });
 
   const $historyDepth = createStore<number>(_currentDepth);
-  const { emitHistoryDepth } = createApi($historyDepth, {
+  const {
+    emitHistoryDepth, 
+  } = createApi($historyDepth, {
     emitHistoryDepth: (_, payload: number) => payload,
   });
 
@@ -367,82 +402,84 @@ function routerProviderBase({
   const $immeidateHashQuery = $immeidateHashLocation.map(getQuery);
   const $immeidateHashPath = $immeidateHashLocation.map(getPath);
 
-  const changeLocation = queue(
-    (location: TUrlProps, _options?: TLocationOptions, replace?: boolean | number) => {
-      const options = _options || {};
-      const { onBeforeUnload } = options;
-      const url = location.href;
+  const changeLocation = queue((
+    location: TUrlProps, _options?: TLocationOptions, replace?: boolean | number,
+  ) => {
+    const options = _options || {};
+    const {
+      onBeforeUnload, 
+    } = options;
+    const url = location.href;
 
-      const beforeUnloadWatcher: TLockWatcher | null = onBeforeUnload
-        ? ({
-          ...DEFAULT_LOCK_WATCHER_OPTIONS,
-          ...(isFunction(onBeforeUnload)
-            ? {
-              callback: onBeforeUnload,
-            }
-            : onBeforeUnload),
-        } as TLockWatcher)
-        : null;
+    const beforeUnloadWatcher: TLockWatcher | null = onBeforeUnload
+      ? ({
+        ...DEFAULT_LOCK_WATCHER_OPTIONS,
+        ...(isFunction(onBeforeUnload)
+          ? {
+            callback: onBeforeUnload,
+          }
+          : onBeforeUnload),
+      } as TLockWatcher)
+      : null;
 
-      if (!replace) {
-        _currentDepth++;
-        _historyStack = _historyStack.slice(0, _currentDepth);
-        _skipFocus = _skipFocus.slice(0, _currentDepth);
-        _closing = _closing.slice(0, _currentDepth);
-        _historyStackBeforeUnload = _historyStackBeforeUnload.slice(0, _currentDepth);
-      }
+    if (!replace) {
+      _currentDepth++;
+      _historyStack = _historyStack.slice(0, _currentDepth);
+      _skipFocus = _skipFocus.slice(0, _currentDepth);
+      _closing = _closing.slice(0, _currentDepth);
+      _historyStackBeforeUnload = _historyStackBeforeUnload.slice(0, _currentDepth);
+    }
 
-      _historyStack[_currentDepth] = location;
-      _historyStackBeforeUnload[_currentDepth] = beforeUnloadWatcher ? [beforeUnloadWatcher] : [];
-      _skipFocus[_currentDepth] = false;
-      _closing[_currentDepth] = false;
+    _historyStack[_currentDepth] = location;
+    _historyStackBeforeUnload[_currentDepth] = beforeUnloadWatcher ? [beforeUnloadWatcher] : [];
+    _skipFocus[_currentDepth] = false;
+    _closing[_currentDepth] = false;
 
-      if (replace) {
-        history.replaceState(
-          {
-            currentLocation: location,
-            prevLocation: history.state?.prevLocation,
-            depth: _currentDepth,
-            history: _historyStack,
-          },
-          '',
-          url,
-        );
-      } else {
-        history.pushState(
-          {
-            currentLocation: location,
-            prevLocation: _currentLocation,
-            depth: _currentDepth,
-            history: _historyStack,
-          },
-          '',
-          url,
-        );
-      }
+    if (replace) {
+      history.replaceState(
+        {
+          currentLocation: location,
+          prevLocation: history.state?.prevLocation,
+          depth: _currentDepth,
+          history: _historyStack,
+        },
+        '',
+        url,
+      );
+    } else {
+      history.pushState(
+        {
+          currentLocation: location,
+          prevLocation: _currentLocation,
+          depth: _currentDepth,
+          history: _historyStack,
+        },
+        '',
+        url,
+      );
+    }
 
-      _fromLocation = _currentLocation;
-      _currentLocation = location;
+    _fromLocation = _currentLocation;
+    _currentLocation = location;
 
-      if (options.quiet) {
-        return location;
-      }
-
-      emitState({
-        depth: _currentDepth,
-        prev: getPrevLocation(),
-        location,
-        history: _historyStack,
-      });
-
-      emitHistoryDepth(_currentDepth);
-
-      immediateTransition();
-
+    if (options.quiet) {
       return location;
-    },
-    50,
-  );
+    }
+
+    emitState({
+      depth: _currentDepth,
+      prev: getPrevLocation(),
+      location,
+      history: _historyStack,
+    });
+
+    emitHistoryDepth(_currentDepth);
+
+    immediateTransition();
+
+    return location;
+  },
+  50);
 
   const backLocation = queue((options?: TLocationNavigationOptions | any) => {
     if (_currentDepth < 1) {
@@ -535,9 +572,7 @@ function routerProviderBase({
       }
     }
 
-    const onBeforeUnload = _historyStackBeforeUnload[prevDepth].filter(
-      isBack ? (v) => v.backwards : (v) => v.forwards,
-    );
+    const onBeforeUnload = _historyStackBeforeUnload[prevDepth].filter(isBack ? (v) => v.backwards : (v) => v.forwards);
 
     _closing[prevDepth] = true;
     if (onBeforeUnload.length) {
@@ -636,12 +671,9 @@ function routerProviderBase({
     return new Promise<TBackLocationResponse>((resolve) => {
       let started = false;
 
-      _backStack.push([
-        () => {
-          started = true;
-        },
-        resolve,
-      ]);
+      _backStack.push([() => {
+        started = true;
+      }, resolve]);
 
       base();
 
@@ -710,49 +742,47 @@ function routerProviderBase({
     return urlParse(location.href);
   }
   function pushLocation(extendsLocation: Partial<TUrlProps>, options?: TLocationOptions) {
-    console.log('pushLocation', extendsLocation, options);
+    console.log(
+      'pushLocation', extendsLocation, options,
+    );
     return changeLocation(mergeLocation(_currentLocation, extendsLocation), options);
   }
   function storagePushLocation(extendsLocation: Partial<TUrlProps>, options?: TLocationOptions) {
     return changeLocation(urlExtend(_currentLocation, extendsLocation), options);
   }
   function replaceLocation(extendsLocation: Partial<TUrlProps>, options?: TLocationOptions) {
-    return changeLocation(mergeLocation(_currentLocation, extendsLocation), options, 1);
+    return changeLocation(
+      mergeLocation(_currentLocation, extendsLocation), options, 1,
+    );
   }
   function storageReplaceLocation(extendsLocation: Partial<TUrlProps>, options?: TLocationOptions) {
-    return changeLocation(urlExtend(_currentLocation, extendsLocation), options, 1);
+    return changeLocation(
+      urlExtend(_currentLocation, extendsLocation), options, 1,
+    );
   }
   function pushHashLocation(child: Partial<TUrlProps>, options?: TLocationOptions) {
-    return pushLocation(
-      {
-        child,
-      },
-      options,
-    );
+    return pushLocation({
+      child,
+    },
+    options);
   }
   function storagePushHashLocation(child: Partial<TUrlProps>, options?: TLocationOptions) {
-    return storagePushLocation(
-      {
-        child,
-      },
-      options,
-    );
+    return storagePushLocation({
+      child,
+    },
+    options);
   }
   function storageReplaceHashLocation(child: Partial<TUrlProps>, options?: TLocationOptions) {
-    return storageReplaceLocation(
-      {
-        child,
-      },
-      options,
-    );
+    return storageReplaceLocation({
+      child,
+    },
+    options);
   }
   function replaceHashLocation(child: Partial<TUrlProps>, options?: TLocationOptions) {
-    return replaceLocation(
-      {
-        child,
-      },
-      options,
-    );
+    return replaceLocation({
+      child,
+    },
+    options);
   }
 
   function isTryClosingLocation(depth: number) {
@@ -837,10 +867,8 @@ function routerProviderBase({
         return false;
       };
 
-      return createElement(
-        props.component || 'a',
-        addition,
-      );
+      return createElement(props.component || 'a',
+        addition);
     });
   }
   function NavLinkProvider(Link: TElementType, $location: Store<any>): TElementType {
@@ -857,7 +885,9 @@ function routerProviderBase({
       self.render = () => {
         const props = extend({}, self.props);
         const forwardedRef = props.forwardedRef;
-        const { state } = self;
+        const {
+          state, 
+        } = self;
         const path = state.path || '/';
         const matchs = urlExtend(props.href, props.options);
         const targetPath = matchs.path;
@@ -884,7 +914,9 @@ function routerProviderBase({
 
   function paramStorageProvider($query: Store<TParams>, pushLocation: TPushLocation) {
     const $params = createStore({});
-    const { emit } = createApi($params, {
+    const {
+      emit, 
+    } = createApi($params, {
       emit: (_, payload: Record<string, any>) => payload,
     });
 
@@ -904,13 +936,17 @@ function routerProviderBase({
 
     function setState(query: Record<string, any>) {
       _locked = 1;
-      pushLocation({ query });
+      pushLocation({
+        query, 
+      });
       changeState(query);
       _locked = 0;
     }
     function set(key: string, v?: any) {
       if (!isEqual(v, state[key])) {
-        const nextState: Record<string, any> = { ...state };
+        const nextState: Record<string, any> = {
+          ...state, 
+        };
         nextState[key] = v;
         setState(nextState);
       }
@@ -926,11 +962,15 @@ function routerProviderBase({
         exclude[k] = 1;
         isEqual(prev[k], (v = state[k])) || (changed[k] = v);
       }
-      for (k in prev) exclude[k] || isEqual(prev[k], (v = state[k])) || (changed[k] = v);
-      for (k in changed) emit({
-        key: k,
-        value: changed[k],
-      });
+      for (k in prev) {
+        exclude[k] || isEqual(prev[k], (v = state[k])) || (changed[k] = v);
+      }
+      for (k in changed) {
+        emit({
+          key: k,
+          value: changed[k],
+        });
+      }
     }
     $query.watch((state) => {
       _locked || changeState(state || {});

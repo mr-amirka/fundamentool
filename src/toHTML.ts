@@ -1,4 +1,6 @@
-import { escapeHTML } from './escapeHTML';
+import {
+  escapeHTML, 
+} from './escapeHTML';
 
 const REGEXP_LINE_BREAK = /\r?\n/;
 

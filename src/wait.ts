@@ -10,6 +10,8 @@
  */
 export const wait = <A>(millis?: number, params?: A): Promise<A> => {
   return new Promise<A>((resolve) => {
-    setTimeout(resolve, millis || 0, params);
+    setTimeout(
+      resolve, millis || 0, params,
+    );
   });
 };

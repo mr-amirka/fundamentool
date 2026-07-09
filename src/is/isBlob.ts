@@ -1,4 +1,6 @@
-import { providerOfIsClass } from '../providerOfIsClass';
+import {
+  providerOfIsClass, 
+} from '../providerOfIsClass';
 
 /**
  * Checks whether value is a Blob (when Blob is available).

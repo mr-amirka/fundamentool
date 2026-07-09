@@ -3,36 +3,63 @@
  */
 
 import fc from 'fast-check';
-import { scopeSplit } from '../src/scopeSplit';
-import { scopeJoin } from '../src/scopeJoin';
-import { escapedSplitProvider } from '../src/escapedSplitProvider';
-import { unslash } from '../src/unslash';
-import { escapeCss } from '../src/escapeCss';
-import { escapeQuote } from '../src/escapeQuote';
-import { escapeRegExp } from '../src/escapeRegExp';
-import { camelToKebabCase } from '../src/camelToKebabCase';
-import { kebabToCamelCase } from '../src/kebabToCamelCase';
+import {
+  scopeSplit, 
+} from '../src/scopeSplit';
+import {
+  scopeJoin, 
+} from '../src/scopeJoin';
+import {
+  escapedSplitProvider, 
+} from '../src/escapedSplitProvider';
+import {
+  unslash, 
+} from '../src/unslash';
+import {
+  escapeCss, 
+} from '../src/escapeCss';
+import {
+  escapeQuote, 
+} from '../src/escapeQuote';
+import {
+  escapeRegExp, 
+} from '../src/escapeRegExp';
+import {
+  camelToKebabCase, 
+} from '../src/camelToKebabCase';
+import {
+  kebabToCamelCase, 
+} from '../src/kebabToCamelCase';
 
-function stringFromChars(chars: string, minLen = 0, maxLen = 20): fc.Arbitrary<string> {
-  return fc.array(
-    fc.constantFrom(...chars.split('')),
-    { minLength: minLen, maxLength: maxLen },
-  ).map((arr: string[]) => arr.join(''));
+function stringFromChars(
+  chars: string, minLen = 0, maxLen = 20,
+): fc.Arbitrary<string> {
+  return fc.array(fc.constantFrom(...chars.split('')),
+    {
+      minLength: minLen,
+      maxLength: maxLen, 
+    }).map((arr: string[]) => arr.join(''));
 }
 
 describe('scopeSplit ↔ scopeJoin — round-trip', () => {
   test('fast-check: scopeJoin(scopeSplit(s)) === s для строк без скобок', () => {
     const noParens = stringFromChars('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 _');
     fc.assert(fc.property(noParens, (input: string) => {
-      const tree = scopeSplit(input, '(', ')');
-      expect(scopeJoin(tree, '(', ')')).toBe(input);
+      const tree = scopeSplit(
+        input, '(', ')',
+      );
+      expect(scopeJoin(
+        tree, '(', ')',
+      )).toBe(input);
     }));
   });
 
   test('fast-check: scopeSplit на любом входе: либо успех, либо Error', () => {
     fc.assert(fc.property(fc.string(), (input: string) => {
       try {
-        const tree = scopeSplit(input, '(', ')');
+        const tree = scopeSplit(
+          input, '(', ')',
+        );
         expect(Array.isArray(tree)).toBe(true);
       } catch (e) {
         // Несбалансированные скобки — допустимый throw
@@ -95,14 +122,16 @@ describe('camelToKebabCase ↔ kebabToCamelCase — round-trip', () => {
   test('fast-check: kebabToCamelCase(camelToKebabCase(s)) === s для camelCase', () => {
     const lower = fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz'.split(''));
     const upper = fc.constantFrom(...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''));
-    const lowerWord = fc.array(lower, { minLength: 1, maxLength: 8 }).map((arr: string[]) => arr.join(''));
-    const camelString: fc.Arbitrary<string> = fc.tuple(
-      lowerWord,
-      fc.array(
-        fc.tuple(upper, lowerWord).map(([u, r]: [string, string]) => u + r),
-        { minLength: 0, maxLength: 4 },
-      ),
-    ).map(([first, parts]: [string, string[]]) => first + parts.join(''));
+    const lowerWord = fc.array(lower, {
+      minLength: 1,
+      maxLength: 8, 
+    }).map((arr: string[]) => arr.join(''));
+    const camelString: fc.Arbitrary<string> = fc.tuple(lowerWord,
+      fc.array(fc.tuple(upper, lowerWord).map(([u, r]: [string, string]) => u + r),
+        {
+          minLength: 0,
+          maxLength: 4, 
+        })).map(([first, parts]: [string, string[]]) => first + parts.join(''));
 
     fc.assert(fc.property(camelString, (input: string) => {
       expect(kebabToCamelCase(camelToKebabCase(input))).toBe(input);

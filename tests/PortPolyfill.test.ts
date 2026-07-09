@@ -1,4 +1,6 @@
-import { PortPolyfill } from '../src/PortPolyfill';
+import {
+  PortPolyfill, 
+} from '../src/PortPolyfill';
 
 describe('PortPolyfill', () => {
   test('dispatches message event on postMessage', () => {
@@ -8,8 +10,12 @@ describe('PortPolyfill', () => {
       received.push((e as MessageEvent).data);
     });
     port.postMessage('hello');
-    port.postMessage({ x: 1 });
-    expect(received).toEqual(['hello', { x: 1 }]);
+    port.postMessage({
+      x: 1, 
+    });
+    expect(received).toEqual(['hello', {
+      x: 1, 
+    }]);
   });
 
   test('multiple listeners receive the same message', () => {

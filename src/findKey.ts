@@ -15,7 +15,11 @@ export const findKey = <T = any>(
 ): string | undefined => {
   let k = '';
   for (k in collection) {
-    if (iteratee.call(ctx, collection[k], k, collection)) return k;
+    if (iteratee.call(
+      ctx, collection[k], k, collection,
+    )) {
+      return k;
+    }
   }
 };
 

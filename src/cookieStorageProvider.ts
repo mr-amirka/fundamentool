@@ -1,6 +1,12 @@
-import { createStore as _createStore, createApi as _createApi, StoreWritable } from './Store';
-import type { TStoreAdapter } from './Store';
-import { tryJsonParse } from './tryJsonParse';
+import {
+  createStore as _createStore, createApi as _createApi, StoreWritable, 
+} from './Store';
+import type {
+  TStoreAdapter, 
+} from './Store';
+import {
+  tryJsonParse, 
+} from './tryJsonParse';
 
 export type TCookieWindowContext = {
   document: {
@@ -36,7 +42,7 @@ export const storageInit = (cookie: string): any => {
     output[k] = tryJsonParse(decodeURIComponent(parts[1]));
   }
   return output;
-}
+};
 
 /**
  * Creates a cookie storage provider.
@@ -49,13 +55,15 @@ export const storageInit = (cookie: string): any => {
  * storage.get('token'); // => 'abc123'
  * storage.remove('token');
  */
-export const cookieStorageProvider = (
-  ctx: TCookieWindowContext,
-  deps: Partial<TStoreAdapter> = {},
-): TCookieStorage => {
-  const { createStore = _createStore, createApi = _createApi } = deps;
+export const cookieStorageProvider = (ctx: TCookieWindowContext,
+  deps: Partial<TStoreAdapter> = {}): TCookieStorage => {
+  const {
+    createStore = _createStore, createApi = _createApi, 
+  } = deps;
   const $instance = createStore<any>({} as any);
-  const { emit } = createApi($instance, {
+  const {
+    emit, 
+  } = createApi($instance, {
     emit: (_: any, payload: any) => payload,
   });
 
@@ -68,11 +76,19 @@ export const cookieStorageProvider = (
       encodeURIComponent(key) + '=' + encodeURIComponent(value) + '; expires=' + date.toUTCString();
   }
   function set(key: string, value: any) {
-    emit({ key, value } as any);
+    emit({
+      key,
+      value, 
+    } as any);
     return $instance;
   }
-  $instance.watch(({ key, value }: { key: string; value: any }) => {
-    if (value === cache[key]) return;
+  $instance.watch(({
+    key, value, 
+  }: { key: string;
+value: any }) => {
+    if (value === cache[key]) {
+      return;
+    }
     if (value === null || value === undefined) {
       delete cache[key];
       __set(key, '');

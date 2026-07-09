@@ -1,4 +1,6 @@
-import { providerOfIsClass } from '../src/providerOfIsClass';
+import {
+  providerOfIsClass, 
+} from '../src/providerOfIsClass';
 
 class Foo {}
 class Bar {}

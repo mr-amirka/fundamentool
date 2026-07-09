@@ -1,4 +1,6 @@
-import { withResult } from '../src/withResult';
+import {
+  withResult, 
+} from '../src/withResult';
 
 describe('withResult', () => {
   test('calls original function and returns fixed result', () => {
@@ -15,9 +17,15 @@ describe('withResult', () => {
   });
 
   test('uses provided context', () => {
-    const ctx = { value: 42 };
+    const ctx = {
+      value: 42, 
+    };
     let capturedThis: any;
-    const handler = withResult(function(this: any) { capturedThis = this; }, null, ctx);
+    const handler = withResult(
+      function(this: any) {
+        capturedThis = this; 
+      }, null, ctx,
+    );
     handler();
     expect(capturedThis).toBe(ctx);
   });

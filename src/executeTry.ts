@@ -25,4 +25,4 @@ export const executeTry = <T>(
   } catch (error) {
     onError?.(error);
   }
-}
+};

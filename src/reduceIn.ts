@@ -13,11 +13,13 @@ export const reduceIn = (
   collection: any,
   iteratee: (acc: any, value: any, key: string, collection: any) => any,
   accumulator: any,
-  ctx?: any
+  ctx?: any,
 ): any => {
   let k: string;
   for (k in collection) {
-    accumulator = iteratee.call(ctx, accumulator, collection[k], k, collection);
+    accumulator = iteratee.call(
+      ctx, accumulator, collection[k], k, collection,
+    );
   }
   return accumulator;
 };

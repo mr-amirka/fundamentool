@@ -1,4 +1,6 @@
-import { numParse } from '../src/numParse';
+import {
+  numParse, 
+} from '../src/numParse';
 
 describe('numParse', () => {
   test('parses number string', () => {

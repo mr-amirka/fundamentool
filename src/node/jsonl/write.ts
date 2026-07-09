@@ -1,7 +1,15 @@
-import type { CreateWriteStreamOptions } from 'fs/promises';
-import { createWriteStream, mkdir } from 'fs';
-import { dirname } from 'path';
-import { TransformTo } from './TransformTo';
+import type {
+  CreateWriteStreamOptions, 
+} from 'fs/promises';
+import {
+  createWriteStream, mkdir, 
+} from 'fs';
+import {
+  dirname, 
+} from 'path';
+import {
+  TransformTo, 
+} from './TransformTo';
 
 
 /**
@@ -23,12 +31,10 @@ export const write = (path: string, options?: CreateWriteStreamOptions): NodeJS.
       writable.destroy(error);
       return;
     }
-    writable.pipe(
-      createWriteStream(path, {
-        encoding: 'utf8',
-        ...(options || {}),
-      }),
-    );
+    writable.pipe(createWriteStream(path, {
+      encoding: 'utf8',
+      ...(options || {}),
+    }));
   }
 
   if (dname) {

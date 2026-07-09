@@ -7,9 +7,7 @@
  * const onEnter = onEnterProvider(() => console.log('Enter key pressed'));
  * onEnter({ key: 'Enter' }); // => 'Enter key pressed'
  */
-export const onEnterProvider = (
-  handle: () => void,
-): ((e: { key: string }) => void) => {
+export const onEnterProvider = (handle: () => void): ((e: { key: string }) => void) => {
   return (e: { key: string }) => {
     if (e.key === 'Enter') {
       handle();

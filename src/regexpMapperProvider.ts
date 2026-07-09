@@ -1,5 +1,9 @@
-import { isFunction } from './is/isFunction';
-import { mapperProvider } from './mapperProvider';
+import {
+  isFunction, 
+} from './is/isFunction';
+import {
+  mapperProvider, 
+} from './mapperProvider';
 
 export type TRouteMapper = (text: string, dst?: Record<string, any>) => boolean;
 
@@ -24,14 +28,14 @@ export type TRouteMapper = (text: string, dst?: Record<string, any>) => boolean;
  *   // }
  * }
  */
-export const regexpMapperProvider = (
-  regexp: RegExp,
-  keys: string[] | ((values: any[], dst?: Record<string, any>) => void),
-): TRouteMapper => {
+export const regexpMapperProvider = (regexp: RegExp,
+  keys: string[] | ((values: any[], dst?: Record<string, any>) => void)): TRouteMapper => {
   const mapper = isFunction(keys) ? keys : mapperProvider(keys);
   return (text: string, dst?: Record<string, any>): boolean => {
     const values = regexp.exec(text || '');
-    if (!values) return false;
+    if (!values) {
+      return false;
+    }
     dst && mapper(values, dst);
     return true;
   };

@@ -1,4 +1,6 @@
-import { isPromise } from '../../src/is/isPromise';
+import {
+  isPromise, 
+} from '../../src/is/isPromise';
 
 describe('isPromise', () => {
   test('returns true for Promise instances', () => {
@@ -7,7 +9,9 @@ describe('isPromise', () => {
   });
 
   test('returns true for thenables', () => {
-    expect(isPromise({ then: () => {} })).toBe(true);
+    expect(isPromise({
+      then: () => {}, 
+    })).toBe(true);
   });
 
   test('returns false for non-thenables', () => {
@@ -15,6 +19,8 @@ describe('isPromise', () => {
     expect(isPromise(null)).toBe(false);
     expect(isPromise(undefined)).toBe(false);
     expect(isPromise(42)).toBe(false);
-    expect(isPromise({ then: 'not-a-function' })).toBe(false);
+    expect(isPromise({
+      then: 'not-a-function', 
+    })).toBe(false);
   });
 });

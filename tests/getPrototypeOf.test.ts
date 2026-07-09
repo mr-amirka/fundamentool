@@ -1,4 +1,6 @@
-import { getPrototypeOf } from '../src/getPrototypeOf';
+import {
+  getPrototypeOf, 
+} from '../src/getPrototypeOf';
 
 describe('getPrototypeOf', () => {
   test('returns Array.prototype for arrays', () => {

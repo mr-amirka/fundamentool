@@ -1,5 +1,9 @@
-import { isArrayLike } from './is/isArrayLike';
-import { each } from './each';
+import {
+  isArrayLike, 
+} from './is/isArrayLike';
+import {
+  each, 
+} from './each';
 
 type TFn = (...args: any[]) => any;
 

@@ -1,7 +1,15 @@
-import { escapedSplitProvider } from './escapedSplitProvider';
-import { joinArrays } from './join/joinArrays';
-import { joinOnly } from './join/joinOnly';
-import { unslash } from './unslash';
+import {
+  escapedSplitProvider, 
+} from './escapedSplitProvider';
+import {
+  joinArrays, 
+} from './join/joinArrays';
+import {
+  joinOnly, 
+} from './join/joinOnly';
+import {
+  unslash, 
+} from './unslash';
 
 export type TVariantsResult = readonly [strings: string[], maxDepth: number];
 
@@ -51,10 +59,8 @@ export type TScopeToken =
   | readonly [typeof SCOPE_CLOSE];
 
 
-function maxLimitNormalize(
-  value: unknown,
-  label: string,
-): number {
+function maxLimitNormalize(value: unknown,
+  label: string): number {
   const type = typeof value;
   switch (type) {
     case 'number': {
@@ -87,9 +93,17 @@ function maxLimitNormalize(
  * Правила совпадения с 1.x для `(` `)`:
  * - `\\` + символ — один литерал префикса;
  * - иначе границы (сначала более длинная подстрока, при равной длине — `scopeStart`, затем `scopeEnd`), иначе один символ префикса.
+ *
+ * @param options - Разделитель, границы scope и лимиты глубины/размера результата.
+ * @returns Функция `(value, applyUnslash?) => [строки, maxDepth]`.
+ * @example
+ * const variants = variantsProvider({ separator: '|', scopeStart: '(', scopeEnd: ')', maxDepth: 5 });
+ * variants('a(b|c)'); // => [['ab', 'ac'], 1]
  */
 export function variantsProvider(options: IVariantsProviderOptions): TVariants {
-  const { scopeStart, scopeEnd } = options;
+  const {
+    scopeStart, scopeEnd, 
+  } = options;
 
   const scopeStartLength = scopeStart.length;
   const scopeEndLength = scopeEnd.length;
@@ -116,22 +130,30 @@ export function variantsProvider(options: IVariantsProviderOptions): TVariants {
     number,
   ][] =
     scopeStartLength >= scopeEndLength
-      ? [
-          [scopeStart, SCOPE_OPEN, scopeStartLength],
-          [scopeEnd, SCOPE_CLOSE, scopeEndLength],
-        ]
-      : [
-          [scopeEnd, SCOPE_CLOSE, scopeEndLength],
-          [scopeStart, SCOPE_OPEN, scopeStartLength],
-        ];
+      ? [[
+        scopeStart,
+        SCOPE_OPEN,
+        scopeStartLength,
+      ], [
+        scopeEnd,
+        SCOPE_CLOSE,
+        scopeEndLength,
+      ]]
+      : [[
+        scopeEnd,
+        SCOPE_CLOSE,
+        scopeEndLength,
+      ], [
+        scopeStart,
+        SCOPE_OPEN,
+        scopeStartLength,
+      ]];
 
   /**
    * Сборка дерева вариантов по уже разобранным `childs`.
    * При конечном `maxOutputCount` длина результата проверяется один раз после сборки.
    */
-  function variantsBuildSplit(
-    childs: VariantsChild[],
-  ): string[] {
+  function variantsBuildSplit(childs: VariantsChild[]): string[] {
     /*
      * Узел: [текст до вложенных scope, дети]. Текст режется по separator на альтернативы parts[0]…parts[end].
      * Последняя альтернатива parts[end] склеивается с развёрткой вложенного дерева (рекурсия); остальные
@@ -153,11 +175,17 @@ export function variantsProvider(options: IVariantsProviderOptions): TVariants {
       parts = splitBySep(child[0]);
       pl = parts.length;
       end = pl - 1;
-      joinArrays([parts[end]], variantsBuildSplit(child[1]), '', (next = []));
+      joinArrays(
+        [parts[end]], variantsBuildSplit(child[1]), '', (next = []),
+      );
       if (end) {
-        joinArrays(prev, [parts[0]], '', output);
+        joinArrays(
+          prev, [parts[0]], '', output,
+        );
         prev = next;
-        for (pi = 1; pi < end; pi++) output.push(parts[pi]);
+        for (pi = 1; pi < end; pi++) {
+          output.push(parts[pi]);
+        }
       } else {
         prev = joinArrays(prev, next);
       }
@@ -166,9 +194,7 @@ export function variantsProvider(options: IVariantsProviderOptions): TVariants {
     const strings = [...output, ...prev];
 
     if (strings.length > maxOutputCountLimit) {
-      throw new RangeError(
-        `variantsProvider: variant count exceeds maxOutputCount (${String(maxOutputCountLimit)})`,
-      );
+      throw new RangeError(`variantsProvider: variant count exceeds maxOutputCount (${String(maxOutputCountLimit)})`);
     }
 
     return strings;
@@ -226,9 +252,7 @@ export function variantsProvider(options: IVariantsProviderOptions): TVariants {
         matched = true;
         if (kind === SCOPE_OPEN) {
           if (depth >= maxDepthLimit) {
-            throw new RangeError(
-              `variantsProvider: nesting exceeds maxDepth (${String(maxDepthLimit)})`,
-            );
+            throw new RangeError(`variantsProvider: nesting exceeds maxDepth (${String(maxDepthLimit)})`);
           }
           levels[depth] = levels[depth] || [];
           last = [joinOnly(parts), []];
@@ -263,9 +287,6 @@ export function variantsProvider(options: IVariantsProviderOptions): TVariants {
 
     const strings = variantsBuildSplit(childs);
 
-    return [
-      applyUnslash === false ? strings : strings.map(unslash),
-      maxDepthSeen,
-    ] as const;
+    return [applyUnslash === false ? strings : strings.map(unslash), maxDepthSeen] as const;
   };
 }

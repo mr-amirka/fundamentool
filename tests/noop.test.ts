@@ -1,4 +1,6 @@
-import { noop } from '../src/noop';
+import {
+  noop, 
+} from '../src/noop';
 
 describe('noop', () => {
   test('is a function', () => {
@@ -10,6 +12,8 @@ describe('noop', () => {
   });
 
   test('accepts any arguments without error', () => {
-    expect(() => (noop as any)(1, 2, 3)).not.toThrow();
+    expect(() => (noop as any)(
+      1, 2, 3,
+    )).not.toThrow();
   });
 });

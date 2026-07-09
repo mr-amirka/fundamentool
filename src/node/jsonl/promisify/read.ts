@@ -1,4 +1,6 @@
-import { read as simpleRead } from '../read';
+import {
+  read as simpleRead, 
+} from '../read';
 
 /**
  * Reads all records from a JSONL file into memory as an array of parsed objects.
@@ -26,5 +28,5 @@ export function read(
     stream.on('end', () => resolve(items));
     stream.on('error', reject);
   });
-};
+}
 

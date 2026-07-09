@@ -3,16 +3,31 @@
  */
 
 import fc from 'fast-check';
-import { variants } from '../src/variants';
-import { variantsProvider } from '../src/variantsProvider';
+import {
+  variants, 
+} from '../src/variants';
+import {
+  variantsProvider, 
+} from '../src/variantsProvider';
 
 const alphaChars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_';
 
 function arbitraryMnExpression(): fc.Arbitrary<string> {
-  const alpha = fc.array(fc.constantFrom(...alphaChars.split('')), { minLength: 0, maxLength: 5 })
+  const alpha = fc.array(fc.constantFrom(...alphaChars.split('')), {
+    minLength: 0,
+    maxLength: 5, 
+  })
     .map(arr => arr.join(''));
-  return fc.tuple(alpha, alpha, alpha).map(([prefix, middle, suffix]) => {
-    if (middle.length === 0) return prefix + suffix;
+  return fc.tuple(
+    alpha, alpha, alpha,
+  ).map(([
+    prefix,
+    middle,
+    suffix,
+  ]) => {
+    if (middle.length === 0) {
+      return prefix + suffix;
+    }
     return `${prefix}(${middle})${suffix}`;
   });
 }

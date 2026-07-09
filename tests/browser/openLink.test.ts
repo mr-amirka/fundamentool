@@ -1,11 +1,17 @@
-import { openLink } from '../../src/browser/openLink';
-import { setupBrowserDomMocks } from './browserDomMocks';
+import {
+  openLink, 
+} from '../../src/browser/openLink';
+import {
+  setupBrowserDomMocks, 
+} from './browserDomMocks';
 
 describe('browser/openLink', () => {
   let clickMock: jest.Mock;
 
   beforeEach(() => {
-    ({ clickMock } = setupBrowserDomMocks());
+    ({
+      clickMock, 
+    } = setupBrowserDomMocks());
   });
 
   test('creates anchor and clicks it', async () => {

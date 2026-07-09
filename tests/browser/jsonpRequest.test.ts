@@ -1,5 +1,9 @@
-import { jsonpRequest } from '../../src/browser/jsonpRequest';
-import { setupBrowserDomMocks } from './browserDomMocks';
+import {
+  jsonpRequest, 
+} from '../../src/browser/jsonpRequest';
+import {
+  setupBrowserDomMocks, 
+} from './browserDomMocks';
 
 describe('browser/jsonpRequest', () => {
   beforeEach(() => {
@@ -7,15 +11,18 @@ describe('browser/jsonpRequest', () => {
   });
 
   test('injects script and resolves with callback data', async () => {
-    const promise = jsonpRequest('https://example.com/test', { q: 1 }) as Promise<any>;
+    const promise = jsonpRequest('https://example.com/test', {
+      q: 1, 
+    }) as Promise<any>;
 
     const callbackName = Object.keys(globalThis).find((k) =>
-      k.startsWith('JSONP_CALLBACK_'),
-    );
+      k.startsWith('JSONP_CALLBACK_'));
 
     expect(callbackName).toBeTruthy();
 
-    const response = { ok: true };
+    const response = {
+      ok: true, 
+    };
     (globalThis as any)[callbackName as string](response);
 
     const result = await promise;

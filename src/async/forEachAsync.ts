@@ -1,5 +1,9 @@
-import { checkNoop } from './checkNoop';
-import { loopAsync } from './loopAsync';
+import {
+  checkNoop, 
+} from './checkNoop';
+import {
+  loopAsync, 
+} from './loopAsync';
 
 /**
  * Asynchronously iterates over an array-like `items`.
@@ -20,13 +24,13 @@ export function forEachAsync<T>(
 ): Promise<T[]> {
   const length = items?.length || 0;
   let index = 0;
-  return loopAsync(
-    () => index < length && checkFn(),
+  return loopAsync(() => index < length && checkFn(),
     () => {
       const i = index++;
-      return iteratee.call(ctx, items[i], i, items);
-    },
-  )
+      return iteratee.call(
+        ctx, items[i], i, items,
+      );
+    })
     .then(() => items);
 }
 

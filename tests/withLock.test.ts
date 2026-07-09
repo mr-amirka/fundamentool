@@ -1,4 +1,6 @@
-import { withLock } from '../src/withLock';
+import {
+  withLock, 
+} from '../src/withLock';
 
 describe('withLock', () => {
   test('allows first call to proceed', () => {
@@ -10,7 +12,6 @@ describe('withLock', () => {
 
   test('ignores re-entrant calls from within fn', () => {
     let callCount = 0;
-    let inner: (() => void) | undefined;
 
     const locked = withLock(function() {
       callCount++;
@@ -19,13 +20,15 @@ describe('withLock', () => {
       }
     });
 
-    inner = locked;
+    const inner = locked;
     locked(); // first call triggers inner() which is blocked
     expect(callCount).toBe(1);
   });
 
   test('returns result value for ignored calls', () => {
-    const fn = withLock(() => {}, null, 'busy');
+    const fn = withLock(
+      () => {}, null, 'busy',
+    );
     fn();
     expect(fn()).toBe('busy');
   });

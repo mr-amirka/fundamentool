@@ -19,7 +19,9 @@ export const pick = (
 ): Record<string, any> => {
   const dst: Record<string, any> = output || {};
   const dstOther: Record<string, any> = outOther || {};
-  if (!input) return dst;
+  if (!input) {
+    return dst;
+  }
 
   let v: any;
   let k: string;

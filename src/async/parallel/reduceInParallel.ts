@@ -1,6 +1,12 @@
-import { entries } from '../../entries';
-import { checkNoop } from '../checkNoop';
-import { loopParallel } from './loopParallel';
+import {
+  entries, 
+} from '../../entries';
+import {
+  checkNoop, 
+} from '../checkNoop';
+import {
+  loopParallel, 
+} from './loopParallel';
 
 /**
  * Parallel asynchronous reduce over array or object.
@@ -32,7 +38,9 @@ export function reduceInParallel<T, A>(
     async () => {
       const i = index++;
       const [key, value] = pairs[i];
-      accumulator = await iteratee.call(ctx, accumulator, value, key, collection as Record<string, T>);
+      accumulator = await iteratee.call(
+        ctx, accumulator, value, key, collection as Record<string, T>,
+      );
     },
     taskLimit,
   ).then(() => accumulator);

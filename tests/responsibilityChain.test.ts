@@ -1,8 +1,12 @@
-import { responsibilityChain } from '../src/responsibilityChain';
+import {
+  responsibilityChain, 
+} from '../src/responsibilityChain';
 
 describe('responsibilityChain', () => {
   test('calls end when chain is empty', () => {
-    const result = responsibilityChain([], 'req', (r) => r + '_done');
+    const result = responsibilityChain(
+      [], 'req', (r) => r + '_done',
+    );
     expect(result).toBe('req_done');
   });
 
@@ -26,10 +30,7 @@ describe('responsibilityChain', () => {
 
   test('handler can short-circuit the chain', () => {
     const result = responsibilityChain(
-      [
-        (_req, _next) => 'short-circuit',
-        (_req, next) => next(_req),
-      ],
+      [(_req, _next) => 'short-circuit', (_req, next) => next(_req)],
       'req',
       (_r) => 'end',
     );
@@ -40,14 +41,27 @@ describe('responsibilityChain', () => {
     const log: number[] = [];
     responsibilityChain(
       [
-        (req, next) => { log.push(1); return next(req); },
-        (req, next) => { log.push(2); return next(req); },
-        (req, next) => { log.push(3); return next(req); },
+        (req, next) => {
+          log.push(1); return next(req); 
+        },
+        (req, next) => {
+          log.push(2); return next(req); 
+        },
+        (req, next) => {
+          log.push(3); return next(req); 
+        },
       ],
       null,
-      () => { log.push(4); },
+      () => {
+        log.push(4); 
+      },
     );
-    expect(log).toEqual([1, 2, 3, 4]);
+    expect(log).toEqual([
+      1,
+      2,
+      3,
+      4,
+    ]);
   });
 
   test('handler error calls onError and continues chain', () => {
@@ -56,12 +70,15 @@ describe('responsibilityChain', () => {
     const err = new Error('oops');
 
     responsibilityChain(
-      [
-        (_req, _next) => { throw err; },
-        (req, next) => { log.push(2); return next(req); },
-      ],
+      [(_req, _next) => {
+        throw err; 
+      }, (req, next) => {
+        log.push(2); return next(req); 
+      }],
       null,
-      () => { log.push(3); },
+      () => {
+        log.push(3); 
+      },
       (e) => errors.push(e),
     );
 

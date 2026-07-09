@@ -1,6 +1,12 @@
-import { isRegExp } from './is/isRegExp';
-import { escapeRegExp } from './escapeRegExp';
-import { regexpParse } from './regexpParse';
+import {
+  isRegExp, 
+} from './is/isRegExp';
+import {
+  escapeRegExp, 
+} from './escapeRegExp';
+import {
+  regexpParse, 
+} from './regexpParse';
 
 /**
  * Normalizes a separator to a regexp-safe source string.

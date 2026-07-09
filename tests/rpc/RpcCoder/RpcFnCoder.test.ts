@@ -1,4 +1,6 @@
-import { RpcFnCoder } from '../../../src/rpc/RpcCoder/RpcFnCoder';
+import {
+  RpcFnCoder, 
+} from '../../../src/rpc/RpcCoder/RpcFnCoder';
 
 describe('RpcFnCoder', () => {
   function makeProvider() {
@@ -7,11 +9,16 @@ describe('RpcFnCoder', () => {
       calls.push(index);
       return `external:${index}`;
     };
-    return { provider, calls };
+    return {
+      provider,
+      calls, 
+    };
   }
 
   test('encode returns [0, index] for new internal fn', () => {
-    const { provider } = makeProvider();
+    const {
+      provider, 
+    } = makeProvider();
     const coder = new RpcFnCoder(provider);
     const fn = () => 42;
     const encoded = coder.encode(fn);
@@ -19,7 +26,9 @@ describe('RpcFnCoder', () => {
   });
 
   test('encode returns same index for same fn', () => {
-    const { provider } = makeProvider();
+    const {
+      provider, 
+    } = makeProvider();
     const coder = new RpcFnCoder(provider);
     const fn = () => 42;
     expect(coder.encode(fn)).toEqual([0, 0]);
@@ -27,7 +36,9 @@ describe('RpcFnCoder', () => {
   });
 
   test('different fns get different indexes', () => {
-    const { provider } = makeProvider();
+    const {
+      provider, 
+    } = makeProvider();
     const coder = new RpcFnCoder(provider);
     const fn1 = () => 1;
     const fn2 = () => 2;
@@ -38,7 +49,9 @@ describe('RpcFnCoder', () => {
 
   test('decode [0, index] creates external proxy via provider (other side encoded as internal)', async () => {
     // [0, i] = "the OTHER side's internal fn at index i" → create proxy
-    const { provider } = makeProvider();
+    const {
+      provider, 
+    } = makeProvider();
     const coder = new RpcFnCoder(provider);
     const externalFn = coder.decode([0, 3]);
     expect(typeof externalFn).toBe('function');
@@ -47,7 +60,9 @@ describe('RpcFnCoder', () => {
 
   test('decode [1, index] returns original internal fn (round-trip)', () => {
     // [1, i] = "this fn was originally mine (internals[i])" → return it
-    const { provider } = makeProvider();
+    const {
+      provider, 
+    } = makeProvider();
     const coder = new RpcFnCoder(provider);
     const fn = () => 99;
     coder.encode(fn); // stored as internals[0]
@@ -55,7 +70,9 @@ describe('RpcFnCoder', () => {
   });
 
   test('invoke calls internal fn with args', () => {
-    const { provider } = makeProvider();
+    const {
+      provider, 
+    } = makeProvider();
     const coder = new RpcFnCoder(provider);
     const fn = (a: number, b: number) => a + b;
     coder.encode(fn);
@@ -63,7 +80,9 @@ describe('RpcFnCoder', () => {
   });
 
   test('addInternal adds fn and returns its index', () => {
-    const { provider } = makeProvider();
+    const {
+      provider, 
+    } = makeProvider();
     const coder = new RpcFnCoder(provider);
     const fn = () => 'hi';
     const index = coder.addInternal(fn);

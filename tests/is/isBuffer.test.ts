@@ -1,4 +1,6 @@
-import { isBuffer } from '../../src/is/isBuffer';
+import {
+  isBuffer, 
+} from '../../src/is/isBuffer';
 
 describe('isBuffer', () => {
   test('returns true for Buffer instances', () => {

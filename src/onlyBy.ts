@@ -1,5 +1,9 @@
-import { isFunction } from './is/isFunction';
-import { noopHandle } from './noopHandle';
+import {
+  isFunction, 
+} from './is/isFunction';
+import {
+  noopHandle, 
+} from './noopHandle';
 
 type CompareFn = (v: any, w: any) => boolean;
 
@@ -34,7 +38,9 @@ export const onlyBy = (
   
   for (; i < length; i++) {
     tmpItem = collection[i];
-    tmpValue = iteratee(tmpItem, i, collection);
+    tmpValue = iteratee(
+      tmpItem, i, collection,
+    );
     if (!item || _compare(tmpValue, value)) {
       item = tmpItem;
       value = tmpValue;
@@ -68,7 +74,9 @@ export const onlyByIn = (
 
   for (k in collection) {
     tmpItem = collection[k];
-    tmpValue = iteratee(tmpItem, k, collection);
+    tmpValue = iteratee(
+      tmpItem, k, collection,
+    );
     if (!item || _compare(tmpValue, value)) {
       item = tmpItem;
       value = tmpValue;

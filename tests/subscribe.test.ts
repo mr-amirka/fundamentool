@@ -1,4 +1,6 @@
-import { subscribe } from '../src/subscribe';
+import {
+  subscribe, 
+} from '../src/subscribe';
 
 describe('subscribe', () => {
   test('pushes listeners to collection and unsubscribe removes them', () => {

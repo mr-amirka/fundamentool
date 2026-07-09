@@ -1,4 +1,6 @@
-import { delimiterToCamelCase } from './delimiterToCamelCase';
+import {
+  delimiterToCamelCase, 
+} from './delimiterToCamelCase';
 
 /**
  * Converts snake_case string to camelCase.

@@ -1,4 +1,6 @@
-import { isDefined } from "./is/isDefined";
+import {
+  isDefined, 
+} from './is/isDefined';
 
 const REXGEXP_SIGN = /^(-)(.+)$/;
 // const REXGEXP_SPACE = /[^0-9.-]/g;
@@ -41,27 +43,35 @@ interface INumParse {
  */
 export const numParse: INumParse = (num: any): number | null => {
   const parts = base(num);
-  if (!parts) return null;
+  if (!parts) {
+    return null;
+  }
   const right = parts[2];
   return parseFloat(parts[0] + (parts[1] || '0') + (right ? '.' + right : ''));
 };
 
 const base = numParse.base = (num: any): [string, string, string] | null => {
-  if (!isDefined(num)) return null;
+  if (!isDefined(num)) {
+    return null;
+  }
   let val = '';
   let sign = '';
   let right = '';
   let matched: null | RegExpExecArray = null;
   num && (val = ('' + num).replace(REXGEXP_SPACE, ''));
 
-  if (matched = REXGEXP_SIGN.exec(val)) {
+  if ((matched = REXGEXP_SIGN.exec(val))) {
     sign = matched[1];
     val = matched[2];
   }
-  if (matched = REXGEXP_DOT.exec(val)) {
+  if ((matched = REXGEXP_DOT.exec(val))) {
     val = matched[1].replace(REXGEXP_DOTS, '');
     right = matched[2];
   }
-  return val || right ? [sign, val, right] : null;
+  return val || right ? [
+    sign,
+    val,
+    right,
+  ] : null;
 };
 

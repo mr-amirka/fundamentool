@@ -1,4 +1,6 @@
-import { sort } from './sort';
+import {
+  sort, 
+} from './sort';
 
 /**
  * Sorts an array by the result of a function.
@@ -13,8 +15,8 @@ export const sortBy = <T>(
   src: T[],
   iteratee: (item: T) => any,
 ): T[] => sort(src, (a: T, b: T) => {
-  const av = iteratee(a);
-  const bv = iteratee(b);
-  return av < bv ? -1 : av > bv ? 1 : 0;
-});
+    const av = iteratee(a);
+    const bv = iteratee(b);
+    return av < bv ? -1 : av > bv ? 1 : 0;
+  });
 

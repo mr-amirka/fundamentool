@@ -15,7 +15,11 @@ export const findIn = <T = any>(
 ): T | undefined => {
   let v: T;
   for (const k in collection) {
-    if (iteratee.call(ctx, (v = collection[k]), k, collection)) return v;
+    if (iteratee.call(
+      ctx, (v = collection[k]), k, collection,
+    )) {
+      return v;
+    }
   }
 };
 

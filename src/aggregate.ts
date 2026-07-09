@@ -1,4 +1,6 @@
-import { eachApply } from './eachApply';
+import {
+  eachApply, 
+} from './eachApply';
 
 type AnyFn = (...args: any[]) => any;
 type Aggregator = (funcs: AnyFn[], args: any[], context: any) => any;
@@ -15,9 +17,15 @@ type Aggregator = (funcs: AnyFn[], args: any[], context: any) => any;
  */
 export const aggregate = <T extends any[]>(
   funcs: AnyFn[],
-  aggregator: Aggregator = ((f, a, c) => eachApply(f, a, c)) as Aggregator,
+  aggregator: Aggregator = ((
+    f, a, c,
+  ) => eachApply(
+    f, a, c,
+  )) as Aggregator,
 ): ((this: any, ..._args: T) => any) => {
   return function aggregated(...args: T): any {
-    return aggregator(funcs, args, this);
+    return aggregator(
+      funcs, args, this,
+    );
   };
 };

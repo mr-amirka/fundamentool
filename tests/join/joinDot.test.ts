@@ -1,8 +1,14 @@
-import { joinDot } from '../../src/join/joinDot';
+import {
+  joinDot, 
+} from '../../src/join/joinDot';
 
 describe('joinDot', () => {
   test('joins items with dot', () => {
-    expect(joinDot(['a', 'b', 'c'])).toBe('a.b.c');
+    expect(joinDot([
+      'a',
+      'b',
+      'c',
+    ])).toBe('a.b.c');
   });
 
   test('handles single item', () => {

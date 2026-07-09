@@ -1,5 +1,9 @@
-import { checkNoop } from '../checkNoop';
-import { loopParallel } from './loopParallel';
+import {
+  checkNoop, 
+} from '../checkNoop';
+import {
+  loopParallel, 
+} from './loopParallel';
 
 /**
  * Parallel asynchronous find over array.
@@ -29,7 +33,9 @@ export function findParallel<T>(
     async () => {
       const i = index++;
       const item = items[i];
-      if (await iteratee.call(ctx, item, i, items)) {
+      if (await iteratee.call(
+        ctx, item, i, items,
+      )) {
         if (!found) {
           found = item;
         }

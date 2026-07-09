@@ -1,6 +1,12 @@
-import { extend } from '../extend';
-import { getDataLink } from './getDataLink';
-import { ready } from './ready';
+import {
+  extend, 
+} from '../extend';
+import {
+  getDataLink, 
+} from './getDataLink';
+import {
+  ready, 
+} from './ready';
 
 export interface IDownload {
   (content: BlobPart | BlobPart[] | ArrayBuffer | string, type?: string, filename?: string): Promise<boolean>;
@@ -22,7 +28,7 @@ declare const document: Document;
 export const download: IDownload = (
   content: BlobPart | BlobPart[] | ArrayBuffer | string,
   type?: string,
-  filename?: string
+  filename?: string,
 ): Promise<boolean> => base(getDataLink(content, type), filename);
 
 const base = download.base = (url: string, filename?: string): Promise<boolean> => {
@@ -32,7 +38,7 @@ const base = download.base = (url: string, filename?: string): Promise<boolean> 
         href: url,
         download: filename || String(+new Date()),
         target: '_blank',
-        style: 'display:none;'
+        style: 'display:none;',
       } as any);
       const body = document.body;
       body.appendChild(link);

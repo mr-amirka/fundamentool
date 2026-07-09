@@ -1,5 +1,9 @@
-import { childClass } from '../childClass';
-import { noop } from '../noop';
+import {
+  childClass, 
+} from '../childClass';
+import {
+  noop, 
+} from '../noop';
 
 const originalStringify = JSON.stringify;
 
@@ -31,7 +35,9 @@ export interface IJsonlTransformToEnv {
 export const ProviderOfTransformTo = (env: IJsonlTransformToEnv): Transform & { drain: () => Promise<void> } => {
   return childClass(
     env.Transform,
-    (_self: Transform, sup: (options?: any) => void, options?: Record<string, any>) => {
+    (
+      _self: Transform, sup: (options?: any) => void, options?: Record<string, any>,
+    ) => {
       sup({
         ...options,
         readableObjectMode: false,
@@ -40,7 +46,9 @@ export const ProviderOfTransformTo = (env: IJsonlTransformToEnv): Transform & { 
       });
     },
     {
-      _transform(this: any, item: any, _encoding: string, done: (err: any, chunk?: any) => void) {
+      _transform(
+        this: any, item: any, _encoding: string, done: (err: any, chunk?: any) => void,
+      ) {
         try {
           done(null, originalStringify(item) + '\n');
         } catch (error) {

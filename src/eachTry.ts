@@ -1,6 +1,12 @@
-import { isArrayLike } from './is/isArrayLike';
-import { executeTry } from './executeTry';
-import { each } from './each';
+import {
+  isArrayLike, 
+} from './is/isArrayLike';
+import {
+  executeTry, 
+} from './executeTry';
+import {
+  each, 
+} from './each';
 
 /**
  * Executes all functions with shared args/context, catching errors via `onError`.
@@ -24,7 +30,9 @@ export const eachTry = (
   each(
     funcs,
     (fn: (...a: any[]) => any) => {
-      executeTry(fn, callArgs, ctx, onError);
+      executeTry(
+        fn, callArgs, ctx, onError,
+      );
     },
     isArrayLike(funcs),
   );

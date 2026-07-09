@@ -1,4 +1,6 @@
-import { startsWith } from '../src/startsWith';
+import {
+  startsWith, 
+} from '../src/startsWith';
 
 describe('startsWith', () => {
   test('returns true when string starts with search', () => {
@@ -11,6 +13,8 @@ describe('startsWith', () => {
   });
 
   test('position parameter', () => {
-    expect(startsWith('hello', 'el', 1)).toBe(true);
+    expect(startsWith(
+      'hello', 'el', 1,
+    )).toBe(true);
   });
 });

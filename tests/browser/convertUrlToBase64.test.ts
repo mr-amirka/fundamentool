@@ -1,4 +1,6 @@
-import { convertUrlToBase64 } from '../../src/browser/convertUrlToBase64';
+import {
+  convertUrlToBase64, 
+} from '../../src/browser/convertUrlToBase64';
 
 describe('browser/convertUrlToBase64', () => {
   beforeEach(() => {
@@ -28,7 +30,9 @@ describe('browser/convertUrlToBase64', () => {
   test('composes url->blob->base64', async () => {
     const originalFetch = global.fetch;
     (global as any).fetch = jest.fn().mockResolvedValue({
-      blob: async () => new Blob(['ok'], { type: 'text/plain' }),
+      blob: async () => new Blob(['ok'], {
+        type: 'text/plain', 
+      }),
     });
 
     const result = await convertUrlToBase64('https://example.com/test.txt');

@@ -1,4 +1,6 @@
-import { indexOf } from './indexOf';
+import {
+  indexOf, 
+} from './indexOf';
 
 /**
  * Creates a shallow copy of `src` without the specified keys.

@@ -1,6 +1,12 @@
-import { forEach } from './forEach';
-import { removeOf } from './removeOf';
-import { eachApply } from './eachApply';
+import {
+  forEach, 
+} from './forEach';
+import {
+  removeOf, 
+} from './removeOf';
+import {
+  eachApply, 
+} from './eachApply';
 
 export type TDestroyFn = () => void;
 
@@ -69,5 +75,5 @@ export const destroyProvider = (initial?: TDestroyFn[]): IDestroyer => {
   };
 
   return instance;
-}
+};
 

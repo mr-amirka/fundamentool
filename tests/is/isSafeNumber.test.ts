@@ -1,4 +1,6 @@
-import { isSafeNumber } from '../../src/is/isSafeNumber';
+import {
+  isSafeNumber, 
+} from '../../src/is/isSafeNumber';
 
 describe('isSafeNumber', () => {
   test('returns true for valid non-negative numbers', () => {

@@ -1,11 +1,19 @@
-import { escapedSplitProvider } from '../src/escapedSplitProvider';
-import { escapedHalfProvider } from '../src/escapedHalfProvider';
+import {
+  escapedSplitProvider, 
+} from '../src/escapedSplitProvider';
+import {
+  escapedHalfProvider, 
+} from '../src/escapedHalfProvider';
 
 describe('escapedSplitProvider', () => {
   const split = escapedSplitProvider(',');
 
   test('splits on separator', () => {
-    expect(split('a,b,c')).toEqual(['a', 'b', 'c']);
+    expect(split('a,b,c')).toEqual([
+      'a',
+      'b',
+      'c',
+    ]);
   });
 
   test('preserves escaped separator', () => {
@@ -35,7 +43,11 @@ describe('escapedHalfProvider', () => {
   const half = escapedHalfProvider(':');
 
   test('splits at first separator', () => {
-    const [prefix, suffix, value] = half('key:value');
+    const [
+      prefix,
+      suffix,
+      value,
+    ] = half('key:value');
     expect(prefix).toBe('key');
     expect(suffix).toBe(':value');
     expect(value).toBe('value');
@@ -47,7 +59,11 @@ describe('escapedHalfProvider', () => {
   });
 
   test('returns full string in prefix when no separator', () => {
-    const [prefix, suffix, value] = half('noSeparator');
+    const [
+      prefix,
+      suffix,
+      value,
+    ] = half('noSeparator');
     expect(prefix).toBe('noSeparator');
     expect(suffix).toBe('');
     expect(value).toBe('');

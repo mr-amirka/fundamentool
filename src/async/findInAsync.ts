@@ -1,6 +1,12 @@
-import { entries } from '../entries';
-import { findAsync } from './findAsync';
-import { checkNoop } from './checkNoop';
+import {
+  entries, 
+} from '../entries';
+import {
+  findAsync, 
+} from './findAsync';
+import {
+  checkNoop, 
+} from './checkNoop';
 
 /**
  * Asynchronous find over array or object.
@@ -23,7 +29,9 @@ export function findInAsync<T>(
 ): Promise<T | undefined> {
   return findAsync(
     entries(collection),
-    (line: [string, T]) => iteratee.call(ctx, line[1], line[0], collection),
+    (line: [string, T]) => iteratee.call(
+      ctx, line[1], line[0], collection,
+    ),
     ctx,
     checkFn,
   )

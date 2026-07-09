@@ -1,4 +1,6 @@
-import { upperFirst } from '../src/upperFirst';
+import {
+  upperFirst, 
+} from '../src/upperFirst';
 
 describe('upperFirst', () => {
   test('uppercases first char', () => {

@@ -1,5 +1,9 @@
-import { RpcClient } from '../../src/rpc/RpcClient';
-import { RpcConnect } from '../../src/rpc/RpcConnect';
+import {
+  RpcClient, 
+} from '../../src/rpc/RpcClient';
+import {
+  RpcConnect, 
+} from '../../src/rpc/RpcConnect';
 
 function makeChannel() {
   type Listener = (msg: any) => void;
@@ -13,7 +17,9 @@ function makeChannel() {
     },
     onMessage: (cb: Listener) => {
       clientListeners.push(cb);
-      return () => { clientListeners.splice(clientListeners.indexOf(cb), 1); };
+      return () => {
+        clientListeners.splice(clientListeners.indexOf(cb), 1); 
+      };
     },
   };
 
@@ -24,16 +30,23 @@ function makeChannel() {
     },
     onMessage: (cb: Listener) => {
       serverListeners.push(cb);
-      return () => { serverListeners.splice(serverListeners.indexOf(cb), 1); };
+      return () => {
+        serverListeners.splice(serverListeners.indexOf(cb), 1); 
+      };
     },
   };
 
-  return { clientOptions, serverOptions };
+  return {
+    clientOptions,
+    serverOptions, 
+  };
 }
 
 describe('RpcClient ↔ RpcConnect integration', () => {
   test('client.call resolves with server export result', async () => {
-    const { clientOptions, serverOptions } = makeChannel();
+    const {
+      clientOptions, serverOptions, 
+    } = makeChannel();
     const connect = new RpcConnect({
       ...serverOptions,
       exports: {
@@ -50,11 +63,15 @@ describe('RpcClient ↔ RpcConnect integration', () => {
   });
 
   test('client.call rejects when server method throws', async () => {
-    const { clientOptions, serverOptions } = makeChannel();
+    const {
+      clientOptions, serverOptions, 
+    } = makeChannel();
     const connect = new RpcConnect({
       ...serverOptions,
       exports: {
-        fail: () => { throw new Error('server error'); },
+        fail: () => {
+          throw new Error('server error'); 
+        },
       },
     });
     const client = new RpcClient(clientOptions);
@@ -66,7 +83,9 @@ describe('RpcClient ↔ RpcConnect integration', () => {
   });
 
   test('client passes function argument that server can call back', async () => {
-    const { clientOptions, serverOptions } = makeChannel();
+    const {
+      clientOptions, serverOptions, 
+    } = makeChannel();
     const connect = new RpcConnect({
       ...serverOptions,
       exports: {
@@ -83,17 +102,25 @@ describe('RpcClient ↔ RpcConnect integration', () => {
   });
 
   test('server can return complex object', async () => {
-    const { clientOptions, serverOptions } = makeChannel();
+    const {
+      clientOptions, serverOptions, 
+    } = makeChannel();
     const connect = new RpcConnect({
       ...serverOptions,
       exports: {
-        getData: () => ({ name: 'Alice', tags: ['a', 'b'] }),
+        getData: () => ({
+          name: 'Alice',
+          tags: ['a', 'b'], 
+        }),
       },
     });
     const client = new RpcClient(clientOptions);
 
     const result = await client.call('getData');
-    expect(result).toEqual({ name: 'Alice', tags: ['a', 'b'] });
+    expect(result).toEqual({
+      name: 'Alice',
+      tags: ['a', 'b'], 
+    });
 
     client.destroy();
     connect.destroy();

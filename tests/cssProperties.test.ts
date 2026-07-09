@@ -1,4 +1,6 @@
-import { cssPropertiesParseSimple } from '../src/cssPropertiesParseSimple';
+import {
+  cssPropertiesParseSimple, 
+} from '../src/cssPropertiesParseSimple';
 import {
   cssPropertiesStringifyProvider,
   TCssProps,

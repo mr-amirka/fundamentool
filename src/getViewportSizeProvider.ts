@@ -20,15 +20,10 @@ export type TViewportWindowContext = {
  * const getSize = getViewportSizeProvider(window);
  * getSize(); // => [1024, 768]
  */
-export function getViewportSizeProvider(
-  w: TViewportWindowContext,
-): (() => [number, number]) {
+export function getViewportSizeProvider(w: TViewportWindowContext): (() => [number, number]) {
   const d = w.document;
   const de = d.documentElement;
   return () => {
-    return [
-      w.innerWidth || d.width || de.clientWidth,
-      w.innerHeight || d.height || de.clientHeight,
-    ] as [number, number];
+    return [w.innerWidth || d.width || de.clientWidth, w.innerHeight || d.height || de.clientHeight] as [number, number];
   };
 }

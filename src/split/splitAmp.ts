@@ -1,4 +1,6 @@
-import { splitProvider } from './splitProvider';
+import {
+  splitProvider, 
+} from './splitProvider';
 
 /**
  * Splits string by ampersand.
@@ -9,4 +11,4 @@ import { splitProvider } from './splitProvider';
  * splitAmp('a&b&c') // => ['a', 'b', 'c']
  * splitAmp('hello') // => ['hello']
  */
-export const splitAmp = splitProvider(/\&/);
+export const splitAmp = splitProvider(/&/);

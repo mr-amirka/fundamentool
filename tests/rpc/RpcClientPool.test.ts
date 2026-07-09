@@ -1,6 +1,12 @@
-import { RpcClient } from '../../src/rpc/RpcClient';
-import { RpcConnect } from '../../src/rpc/RpcConnect';
-import { RpcClientPool } from '../../src/rpc/RpcClientPool';
+import {
+  RpcClient, 
+} from '../../src/rpc/RpcClient';
+import {
+  RpcConnect, 
+} from '../../src/rpc/RpcConnect';
+import {
+  RpcClientPool, 
+} from '../../src/rpc/RpcClientPool';
 
 function makeChannel() {
   type Listener = (msg: any) => void;
@@ -14,7 +20,9 @@ function makeChannel() {
     },
     onMessage: (cb: Listener) => {
       clientListeners.push(cb);
-      return () => { clientListeners.splice(clientListeners.indexOf(cb), 1); };
+      return () => {
+        clientListeners.splice(clientListeners.indexOf(cb), 1); 
+      };
     },
   };
 
@@ -25,17 +33,31 @@ function makeChannel() {
     },
     onMessage: (cb: Listener) => {
       serverListeners.push(cb);
-      return () => { serverListeners.splice(serverListeners.indexOf(cb), 1); };
+      return () => {
+        serverListeners.splice(serverListeners.indexOf(cb), 1); 
+      };
     },
   };
 
-  return { clientOptions, serverOptions };
+  return {
+    clientOptions,
+    serverOptions, 
+  };
 }
 
 function makeServer(exports: Record<string, any>) {
-  const channels = Array.from({ length: 4 }, () => makeChannel());
-  const connects = channels.map(({ serverOptions }) => new RpcConnect({ ...serverOptions, exports }));
-  const clients = channels.map(({ clientOptions }) => new RpcClient(clientOptions));
+  const channels = Array.from({
+    length: 4, 
+  }, () => makeChannel());
+  const connects = channels.map(({
+    serverOptions, 
+  }) => new RpcConnect({
+    ...serverOptions,
+    exports, 
+  }));
+  const clients = channels.map(({
+    clientOptions, 
+  }) => new RpcClient(clientOptions));
 
   const pool = new RpcClientPool({
     maxWorkers: clients.length,
@@ -57,7 +79,11 @@ function makeServer(exports: Record<string, any>) {
 
 describe('RpcClientPool', () => {
   test('call routes to a worker and resolves', async () => {
-    const { pool, cleanup } = makeServer({ add: (a: number, b: number) => a + b });
+    const {
+      pool, cleanup, 
+    } = makeServer({
+      add: (a: number, b: number) => a + b, 
+    });
     const result = await pool.call('add', [3, 4]);
     expect(result).toBe(7);
     cleanup();
@@ -87,7 +113,13 @@ describe('RpcClientPool', () => {
         let i = 0;
         return () => {
           created.push(i++);
-          return { call: () => Promise.resolve(), on: () => () => {}, proxy: () => Promise.resolve(), taskCount: () => 0, destroy: () => {} } as any;
+          return {
+            call: () => Promise.resolve(),
+            on: () => () => {},
+            proxy: () => Promise.resolve(),
+            taskCount: () => 0,
+            destroy: () => {}, 
+          } as any;
         };
       })(),
     });
@@ -100,13 +132,23 @@ describe('RpcClientPool', () => {
   });
 
   test('getWorker picks worker with fewest tasks', () => {
-    const taskCounts = [3, 1, 2];
+    const taskCounts = [
+      3,
+      1,
+      2,
+    ];
     let provideIndex = 0;
     const pool = new RpcClientPool({
       maxWorkers: 3,
       workerProvider: () => {
         const idx = provideIndex++;
-        return { call: () => Promise.resolve(), on: () => () => {}, proxy: () => Promise.resolve(), taskCount: () => taskCounts[idx], destroy: () => {} } as any;
+        return {
+          call: () => Promise.resolve(),
+          on: () => () => {},
+          proxy: () => Promise.resolve(),
+          taskCount: () => taskCounts[idx],
+          destroy: () => {}, 
+        } as any;
       },
     });
     // Force creation of all 3 workers
@@ -122,7 +164,13 @@ describe('RpcClientPool', () => {
       maxWorkers: 2,
       workerProvider: () => {
         callCount++;
-        return { call: () => Promise.resolve(), on: () => () => {}, proxy: () => Promise.resolve(), taskCount: () => 0, destroy: () => {} } as any;
+        return {
+          call: () => Promise.resolve(),
+          on: () => () => {},
+          proxy: () => Promise.resolve(),
+          taskCount: () => 0,
+          destroy: () => {}, 
+        } as any;
       },
     });
     pool.getWorker(); // creates worker 0, taskCount=0 → returns immediately
@@ -137,22 +185,40 @@ describe('RpcClientPool', () => {
       maxWorkers: 3,
       workerProvider: () => {
         const i = idx++;
-        return { call: () => Promise.resolve(), on: () => () => {}, proxy: () => Promise.resolve(), taskCount: () => 1, destroy: () => destroyed.push(i) } as any;
+        return {
+          call: () => Promise.resolve(),
+          on: () => () => {},
+          proxy: () => Promise.resolve(),
+          taskCount: () => 1,
+          destroy: () => destroyed.push(i), 
+        } as any;
       },
     });
     pool.getWorkers(3);
     pool.destroy();
-    expect(destroyed.sort()).toEqual([0, 1, 2]);
+    expect(destroyed.sort()).toEqual([
+      0,
+      1,
+      2,
+    ]);
   });
 
   test('multiple calls resolve correctly via pool', async () => {
-    const { pool, cleanup } = makeServer({ double: (x: number) => x * 2 });
+    const {
+      pool, cleanup, 
+    } = makeServer({
+      double: (x: number) => x * 2, 
+    });
     const results = await Promise.all([
       pool.call('double', [1]),
       pool.call('double', [2]),
       pool.call('double', [3]),
     ]);
-    expect(results).toEqual([2, 4, 6]);
+    expect(results).toEqual([
+      2,
+      4,
+      6,
+    ]);
     cleanup();
   });
 });

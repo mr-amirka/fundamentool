@@ -1,4 +1,6 @@
-import { isHash } from '../../src/is/isHash';
+import {
+  isHash, 
+} from '../../src/is/isHash';
 
 describe('isHash', () => {
   test('returns true for valid 32-char hex string (default)', () => {

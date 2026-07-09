@@ -1,10 +1,16 @@
 import type {
   TRpcClientOptionsOnMessage,
   TRpcClientOptionsPostMessage,
-} from "../../types";
-import { RpcClient } from "../../RpcClient";
-import { SyntheticWorker } from "../SyntheticWorker";
-import { onRpcMessageProvider } from "./onRpcMessageProvider";
+} from '../../types';
+import {
+  RpcClient, 
+} from '../../RpcClient';
+import {
+  SyntheticWorker, 
+} from '../SyntheticWorker';
+import {
+  onRpcMessageProvider, 
+} from './onRpcMessageProvider';
 
 /** Worker type for `RpcClientWorker`. Falls back automatically if the chosen type is unavailable. */
 export type TRpcClientWorkerOptionsType = 'ordinary' | 'shared' | 'synthetic';

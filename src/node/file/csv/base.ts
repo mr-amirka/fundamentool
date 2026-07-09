@@ -6,7 +6,7 @@ import {
   parse,
   parseEachLine,
   stringify,
-  TParseEachLineCallback
+  TParseEachLineCallback,
 } from '../../../csv';
 
 /**
@@ -19,7 +19,9 @@ import {
  * await write('/data/report', [[1, 2], [3, 4]]);
  */
 export const write = (path: string, data: any) => {
-  return writeFile(path + '.csv', stringify(data), 'utf8');
+  return writeFile(
+    path + '.csv', stringify(data), 'utf8',
+  );
 };
 
 /**

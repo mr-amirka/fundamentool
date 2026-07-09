@@ -1,15 +1,31 @@
-import { tmpdir } from 'os';
-import { join } from 'path';
-import { mkdirSync, writeFileSync, rmSync } from 'fs';
-import { TransformFrom } from '../../../src/node/jsonl/TransformFrom';
-import { TransformTo } from '../../../src/node/jsonl/TransformTo';
-import { read } from '../../../src/node/jsonl/read';
-import { write } from '../../../src/node/jsonl/write';
+import {
+  tmpdir, 
+} from 'os';
+import {
+  join, 
+} from 'path';
+import {
+  mkdirSync, writeFileSync, rmSync, 
+} from 'fs';
+import {
+  TransformFrom, 
+} from '../../../src/node/jsonl/TransformFrom';
+import {
+  TransformTo, 
+} from '../../../src/node/jsonl/TransformTo';
+import {
+  read, 
+} from '../../../src/node/jsonl/read';
+import {
+  write, 
+} from '../../../src/node/jsonl/write';
 import * as promisify from '../../../src/node/jsonl/promisify';
 
 function tmpDir() {
   const dir = join(tmpdir(), `fundamentool-jsonl-${Date.now()}-${Math.random().toString(36).slice(2)}`);
-  mkdirSync(dir, { recursive: true });
+  mkdirSync(dir, {
+    recursive: true, 
+  });
   return dir;
 }
 
@@ -32,8 +48,12 @@ describe('node/jsonl — TransformTo (serialize)', () => {
       expect(joined).toBe('{"a":1}\n{"b":2}\n');
       done();
     });
-    transform.write({ a: 1 });
-    transform.write({ b: 2 });
+    transform.write({
+      a: 1, 
+    });
+    transform.write({
+      b: 2, 
+    });
     transform.end();
   });
 });
@@ -44,7 +64,11 @@ describe('node/jsonl — TransformFrom (deserialize)', () => {
     const items: any[] = [];
     transform.on('data', (obj: any) => items.push(obj));
     transform.on('end', () => {
-      expect(items).toEqual([{ a: 1 }, { b: 2 }]);
+      expect(items).toEqual([{
+        a: 1, 
+      }, {
+        b: 2, 
+      }]);
       done();
     });
     transform.write(Buffer.from('{"a":1}\n{"b":2}\n'));
@@ -56,7 +80,9 @@ describe('node/jsonl — TransformFrom (deserialize)', () => {
     const items: any[] = [];
     transform.on('data', (obj: any) => items.push(obj));
     transform.on('end', () => {
-      expect(items).toEqual([{ x: 42 }]);
+      expect(items).toEqual([{
+        x: 42, 
+      }]);
       done();
     });
     transform.write(Buffer.from('{"x"'));
@@ -73,14 +99,30 @@ describe('node/jsonl — round-trip via pipe', () => {
 
     fromStream.on('data', (obj: any) => items.push(obj));
     fromStream.on('end', () => {
-      expect(items).toEqual([{ id: 1 }, { id: 2 }, { id: 3 }]);
+      expect(items).toEqual([
+        {
+          id: 1, 
+        },
+        {
+          id: 2, 
+        },
+        {
+          id: 3, 
+        },
+      ]);
       done();
     });
 
     toStream.pipe(fromStream);
-    toStream.write({ id: 1 });
-    toStream.write({ id: 2 });
-    toStream.write({ id: 3 });
+    toStream.write({
+      id: 1, 
+    });
+    toStream.write({
+      id: 2, 
+    });
+    toStream.write({
+      id: 3, 
+    });
     toStream.end();
   });
 });
@@ -92,8 +134,20 @@ describe('node/jsonl — file read (from pre-written file)', () => {
     writeFileSync(path, '{"a":1}\n{"b":2}\n{"c":3}\n');
 
     const items = await collectStream(read(path));
-    expect(items).toEqual([{ a: 1 }, { b: 2 }, { c: 3 }]);
-    rmSync(dir, { recursive: true });
+    expect(items).toEqual([
+      {
+        a: 1, 
+      },
+      {
+        b: 2, 
+      },
+      {
+        c: 3, 
+      },
+    ]);
+    rmSync(dir, {
+      recursive: true, 
+    });
   });
 
   test('read() handles empty file', async () => {
@@ -103,7 +157,9 @@ describe('node/jsonl — file read (from pre-written file)', () => {
 
     const items = await collectStream(read(path));
     expect(items).toEqual([]);
-    rmSync(dir, { recursive: true });
+    rmSync(dir, {
+      recursive: true, 
+    });
   });
 });
 
@@ -111,10 +167,16 @@ describe('node/jsonl — file write', () => {
   test('write() produces valid JSONL content in file', async () => {
     const dir = tmpDir();
     const path = join(dir, 'out.jsonl');
-    const records = [{ a: 1 }, { b: 'hello' }];
+    const records = [{
+      a: 1, 
+    }, {
+      b: 'hello', 
+    }];
 
     const out = write(path) as any;
-    out.on('error', (e: any) => { throw e; });
+    out.on('error', (e: any) => {
+      throw e; 
+    });
     records.forEach((r) => out.write(r));
     out.end();
     // write() pipes async (mkdir callback), so we wait for the file to appear
@@ -122,22 +184,34 @@ describe('node/jsonl — file write', () => {
 
     const items = await collectStream(read(path));
     expect(items).toEqual(records);
-    rmSync(dir, { recursive: true });
+    rmSync(dir, {
+      recursive: true, 
+    });
   });
 
   test('write() creates parent directories', async () => {
     const dir = tmpDir();
-    const path = join(dir, 'nested', 'out.jsonl');
+    const path = join(
+      dir, 'nested', 'out.jsonl',
+    );
 
     const out = write(path) as any;
-    out.on('error', (e: any) => { throw e; });
-    out.write({ v: 1 });
+    out.on('error', (e: any) => {
+      throw e; 
+    });
+    out.write({
+      v: 1, 
+    });
     out.end();
     await new Promise<void>((resolve) => setTimeout(resolve, 50));
 
     const items = await collectStream(read(path));
-    expect(items).toEqual([{ v: 1 }]);
-    rmSync(dir, { recursive: true });
+    expect(items).toEqual([{
+      v: 1, 
+    }]);
+    rmSync(dir, {
+      recursive: true, 
+    });
   });
 });
 
@@ -148,8 +222,20 @@ describe('node/jsonl/promisify — read', () => {
     writeFileSync(path, '{"n":10}\n{"n":20}\n{"n":30}\n');
 
     const records = await promisify.read(path);
-    expect(records).toEqual([{ n: 10 }, { n: 20 }, { n: 30 }]);
-    rmSync(dir, { recursive: true });
+    expect(records).toEqual([
+      {
+        n: 10, 
+      },
+      {
+        n: 20, 
+      },
+      {
+        n: 30, 
+      },
+    ]);
+    rmSync(dir, {
+      recursive: true, 
+    });
   });
 
   test('resolves with empty array for empty file', async () => {
@@ -159,6 +245,8 @@ describe('node/jsonl/promisify — read', () => {
 
     const records = await promisify.read(path);
     expect(records).toEqual([]);
-    rmSync(dir, { recursive: true });
+    rmSync(dir, {
+      recursive: true, 
+    });
   });
 });

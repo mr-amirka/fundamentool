@@ -1,4 +1,6 @@
-import { intval, floatval } from '../src/numval';
+import {
+  intval, floatval, 
+} from '../src/numval';
 
 describe('intval', () => {
   test('parses integer from string', () => {
@@ -17,9 +19,15 @@ describe('intval', () => {
   });
 
   test('clamps to [minVal, maxVal]', () => {
-    expect(intval(3, 0, 1, 10)).toBe(3);
-    expect(intval(-5, 0, 1, 10)).toBe(1);
-    expect(intval(50, 0, 1, 10)).toBe(10);
+    expect(intval(
+      3, 0, 1, 10,
+    )).toBe(3);
+    expect(intval(
+      -5, 0, 1, 10,
+    )).toBe(1);
+    expect(intval(
+      50, 0, 1, 10,
+    )).toBe(10);
   });
 });
 

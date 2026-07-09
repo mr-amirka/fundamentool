@@ -1,5 +1,9 @@
-import { readUnopened as readUnopenedSimple } from '../file/readUnopened';
-import { TransformFrom } from './TransformFrom';
+import {
+  readUnopened as readUnopenedSimple, 
+} from '../file/readUnopened';
+import {
+  TransformFrom, 
+} from './TransformFrom';
 
 /**
  * Creates a JSONL readable stream that polls the file until it becomes available.
@@ -13,5 +17,5 @@ import { TransformFrom } from './TransformFrom';
  */
 export function readUnopened(path: string, options?: any): NodeJS.ReadableStream {
   return readUnopenedSimple(path, options).pipe(new (TransformFrom as any)());
-};
+}
 

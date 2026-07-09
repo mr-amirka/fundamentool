@@ -1,5 +1,9 @@
-import { isObject } from './is/isObject';
-import { getKeyPath } from './getKeyPath';
+import {
+  isObject, 
+} from './is/isObject';
+import {
+  getKeyPath, 
+} from './getKeyPath';
 
 export interface IRemove {
   /**

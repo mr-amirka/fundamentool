@@ -1,6 +1,12 @@
-import { getWithContext } from './get';
-import { isArrayLike } from './is/isArrayLike';
-import { getKeyPath } from './getKeyPath';
+import {
+  getWithContext, 
+} from './get';
+import {
+  isArrayLike, 
+} from './is/isArrayLike';
+import {
+  getKeyPath, 
+} from './getKeyPath';
 
 /**
  * Invokes a function by path in the scope.

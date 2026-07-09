@@ -1,4 +1,6 @@
-import { createTimeout } from '../src/createTimeout';
+import {
+  createTimeout, 
+} from '../src/createTimeout';
 
 describe('createTimeout', () => {
   beforeEach(() => {
@@ -26,8 +28,12 @@ describe('createTimeout', () => {
 
   test('passes args and ctx', () => {
     const fn = jest.fn();
-    const ctx = { x: 1 };
-    createTimeout(fn, 50, ['a', 'b'], ctx);
+    const ctx = {
+      x: 1, 
+    };
+    createTimeout(
+      fn, 50, ['a', 'b'], ctx,
+    );
     jest.advanceTimersByTime(50);
     expect(fn).toHaveBeenCalledWith('a', 'b');
     expect(fn).toHaveBeenLastCalledWith('a', 'b');

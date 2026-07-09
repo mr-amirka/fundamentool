@@ -29,13 +29,17 @@ describe('browser/blob/from', () => {
   });
 
   test('creates Blob with correct type; toText reads JSON', async () => {
-    const { from } = require('../../../src/browser/blob');
+    const {
+      from, 
+    } = require('../../../src/browser/blob');
 
     const blob1 = from('hello', 'text/plain');
     expect(blob1).toBeInstanceOf(Blob);
     expect(blob1.type).toBe('text/plain');
 
-    const blob2 = from({ a: 1 });
+    const blob2 = from({
+      a: 1, 
+    });
     expect(blob2.type).toBe('application/json');
 
     const textProvider = require('../../../src/browser/blob').toText as (

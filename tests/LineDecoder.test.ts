@@ -1,4 +1,6 @@
-import { LineDecoder } from '../src/LineDecoder';
+import {
+  LineDecoder, 
+} from '../src/LineDecoder';
 
 describe('LineDecoder', () => {
   test('splits lines across multiple chunks', () => {
@@ -17,13 +19,23 @@ describe('LineDecoder', () => {
     const decoder = new LineDecoder();
     const lines = decoder.end('a\r\nb\r\nc');
 
-    expect(lines).toEqual(['a', 'b', 'c']);
+    expect(lines).toEqual([
+      'a',
+      'b',
+      'c',
+    ]);
   });
 
   test('can keep empty lines when skipEmptyLines=false', () => {
-    const decoder = new LineDecoder({ skipEmptyLines: false });
+    const decoder = new LineDecoder({
+      skipEmptyLines: false, 
+    });
     const lines = decoder.end('\n\nx\n');
 
-    expect(lines).toEqual(['', '', 'x']);
+    expect(lines).toEqual([
+      '',
+      '',
+      'x',
+    ]);
   });
 });

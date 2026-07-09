@@ -1,6 +1,12 @@
-import { regexpNormalizeText } from './regexpNormalizeText';
-import { unslash } from './unslash';
-import { map } from './map';
+import {
+  regexpNormalizeText, 
+} from './regexpNormalizeText';
+import {
+  unslash, 
+} from './unslash';
+import {
+  map, 
+} from './map';
 
 interface IEscapedHalf {
   /**
@@ -36,10 +42,8 @@ interface IEscapedHalf {
  * half('key:value');        // => ['key', ':value', 'value']
  * half('key\\:name:value'); // => ['key:name', ':value', 'value']
  */
-export const escapedHalfProvider = (
-  separator: string,
-  escaped?: string,
-): IEscapedHalf => {
+export const escapedHalfProvider = (separator: string,
+  escaped?: string): IEscapedHalf => {
   const sep = regexpNormalizeText(separator);
   const esc = escaped ? regexpNormalizeText(escaped) : '\\\\.';
   const regexp = new RegExp('(' + esc + ')|(' + sep + '(.*)$)', 'g');
@@ -60,7 +64,9 @@ export const escapedHalfProvider = (
     let prefix = input;
     let value = '';
     let suffix = '';
-    input.replace(regexp, (all, escapedMatch, _suffix, _value, offset) => {
+    input.replace(regexp, (
+      all, escapedMatch, _suffix, _value, offset,
+    ) => {
       if (!escapedMatch) {
         suffix = _suffix;
         value = _value;
@@ -68,8 +74,12 @@ export const escapedHalfProvider = (
       }
       return '';
     });
-    return [prefix, suffix, value];
-  }
+    return [
+      prefix,
+      suffix,
+      value,
+    ];
+  };
 
   return instance;
 };

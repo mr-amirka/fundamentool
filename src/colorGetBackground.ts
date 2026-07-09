@@ -1,13 +1,27 @@
-import { color } from './color';
-import { push } from './push';
-import { pushArray } from './pushArray';
-import { splitProvider } from './split/splitProvider';
-import { camelToKebabCase } from './camelToKebabCase';
-import { joinSpace } from './join/joinSpace';
-import { joinComma } from './join/joinComma';
+import {
+  color, 
+} from './color';
+import {
+  push, 
+} from './push';
+import {
+  pushArray, 
+} from './pushArray';
+import {
+  splitProvider, 
+} from './split/splitProvider';
+import {
+  camelToKebabCase, 
+} from './camelToKebabCase';
+import {
+  joinSpace, 
+} from './join/joinSpace';
+import {
+  joinComma, 
+} from './join/joinComma';
 
 const regexpBg = /^(---?[^;]+;?|[A-Fa-f0-9]+(\.[0-9]+)?)(p([0-9]+)([a-z%]*))?$/i;
-const regexpAngle = /^(.*)((\_r)_?([A-Za-z_]*)|\_g(\-?[0-9]+))$/i;
+const regexpAngle = /^(.*)((_r)_?([A-Za-z_]*)|_g(-?[0-9]+))$/i;
 const regexpRepeat = /^(.*)_rpt$/i;
 const regexpDelimeter = /--[^;]+(;[^-]*)?|[^-]+/gim;
 const splitSuffix = splitProvider(/_+/);

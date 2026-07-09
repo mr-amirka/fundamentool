@@ -1,5 +1,9 @@
-import { isPlainObject } from './is/isPlainObject';
-import { isObject } from './is/isObject';
+import {
+  isPlainObject, 
+} from './is/isPlainObject';
+import {
+  isObject, 
+} from './is/isObject';
 
 export type ComplementTarget = Record<string, any> | undefined;
 export type ComplementSource = Record<string, any>;
@@ -29,10 +33,14 @@ export const complement: IComplement = <TDst extends ComplementTarget, TSrc exte
   }
   let target: any = dst;
   if (!isObject(target)) {
-    if (target !== undefined) return target;
+    if (target !== undefined) {
+      return target;
+    }
     target = {};
   }
-  return base(target, src, depth) as any;
+  return base(
+    target, src, depth,
+  ) as any;
 };
 
 /**
@@ -43,24 +51,32 @@ export const complement: IComplement = <TDst extends ComplementTarget, TSrc exte
  * @param depth - The depth of the object.
  * @returns The destination object.
  */
-const base = complement.base = (dst: Record<string, any>, src: Record<string, any>, depth: number): Record<string, any> => {
+const base = complement.base = (
+  dst: Record<string, any>, src: Record<string, any>, depth: number,
+): Record<string, any> => {
   depth--;
   const dp = depth > -1;
   // eslint-disable-next-line guard-for-in
   for (const k in src) {
     const from = src[k];
-    if (from === undefined) continue;
+    if (from === undefined) {
+      continue;
+    }
     const to = dst[k];
     if (to === undefined) {
       if (dp && isPlainObject(from)) {
-        dst[k] = base({}, from as any, depth);
+        dst[k] = base(
+          {}, from as any, depth,
+        );
       } else {
         dst[k] = from;
       }
       continue;
     }
     if (dp && isObject(to) && isPlainObject(from)) {
-      base(to, from as any, depth);
+      base(
+        to, from as any, depth,
+      );
     }
   }
   return dst;

@@ -34,7 +34,9 @@ export function responsibilityChain<TReq = any>(
 ): any {
   function next(_req: TReq, i: number): any {
     const handler = chain[i];
-    if (!handler) return end(_req);
+    if (!handler) {
+      return end(_req);
+    }
     const ni = i + 1;
     try {
       return handler(_req, (r?: TReq) => next(r ?? _req, ni));

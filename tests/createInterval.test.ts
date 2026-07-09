@@ -1,4 +1,6 @@
-import { createInterval } from '../src/createInterval';
+import {
+  createInterval, 
+} from '../src/createInterval';
 
 describe('createInterval', () => {
   beforeEach(() => {

@@ -1,4 +1,6 @@
-import { kebabToCamelCase } from '../src/kebabToCamelCase';
+import {
+  kebabToCamelCase, 
+} from '../src/kebabToCamelCase';
 
 describe('kebabToCamelCase', () => {
   test('converts kebab to camel', () => {

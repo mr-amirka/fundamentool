@@ -11,7 +11,11 @@ const DEFAULT_SPACE = ' ';
  * @example
  * padEnd('hello', 10, '0'); // => 'hello00000'
  */
-export function padEnd(v: string, length: number, space?: string): string {
-  return (NATIVE_PAD_END as any).call('' + v, length, space || DEFAULT_SPACE);
+export function padEnd(
+  v: string, length: number, space?: string,
+): string {
+  return (NATIVE_PAD_END as any).call(
+    '' + v, length, space || DEFAULT_SPACE,
+  );
 }
 

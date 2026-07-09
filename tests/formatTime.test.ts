@@ -1,4 +1,6 @@
-import { formatTime, normalizeDate, getData } from '../src/formatTime';
+import {
+  formatTime, normalizeDate, getData, 
+} from '../src/formatTime';
 
 describe('formatTime', () => {
   test('normalizeDate returns Date for valid input', () => {
@@ -12,16 +14,22 @@ describe('formatTime', () => {
   });
 
   test('getData returns tokens for date', () => {
-    const date = new Date(Date.UTC(2020, 0, 2, 3, 4, 5));
+    const date = new Date(Date.UTC(
+      2020, 0, 2, 3, 4, 5,
+    ));
     const data = getData(date, true);
     expect(data).not.toBeNull();
-    if (!data) return;
+    if (!data) {
+      return;
+    }
     expect(data.yyyy).toBe('2020');
     expect(data.mm).toBe('01');
   });
 
   test('formatTime formats date with default mask', () => {
-    const date = new Date(2020, 0, 2, 3, 4, 5);
+    const date = new Date(
+      2020, 0, 2, 3, 4, 5,
+    );
     const result = formatTime(date);
     expect(typeof result).toBe('string');
     expect(result).toMatch(/2020/);

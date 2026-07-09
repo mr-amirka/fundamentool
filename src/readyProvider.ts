@@ -1,6 +1,12 @@
-import { defer } from './defer';
-import { attachEvent } from './attachEvent';
-import { isDocumentStateReady } from './is/isDocumentStateReady';
+import {
+  defer, 
+} from './defer';
+import {
+  attachEvent, 
+} from './attachEvent';
+import {
+  isDocumentStateReady, 
+} from './is/isDocumentStateReady';
 
 export type TReadyDocumentContext = {
   readyState: string;
@@ -38,15 +44,29 @@ export const readyProvider = (w: TReadyWindowContext): TReadyFn => {
   let last = first;
   let hasReady = isDocumentStateReady(w);
 
-  attachEvent(d as any, 'readystatechange', onChange, false);
-  attachEvent(d as any, 'DOMContentLoaded', onReady, false);
-  attachEvent(w as any, 'load', onReady, false);
+  attachEvent(
+d as any, 'readystatechange', onChange, false,
+  );
+  attachEvent(
+d as any, 'DOMContentLoaded', onReady, false,
+  );
+  attachEvent(
+w as any, 'load', onReady, false,
+  );
 
-  return (fn: (...args: any[]) => any, args?: any[], ctx?: any): TReadyUnsubscribe | void => {
+  return (
+    fn: (...args: any[]) => any, args?: any[], ctx?: any,
+  ): TReadyUnsubscribe | void => {
     if (hasReady) {
-      return defer(fn as any, args, ctx) as TReadyUnsubscribe;
+      return defer(
+fn as any, args, ctx,
+      ) as TReadyUnsubscribe;
     }
-    let watcher: any[] | null = [fn, args, ctx];
+    let watcher: any[] | null = [
+      fn,
+      args,
+      ctx,
+    ];
     const node = (last = last.next = {
       watcher,
     });
@@ -59,7 +79,9 @@ export const readyProvider = (w: TReadyWindowContext): TReadyFn => {
   };
 
   function onReady() {
-    if (hasReady) return;
+    if (hasReady) {
+      return;
+    }
     hasReady = true;
     let item = first;
     let watcher: any[] | null;

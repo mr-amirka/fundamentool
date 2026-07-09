@@ -1,5 +1,9 @@
-import { noop } from '../noop';
-import { wait } from '../wait';
+import {
+  noop, 
+} from '../noop';
+import {
+  wait, 
+} from '../wait';
 
 /**
  * Like `sequence`, but adds a delay before each execution.

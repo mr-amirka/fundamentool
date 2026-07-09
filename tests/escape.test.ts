@@ -1,6 +1,12 @@
-import { escapeHTML } from '../src/escapeHTML';
-import { escapeCss } from '../src/escapeCss';
-import { escapeQuote } from '../src/escapeQuote';
+import {
+  escapeHTML, 
+} from '../src/escapeHTML';
+import {
+  escapeCss, 
+} from '../src/escapeCss';
+import {
+  escapeQuote, 
+} from '../src/escapeQuote';
 
 describe('escapeHTML', () => {
   test('escapes ampersand', () => {
@@ -24,9 +30,7 @@ describe('escapeHTML', () => {
   });
 
   test('combines multiple replacements', () => {
-    expect(escapeHTML("<script>alert('xss')</script>")).toBe(
-      '&lt;script&gt;alert(&#039;xss&#039;)&lt;/script&gt;',
-    );
+    expect(escapeHTML("<script>alert('xss')</script>")).toBe('&lt;script&gt;alert(&#039;xss&#039;)&lt;/script&gt;');
   });
 });
 

@@ -1,5 +1,9 @@
-import { camelToKebabCase } from './camelToKebabCase';
-import { push } from './push';
+import {
+  camelToKebabCase, 
+} from './camelToKebabCase';
+import {
+  push, 
+} from './push';
 
 export type TPrefixedAttrs = Record<string, Record<string, boolean> | boolean>;
 export type TPrefixes = Record<string, boolean>;
@@ -23,10 +27,8 @@ export interface IStringifyCss {
  * stringify({ color: 'red', fontSize: '12px' }); // => 'color:red;font-size:12px'
  * stringify({ color: 'red' }, true);              // => 'color:red!important'
  */
-export const cssPropertiesStringifyProvider = (
-  prefixedAttrs: TPrefixedAttrs = {},
-  prefixes: TPrefixes = {},
-): IStringifyCss => {
+export const cssPropertiesStringifyProvider = (prefixedAttrs: TPrefixedAttrs = {},
+  prefixes: TPrefixes = {}): IStringifyCss => {
 
   /**
    * Serializes CSS properties to a string.

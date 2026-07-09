@@ -12,18 +12,18 @@ import {
 } from 'path';
 
 type BufferEncoding =
-  | "ascii"
-  | "utf8"
-  | "utf-8"
-  | "utf16le"
-  | "utf-16le"
-  | "ucs2"
-  | "ucs-2"
-  | "base64"
-  | "base64url"
-  | "latin1"
-  | "binary"
-  | "hex";
+  | 'ascii'
+  | 'utf8'
+  | 'utf-8'
+  | 'utf16le'
+  | 'utf-16le'
+  | 'ucs2'
+  | 'ucs-2'
+  | 'base64'
+  | 'base64url'
+  | 'latin1'
+  | 'binary'
+  | 'hex';
 
 
 /**
@@ -36,9 +36,11 @@ type BufferEncoding =
  */
 export const access = async (path: string) => {
   return new Promise((resolve) => {
-    originAccess(path, constants.R_OK, (err) => {
-      resolve(!err);
-    });
+    originAccess(
+      path, constants.R_OK, (err) => {
+        resolve(!err);
+      },
+    );
   });
 };
 
@@ -52,11 +54,13 @@ export const access = async (path: string) => {
  */
 export const makeDir = (path: string) => {
   return new Promise<void>((resolve, reject) => {
-    mkdir(path, {
-      recursive: true,
-    }, (error: any) => {
-      error ? reject(error) : resolve();
-    });
+    mkdir(
+      path, {
+        recursive: true,
+      }, (error: any) => {
+        error ? reject(error) : resolve();
+      },
+    );
   });
 };
 
@@ -70,19 +74,25 @@ export const makeDir = (path: string) => {
  * @example
  * await write('./output/result.json', JSON.stringify(data));
  */
-export const write = (path: string, data: string | NodeJS.ArrayBufferView, options: WriteFileOptions = {}) => {
+export const write = (
+  path: string, data: string | NodeJS.ArrayBufferView, options: WriteFileOptions = {},
+) => {
   return new Promise<void>((resolve, reject) => {
     const dirPath = dirname(path);
-    dirPath ? mkdir(dirPath, {
-      recursive: true,
-    }, (error: any) => {
-      error ? reject(error) : write();
-    }) : write();
+    dirPath ? mkdir(
+      dirPath, {
+        recursive: true,
+      }, (error: any) => {
+        error ? reject(error) : write();
+      },
+    ) : write();
     
     function write() {
-      writeFile(path, data, options, (error: any) => {
-        error ? reject(error) : resolve();
-      });
+      writeFile(
+        path, data, options, (error: any) => {
+          error ? reject(error) : resolve();
+        },
+      );
     }
   });
 };
@@ -103,11 +113,13 @@ export const read = (path: string, options: BufferEncoding | ({
     * When provided the corresponding `AbortController` can be used to cancel an asynchronous action.
     */
     signal?: AbortSignal | undefined;
-}) | undefined | null = "utf8") => {
+}) | undefined | null = 'utf8') => {
   return new Promise<any>((resolve, reject) => {
-    readFile(path, options, (error: any, result) => {
-      error ? reject(error) : resolve(result);
-    });
+    readFile(
+      path, options, (error: any, result) => {
+        error ? reject(error) : resolve(result);
+      },
+    );
   });
 };
 

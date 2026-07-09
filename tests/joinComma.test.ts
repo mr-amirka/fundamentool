@@ -1,8 +1,14 @@
-import { joinComma } from '../src/join/joinComma';
+import {
+  joinComma, 
+} from '../src/join/joinComma';
 
 describe('joinComma', () => {
   test('joins with comma', () => {
-    expect(joinComma([1, 2, 3])).toBe('1,2,3');
+    expect(joinComma([
+      1,
+      2,
+      3,
+    ])).toBe('1,2,3');
     expect(joinComma(['a', 'b'])).toBe('a,b');
   });
 

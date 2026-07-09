@@ -1,7 +1,15 @@
-import { urlParse, TUrlProps, TUrlOptions } from './urlParse';
-import { param } from './param';
-import { merge } from './merge';
-import { isDefined } from './is/isDefined';
+import {
+  urlParse, TUrlProps, TUrlOptions, 
+} from './urlParse';
+import {
+  param, 
+} from './param';
+import {
+  merge, 
+} from './merge';
+import {
+  isDefined, 
+} from './is/isDefined';
 
 function normalize(v: Partial<TUrlProps> | string | null | undefined): Partial<TUrlProps> {
   if (isDefined(v)) {
@@ -30,26 +38,26 @@ export * from './urlParse';
  * urlExtend('https://example.com/page', { query: { v: 2 } }).href;
  * // => 'https://example.com/page?v=2'
  */
-export const urlExtend = (
-  _first?:
+export const urlExtend = (_first?:
     | (Partial<TUrlOptions> & {
         child?: Partial<TUrlOptions> | null;
       })
     | string
     | null
     | undefined,
-  _src?:
+_src?:
     | (Partial<TUrlOptions> & {
         child?: Partial<TUrlOptions> | null;
       })
     | string
     | null
-    | undefined,
-): TUrlProps => {
+    | undefined): TUrlProps => {
   const first = normalize(_first);
   const src = normalize(_src);
 
-  function __def(prop: string, def?: any, v?: any) {
+  function __def(
+    prop: string, def?: any, v?: any,
+  ) {
     return ((v = (src as any)[prop]) === undefined ? (first as any)[prop] : v) || def || '';
   }
 

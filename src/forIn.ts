@@ -15,7 +15,9 @@ export const forIn = <T extends Record<string, any>>(
 ): void => {
   let k: string;
   for (k in obj as any) {
-    iteratee.call(ctx, obj[k], k as keyof T & string, obj);
+    iteratee.call(
+      ctx, obj[k], k as keyof T & string, obj,
+    );
   } 
 };
 

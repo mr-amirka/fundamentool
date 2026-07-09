@@ -1,9 +1,15 @@
-import { variants } from '../src/variants';
+import {
+  variants, 
+} from '../src/variants';
 
 describe('variants', () => {
   test('with "P(eter|awel|atrik)"', () => {
     const [strings, depth] = variants('P(eter|awel|atrik)');
-    expect(strings).toEqual(['Peter', 'Pawel', 'Patrik']);
+    expect(strings).toEqual([
+      'Peter',
+      'Pawel',
+      'Patrik',
+    ]);
     expect(depth).toBe(1);
   });
 
@@ -32,7 +38,11 @@ describe('variants', () => {
 
   test('with "V((olod|as)ya|italiy)"', () => {
     const [strings, depth] = variants('V((olod|as)ya|italiy)');
-    expect(strings).toEqual(['Volodya', 'Vasya', 'Vitaliy']);
+    expect(strings).toEqual([
+      'Volodya',
+      'Vasya',
+      'Vitaliy',
+    ]);
     expect(depth).toBe(2);
   });
 

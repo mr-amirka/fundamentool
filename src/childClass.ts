@@ -1,5 +1,9 @@
-import { extend } from './extend';
-import { pushArray } from './pushArray';
+import {
+  extend, 
+} from './extend';
+import {
+  pushArray, 
+} from './pushArray';
 
 /**
  * Creates a "child" class that wraps a Parent constructor.

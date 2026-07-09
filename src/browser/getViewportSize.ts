@@ -1,4 +1,6 @@
-import { getViewportSizeProvider } from '../getViewportSizeProvider';
+import {
+  getViewportSizeProvider, 
+} from '../getViewportSizeProvider';
 
 declare const window: Window;
 

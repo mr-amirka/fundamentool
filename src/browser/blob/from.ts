@@ -1,7 +1,15 @@
-import { isBlob } from '../../is/isBlob';
-import { isArrayBuffer } from '../../is/isArrayBuffer';
-import { isDefined } from '../../is/isDefined';
-import { isObject } from '../../is/isObject';
+import {
+  isBlob, 
+} from '../../is/isBlob';
+import {
+  isArrayBuffer, 
+} from '../../is/isArrayBuffer';
+import {
+  isDefined, 
+} from '../../is/isDefined';
+import {
+  isObject, 
+} from '../../is/isObject';
 
 const TYPE_BINARY = 'application/octet-binary';
 
@@ -41,7 +49,11 @@ function normalize(content: any): [
  * from(new ArrayBuffer(4)); // => Blob (application/octet-binary)
  */
 export const from = (content: any, type?: string) => {
-  if (isBlob(content)) return content;
+  if (isBlob(content)) {
+    return content;
+  }
   const args = normalize(content);
-  return new Blob([args[0]], {type: type || args[1]});
+  return new Blob([args[0]], {
+    type: type || args[1],
+  });
 };

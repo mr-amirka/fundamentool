@@ -1,6 +1,12 @@
-import { checkNoop } from './checkNoop';
-import { forEachAsync } from './forEachAsync';
-import { entries } from '../entries';
+import {
+  checkNoop, 
+} from './checkNoop';
+import {
+  forEachAsync, 
+} from './forEachAsync';
+import {
+  entries, 
+} from '../entries';
 
 /**
  * Asynchronously iterates over object properties using `entries`.
@@ -21,7 +27,9 @@ export function forInAsync<T>(
 ): Promise<Record<string, T>> {
   return forEachAsync(
     entries(collection),
-    (line: [string, T]) => iteratee.call(ctx, line[1], line[0], collection),
+    (line: [string, T]) => iteratee.call(
+      ctx, line[1], line[0], collection,
+    ),
     ctx,
     checkFn,
   )

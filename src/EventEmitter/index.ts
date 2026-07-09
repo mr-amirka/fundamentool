@@ -1,5 +1,9 @@
-import { subscribe } from "../subscribe";
-import type { IEventEmitter, IEventEmitterListener } from "./types";
+import {
+  subscribe, 
+} from '../subscribe';
+import type {
+  IEventEmitter, IEventEmitterListener, 
+} from './types';
 
 type TListener<T> = (event: T) => void;
 
@@ -26,7 +30,7 @@ export class EventEmitter<T = any> implements IEventEmitter<T> {
 
   protected emit(data: T) {
     const {
-      listeners
+      listeners,
     } = this;
     if (listeners) {
       let i = 0;
@@ -57,4 +61,4 @@ export class EventEmitter<T = any> implements IEventEmitter<T> {
   }
 }
 
-export * from "./types";
+export * from './types';

@@ -1,5 +1,9 @@
-import { isFunction } from './is/isFunction';
-import { forEach } from './forEach';
+import {
+  isFunction, 
+} from './is/isFunction';
+import {
+  forEach, 
+} from './forEach';
 
 export type Decorator<T extends (...args: any[]) => any> = (emit: T) => T;
 

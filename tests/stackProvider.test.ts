@@ -1,4 +1,6 @@
-import { stackProvider } from '../src/stackProvider';
+import {
+  stackProvider, 
+} from '../src/stackProvider';
 
 describe('stackProvider', () => {
   test('push and pop returns items in FIFO order', () => {
@@ -41,7 +43,11 @@ describe('stackProvider', () => {
     stack.push(3);
     const result: number[] = [];
     stack.eachPop((item) => result.push(item));
-    expect(result).toEqual([1, 2, 3]);
+    expect(result).toEqual([
+      1,
+      2,
+      3,
+    ]);
     expect(stack.has()).toBe(false);
   });
 

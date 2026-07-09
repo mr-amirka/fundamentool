@@ -2,8 +2,10 @@ import type {
   TRpcClientRequestOptions,
   TRpcUnsubscribe,
   IRpcClient,
-} from "./types";
-import { EventEmitter } from '../EventEmitter';
+} from './types';
+import {
+  EventEmitter, 
+} from '../EventEmitter';
 
 /** Options for `RpcClientPool`. */
 export type TRpcClientPoolOptions<Client extends IRpcClient = IRpcClient> = {
@@ -15,7 +17,7 @@ export type TRpcClientPoolOptions<Client extends IRpcClient = IRpcClient> = {
 
 /** Factory function that returns `TRpcClientPoolOptions` (used for lazy init). */
 export type TRpcClientWorkerPoolOptionsInit<
-  Client extends IRpcClient = IRpcClient
+  Client extends IRpcClient = IRpcClient,
 > = () => TRpcClientPoolOptions<Client>
 
 /**

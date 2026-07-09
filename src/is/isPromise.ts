@@ -1,4 +1,6 @@
-import { isFunction } from './isFunction';
+import {
+  isFunction, 
+} from './isFunction';
 
 /**
  * Checks whether value is a Promise (or thenable).

@@ -7,10 +7,8 @@
  * @example
  * fromPairs([['a', 1], ['b', 2]]); // => { a: 1, b: 2 }
  */
-export const fromPairs = (
-  entries: Array<[string, any]> | null | undefined,
-  dst?: Record<string, any>,
-): Record<string, any> => {
+export const fromPairs = (entries: Array<[string, any]> | null | undefined,
+  dst?: Record<string, any>): Record<string, any> => {
   const out: Record<string, any> = dst || {};
   const length = (entries && entries.length) || 0;
   let i = 0;

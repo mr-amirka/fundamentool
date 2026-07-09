@@ -1,5 +1,9 @@
-import { extractExportedFn } from './testUtils';
-import { setupBrowserDomMocks } from './browserDomMocks';
+import {
+  extractExportedFn, 
+} from './testUtils';
+import {
+  setupBrowserDomMocks, 
+} from './browserDomMocks';
 
 describe('browser/download', () => {
   let clickMock: jest.Mock;
@@ -7,7 +11,9 @@ describe('browser/download', () => {
   beforeEach(() => {
     jest.useRealTimers();
     jest.resetModules();
-    ({ clickMock } = setupBrowserDomMocks());
+    ({
+      clickMock, 
+    } = setupBrowserDomMocks());
   });
 
   test('base triggers click using mocked ready', async () => {

@@ -1,13 +1,21 @@
-import { tryJsonParse } from './tryJsonParse';
-import { half } from './half';
-import { set } from './set';
+import {
+  tryJsonParse, 
+} from './tryJsonParse';
+import {
+  half, 
+} from './half';
+import {
+  set, 
+} from './set';
 
 const REGEXP_SPACE = /\+/g;
 
 export type TParams = Record<string, any>;
 
 export const unparamBase = (query: string, output?: any): TParams => {
-  const parts = half(query, '?', 1)[1].split('&');
+  const parts = half(
+    query, '?', 1,
+  )[1].split('&');
   const length = parts.length;
   let result = output;
 
@@ -27,7 +35,7 @@ export const unparamBase = (query: string, output?: any): TParams => {
     result = set(
       result,
       halfParts[0],
-      typeof normalizedValue === 'number' ? normalizedValue : value
+      typeof normalizedValue === 'number' ? normalizedValue : value,
     );
   }
 

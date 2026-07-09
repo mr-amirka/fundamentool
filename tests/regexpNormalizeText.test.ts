@@ -1,4 +1,6 @@
-import { regexpNormalizeText } from '../src/regexpNormalizeText';
+import {
+  regexpNormalizeText, 
+} from '../src/regexpNormalizeText';
 
 describe('regexpNormalizeText', () => {
   test('escapes special regexp chars in string', () => {

@@ -1,4 +1,6 @@
-import { extractExportedFn } from './testUtils';
+import {
+  extractExportedFn, 
+} from './testUtils';
 
 describe('browser/convertBlobToBase64', () => {
   beforeEach(() => {
@@ -26,11 +28,11 @@ describe('browser/convertBlobToBase64', () => {
   });
 
   test('resolves data URL string', async () => {
-    const convertBlobToBase64 = extractExportedFn(
-      require('../../src/browser/convertBlobToBase64'),
-    ) as (blob: Blob) => Promise<string>;
+    const convertBlobToBase64 = extractExportedFn(require('../../src/browser/convertBlobToBase64')) as (blob: Blob) => Promise<string>;
 
-    const blob = new Blob(['test'], { type: 'text/plain' });
+    const blob = new Blob(['test'], {
+      type: 'text/plain', 
+    });
     const result = await convertBlobToBase64(blob);
 
     expect(typeof result).toBe('string');

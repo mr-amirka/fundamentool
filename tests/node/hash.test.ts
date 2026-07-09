@@ -1,4 +1,6 @@
-import { hash } from '../../src/node/hash';
+import {
+  hash, 
+} from '../../src/node/hash';
 
 describe('node/hash', () => {
   test('returns a hex string', () => {

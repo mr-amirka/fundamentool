@@ -19,7 +19,9 @@ export const filterIn = <T>(
   const result: Record<string, T> = output || {};
   for (const k in collection) {
     v = collection[k];
-    if (iteratee.call(ctx, v, k, collection)) {
+    if (iteratee.call(
+      ctx, v, k, collection,
+    )) {
       result[k] = v;
     }
   }

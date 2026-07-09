@@ -1,4 +1,6 @@
-import { isIE } from './isIE';
+import {
+  isIE, 
+} from './isIE';
 
 /**
  * Returns `true` when `document.readyState` is in interactive or complete state.

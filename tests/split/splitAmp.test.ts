@@ -1,8 +1,14 @@
-import { splitAmp } from '../../src/split/splitAmp';
+import {
+  splitAmp, 
+} from '../../src/split/splitAmp';
 
 describe('splitAmp', () => {
   test('splits by ampersand', () => {
-    expect(splitAmp('a&b&c')).toEqual(['a', 'b', 'c']);
+    expect(splitAmp('a&b&c')).toEqual([
+      'a',
+      'b',
+      'c',
+    ]);
   });
 
   test('handles single value without ampersand', () => {

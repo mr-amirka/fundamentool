@@ -1,4 +1,6 @@
-import { childClass } from '../childClass';
+import {
+  childClass, 
+} from '../childClass';
 
 const originalParse = JSON.parse;
 
@@ -36,11 +38,14 @@ export interface IJsonlTransformFrom extends Transform {
  * stream.pipe(new TransformFrom()).on('data', (obj) => console.log(obj));
  */
 export const ProviderOfTransformFrom = (env: IJsonlTransformFromEnv): IJsonlTransformFrom => {
-  const { StringDecoder } = env;
+  const {
+    StringDecoder, 
+  } = env;
 
-  return childClass(
-    env.Transform,
-    (self: Transform, sup: (options?: any) => void, options?: Record<string, any>) => {
+  return childClass(env.Transform,
+    (
+      self: Transform, sup: (options?: any) => void, options?: Record<string, any>,
+    ) => {
       sup({
         ...options,
         readableObjectMode: true,
@@ -54,12 +59,12 @@ export const ProviderOfTransformFrom = (env: IJsonlTransformFromEnv): IJsonlTran
       let prev: string | undefined;
 
       function getLineError(error: any): Error {
-        return new Error(
-          `Parse error on line ${lineCount}:\n${error.toString()}`,
-        );
+        return new Error(`Parse error on line ${lineCount}:\n${error.toString()}`);
       }
 
-      self._transform = (chunk: any, _encoding: string, done: (err?: any) => void) => {
+      self._transform = (
+        chunk: any, _encoding: string, done: (err?: any) => void,
+      ) => {
         const text: string = decoder.write(chunk);
         const length = text.length;
         let start = 0;
@@ -105,13 +110,10 @@ export const ProviderOfTransformFrom = (env: IJsonlTransformFromEnv): IJsonlTran
         done();
 
         function getLineError(error: any): Error {
-          return new Error(
-            `Parse error on line ${lineCount}:\n${error.toString()}`,
-          );
+          return new Error(`Parse error on line ${lineCount}:\n${error.toString()}`);
         }
       };
-    },
-  ) as any;
+    }) as any;
 };
 
 

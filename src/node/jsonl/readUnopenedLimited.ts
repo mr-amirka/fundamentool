@@ -1,6 +1,12 @@
-import { extend } from '../../extend';
-import { limitStream } from '../../limitStream';
-import { readUnopened } from './readUnopened';
+import {
+  extend, 
+} from '../../extend';
+import {
+  limitStream, 
+} from '../../limitStream';
+import {
+  readUnopened, 
+} from './readUnopened';
 
 /**
  * Like `readUnopened`, but limits the number of JSONL records emitted.

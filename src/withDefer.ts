@@ -1,4 +1,6 @@
-import { defer } from './defer';
+import {
+  defer, 
+} from './defer';
 
 /**
  * Debounces a function using defer: only the last call is executed after the current tick.
@@ -21,7 +23,9 @@ export function withDefer<T extends (...args: any[]) => any>(
 
   function exec(): void {
     hasDebounce = false;
-    if (args) fn.apply(ctx, args as any);
+    if (args) {
+      fn.apply(ctx, args as any);
+    }
   }
 
   const wrapper = function (this: any): any {

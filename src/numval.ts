@@ -1,10 +1,20 @@
-import { isBoolean } from './is/isBoolean';
-import { isNumber } from './is/isNumber';
-import { isDefined } from './is/isDefined';
-import { isNaN } from './is/isNaN';
+import {
+  isBoolean, 
+} from './is/isBoolean';
+import {
+  isNumber, 
+} from './is/isNumber';
+import {
+  isDefined, 
+} from './is/isDefined';
+import {
+  isNaN, 
+} from './is/isNaN';
 
 
-function normalize(value: number, minVal?: number, maxVal?: number): number {
+function normalize(
+  value: number, minVal?: number, maxVal?: number,
+): number {
   if (isDefined(minVal)) {
     if (isNumber(minVal)) {
       value = value > minVal ? value : minVal;
@@ -30,12 +40,16 @@ function numvalProvider(parse: (v: any) => number) {
     maxVal?: number,
   ): number => {
     if (isBoolean(value)) {
-      return normalize(value ? 1 : 0, minVal, maxVal);
+      return normalize(
+        value ? 1 : 0, minVal, maxVal,
+      );
     }
     const parsed = parse(value);
     return isNaN(parsed)
       ? def ?? 0
-      : normalize(parsed, minVal, maxVal);
+      : normalize(
+        parsed, minVal, maxVal,
+      );
   };
 }
 

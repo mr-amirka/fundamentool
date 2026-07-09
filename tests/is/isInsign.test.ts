@@ -1,4 +1,6 @@
-import { isInsign } from '../../src/is/isInsign';
+import {
+  isInsign, 
+} from '../../src/is/isInsign';
 
 describe('isInsign', () => {
   test('returns true for null and undefined', () => {
@@ -20,7 +22,9 @@ describe('isInsign', () => {
 
   test('returns false for non-empty collections', () => {
     expect(isInsign([1])).toBe(false);
-    expect(isInsign({ a: 1 })).toBe(false);
+    expect(isInsign({
+      a: 1, 
+    })).toBe(false);
   });
 
   test('returns false for non-object truthy values', () => {

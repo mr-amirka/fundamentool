@@ -1,5 +1,9 @@
-import { isPlainObjectBase } from './isPlainObject';
-import { isLength } from './isLength';
+import {
+  isPlainObjectBase, 
+} from './isPlainObject';
+import {
+  isLength, 
+} from './isLength';
 
 /**
  * Checks whether value is a "collection": plain object or array-like object.

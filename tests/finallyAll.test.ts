@@ -1,4 +1,6 @@
-import { finallyAll } from '../src/finallyAll';
+import {
+  finallyAll, 
+} from '../src/finallyAll';
 
 describe('finallyAll', () => {
   test('calls callback when counter returns to zero', () => {
@@ -20,7 +22,9 @@ describe('finallyAll', () => {
 
   test('works without callback (uses noop)', () => {
     expect(() => {
-      finallyAll((inc, dec) => { inc(); dec(); });
+      finallyAll((inc, dec) => {
+        inc(); dec(); 
+      });
     }).not.toThrow();
   });
 });

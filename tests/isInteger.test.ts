@@ -1,4 +1,6 @@
-import { isInteger } from '../src/is/isInteger';
+import {
+  isInteger, 
+} from '../src/is/isInteger';
 
 describe('isInteger', () => {
   test('returns true for integers', () => {

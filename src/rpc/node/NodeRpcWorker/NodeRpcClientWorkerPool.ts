@@ -1,5 +1,9 @@
-import { RpcClientPool } from "../../RpcClientPool";
-import { NodeRpcClientWorker, TNodeRpcClientWorkerOptions } from "./NodeRpcClientWorker";
+import {
+  RpcClientPool, 
+} from '../../RpcClientPool';
+import {
+  NodeRpcClientWorker, TNodeRpcClientWorkerOptions, 
+} from './NodeRpcClientWorker';
 
 /** Options for `NodeRpcClientWorkerPool`. */
 export type TNodeRpcClientWorkerPoolOptions = TNodeRpcClientWorkerOptions & {

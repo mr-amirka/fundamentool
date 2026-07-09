@@ -1,8 +1,14 @@
-import { isDocumentStateReady } from '../../src/is/isDocumentStateReady';
+import {
+  isDocumentStateReady, 
+} from '../../src/is/isDocumentStateReady';
 
 const makeWindow = (readyState: string, userAgent = 'Chrome') => ({
-  navigator: { userAgent },
-  document: { readyState },
+  navigator: {
+    userAgent, 
+  },
+  document: {
+    readyState, 
+  },
 });
 
 describe('isDocumentStateReady', () => {

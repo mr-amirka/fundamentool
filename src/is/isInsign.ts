@@ -1,6 +1,12 @@
-import { isObject } from './isObject';
-import { isArray } from './isArray';
-import { isEmpty } from './isEmpty';
+import {
+  isObject, 
+} from './isObject';
+import {
+  isArray, 
+} from './isArray';
+import {
+  isEmpty, 
+} from './isEmpty';
 
 /**
  * Checks that value is "insignificant":
@@ -18,8 +24,12 @@ import { isEmpty } from './isEmpty';
  * isInsign([1]);   // => false
  */
 export const isInsign = (m: any): boolean => {
-  if (!m && m !== 0) return true;
-  if (!isObject(m)) return false;
+  if (!m && m !== 0) {
+    return true;
+  }
+  if (!isObject(m)) {
+    return false;
+  }
   return isArray(m) ? m.length < 1 : isEmpty(m);
 };
 

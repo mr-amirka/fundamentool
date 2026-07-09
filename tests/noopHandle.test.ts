@@ -1,4 +1,6 @@
-import { noopHandle } from '../src/noopHandle';
+import {
+  noopHandle, 
+} from '../src/noopHandle';
 
 describe('noopHandle', () => {
   test('returns the same value unchanged', () => {
@@ -9,7 +11,9 @@ describe('noopHandle', () => {
   });
 
   test('returns the same object reference', () => {
-    const obj = { a: 1 };
+    const obj = {
+      a: 1, 
+    };
     expect(noopHandle(obj)).toBe(obj);
   });
 });

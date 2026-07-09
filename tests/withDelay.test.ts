@@ -1,4 +1,6 @@
-import { withDelay } from '../src/withDelay';
+import {
+  withDelay, 
+} from '../src/withDelay';
 
 jest.useFakeTimers();
 
@@ -28,7 +30,9 @@ describe('withDelay', () => {
   });
 
   test('returns the result value on each call', () => {
-    const debounced = withDelay(jest.fn(), 100, null, 'pending');
+    const debounced = withDelay(
+      jest.fn(), 100, null, 'pending',
+    );
     expect(debounced()).toBe('pending');
   });
 });

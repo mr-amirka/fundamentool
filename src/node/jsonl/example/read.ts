@@ -1,4 +1,6 @@
-import { read } from '../promisify/read';
+import {
+  read, 
+} from '../promisify/read';
 
 (async () => {
   const response = await read(__dirname + '/input.jsonl');

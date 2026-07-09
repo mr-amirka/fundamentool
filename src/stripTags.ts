@@ -2,7 +2,9 @@ const REGEXP_STRIP_TAGS = /(<[A-Za-z0-9]+('[^']+'|"[^"]+"|[^>])*\/?>|<\/[A-Za-z0
 const REGEXP_SPACE = /\s+/g;
 const REGEXP_TRIM = /^\s+|\s+$/g;
 
-function replaceOnce(v: string, from: RegExp, to: string): string {
+function replaceOnce(
+  v: string, from: RegExp, to: string,
+): string {
   return v.replace(from, to);
 }
 
@@ -17,7 +19,11 @@ function replaceOnce(v: string, from: RegExp, to: string): string {
 export const stripTags = (v: string): string =>
   v &&
   replaceOnce(
-    replaceOnce(replaceOnce(v, REGEXP_STRIP_TAGS, ' '), REGEXP_SPACE, ''),
+    replaceOnce(
+      replaceOnce(
+        v, REGEXP_STRIP_TAGS, ' ',
+      ), REGEXP_SPACE, '',
+    ),
     REGEXP_TRIM,
-    ''
+    '',
   );

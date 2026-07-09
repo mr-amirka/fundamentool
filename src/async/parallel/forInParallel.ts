@@ -1,6 +1,12 @@
-import { entries } from '../../entries';
-import { checkNoop } from '../checkNoop';
-import { forEachParallel } from './forEachParallel';
+import {
+  entries, 
+} from '../../entries';
+import {
+  checkNoop, 
+} from '../checkNoop';
+import {
+  forEachParallel, 
+} from './forEachParallel';
 
 /**
  * Parallel asynchronous iteration over object properties.
@@ -24,7 +30,9 @@ export function forInParallel<T>(
   return collection
     ? forEachParallel(
       entries(collection),
-      (line: [string, any]) => fn.call(ctx, line[1], line[0], collection),
+      (line: [string, any]) => fn.call(
+        ctx, line[1], line[0], collection,
+      ),
       ctx,
       taskLimit,
       checkFn,

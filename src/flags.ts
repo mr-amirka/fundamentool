@@ -1,5 +1,9 @@
-import { set } from './set';
-import { reduce } from './reduce';
+import {
+  set, 
+} from './set';
+import {
+  reduce, 
+} from './reduce';
 
 type TFlagsObject = Record<string, any>;
 
@@ -17,13 +21,15 @@ type TFlagsObject = Record<string, any>;
  * //   test: { use: 1 }
  * // }
  */
-export const flags = (
-  flags: string[],
-  dst?: TFlagsObject,
-): TFlagsObject => reduce(flags, reducer, dst || {});
+export const flags = (flags: string[],
+  dst?: TFlagsObject): TFlagsObject => reduce(
+  flags, reducer, dst || {},
+);
 
 const reducer = (dst: TFlagsObject, key: string): TFlagsObject => {
-  set(dst, key, 1);
+  set(
+    dst, key, 1,
+  );
   return dst;
 };
 

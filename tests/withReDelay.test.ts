@@ -1,4 +1,6 @@
-import { withReDelay } from '../src/withReDelay';
+import {
+  withReDelay, 
+} from '../src/withReDelay';
 
 describe('withReDelay', () => {
   beforeEach(() => {

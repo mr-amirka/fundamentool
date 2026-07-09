@@ -1,4 +1,6 @@
-import { GLOBAL_CONTEXT } from '../src/globalContext';
+import {
+  GLOBAL_CONTEXT, 
+} from '../src/globalContext';
 
 describe('globalContext', () => {
   test('is an object', () => {

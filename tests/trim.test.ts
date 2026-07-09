@@ -1,4 +1,6 @@
-import { trim } from '../src/trim';
+import {
+  trim, 
+} from '../src/trim';
 
 describe('trim', () => {
   test('trims spaces from both ends', () => {

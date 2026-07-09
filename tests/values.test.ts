@@ -1,8 +1,13 @@
-import { values } from '../src/values';
+import {
+  values, 
+} from '../src/values';
 
 describe('values', () => {
   test('returns enumerable values', () => {
-    expect(values({ a: 1, b: 2 })).toEqual([1, 2]);
+    expect(values({
+      a: 1,
+      b: 2, 
+    })).toEqual([1, 2]);
   });
 
   test('returns empty for null/undefined', () => {

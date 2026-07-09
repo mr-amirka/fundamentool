@@ -1,4 +1,6 @@
-import { executeTry } from '../src/executeTry';
+import {
+  executeTry, 
+} from '../src/executeTry';
 
 describe('executeTry', () => {
   test('returns the function result on success', () => {
@@ -7,13 +9,19 @@ describe('executeTry', () => {
   });
 
   test('returns undefined when function throws', () => {
-    expect(executeTry(() => { throw new Error('fail'); })).toBeUndefined();
+    expect(executeTry(() => {
+      throw new Error('fail'); 
+    })).toBeUndefined();
   });
 
   test('calls onError with the thrown error', () => {
     const onError = jest.fn();
     const error = new Error('oops');
-    executeTry(() => { throw error; }, [], null, onError);
+    executeTry(
+      () => {
+        throw error; 
+      }, [], null, onError,
+    );
     expect(onError).toHaveBeenCalledWith(error);
   });
 

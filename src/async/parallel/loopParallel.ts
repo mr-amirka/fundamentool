@@ -1,6 +1,12 @@
-import { loopMap } from '../../loopMap';
-import { isLength } from '../../is/isLength';
-import { loopAsync } from '../loopAsync';
+import {
+  loopMap, 
+} from '../../loopMap';
+import {
+  isLength, 
+} from '../../is/isLength';
+import {
+  loopAsync, 
+} from '../loopAsync';
 
 /**
  * Runs `statementFn` in parallel with a maximum of `taskLimit` concurrent tasks,

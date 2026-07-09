@@ -1,8 +1,18 @@
-import { camelToDelimiterCase } from '../src/camelToDelimiterCase';
-import { camelToKebabCase } from '../src/camelToKebabCase';
-import { camelToSnakeCase } from '../src/camelToSnakeCase';
-import { toLower } from '../src/toLower';
-import { toUpper } from '../src/toUpper';
+import {
+  camelToDelimiterCase, 
+} from '../src/camelToDelimiterCase';
+import {
+  camelToKebabCase, 
+} from '../src/camelToKebabCase';
+import {
+  camelToSnakeCase, 
+} from '../src/camelToSnakeCase';
+import {
+  toLower, 
+} from '../src/toLower';
+import {
+  toUpper, 
+} from '../src/toUpper';
 
 describe('toLower / toUpper', () => {
   test('toLower lowercases ASCII', () => {

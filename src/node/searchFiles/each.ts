@@ -1,6 +1,12 @@
-import { Stats, lstat, readdir } from 'fs';
-import { join, basename } from 'path';
-import { noop } from '../../noop';
+import {
+  Stats, lstat, readdir, 
+} from 'fs';
+import {
+  join, basename, 
+} from 'path';
+import {
+  noop, 
+} from '../../noop';
 
 export interface ISearchFilesOptions {
   filter?: (name: string, isDir: boolean, depth: number) => boolean;
@@ -19,10 +25,8 @@ export interface ISearchFilesOptions {
  *   iteratee: (path) => console.log(path),
  * });
  */
-export function each(
-  folderPath: string,
-  options: ISearchFilesOptions = {},
-): Promise<void> {
+export function each(folderPath: string,
+  options: ISearchFilesOptions = {}): Promise<void> {
   return new Promise((resolve) => {
     const filter = options.filter || defaultFilter;
     const iteratee = options.iteratee || noop;
@@ -35,7 +39,9 @@ export function each(
       }
     }
 
-    function base(path: string, name: string, depth: number): void {
+    function base(
+      path: string, name: string, depth: number,
+    ): void {
       taskCount++;
       lstat(path, (err: NodeJS.ErrnoException | null, stats: Stats) => {
         if (stop) {
@@ -46,7 +52,9 @@ export function each(
           return;
         }
         const isDir = stats.isDirectory();
-        if (!filter(name, isDir, depth)) {
+        if (!filter(
+          name, isDir, depth,
+        )) {
           dec();
           return;
         }
@@ -67,7 +75,9 @@ export function each(
           const length = files.length;
           for (let i = 0; i < length; i++) {
             const childName = files[i];
-            base(join(path, childName), childName, nextDepth);
+            base(
+              join(path, childName), childName, nextDepth,
+            );
           }
           dec();
         });
@@ -78,6 +88,8 @@ export function each(
       return true;
     }
 
-    base(folderPath, basename(folderPath), 0);
+    base(
+      folderPath, basename(folderPath), 0,
+    );
   });
 }

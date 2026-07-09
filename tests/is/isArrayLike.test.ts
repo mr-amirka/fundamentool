@@ -1,14 +1,24 @@
-import { isArrayLike } from '../../src/is/isArrayLike';
+import {
+  isArrayLike, 
+} from '../../src/is/isArrayLike';
 
 describe('isArrayLike', () => {
   test('returns true for arrays', () => {
     expect(isArrayLike([])).toBe(true);
-    expect(isArrayLike([1, 2, 3])).toBe(true);
+    expect(isArrayLike([
+      1,
+      2,
+      3,
+    ])).toBe(true);
   });
 
   test('returns true for objects with valid numeric length', () => {
-    expect(isArrayLike({ length: 0 })).toBe(true);
-    expect(isArrayLike({ length: 3 })).toBe(true);
+    expect(isArrayLike({
+      length: 0, 
+    })).toBe(true);
+    expect(isArrayLike({
+      length: 3, 
+    })).toBe(true);
   });
 
   test('returns false for strings (not an object)', () => {
@@ -22,7 +32,11 @@ describe('isArrayLike', () => {
   });
 
   test('returns false for objects with invalid length', () => {
-    expect(isArrayLike({ length: -1 })).toBe(false);
-    expect(isArrayLike({ length: 1.5 })).toBe(false);
+    expect(isArrayLike({
+      length: -1, 
+    })).toBe(false);
+    expect(isArrayLike({
+      length: 1.5, 
+    })).toBe(false);
   });
 });

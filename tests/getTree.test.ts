@@ -1,11 +1,25 @@
-import { getTree } from '../src/getTree';
+import {
+  getTree, 
+} from '../src/getTree';
 
 describe('getTree', () => {
   const items = [
-    { id: 1, parent: null },
-    { id: 2, parent: 1 },
-    { id: 3, parent: 1 },
-    { id: 4, parent: 2 },
+    {
+      id: 1,
+      parent: null, 
+    },
+    {
+      id: 2,
+      parent: 1, 
+    },
+    {
+      id: 3,
+      parent: 1, 
+    },
+    {
+      id: 4,
+      parent: 2, 
+    },
   ];
 
   test('builds top-level nodes', () => {
@@ -38,7 +52,9 @@ describe('getTree', () => {
 
   test('writes into provided dst array', () => {
     const dst: any[] = [];
-    getTree(items, null, dst);
+    getTree(
+      items, null, dst,
+    );
     expect(dst).toHaveLength(1);
   });
 });

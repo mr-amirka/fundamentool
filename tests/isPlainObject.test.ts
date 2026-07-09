@@ -1,9 +1,13 @@
-import { isPlainObject, isPlainObjectBase } from '../src/is/isPlainObject';
+import {
+  isPlainObject, isPlainObjectBase, 
+} from '../src/is/isPlainObject';
 
 describe('isPlainObject', () => {
   test('returns true for plain objects', () => {
     expect(isPlainObject({})).toBe(true);
-    expect(isPlainObject({ a: 1 })).toBe(true);
+    expect(isPlainObject({
+      a: 1, 
+    })).toBe(true);
   });
 
   test('returns false for Array, Date, etc', () => {

@@ -1,5 +1,9 @@
-import { urlExtend } from '../urlExtend';
-import { script } from './script';
+import {
+  urlExtend, 
+} from '../urlExtend';
+import {
+  script, 
+} from './script';
 
 const cache: Record<string, Promise<void>> = {};
 

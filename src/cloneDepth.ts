@@ -1,5 +1,9 @@
-import { isArray } from './is/isArray';
-import { isObject } from './is/isObject';
+import {
+  isArray, 
+} from './is/isArray';
+import {
+  isObject, 
+} from './is/isObject';
 
 interface ICloneDepth {
   <T>(src: T, depth: number): T;
@@ -19,7 +23,9 @@ interface ICloneDepth {
 export const cloneDepth: ICloneDepth = <T>(src: T, depth: number = 0): T => base(src, depth);
 
 const base = cloneDepth.base = <T>(src: T, depth: number): T => {
-  if (depth < 0) return src;
+  if (depth < 0) {
+    return src;
+  }
   depth--;
   if (isObject(src)) {
     if (isArray(src)) {
@@ -39,5 +45,5 @@ const base = cloneDepth.base = <T>(src: T, depth: number): T => {
     return dst;
   }
   return src;
-}
+};
 

@@ -1,4 +1,6 @@
-import { asAsync } from "../asAsync";
+import {
+  asAsync, 
+} from '../asAsync';
 
 /**
  * Asynchronous loop helper that repeatedly calls `statementFn` while `checkFn` is true.
@@ -10,10 +12,8 @@ import { asAsync } from "../asAsync";
  * let i = 0;
  * await loopAsync(() => i < 3, async () => { i++; }); // i === 3
  */
-export function loopAsync(
-  checkFn: () => boolean,
-  statementFn: () => any,
-): Promise<void> {
+export function loopAsync(checkFn: () => boolean,
+  statementFn: () => any): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     function next() {
       try {

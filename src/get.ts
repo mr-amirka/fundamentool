@@ -1,4 +1,6 @@
-import { getKeyPath } from "./getKeyPath";
+import {
+  getKeyPath, 
+} from './getKeyPath';
 
 /**
  * Gets a value from an object by a dot path string.
@@ -15,7 +17,7 @@ import { getKeyPath } from "./getKeyPath";
  */
 export const getWithContext = (scope: any, path: ArrayLike<string | number>): null | [
   context: any,
-  value: any
+  value: any,
 ] => {
   const length = path.length;
   let i = 0;

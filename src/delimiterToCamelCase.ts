@@ -1,4 +1,6 @@
-import { toUpper } from './toUpper';
+import {
+  toUpper, 
+} from './toUpper';
 
 /**
  * Converts a delimited string to camelCase using the given delimiter.

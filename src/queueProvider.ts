@@ -1,6 +1,12 @@
-import { wait } from './wait';
-import { isPromise } from './is/isPromise';
-import { noop } from './noop';
+import {
+  wait, 
+} from './wait';
+import {
+  isPromise, 
+} from './is/isPromise';
+import {
+  noop, 
+} from './noop';
 
 /**
  * Creates a queue provider.

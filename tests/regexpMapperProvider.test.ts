@@ -1,8 +1,14 @@
-import { regexpMapperProvider } from '../src/regexpMapperProvider';
+import {
+  regexpMapperProvider, 
+} from '../src/regexpMapperProvider';
 
 describe('regexpMapperProvider', () => {
   test('returns true and fills dst when regex matches', () => {
-    const mapper = regexpMapperProvider(/^([^/]*)\/([^/]*)$/, ['full', 'begin', 'end']);
+    const mapper = regexpMapperProvider(/^([^/]*)\/([^/]*)$/, [
+      'full',
+      'begin',
+      'end',
+    ]);
     const dst: Record<string, string> = {};
     expect(mapper('users/id6574334245', dst)).toBe(true);
     expect(dst.full).toBe('users/id6574334245');

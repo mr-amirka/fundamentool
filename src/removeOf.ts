@@ -14,7 +14,9 @@ export function removeOf<T>(collection: T[], v: T): number {
   let i = length;
   while (i--) {
     if (v === collection[i]) {
-      splice.call(collection, i, 1);
+      splice.call(
+        collection, i, 1,
+      );
     }
   }
   return length - collection.length;

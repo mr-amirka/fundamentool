@@ -9,7 +9,9 @@
  */
 export const isEmpty = (src: Record<string, any>, k?: string): boolean => {
   // eslint-disable-next-line guard-for-in
-  for (k in src) return false;
+  for (k in src) {
+    return false;
+  }
   return true;
 };
 

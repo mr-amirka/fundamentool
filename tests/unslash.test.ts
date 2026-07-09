@@ -1,4 +1,6 @@
-import { unslash } from '../src/unslash';
+import {
+  unslash, 
+} from '../src/unslash';
 
 describe('unslash', () => {
   test('unescapes backslash', () => {

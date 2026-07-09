@@ -1,4 +1,6 @@
-import { EventEmitter } from '../src/EventEmitter';
+import {
+  EventEmitter, 
+} from '../src/EventEmitter';
 
 class TestEmitter extends EventEmitter<number> {
   public fire(value: number) {

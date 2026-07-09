@@ -1,7 +1,15 @@
-import { isObjectLike } from './is/isObjectLike';
-import { isIndex } from './is/isIndex';
-import { getKeyPath } from './getKeyPath';
-import { isLength } from './is/isLength';
+import {
+  isObjectLike, 
+} from './is/isObjectLike';
+import {
+  isIndex, 
+} from './is/isIndex';
+import {
+  getKeyPath, 
+} from './getKeyPath';
+import {
+  isLength, 
+} from './is/isLength';
 
 /**
  * Устанавливает значение по строковому пути, разделённому точками.
@@ -15,9 +23,15 @@ import { isLength } from './is/isLength';
  * set(obj, 'user.profile.name', 'Vasya');
  * // obj.user.profile.name === 'Vasya'
  */
-export function set(ctx: any, path: string | string[], value: any): any {
-  if (!path) return ctx;
-  return baseSet(ctx, Array.isArray(path) ? path : getKeyPath('' + path), value);
+export function set(
+  ctx: any, path: string | string[], value: any,
+): any {
+  if (!path) {
+    return ctx;
+  }
+  return setBase(
+    ctx, Array.isArray(path) ? path : getKeyPath('' + path), value,
+  );
 }
 
 /**
@@ -28,7 +42,9 @@ export function set(ctx: any, path: string | string[], value: any): any {
  * @param value - The value to set.
  * @returns The context.
  */
-export function baseSet(ctx: any, path: ArrayLike<string>, value: any): any {
+export function setBase(
+  ctx: any, path: ArrayLike<string>, value: any,
+): any {
   const lastIndex = path.length - 1;
   const rootKeySlot = getKeySlot(ctx, path[0]);
 
@@ -39,7 +55,6 @@ export function baseSet(ctx: any, path: ArrayLike<string>, value: any): any {
   let key: string | number = keySlot[0];
   let next: any;
   let i = 0;
-  let child: any;
 
   if (!isObjectLike(rootNested)) {
     rootNested = rootKeySlot[1] ? [] : {};
@@ -79,7 +94,7 @@ function setLength(nested: Record<string, any> | ArrayLike<any>, arrayLength?: n
 
 function getKeySlot(nested: any, key: string | number): [
   key: string | number,
-  arrayLength?: number | undefined
+  arrayLength?: number | undefined,
 ] {
   const isNewItem = key === '[]';
 

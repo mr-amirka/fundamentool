@@ -16,7 +16,11 @@ export const findIndex = <T = any>(
   const l = collection?.length || 0;
   let i = 0;
   for (; i < l; i++) {
-    if (iteratee.call(ctx, collection[i], i, collection)) return i;
+    if (iteratee.call(
+      ctx, collection[i], i, collection,
+    )) {
+      return i;
+    }
   }
   return -1;
 };

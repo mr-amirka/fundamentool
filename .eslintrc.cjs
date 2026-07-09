@@ -21,10 +21,17 @@ module.exports = {
   rules: {
     'no-unused-vars': 'off',
     '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+    // не пункт coding.md — низкоуровневая библиотека осознанно использует any на generic hot-path
+    '@typescript-eslint/no-explicit-any': 'warn',
+
+    // §6.1 coding.md — arguments вместо rest на горячем пути (без Array-аллокации)
+    'prefer-rest-params': 'off',
+    'prefer-spread': 'off',
 
     // §6.7 — каждый элемент на своей строке
     indent: ['error', 2, { SwitchCase: 1 }],
     semi: ['error', 'always'],
+    quotes: ['error', 'single', { avoidEscape: true }],
     '@stylistic/object-curly-newline': ['error', {
       ObjectExpression:  { minProperties: 1 },
       ObjectPattern:     { minProperties: 1 },
@@ -41,5 +48,18 @@ module.exports = {
     curly: ['error', 'all'],
     '@stylistic/brace-style': ['error', '1tbs', { allowSingleLine: false }],
   },
+  overrides: [
+    {
+      // Jest-паттерн: require() внутри теста даёт свежий экземпляр модуля
+      // (изоляция module-level кешей/состояния между тестами) — не покрыто coding.md
+      files: ['tests/**/*.ts'],
+      rules: {
+        '@typescript-eslint/no-var-requires': 'off',
+        // тесты намеренно захватывают `this` в переменную, чтобы проверить
+        // на что был забинжен контекст (bind/defer/withResult) — не алиас удобства
+        '@typescript-eslint/no-this-alias': 'off',
+      },
+    },
+  ],
 };
 

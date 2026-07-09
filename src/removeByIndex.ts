@@ -1,4 +1,6 @@
-import { isDefined } from './is/isDefined';
+import {
+  isDefined, 
+} from './is/isDefined';
 
 /**
  * Returns a new array with elements at [index, index+length) removed.
@@ -18,9 +20,7 @@ export function removeByIndex<T>(
   const inputLength = (collection && collection.length) || 0;
   const offset = Math.min(inputLength, Math.max(0, index));
   const len = isDefined(length) ? length : 1;
-  const output = new Array(
-    Math.min(inputLength, offset) + Math.max(0, inputLength - offset - len),
-  );
+  const output = new Array(Math.min(inputLength, offset) + Math.max(0, inputLength - offset - len));
   let out = 0;
   let i = 0;
   for (; i < offset; i++) {

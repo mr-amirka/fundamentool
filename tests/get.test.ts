@@ -1,18 +1,31 @@
-import { get, getBase, getWithContext } from '../src/get';
+import {
+  get, getBase, getWithContext, 
+} from '../src/get';
 
 describe('get', () => {
   test('gets value by dot path string', () => {
-    const obj = { a: { b: { c: 42 } } };
+    const obj = {
+      a: {
+        b: {
+          c: 42, 
+        }, 
+      }, 
+    };
     expect(get(obj, 'a.b.c')).toBe(42);
   });
 
   test('accepts number as single segment', () => {
-    const obj = { 0: 'zero', 1: 'one' };
+    const obj = {
+      0: 'zero',
+      1: 'one', 
+    };
     expect(get(obj, 1)).toBe('one');
   });
 
   test('returns undefined for missing path', () => {
-    const obj = { a: {} };
+    const obj = {
+      a: {}, 
+    };
     expect(get(obj, 'a.b.c')).toBeUndefined();
   });
 
@@ -24,7 +37,11 @@ describe('get', () => {
 
 describe('getBase', () => {
   test('returns value at path', () => {
-    const obj = { x: { y: 7 } };
+    const obj = {
+      x: {
+        y: 7, 
+      }, 
+    };
     expect(getBase(obj, ['x', 'y'])).toBe(7);
   });
 
@@ -35,15 +52,27 @@ describe('getBase', () => {
 
 describe('getWithContext', () => {
   test('returns [parent, value] when path exists', () => {
-    const obj = { a: { b: 99 } };
+    const obj = {
+      a: {
+        b: 99, 
+      }, 
+    };
     const result = getWithContext(obj, ['a', 'b']);
     expect(result).not.toBeNull();
-    expect(result![0]).toEqual({ b: 99 });
+    expect(result![0]).toEqual({
+      b: 99, 
+    });
     expect(result![1]).toBe(99);
   });
 
   test('returns null when path is incomplete', () => {
-    const obj = { a: {} };
-    expect(getWithContext(obj, ['a', 'b', 'c'])).toBeNull();
+    const obj = {
+      a: {}, 
+    };
+    expect(getWithContext(obj, [
+      'a',
+      'b',
+      'c',
+    ])).toBeNull();
   });
 });

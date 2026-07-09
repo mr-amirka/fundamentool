@@ -1,4 +1,6 @@
-import { NATIVE_SLICE } from './slice';
+import {
+  NATIVE_SLICE, 
+} from './slice';
 
 const NATIVE_STARTS_WITH = ''.startsWith;
 

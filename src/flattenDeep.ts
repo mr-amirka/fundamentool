@@ -1,4 +1,6 @@
-import { isArray } from './is/isArray';
+import {
+  isArray, 
+} from './is/isArray';
 
 /**
  * Flattens nested arrays into a single‑level array.

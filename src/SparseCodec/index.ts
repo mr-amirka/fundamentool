@@ -29,20 +29,40 @@ const T_STR = 5;
 const SZ_STR = 0;
 
 const typeCode = (type: IFieldDef['type']): number => {
-  if (type === 'f32') return T_F32;
-  if (type === 'f64') return T_F64;
-  if (type === 'u8')  return T_U8;
-  if (type === 'u16') return T_U16;
-  if (type === 'u32') return T_U32;
+  if (type === 'f32') {
+    return T_F32;
+  }
+  if (type === 'f64') {
+    return T_F64;
+  }
+  if (type === 'u8')  {
+    return T_U8;
+  }
+  if (type === 'u16') {
+    return T_U16;
+  }
+  if (type === 'u32') {
+    return T_U32;
+  }
   return T_STR;
 };
 
 const typeSizeByCode = (code: number): number => {
-  if (code === T_F32) return 4;
-  if (code === T_F64) return 8;
-  if (code === T_U8)  return 1;
-  if (code === T_U16) return 2;
-  if (code === T_U32) return 4;
+  if (code === T_F32) {
+    return 4;
+  }
+  if (code === T_F64) {
+    return 8;
+  }
+  if (code === T_U8)  {
+    return 1;
+  }
+  if (code === T_U16) {
+    return 2;
+  }
+  if (code === T_U32) {
+    return 4;
+  }
   return SZ_STR;
 };
 
@@ -52,14 +72,22 @@ const BUF16 = new ArrayBuffer(16);
 const VIEW16 = new DataView(BUF16);
 
 const f32same = (a: number, b: number): boolean => {
-  VIEW16.setFloat32(0, a, false);
-  VIEW16.setFloat32(4, b, false);
+  VIEW16.setFloat32(
+    0, a, false,
+  );
+  VIEW16.setFloat32(
+    4, b, false,
+  );
   return VIEW16.getFloat32(0, false) === VIEW16.getFloat32(4, false);
 };
 
 const f64same = (a: number, b: number): boolean => {
-  VIEW16.setFloat64(0, a, false);
-  VIEW16.setFloat64(8, b, false);
+  VIEW16.setFloat64(
+    0, a, false,
+  );
+  VIEW16.setFloat64(
+    8, b, false,
+  );
   return VIEW16.getFloat64(0, false) === VIEW16.getFloat64(8, false);
 };
 
@@ -119,6 +147,27 @@ const buildMap = (fields: IFieldDef[]): Record<number, TFieldInfo> => {
 
 // ── Factory ──────────────────────────────────────────────────────────────────
 
+/**
+ * Creates a sparse binary codec for a fixed field schema.
+ *
+ * Only values that differ from their configured `default` are written,
+ * keeping encoded payloads short for state that is mostly at rest.
+ * Encoding is a URL-safe base64 string; decoding stops (preserving
+ * already-decoded fields) as soon as it meets a field ID missing from
+ * the current `fields` schema — e.g. produced by a newer app version.
+ *
+ * @param config - Field schema (`fields`) and optional `version` byte.
+ * @returns `{ encode, decode }` pair bound to the given schema.
+ * @example
+ * const codec = createSparseCodec<{ x: number; label: string }>({
+ *   fields: [
+ *     { id: 1, path: 'x', type: 'f32', default: 0 },
+ *     { id: 2, path: 'label', type: 'string', default: '' },
+ *   ],
+ * });
+ * const packed = codec.encode({ x: 42, label: '' }); // 'label' omitted — matches default
+ * codec.decode(packed); // => { x: 42 }
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const createSparseCodec = <T extends Record<string, any>>(
   config: ISparseCodecConfig,
@@ -158,7 +207,9 @@ export const createSparseCodec = <T extends Record<string, any>>(
       prop = entries[ei];
       info = prop[1];
       val = getBase(state, info[0]);
-      if (val === undefined) continue;
+      if (val === undefined) {
+        continue;
+      }
 
       id = prop[0];
       infoDef = info[2];
@@ -167,27 +218,47 @@ export const createSparseCodec = <T extends Record<string, any>>(
       if (valType === 'number') {
         switch (info[1]) {
           case T_F32:
-            if (f32same(val as number, infoDef as number)) continue;
-            VIEW8.setFloat32(0, val as number, false);
-            bytes.push(id, U8[0], U8[1], U8[2], U8[3]);
+            if (f32same(val as number, infoDef as number)) {
+              continue;
+            }
+            VIEW8.setFloat32(
+              0, val as number, false,
+            );
+            bytes.push(
+              id, U8[0], U8[1], U8[2], U8[3],
+            );
             break;
           case T_F64:
-            if (f64same(val as number, infoDef as number)) continue;
-            VIEW8.setFloat64(0, val as number, false);
-            bytes.push(id, U8[0], U8[1], U8[2], U8[3], U8[4], U8[5], U8[6], U8[7]);
+            if (f64same(val as number, infoDef as number)) {
+              continue;
+            }
+            VIEW8.setFloat64(
+              0, val as number, false,
+            );
+            bytes.push(
+              id, U8[0], U8[1], U8[2], U8[3], U8[4], U8[5], U8[6], U8[7],
+            );
             break;
           case T_U8:
-            if (val === infoDef) continue;
+            if (val === infoDef) {
+              continue;
+            }
             nval = val as number;
             bytes.push(id, nval);
             break;
           case T_U16:
-            if (val === infoDef) continue;
+            if (val === infoDef) {
+              continue;
+            }
             nval = val as number;
-            bytes.push(id, (nval >> 8) & 0xFF, nval & 0xFF);
+            bytes.push(
+              id, (nval >> 8) & 0xFF, nval & 0xFF,
+            );
             break;
           case T_U32:
-            if (val === infoDef) continue;
+            if (val === infoDef) {
+              continue;
+            }
             nval = val as number;
             bytes.push(
               id,
@@ -203,7 +274,9 @@ export const createSparseCodec = <T extends Record<string, any>>(
       } else if (info[1] === T_STR && val !== infoDef && valType === 'string') {
         strBytes = TEX.encode(val as string);
         strLen = strBytes.length;
-        bytes.push(id, (strLen >> 8) & 0xFF, strLen & 0xFF);
+        bytes.push(
+          id, (strLen >> 8) & 0xFF, strLen & 0xFF,
+        );
         ji = 0;
         for (; ji < strLen; ji++) {
           bytes.push(strBytes[ji]);
@@ -221,14 +294,20 @@ export const createSparseCodec = <T extends Record<string, any>>(
 
   const decode = (encoded: string): T | null => {
     const bytes = fromBase64Url(encoded);
-    if (!bytes) return null;
+    if (!bytes) {
+      return null;
+    }
 
     const len = bytes.length;
     let pos = 0;
 
-    if (bytes[pos++] !== version) return null;
+    if (bytes[pos++] !== version) {
+      return null;
+    }
 
-    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const view = new DataView(
+      bytes.buffer, bytes.byteOffset, bytes.byteLength,
+    );
     let result: Record<string, unknown> = {};
 
     let id: number;
@@ -241,18 +320,26 @@ export const createSparseCodec = <T extends Record<string, any>>(
       id = bytes[pos++];
 
       info = fieldMap[id];
-      if (!info) break;
+      if (!info) {
+        break;
+      }
       size = info[3];
 
       if (size === SZ_STR) {
-        if (pos + 2 > len) break;
+        if (pos + 2 > len) {
+          break;
+        }
         strLen = (bytes[pos] << 8) | bytes[pos + 1];
         pos += 2;
-        if (pos + strLen > len) break;
+        if (pos + strLen > len) {
+          break;
+        }
         val = TDE.decode(bytes.subarray(pos, pos + strLen));
         pos += strLen;
       } else {
-        if (pos + size > len) break;
+        if (pos + size > len) {
+          break;
+        }
         switch (info[1]) {
           case T_F32: val = view.getFloat32(pos, false); break;
           case T_F64: val = view.getFloat64(pos, false); break;
@@ -263,7 +350,9 @@ export const createSparseCodec = <T extends Record<string, any>>(
         pos += size;
       }
 
-      result = set(result, info[0], val);
+      result = set(
+        result, info[0], val,
+      );
     }
 
     return result as T;

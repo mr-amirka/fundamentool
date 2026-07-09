@@ -1,4 +1,6 @@
-import { normalizeStep } from '../src/normalizeStep';
+import {
+  normalizeStep, 
+} from '../src/normalizeStep';
 
 describe('normalizeStep', () => {
   test('parses positive number from string', () => {

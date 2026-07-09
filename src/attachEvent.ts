@@ -19,8 +19,12 @@ export const attachEvent = (
   listener: (event: any) => any,
   options?: TEventListenerOptions,
 ): TUnsubscribe => {
-  ctx.addEventListener(type, listener, options);
+  ctx.addEventListener(
+    type, listener, options,
+  );
   return () => {
-    ctx.removeEventListener(type, listener, options);
+    ctx.removeEventListener(
+      type, listener, options,
+    );
   };
 };

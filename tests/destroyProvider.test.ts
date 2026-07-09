@@ -1,4 +1,6 @@
-import { destroyProvider } from '../src/destroyProvider';
+import {
+  destroyProvider, 
+} from '../src/destroyProvider';
 
 describe('destroyProvider', () => {
   test('runs all added callbacks when called', () => {

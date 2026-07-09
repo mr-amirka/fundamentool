@@ -1,8 +1,16 @@
 
-import { GLOBAL_CONTEXT } from '../globalContext';
-import { once } from '../once';
-import { defer } from '../defer';
-import { urlExtend } from '../urlExtend';
+import {
+  GLOBAL_CONTEXT, 
+} from '../globalContext';
+import {
+  once, 
+} from '../once';
+import {
+  defer, 
+} from '../defer';
+import {
+  urlExtend, 
+} from '../urlExtend';
 
 interface IScript {
   (url: string, options?: Record<string, any>): Promise<void>;
@@ -17,10 +25,8 @@ interface IScript {
  * @example
  * await script('https://cdn.example.com/lib.js');
  */
-export const script: IScript = (
-  url: string,
-  options?: Record<string, any>,
-): Promise<void> => base(urlExtend(url, options).href);
+export const script: IScript = (url: string,
+  options?: Record<string, any>): Promise<void> => base(urlExtend(url, options).href);
 
 const base = script.base = (url: string): Promise<void> => {
   return new Promise((resolve, reject) => {

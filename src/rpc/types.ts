@@ -1,4 +1,6 @@
-import { IEventEmitter } from "../EventEmitter";
+import {
+  IEventEmitter, 
+} from '../EventEmitter';
 
 // ── Agents ─────────────────────────────────────────────────────────────────
 
@@ -38,7 +40,7 @@ export enum TRpcType {
 export type TRpcMessage<
   Agent extends TRpcAgent,
   Type extends TRpcType,
-  Data extends any[]
+  Data extends any[],
 > = [
   agent: Agent,
   args: [
@@ -52,7 +54,7 @@ export type TRpcMessage<
 export type TRpcMessageSubCall<
   Agent extends TRpcAgent,
   Type extends TRpcType.SubCall | TRpcType.SubResult,
-  Data extends any[]
+  Data extends any[],
 > = TRpcMessage<Agent, Type, [
   subCallIndex: number,
   ...Data,

@@ -1,11 +1,19 @@
-import { GLOBAL_CONTEXT } from "../../../globalContext";
+import {
+  GLOBAL_CONTEXT, 
+} from '../../../globalContext';
 import type {
   TRpcConnectOptionsPostMessage,
-  TRpcConnectOptionsOnMessage
-} from "../../types";
-import { RpcConnect } from "../../RpcConnect";
-import { SyntheticWorker } from "../SyntheticWorker";
-import { onRpcMessageProvider } from "./onRpcMessageProvider";
+  TRpcConnectOptionsOnMessage,
+} from '../../types';
+import {
+  RpcConnect, 
+} from '../../RpcConnect';
+import {
+  SyntheticWorker, 
+} from '../SyntheticWorker';
+import {
+  onRpcMessageProvider, 
+} from './onRpcMessageProvider';
 
 
 /**
@@ -44,19 +52,21 @@ export class RpcConnectWorker extends RpcConnect {
       const connections: RpcConnect[] = [];
       const getConnections = () => connections;
 
-      GLOBAL_CONTEXT.addEventListener('connect', (e: any) => {
-        console.log('RpcConnectWorker: connect');
-        const source: MessagePort = e.source;
+      GLOBAL_CONTEXT.addEventListener(
+        'connect', (e: any) => {
+          console.log('RpcConnectWorker: connect');
+          const source: MessagePort = e.source;
 
-        connections.push(new RpcConnect({
-          getConnections,
-          postMessage: source.postMessage.bind(source) as TRpcConnectOptionsPostMessage,
-          onMessage: onRpcMessageProvider(source) as TRpcConnectOptionsOnMessage,
-          exports,
-        }));
+          connections.push(new RpcConnect({
+            getConnections,
+            postMessage: source.postMessage.bind(source) as TRpcConnectOptionsPostMessage,
+            onMessage: onRpcMessageProvider(source) as TRpcConnectOptionsOnMessage,
+            exports,
+          }));
 
-        source.start();
-      }, false);
+          source.start();
+        }, false,
+      );
       return;
     }
 

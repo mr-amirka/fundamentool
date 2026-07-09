@@ -33,7 +33,9 @@ export function withDelayAsync<T extends (...args: any[]) => any>(
 
   function initialize(resolve?: (value: any) => void): void {
     resolve && (resolveFn = resolve);
-    if (timeoutId) clearTimeout(timeoutId);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
     timeoutId = setTimeout(exec, delayMs);
   }
 

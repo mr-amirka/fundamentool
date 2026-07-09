@@ -1,4 +1,6 @@
-import { regexpParse } from '../src/regexpParse';
+import {
+  regexpParse, 
+} from '../src/regexpParse';
 
 describe('regexpParse', () => {
   test('parses regexp string into match array', () => {

@@ -1,6 +1,8 @@
 /* eslint-disable no-undef */
 
-import { executeTry } from './executeTry';
+import {
+  executeTry, 
+} from './executeTry';
 
 /**
  * Unified access to the global object in any environment.
@@ -14,4 +16,6 @@ export const GLOBAL_CONTEXT =
   || executeTry(() => window)
   || executeTry(() => self)
   || executeTry(() => global)
-  || (function() { return this; })();
+  || (function() {
+    return this; 
+  })();

@@ -1,4 +1,6 @@
-import { indexOf } from "./indexOf";
+import {
+  indexOf, 
+} from './indexOf';
 
 /**
  * Adds an item to a collection if it is not already present.

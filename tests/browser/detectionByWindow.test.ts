@@ -1,8 +1,8 @@
-import { extractExportedFn } from './testUtils';
+import {
+  extractExportedFn, 
+} from './testUtils';
 
-const detectionByWindow = extractExportedFn(
-  require('../../src/browser/detectionByWindow'),
-);
+const detectionByWindow = extractExportedFn(require('../../src/browser/detectionByWindow'));
 
 describe('browser/detectionByWindow', () => {
   test('adds orientation and multitouch flags when present', () => {

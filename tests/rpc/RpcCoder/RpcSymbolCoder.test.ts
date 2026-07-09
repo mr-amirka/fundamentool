@@ -1,4 +1,6 @@
-import { RpcSymbolCoder } from '../../../src/rpc/RpcCoder/RpcSymbolCoder';
+import {
+  RpcSymbolCoder, 
+} from '../../../src/rpc/RpcCoder/RpcSymbolCoder';
 
 describe('RpcSymbolCoder', () => {
   test('encodes internal symbol as [0, index, stringIndex]', () => {

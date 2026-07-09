@@ -1,4 +1,6 @@
-import { isHttpUrl } from '../../src/is/isHttpUrl';
+import {
+  isHttpUrl, 
+} from '../../src/is/isHttpUrl';
 
 describe('isHttpUrl', () => {
   test('returns true for valid HTTP/HTTPS URLs', () => {

@@ -1,4 +1,6 @@
-import { urlTranslite } from '../src/urlTranslite';
+import {
+  urlTranslite, 
+} from '../src/urlTranslite';
 
 describe('urlTranslite', () => {
   test('lowercases latin characters', () => {

@@ -15,7 +15,11 @@ export const everyIn = <T extends Record<string, any>>(
 ): boolean => {
   let k: string;
   for (k in collection) {
-    if (!identity.call(ctx, collection[k], k, collection)) return false;
+    if (!identity.call(
+      ctx, collection[k], k, collection,
+    )) {
+      return false;
+    }
   }
   return true;
 };

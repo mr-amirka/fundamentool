@@ -1,9 +1,11 @@
 import type {
   IUnsubscriber,
   IUnsubscriberUnsubscribeFn,
-  TUnsubscriberUnsubscribe
-} from "./types";
-import { subscribe } from "../subscribe";
+  TUnsubscriberUnsubscribe,
+} from './types';
+import {
+  subscribe, 
+} from '../subscribe';
 
 /**
  * Collects unsubscribe callbacks and calls them all at once via `unsubscribe()`.
@@ -38,4 +40,4 @@ export class Unsubscriber implements IUnsubscriber {
   }
 }
 
-export * from "./types";
+export * from './types';

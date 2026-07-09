@@ -1,4 +1,6 @@
-import { isObjectLike } from '../src/is/isObjectLike';
+import {
+  isObjectLike, 
+} from '../src/is/isObjectLike';
 
 describe('isObjectLike', () => {
   test('returns true for objects and functions', () => {

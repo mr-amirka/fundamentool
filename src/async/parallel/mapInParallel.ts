@@ -1,7 +1,15 @@
-import { entries } from '../../entries';
-import { fromPairs } from '../../fromPairs';
-import { checkNoop } from '../checkNoop';
-import { mapParallel } from './mapParallel';
+import {
+  entries, 
+} from '../../entries';
+import {
+  fromPairs, 
+} from '../../fromPairs';
+import {
+  checkNoop, 
+} from '../checkNoop';
+import {
+  mapParallel, 
+} from './mapParallel';
 
 /**
  * Parallel asynchronous map over array or object.
@@ -24,7 +32,9 @@ export function mapInParallel<T>(
 ): Promise<Record<string, T>> {
   return mapParallel(
     entries(collection),
-    async (line: [string, any]) => [line[0], await iteratee.call(ctx, line[1], line[0], collection)] as [string, T],
+    async (line: [string, any]) => [line[0], await iteratee.call(
+      ctx, line[1], line[0], collection,
+    )] as [string, T],
     ctx,
     taskLimit,
     checkFn,

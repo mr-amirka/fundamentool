@@ -1,8 +1,12 @@
-import { isFormData } from '../../src/is/isFormData';
+import {
+  isFormData, 
+} from '../../src/is/isFormData';
 
 describe('isFormData', () => {
   test('returns true for FormData instances when FormData is available', () => {
-    if (typeof FormData === 'undefined') return;
+    if (typeof FormData === 'undefined') {
+      return;
+    }
     expect(isFormData(new FormData())).toBe(true);
   });
 

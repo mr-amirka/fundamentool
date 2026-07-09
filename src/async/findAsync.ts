@@ -1,5 +1,9 @@
-import { checkNoop } from './checkNoop';
-import { loopAsync } from './loopAsync';
+import {
+  checkNoop, 
+} from './checkNoop';
+import {
+  loopAsync, 
+} from './loopAsync';
 
 /**
  * Asynchronously finds first item that matches `iteratee`.
@@ -22,17 +26,17 @@ export function findAsync<T>(
   let index = 0;
   let found: T | undefined;
 
-  return loopAsync(
-    () => !found && index < length && checkFn(),
+  return loopAsync(() => !found && index < length && checkFn(),
     async () => {
       const i = index++;
       const item = items[i];
-      if (await iteratee.call(ctx, item, i, items)) {
+      if (await iteratee.call(
+        ctx, item, i, items,
+      )) {
         if (!found) {
           found = item;
         }
       }
-    },
-  )
+    })
     .then(() => found);
 }

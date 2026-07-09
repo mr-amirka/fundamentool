@@ -1,5 +1,9 @@
-import { wsAsyncRequestProvider } from '../../src/browser/wsAsyncRequestProvider';
-import { FakeWebSocket } from './wsFakeWebSocket';
+import {
+  wsAsyncRequestProvider, 
+} from '../../src/browser/wsAsyncRequestProvider';
+import {
+  FakeWebSocket, 
+} from './wsFakeWebSocket';
 
 describe('browser/wsAsyncRequestProvider', () => {
   beforeEach(() => {
@@ -34,7 +38,9 @@ describe('browser/wsAsyncRequestProvider', () => {
       reconnect: false,
     });
 
-    const p = request('test', { value: 1 });
+    const p = request('test', {
+      value: 1, 
+    });
 
     await Promise.resolve();
     const socket = FakeWebSocket.instances[0];
@@ -46,9 +52,14 @@ describe('browser/wsAsyncRequestProvider', () => {
     const sent = socket.sent[0];
     const payload = JSON.parse(sent.toString('utf-8'));
 
-    const response = { id: payload.id, data: 123 };
+    const response = {
+      id: payload.id,
+      data: 123, 
+    };
     const event = {
-      data: new Blob([JSON.stringify(response)], { type: 'text/plain' }),
+      data: new Blob([JSON.stringify(response)], {
+        type: 'text/plain', 
+      }),
     };
 
     socket.onmessage?.(event as any);

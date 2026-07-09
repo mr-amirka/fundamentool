@@ -1,4 +1,6 @@
-import { LineBasedFormat } from '../LineBasedFormat';
+import {
+  LineBasedFormat, 
+} from '../LineBasedFormat';
 
 /**
  * JSONL `parse` and `stringify` utilities backed by `JSON.parse`/`JSON.stringify`.

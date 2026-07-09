@@ -1,4 +1,6 @@
-import { convertToBreakLineHTML } from '../src/convertToBreakLineHTML';
+import {
+  convertToBreakLineHTML, 
+} from '../src/convertToBreakLineHTML';
 
 describe('convertToBreakLineHTML', () => {
   test('wraps single line in span', () => {

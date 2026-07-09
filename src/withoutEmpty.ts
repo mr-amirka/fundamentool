@@ -12,7 +12,9 @@
 export const withoutEmpty = (data: any, depth?: number) => withoutEmptyBase(data, depth || 0);
 
 export const withoutEmptyBase = (src: any, depth: number): any => {
-  if (depth < 0) return src;
+  if (depth < 0) {
+    return src;
+  }
   depth--;
   const type = typeof src;
   let dst: any = null,
@@ -22,7 +24,9 @@ export const withoutEmptyBase = (src: any, depth: number): any => {
     return null;
   }
   if (type != 'object') return src; // eslint-disable-line
-  if (Array.isArray(src)) return src.length ? src : null;
+  if (Array.isArray(src)) {
+    return src.length ? src : null;
+  }
   for (k in src) {
     (v = withoutEmptyBase(src[k], depth)) === null || ((dst || (dst = {}))[k] = v);
   }

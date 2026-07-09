@@ -17,7 +17,11 @@ export const find = <T = any>(
   let i = 0;
   const l = collection?.length || 0;
   for (; i < l; i++) {
-    if (iteratee.call(ctx, (v = collection[i]), i, collection)) return v;
+    if (iteratee.call(
+      ctx, (v = collection[i]), i, collection,
+    )) {
+      return v;
+    }
   }
 };
 

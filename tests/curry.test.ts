@@ -1,4 +1,6 @@
-import { curry } from '../src/curry';
+import {
+  curry, 
+} from '../src/curry';
 
 describe('curry', () => {
   test('calls function when all args provided at once', () => {
@@ -13,7 +15,9 @@ describe('curry', () => {
   });
 
   test('supports multi-step currying', () => {
-    const sum = curry((a: number, b: number, c: number) => a + b + c);
+    const sum = curry((
+      a: number, b: number, c: number,
+    ) => a + b + c);
     expect((sum as any)(1)(2)(3)).toBe(6);
     expect((sum as any)(1, 2)(3)).toBe(6);
     expect((sum as any)(1)(2, 3)).toBe(6);

@@ -11,6 +11,10 @@ export const NATIVE_SLICE = [].slice;
  * slice([1, 2, 3, 4], 1);    // => [2, 3, 4]
  * slice([1, 2, 3, 4], 1, 3); // => [2, 3]
  */
-export function slice(self: ArrayLike<any>, start?: number, end?: number): any[] {
-  return NATIVE_SLICE.call(self, start, end);
+export function slice(
+  self: ArrayLike<any>, start?: number, end?: number,
+): any[] {
+  return NATIVE_SLICE.call(
+    self, start, end,
+  );
 }

@@ -1,6 +1,12 @@
-import { filter } from '../../filter';
-import { loopParallel } from './loopParallel';
-import { checkNoop } from '../checkNoop';
+import {
+  filter, 
+} from '../../filter';
+import {
+  loopParallel, 
+} from './loopParallel';
+import {
+  checkNoop, 
+} from '../checkNoop';
 
 /**
  * Parallel asynchronous filter over items.
@@ -38,10 +44,14 @@ export function filterParallel<T>(
     () => index < length && checkFn(),
     async () => {
       const i = index++;
-      filtered[i] = await iteratee.call(ctx, items[i], i, items);
+      filtered[i] = await iteratee.call(
+        ctx, items[i], i, items,
+      );
     },
     taskLimit,
   )
-    .then(() => filter(items, iterateeFn, output || []));
+    .then(() => filter(
+      items, iterateeFn, output || [],
+    ));
 }
 

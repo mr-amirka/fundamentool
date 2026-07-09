@@ -1,5 +1,9 @@
-import { localStorageProvider } from '../src/localStorageProvider';
-import { createStore, createApi } from '../src/Store';
+import {
+  localStorageProvider, 
+} from '../src/localStorageProvider';
+import {
+  createStore, createApi, 
+} from '../src/Store';
 
 function makeLocalStorageMock() {
   const store: Record<string, string> = {};
@@ -7,13 +11,21 @@ function makeLocalStorageMock() {
   return {
     storage: {
       getItem: (k: string) => store[k] ?? null,
-      setItem: (k: string, v: string) => { store[k] = v; },
-      removeItem: (k: string) => { delete store[k]; },
+      setItem: (k: string, v: string) => {
+        store[k] = v; 
+      },
+      removeItem: (k: string) => {
+        delete store[k]; 
+      },
       key: (i: number) => Object.keys(store)[i] ?? null,
-      get length() { return Object.keys(store).length; },
+      get length() {
+        return Object.keys(store).length; 
+      },
     },
     win: {
-      get localStorage() { return this._storage; },
+      get localStorage() {
+        return this._storage; 
+      },
       _storage: null as any,
       addEventListener: (_: string, cb: (e: any) => void) => listeners.push(cb),
       removeEventListener: jest.fn(),
@@ -23,14 +35,18 @@ function makeLocalStorageMock() {
 }
 
 function makeLocalStorageWin() {
-  const { storage, win } = makeLocalStorageMock();
+  const {
+    storage, win, 
+  } = makeLocalStorageMock();
   win._storage = storage;
   return win as any;
 }
 
 describe('localStorageProvider', () => {
   test('set and get a value', () => {
-    const { storage, win } = makeLocalStorageMock();
+    const {
+      storage, win, 
+    } = makeLocalStorageMock();
     win._storage = storage;
     const ls = localStorageProvider(win as any);
     ls.set('name', 'Alice');
@@ -38,7 +54,9 @@ describe('localStorageProvider', () => {
   });
 
   test('remove a value', () => {
-    const { storage, win } = makeLocalStorageMock();
+    const {
+      storage, win, 
+    } = makeLocalStorageMock();
     win._storage = storage;
     const ls = localStorageProvider(win as any);
     ls.set('x', 42);
@@ -47,7 +65,9 @@ describe('localStorageProvider', () => {
   });
 
   test('getKeys returns all keys', () => {
-    const { storage, win } = makeLocalStorageMock();
+    const {
+      storage, win, 
+    } = makeLocalStorageMock();
     win._storage = storage;
     const ls = localStorageProvider(win as any);
     ls.set('a', 1);
@@ -56,7 +76,9 @@ describe('localStorageProvider', () => {
   });
 
   test('clear removes all keys', () => {
-    const { storage, win } = makeLocalStorageMock();
+    const {
+      storage, win, 
+    } = makeLocalStorageMock();
     win._storage = storage;
     const ls = localStorageProvider(win as any);
     ls.set('a', 1);
@@ -69,7 +91,9 @@ describe('localStorageProvider', () => {
     const win = makeLocalStorageWin();
     let called = false;
     localStorageProvider(win, {
-      createStore: (initial) => { called = true; return createStore(initial); },
+      createStore: (initial) => {
+        called = true; return createStore(initial); 
+      },
       createApi,
     });
     expect(called).toBe(true);

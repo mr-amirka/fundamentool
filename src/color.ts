@@ -1,4 +1,6 @@
-import { lowerFirst } from './lowerFirst';
+import {
+  lowerFirst, 
+} from './lowerFirst';
 
 const regexpTrimZero = /^0+|0+$/g;
 const regexpColor = /^([A-Fa-f0-9]+)(\.[0-9]+)?$/;
@@ -41,10 +43,8 @@ export const color: IColor = (v: string, alt?: boolean): string[] => {
 
   let m = regexpVar.exec(v);
   if (m) {
-    return [
-      (m[1] === '-' ? 'env' : 'var')
-      + '(' + m[2] + (m[4] ? ',' + m[4] : '') + ')',
-    ];
+    return [(m[1] === '-' ? 'env' : 'var')
+      + '(' + m[2] + (m[4] ? ',' + m[4] : '') + ')'];
   }
 
   m = regexpColor.exec(v) as RegExpExecArray | null;
@@ -81,23 +81,77 @@ const double = color.double = (v: string, start: number): number => parseInt(v.s
  * @param l - The length of the color value.
  * @returns An array of color values.
  */
-const normalize = color.normalize = (v: string, alpha?: string | null, w?: number, l?: number): [number, number, number, number] => {
+const normalize = color.normalize = (
+  v: string, alpha?: string | null, w?: number, l?: number,
+): [number, number, number, number] => {
   const a = alpha ? parseFloat('0' + alpha) : 1;
-  if (!v) return [0, 0, 0, a];
+  if (!v) {
+    return [
+      0,
+      0,
+      0,
+      a,
+    ];
+  }
   l = v.length;
   if (l < 2) {
     const x = one(v);
-    return [x, x, x, a];
+    return [
+      x,
+      x,
+      x,
+      a,
+    ];
   }
   if (l < 3) {
     const x = one(v[0]);
-    return [x, x, x, one(v[1])];
+    return [
+      x,
+      x,
+      x,
+      one(v[1]),
+    ];
   }
-  if (l < 4) return [one(v[0]), one(v[1]), one(v[2]), a];
-  if (l < 5) return [one(v[0]), one(v[1]), one(v[2]), one(v[3])];
-  if (l < 6) return [one(v[0]), one(v[1]), one(v[2]), double(v, 3)];
-  if (l < 7) return [double(v, 0), double(v, 2), double(v, 4), a];
-  if (l < 8) return [double(v, 0), double(v, 2), double(v, 4), one(v[6])];
+  if (l < 4) {
+    return [
+      one(v[0]),
+      one(v[1]),
+      one(v[2]),
+      a,
+    ];
+  }
+  if (l < 5) {
+    return [
+      one(v[0]),
+      one(v[1]),
+      one(v[2]),
+      one(v[3]),
+    ];
+  }
+  if (l < 6) {
+    return [
+      one(v[0]),
+      one(v[1]),
+      one(v[2]),
+      double(v, 3),
+    ];
+  }
+  if (l < 7) {
+    return [
+      double(v, 0),
+      double(v, 2),
+      double(v, 4),
+      a,
+    ];
+  }
+  if (l < 8) {
+    return [
+      double(v, 0),
+      double(v, 2),
+      double(v, 4),
+      one(v[6]),
+    ];
+  }
   return [
     double(v, 0),
     double(v, 2),
@@ -114,7 +168,11 @@ const normalize = color.normalize = (v: string, alpha?: string | null, w?: numbe
  * @returns An array of color strings.
  */
 const base = color.base = (rgbaColor: [number, number, number, number], alt?: boolean): string[] => {
-  const tmp = [0, 0, 0];
+  const tmp = [
+    0,
+    0,
+    0,
+  ];
   let i = 3;
   const alpha = rgbaColor[3];
   while (i--) {
@@ -139,13 +197,21 @@ const base = color.base = (rgbaColor: [number, number, number, number], alt?: bo
  * @returns The converted string.
  */
 const rgbStringify = color.rgbStringify = (rgb: number[]): string => {
-  const output = [0, 0, 0] as any[];
+  const output = [
+    0,
+    0,
+    0,
+  ] as any[];
   let i = 3;
   let oneFlag = 1;
   while (i--) {
     let v = rgb[i].toString(16);
-    if (v.length < 2) v = '0' + v;
-    if (v[0] !== v[1]) oneFlag = 0;
+    if (v.length < 2) {
+      v = '0' + v;
+    }
+    if (v[0] !== v[1]) {
+      oneFlag = 0;
+    }
     output[i] = v;
   }
   return '#' + (oneFlag ? '' + output[0][0] + output[1][0] + output[2][0] : output.join(''));

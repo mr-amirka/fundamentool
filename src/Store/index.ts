@@ -1,5 +1,9 @@
-import { forIn } from "../forIn";
-import type { Unsubscribe, Watcher, Store, StoreWritable } from "./types";
+import {
+  forIn, 
+} from '../forIn';
+import type {
+  Unsubscribe, Watcher, Store, StoreWritable, 
+} from './types';
 
 /**
  * Creates a new store.
@@ -31,7 +35,9 @@ export function createStore<T>(initial: T): StoreWritable<T> {
       return mapped;
     },
     setState(next: T): void {
-      if (next === state) return;
+      if (next === state) {
+        return;
+      }
       state = next;
       watchers.forEach((fn) => fn(state));
     },
@@ -55,10 +61,8 @@ export function createStore<T>(initial: T): StoreWritable<T> {
 export function createApi<
   T,
   E extends Record<string, (state: T, payload: any) => T>,
->(
-  store: StoreWritable<T>,
-  shape: E,
-): { [K in keyof E]: (payload: Parameters<E[K]>[1]) => void } {
+>(store: StoreWritable<T>,
+  shape: E): { [K in keyof E]: (payload: Parameters<E[K]>[1]) => void } {
   const api: Partial<{ [K in keyof E]: (payload: any) => void }> = {};
 
   forIn(shape, (reducer, key) => {
@@ -70,4 +74,4 @@ export function createApi<
   return api as { [K in keyof E]: (payload: Parameters<E[K]>[1]) => void };
 }
 
-export * from "./types";
+export * from './types';

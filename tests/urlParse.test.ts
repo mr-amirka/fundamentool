@@ -1,4 +1,6 @@
-import { urlParse } from '../src/urlParse';
+import {
+  urlParse, 
+} from '../src/urlParse';
 
 describe('urlParse', () => {
   test('parses simple http URL', () => {
@@ -11,7 +13,10 @@ describe('urlParse', () => {
 
   test('parses query string (numbers parsed as numbers)', () => {
     const u = urlParse('https://a.b/c?x=1&y=2');
-    expect(u.query).toEqual({ x: 1, y: 2 });
+    expect(u.query).toEqual({
+      x: 1,
+      y: 2, 
+    });
     expect(u.search).toBe('x=1&y=2');
   });
 
@@ -20,7 +25,9 @@ describe('urlParse', () => {
     expect(u.hash).toBe('/path?q=3');
     expect(u.child).not.toBeNull();
     if (u.child) {
-      expect(u.child.query).toEqual({ q: 3 });
+      expect(u.child.query).toEqual({
+        q: 3, 
+      });
     }
   });
 

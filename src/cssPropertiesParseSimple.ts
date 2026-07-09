@@ -1,6 +1,12 @@
-import { kebabToCamelCase } from './kebabToCamelCase';
-import { includes } from './includes';
-import { splitProvider } from './split/splitProvider';
+import {
+  kebabToCamelCase, 
+} from './kebabToCamelCase';
+import {
+  includes, 
+} from './includes';
+import {
+  splitProvider, 
+} from './split/splitProvider';
 
 const splitLine = splitProvider(/\s*;\s*/);
 const splitProp = splitProvider(/\s*:\s*/);
@@ -20,10 +26,8 @@ export type TCssMap = Record<string, string[]>;
  * cssPropertiesParseSimple('color:red; font-size:12px');
  * // => { color: ['red'], fontSize: ['12px'] }
  */
-export const cssPropertiesParseSimple = (
-  text: string,
-  output?: TCssMap,
-): TCssMap => {
+export const cssPropertiesParseSimple = (text: string,
+  output?: TCssMap): TCssMap => {
   const result: TCssMap = output || {};
 
   const input = splitLine(text.replace(reTrim, ''));
@@ -38,7 +42,9 @@ export const cssPropertiesParseSimple = (
     name = line[0];
     value = line[1];
 
-    if (!name || !value) continue;
+    if (!name || !value) {
+      continue;
+    }
 
     name = kebabToCamelCase(name);
     values = result[name];

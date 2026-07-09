@@ -37,7 +37,9 @@ export class RpcFnCoder {
     return value[0].apply(value[1], args);
   }
 
-  encode(fn: TRpcFn, context?: any, withInternalFns = true): TRpcEncodedValueFn | undefined {
+  encode(
+    fn: TRpcFn, context?: any, withInternalFns = true,
+  ): TRpcEncodedValueFn | undefined {
     let index = this.externals.indexOf(fn);
     if (index > -1) {
       return [1, index];

@@ -1,4 +1,6 @@
-import { LineDecoder } from '../LineDecoder';
+import {
+  LineDecoder, 
+} from '../LineDecoder';
 
 /**
  * JSONL line decoder — a `LineDecoder` pre-configured with `JSON.parse`.

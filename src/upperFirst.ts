@@ -1,4 +1,6 @@
-import { toUpper } from './toUpper';
+import {
+  toUpper, 
+} from './toUpper';
 
 /**
  * Uppercases the first character of a string.

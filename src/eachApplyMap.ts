@@ -1,6 +1,12 @@
-import { map } from './map';
-import { mapIn } from './mapIn';
-import { isArrayLike } from './is/isArrayLike';
+import {
+  map, 
+} from './map';
+import {
+  mapIn, 
+} from './mapIn';
+import {
+  isArrayLike, 
+} from './is/isArrayLike';
 
 type TFn = (...args: any[]) => any;
 

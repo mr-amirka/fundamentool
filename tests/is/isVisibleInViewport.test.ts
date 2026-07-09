@@ -1,11 +1,18 @@
-import { isVisibleInViewportProvider } from '../../src/is/isVisibleInViewportProvider';
+import {
+  isVisibleInViewportProvider, 
+} from '../../src/is/isVisibleInViewportProvider';
 
 function makeCtx(innerWidth: number, innerHeight: number) {
   return {
     window: {
       innerWidth,
       innerHeight,
-      document: { documentElement: { clientWidth: innerWidth, clientHeight: innerHeight } },
+      document: {
+        documentElement: {
+          clientWidth: innerWidth,
+          clientHeight: innerHeight, 
+        }, 
+      },
     },
   };
 }
@@ -39,17 +46,32 @@ describe('isVisibleInViewportProvider', () => {
   });
 
   test('returns true for element fully within viewport', () => {
-    const el = makeElement({ top: 10, left: 10, bottom: 200, right: 200 });
+    const el = makeElement({
+      top: 10,
+      left: 10,
+      bottom: 200,
+      right: 200, 
+    });
     expect(isVisible(el)).toBe(true);
   });
 
   test('returns false for element below viewport bottom', () => {
-    const el = makeElement({ top: 10, left: 10, bottom: 900, right: 200 });
+    const el = makeElement({
+      top: 10,
+      left: 10,
+      bottom: 900,
+      right: 200, 
+    });
     expect(isVisible(el)).toBe(false);
   });
 
   test('returns false for element beyond viewport right edge', () => {
-    const el = makeElement({ top: 10, left: 10, bottom: 200, right: 1200 });
+    const el = makeElement({
+      top: 10,
+      left: 10,
+      bottom: 200,
+      right: 1200, 
+    });
     expect(isVisible(el)).toBe(false);
   });
 
@@ -58,11 +80,21 @@ describe('isVisibleInViewportProvider', () => {
       window: {
         innerWidth: 0,
         innerHeight: 0,
-        document: { documentElement: { clientWidth: 1024, clientHeight: 768 } },
+        document: {
+          documentElement: {
+            clientWidth: 1024,
+            clientHeight: 768, 
+          }, 
+        },
       },
     };
     const isVisibleFallback = isVisibleInViewportProvider(ctx);
-    const el = makeElement({ top: 10, left: 10, bottom: 200, right: 200 });
+    const el = makeElement({
+      top: 10,
+      left: 10,
+      bottom: 200,
+      right: 200, 
+    });
     expect(isVisibleFallback(el)).toBe(true);
   });
 });

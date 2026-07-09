@@ -1,9 +1,16 @@
-import { param } from '../src/param';
-import { unparam } from '../src/unparam';
+import {
+  param, 
+} from '../src/param';
+import {
+  unparam, 
+} from '../src/unparam';
 
 describe('param / unparam', () => {
   test('serializes simple object to query string', () => {
-    const q = param({ a: 1, b: 'x' });
+    const q = param({
+      a: 1,
+      b: 'x', 
+    });
     expect(q).toBe('a=1&b=x');
   });
 
@@ -14,7 +21,10 @@ describe('param / unparam', () => {
 
   test('unparam parses simple query string (numbers parsed as numbers)', () => {
     const obj = unparam('?a=1&b=x');
-    expect(obj).toEqual({ a: 1, b: 'x' });
+    expect(obj).toEqual({
+      a: 1,
+      b: 'x', 
+    });
   });
 
   test('param + unparam round trip', () => {

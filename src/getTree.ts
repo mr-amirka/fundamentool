@@ -1,4 +1,6 @@
-import { merge } from './merge';
+import {
+  merge, 
+} from './merge';
 
 /**
  * Builds a tree structure from flat array of items with `id` and `parent` fields.
@@ -10,12 +12,15 @@ import { merge } from './merge';
  * @returns The tree structure.
  */
 const base = (
-  src: Array<{ id?: any; parent?: any }> | null | undefined,
+  src: Array<{ id?: any;
+parent?: any }> | null | undefined,
   id: any,
   dst: any[],
   depth: number,
 ): any[] => {
-  if (!src) return dst;
+  if (!src) {
+    return dst;
+  }
   const length = src.length;
   let i = 0;
   let item: any;
@@ -25,14 +30,13 @@ const base = (
     item = src[i];
     if (item && item.parent == id) {
       itemId = item.id;
-      dst.push(
-        depth > 0
-          ? merge([
-            item,
-            { childs: itemId ? base(src, itemId, [], depth) : [] },
-          ])
-          : item,
-      );
+      dst.push(depth > 0
+        ? merge([item, {
+          childs: itemId ? base(
+            src, itemId, [], depth,
+          ) : [], 
+        }])
+        : item);
     }
   }
   return dst;
@@ -56,11 +60,14 @@ const base = (
  * // => [{ id: 1, parent: null, childs: [{ id: 2, ... }, { id: 3, ... }] }]
  */
 export const getTree = (
-  src: Array<{ id?: any; parent?: any }> | null | undefined,
+  src: Array<{ id?: any;
+parent?: any }> | null | undefined,
   id: any,
   dst?: any[],
   depth: number = 10,
 ): any[] => {
-  return base(src || [], id, dst || [], depth);
+  return base(
+    src || [], id, dst || [], depth,
+  );
 };
 

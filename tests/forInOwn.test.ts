@@ -1,15 +1,22 @@
-import { forInOwn } from '../src/forInOwn';
+import {
+  forInOwn, 
+} from '../src/forInOwn';
 
 describe('forInOwn', () => {
   test('iterates over own enumerable properties', () => {
     const result: string[] = [];
-    forInOwn({ a: 1, b: 2 }, (v, k) => result.push(k));
+    forInOwn({
+      a: 1,
+      b: 2, 
+    }, (v, k) => result.push(k));
     expect(result).toContain('a');
     expect(result).toContain('b');
   });
 
   test('skips inherited properties', () => {
-    const parent = { inherited: 1 };
+    const parent = {
+      inherited: 1, 
+    };
     const child = Object.create(parent);
     child.own = 2;
     const keys: string[] = [];

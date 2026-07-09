@@ -1,4 +1,6 @@
-import { hasOwn } from './hasOwn';
+import {
+  hasOwn, 
+} from './hasOwn';
 
 /**
  * Shallowly copies own enumerable properties from `src` to `dst`.
@@ -10,10 +12,8 @@ import { hasOwn } from './hasOwn';
  * @example
  * extendOwn({ a: 1 }, { b: 2 }); // => { a: 1, b: 2 }
  */
-export function extendOwn<TDst extends Record<string, any>, TSrc extends Record<string, any>>(
-  dst: TDst,
-  src: TSrc,
-): TDst & TSrc {
+export function extendOwn<TDst extends Record<string, any>, TSrc extends Record<string, any>>(dst: TDst,
+  src: TSrc): TDst & TSrc {
   let k: keyof typeof src;
   for (k in src) {
     if (hasOwn(src, k)) {

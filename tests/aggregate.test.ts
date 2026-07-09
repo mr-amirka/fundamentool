@@ -1,4 +1,6 @@
-import { aggregate } from '../src/aggregate';
+import {
+  aggregate, 
+} from '../src/aggregate';
 
 describe('aggregate | aggregate functions array into one function', () => {
   test('with outputs array', () => {
@@ -20,11 +22,18 @@ describe('aggregate | aggregate functions array into one function', () => {
 
     expect(outputs).toEqual([]);
     aggregateFn(5, 7);
-    expect(outputs).toEqual([12, 35, -2, 2]);
+    expect(outputs).toEqual([
+      12,
+      35,
+      -2,
+      2,
+    ]);
   });
 
   test('with this', () => {
-    const self: { v: number } = { v: 0 };
+    const self: { v: number } = {
+      v: 0, 
+    };
     const aggregateFn = aggregate([
       function (this: { v: number }, v: number) {
         this.v += 2 * v;

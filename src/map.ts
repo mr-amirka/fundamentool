@@ -19,7 +19,9 @@ export const map = <T = any, R = any>(
   const result: R[] = output || new Array(length);
   let i = 0;
   for (; i < length; i++) {
-    result[i] = iteratee.call(ctx, collection[i], i, collection);
+    result[i] = iteratee.call(
+      ctx, collection[i], i, collection,
+    );
   }
   return result;
 };

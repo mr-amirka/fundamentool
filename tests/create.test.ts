@@ -1,8 +1,12 @@
-import { create } from '../src/create';
+import {
+  create, 
+} from '../src/create';
 
 describe('create', () => {
   test('creates object with given prototype', () => {
-    const proto = { a: 1 };
+    const proto = {
+      a: 1, 
+    };
     const obj = create(proto);
 
     expect(Object.getPrototypeOf(obj)).toBe(proto);

@@ -1,8 +1,11 @@
-import { setStyleSheet, TSetStyleSheetDocument } from './setStyleSheet';
+import {
+  setStyleSheet, TSetStyleSheetDocument, 
+} from './setStyleSheet';
 
 export type TStylesRenderDocument = TSetStyleSheetDocument & {
   getElementById(id: string): any;
-  head: { appendChild(node: any): any; removeChild?(node: any): any } | null | undefined;
+  head: { appendChild(node: any): any;
+removeChild?(node: any): any } | null | undefined;
   createElement(tagName: string): any;
 };
 
@@ -70,7 +73,9 @@ export function stylesRenderProvider(doc: TStylesRenderDocument, prefix: string)
    */
   return (styles: TStyleItem[]) => {
     head = head || doc.head;
-    if (!head) return;
+    if (!head) {
+      return;
+    }
 
     const trash = last;
     const length = styles.length;
@@ -93,7 +98,9 @@ export function stylesRenderProvider(doc: TStylesRenderDocument, prefix: string)
       node = slot[0];
       if (revision !== slot[1]) {
         slot[1] = revision;
-        setStyleSheet(node, item.content || '', doc);
+        setStyleSheet(
+          node, item.content || '', doc,
+        );
       }
       head.appendChild(node);
     }

@@ -11,18 +11,32 @@
  * isMatch({ a: 1 }, { a: 2 });        // => false
  * isMatch({ a: 1 }, { b: 1 });        // => false
  */
-export const isMatch = (src: any, matchs: any, depth?: number) => {
-  return !isNotMatch(src, matchs, depth || 10);
+export const isMatch = (
+  src: any, matchs: any, depth?: number,
+) => {
+  return !isNotMatch(
+    src, matchs, depth || 10,
+  );
 };
 
-function isNotMatch(src: any, matchs: any, depth: number) {
-  if (src === matchs || depth < 0) return;
+function isNotMatch(
+  src: any, matchs: any, depth: number,
+) {
+  if (src === matchs || depth < 0) {
+    return;
+  }
   let k: string;
   const t1 = typeof src;
   const t2 = typeof matchs;
-  if (t1 !== t2 || t1 !== 'object' || !src) return true;
+  if (t1 !== t2 || t1 !== 'object' || !src) {
+    return true;
+  }
   depth--;
   for (k in matchs) {
-    if (isNotMatch(src[k], matchs[k], depth)) return true;
+    if (isNotMatch(
+      src[k], matchs[k], depth,
+    )) {
+      return true;
+    }
   }
 }

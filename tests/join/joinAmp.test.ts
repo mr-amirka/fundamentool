@@ -1,8 +1,14 @@
-import { joinAmp } from '../../src/join/joinAmp';
+import {
+  joinAmp, 
+} from '../../src/join/joinAmp';
 
 describe('joinAmp', () => {
   test('joins items with ampersand', () => {
-    expect(joinAmp(['a', 'b', 'c'])).toBe('a&b&c');
+    expect(joinAmp([
+      'a',
+      'b',
+      'c',
+    ])).toBe('a&b&c');
   });
 
   test('handles single item', () => {

@@ -1,28 +1,36 @@
-import { readyProvider } from '../src/readyProvider';
+import {
+  readyProvider, 
+} from '../src/readyProvider';
 
 function makeWindow(readyState: string = 'loading') {
-  const listeners: Record<string, Function[]> = {};
+  const listeners: Record<string, (() => void)[]> = {};
   const doc: any = {
     readyState,
-    addEventListener: (event: string, cb: Function) => {
+    addEventListener: (event: string, cb: () => void) => {
       (listeners[event] = listeners[event] || []).push(cb);
     },
     removeEventListener: jest.fn(),
   };
   const win: any = {
     document: doc,
-    addEventListener: (event: string, cb: Function) => {
+    addEventListener: (event: string, cb: () => void) => {
       (listeners[event] = listeners[event] || []).push(cb);
     },
     removeEventListener: jest.fn(),
   };
   const fire = (event: string) => (listeners[event] || []).forEach((cb) => cb());
-  return { win, doc, fire };
+  return {
+    win,
+    doc,
+    fire, 
+  };
 }
 
 describe('readyProvider', () => {
   test('calls fn immediately via defer when DOM is already ready', async () => {
-    const { win } = makeWindow('complete');
+    const {
+      win, 
+    } = makeWindow('complete');
     const ready = readyProvider(win);
     const calls: number[] = [];
     ready(() => calls.push(1));
@@ -31,7 +39,9 @@ describe('readyProvider', () => {
   });
 
   test('queues fn and calls it on DOMContentLoaded', () => {
-    const { win, fire } = makeWindow('loading');
+    const {
+      win, fire, 
+    } = makeWindow('loading');
     const ready = readyProvider(win);
     const calls: number[] = [];
     ready(() => calls.push(1));
@@ -41,7 +51,9 @@ describe('readyProvider', () => {
   });
 
   test('unsubscribe cancels queued fn', () => {
-    const { win, fire } = makeWindow('loading');
+    const {
+      win, fire, 
+    } = makeWindow('loading');
     const ready = readyProvider(win);
     const calls: number[] = [];
     const unsub = ready(() => calls.push(1)) as () => boolean;
@@ -51,7 +63,9 @@ describe('readyProvider', () => {
   });
 
   test('calls fn immediately on load event', () => {
-    const { win, fire } = makeWindow('loading');
+    const {
+      win, fire, 
+    } = makeWindow('loading');
     const ready = readyProvider(win);
     const calls: number[] = [];
     ready(() => calls.push(1));

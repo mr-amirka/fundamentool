@@ -1,5 +1,9 @@
-import { wsSeriesRequestProvider } from '../../src/browser/wsSeriesRequestProvider';
-import { FakeWebSocket } from './wsFakeWebSocket';
+import {
+  wsSeriesRequestProvider, 
+} from '../../src/browser/wsSeriesRequestProvider';
+import {
+  FakeWebSocket, 
+} from './wsFakeWebSocket';
 
 describe('browser/wsSeriesRequestProvider', () => {
   beforeEach(() => {
@@ -32,8 +36,12 @@ describe('browser/wsSeriesRequestProvider', () => {
   test('resolves requests in order', async () => {
     const request = wsSeriesRequestProvider('ws://example.com');
 
-    const p1 = request('one', { a: 1 });
-    const p2 = request('two', { b: 2 });
+    const p1 = request('one', {
+      a: 1, 
+    });
+    const p2 = request('two', {
+      b: 2, 
+    });
 
     await Promise.resolve();
     const socket = FakeWebSocket.instances[0];
@@ -43,7 +51,9 @@ describe('browser/wsSeriesRequestProvider', () => {
     expect(socket.sent.length).toBeGreaterThanOrEqual(1);
 
     socket.onmessage?.({
-      data: new Blob([JSON.stringify({ data: 10 })], {
+      data: new Blob([JSON.stringify({
+        data: 10, 
+      })], {
         type: 'text/plain',
       }),
     } as any);
@@ -51,12 +61,18 @@ describe('browser/wsSeriesRequestProvider', () => {
     await Promise.resolve();
 
     socket.onmessage?.({
-      data: new Blob([JSON.stringify({ data: 20 })], {
+      data: new Blob([JSON.stringify({
+        data: 20, 
+      })], {
         type: 'text/plain',
       }),
     } as any);
 
-    await expect(p1).resolves.toEqual({ data: 10 });
-    await expect(p2).resolves.toEqual({ data: 20 });
+    await expect(p1).resolves.toEqual({
+      data: 10, 
+    });
+    await expect(p2).resolves.toEqual({
+      data: 20, 
+    });
   });
 });

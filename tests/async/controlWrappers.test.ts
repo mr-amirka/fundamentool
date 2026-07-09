@@ -55,10 +55,22 @@ describe('control wrappers', () => {
     const p2 = seqFn(2);
     const p3 = seqFn(3);
 
-    const results = await Promise.all([p1, p2, p3]);
+    const results = await Promise.all([
+      p1,
+      p2,
+      p3,
+    ]);
 
-    expect(calls).toEqual([1, 2, 3]);
-    expect(results).toEqual([2, 4, 6]);
+    expect(calls).toEqual([
+      1,
+      2,
+      3,
+    ]);
+    expect(results).toEqual([
+      2,
+      4,
+      6,
+    ]);
   });
 
   test('sequenceDelay adds delay between executions', async () => {

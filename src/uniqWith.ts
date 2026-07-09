@@ -1,4 +1,6 @@
-import { isMatch } from './is/isMatch';
+import {
+  isMatch, 
+} from './is/isMatch';
 
 /**
  * Returns unique items from input using a custom comparator.

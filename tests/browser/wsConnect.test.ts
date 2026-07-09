@@ -1,5 +1,9 @@
-import { wsConnect } from '../../src/browser/wsConnect';
-import { FakeWebSocket } from './wsFakeWebSocket';
+import {
+  wsConnect, 
+} from '../../src/browser/wsConnect';
+import {
+  FakeWebSocket, 
+} from './wsFakeWebSocket';
 
 describe('browser/wsConnect', () => {
   beforeEach(() => {

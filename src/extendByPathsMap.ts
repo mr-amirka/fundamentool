@@ -1,8 +1,18 @@
-import { extend } from './extend';
-import { isPlainObject } from './is/isPlainObject';
-import { isObject } from './is/isObject';
-import { get } from './get';
-import { set } from './set';
+import {
+  extend, 
+} from './extend';
+import {
+  isPlainObject, 
+} from './is/isPlainObject';
+import {
+  isObject, 
+} from './is/isObject';
+import {
+  get, 
+} from './get';
+import {
+  set, 
+} from './set';
 
 /**
  * Extends `dst` from `src` according to a map of paths.
@@ -23,8 +33,12 @@ export const extendByPathsMap = (
   src: Record<string, any>,
   map?: Record<string, string>,
 ): Record<string, any> => {
-  if (!map) return dst;
-  if (!isObject(map)) return get(src, map);
+  if (!map) {
+    return dst;
+  }
+  if (!isObject(map)) {
+    return get(src, map);
+  }
 
   let to: string;
   let from: string;
@@ -34,9 +48,13 @@ export const extendByPathsMap = (
   for (to in map) {
     from = map[to];
     v = from === '' ? src : get(src, from);
-    if (v === undefined) continue;
+    if (v === undefined) {
+      continue;
+    }
     if (to) {
-      set(dst, to, v);
+      set(
+        dst, to, v,
+      );
     } else if (isPlainObject(v)) {
       extend(dst, v);
     }

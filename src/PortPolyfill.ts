@@ -1,4 +1,6 @@
-import { GLOBAL_CONTEXT } from './globalContext';
+import {
+  GLOBAL_CONTEXT, 
+} from './globalContext';
 
 const EventTargetConstructor = (GLOBAL_CONTEXT.EventTarget || function() {
   console.warn('EventTarget is not support');

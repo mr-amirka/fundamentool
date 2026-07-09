@@ -1,4 +1,6 @@
-import { readUnopened as simpleReadUnopened } from '../readUnopened';
+import {
+  readUnopened as simpleReadUnopened, 
+} from '../readUnopened';
 
 /**
  * Reads all records from a JSONL file via `readUnopened` into memory as an array of parsed objects.
@@ -26,5 +28,5 @@ export function readUnopened(
     stream.on('end', () => resolve(items));
     stream.on('error', reject);
   });
-};
+}
 

@@ -4,14 +4,26 @@
  * @param indexOf - The index of the separator.
  * @returns The half provider.
  */
-export const halfProvider = (
-  indexOf: (input: string) => number,
-): ((input: string, separator: string, right?: boolean | number) => [string, string, string]) => {
-  return (input: string, separator: string, right?: boolean | number): [string, string, string] => {
+export const halfProvider = (indexOf: (input: string) => number): ((input: string, separator: string, right?: boolean | number) => [string, string, string]) => {
+  return (
+    input: string, separator: string, right?: boolean | number,
+  ): [string, string, string] => {
     const i = indexOf.call(input, separator);
     return i < 0
-      ? right ? ['', input, ''] : [input, '', '']
-      : [input.slice(0, i), input.slice(i + separator.length), separator];
+      ? right ? [
+        '',
+        input,
+        '',
+      ] : [
+        input,
+        '',
+        '',
+      ]
+      : [
+        input.slice(0, i),
+        input.slice(i + separator.length),
+        separator,
+      ];
   };
 };
 

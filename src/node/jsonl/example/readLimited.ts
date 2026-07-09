@@ -1,4 +1,6 @@
-import { readLimited } from '../readLimited';
+import {
+  readLimited, 
+} from '../readLimited';
 
 const _read = readLimited(__dirname + '/input.jsonl', {
   bufferLength: 1024 * 8,

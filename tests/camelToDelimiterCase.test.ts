@@ -1,5 +1,9 @@
-import { camelToDelimiterCase } from '../src/camelToDelimiterCase';
-import { delimiterToCamelCase } from '../src/delimiterToCamelCase';
+import {
+  camelToDelimiterCase, 
+} from '../src/camelToDelimiterCase';
+import {
+  delimiterToCamelCase, 
+} from '../src/delimiterToCamelCase';
 
 describe('camelToDelimiterCase', () => {
   test('converts camelCase to kebab-case', () => {

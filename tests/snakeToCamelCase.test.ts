@@ -1,4 +1,6 @@
-import { snakeToCamelCase } from '../src/snakeToCamelCase';
+import {
+  snakeToCamelCase, 
+} from '../src/snakeToCamelCase';
 
 describe('snakeToCamelCase', () => {
   test('converts snake to camel', () => {

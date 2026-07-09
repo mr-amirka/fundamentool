@@ -7,7 +7,7 @@
  * sendingQueue((...args) => Promise.resolve()); // => { (...args: any[]): Promise<any>, drain(): Promise<any> }
  */
 export function sendingQueue<
-  F extends (...args: any[]) => Promise<any> = (...args: any[]) => any
+  F extends (...args: any[]) => Promise<any> = (...args: any[]) => any,
 >(fn: F): {
   (...args: Parameters<F>): Promise<any>,
   drain(): Promise<any>

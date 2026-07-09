@@ -1,5 +1,9 @@
-import { RpcClientPool } from "../../RpcClientPool";
-import { RpcClientWorker, TRpcClientWorkerOptions } from "./RpcClientWorker";
+import {
+  RpcClientPool, 
+} from '../../RpcClientPool';
+import {
+  RpcClientWorker, TRpcClientWorkerOptions, 
+} from './RpcClientWorker';
 
 /** Options for `RpcClientWorkerPool`. */
 export type TRpcClientWorkerPoolOptions = Omit<TRpcClientWorkerOptions, 'type'> & {

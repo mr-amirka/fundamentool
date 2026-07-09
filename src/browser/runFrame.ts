@@ -11,16 +11,16 @@ declare function requestAnimationFrame(callback: (time: number) => void): number
  * const stop = runFrame((delta) => console.log(delta), 100);
  * stop(); // stops the loop
  */
-export function runFrame(
-  callback: (delta: number) => void,
-  interval: number = 0,
-): () => void {
+export function runFrame(callback: (delta: number) => void,
+  interval: number = 0): () => void {
   let stop = false;
   let balance = 0;
   let lastTime = Date.now();
 
   function step(): void {
-    if (stop) return;
+    if (stop) {
+      return;
+    }
     const now = Date.now();
     balance += now - lastTime;
     lastTime = now;

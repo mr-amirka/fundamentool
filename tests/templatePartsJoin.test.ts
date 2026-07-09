@@ -1,8 +1,14 @@
-import { templatePartsJoin } from '../src/templatePartsJoin';
+import {
+  templatePartsJoin, 
+} from '../src/templatePartsJoin';
 
 describe('templatePartsJoin', () => {
   test('joins static string parts', () => {
-    const render = templatePartsJoin([() => 'Hello', () => ' ', () => 'World']);
+    const render = templatePartsJoin([
+      () => 'Hello',
+      () => ' ',
+      () => 'World',
+    ]);
     expect(render({})).toBe('Hello World');
   });
 
@@ -12,7 +18,9 @@ describe('templatePartsJoin', () => {
       (scope: any) => scope.name,
       () => '!',
     ]);
-    expect(render({ name: 'Alice' })).toBe('Hi, Alice!');
+    expect(render({
+      name: 'Alice', 
+    })).toBe('Hi, Alice!');
   });
 
   test('returns empty string for empty parts', () => {

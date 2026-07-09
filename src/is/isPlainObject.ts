@@ -1,4 +1,6 @@
-import { isObjectLike } from './isObjectLike';
+import {
+  isObjectLike, 
+} from './isObjectLike';
 
 /**
  * Checks whether value is a "plain object":

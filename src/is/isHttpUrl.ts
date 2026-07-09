@@ -1,4 +1,6 @@
-import { isString } from './isString';
+import {
+  isString, 
+} from './isString';
 
 // eslint-disable-next-line
 const URL_VALIDATION_REGEX = /^(https?:\/\/)?(([A-Za-zА-Яа-я0-9]|[A-Za-zА-Яа-я0-9][A-Za-zА-Яа-я0-9\-]*[A-Za-zА-Яа-я0-9])\.)+[A-Za-zА-Яа-я][A-Za-zА-Яа-я\-]*[A-Za-zА-Яа-я](\/([\w#!:.?+=&%@!\-\/])*)?/;

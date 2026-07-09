@@ -1,8 +1,14 @@
-import { joinSpace } from '../src/join/joinSpace';
+import {
+  joinSpace, 
+} from '../src/join/joinSpace';
 
 describe('joinSpace', () => {
   test('joins with space', () => {
-    expect(joinSpace(['a', 'b', 'c'])).toBe('a b c');
+    expect(joinSpace([
+      'a',
+      'b',
+      'c',
+    ])).toBe('a b c');
   });
 
   test('empty array', () => {

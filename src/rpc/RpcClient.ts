@@ -12,12 +12,24 @@ import {
   TRpcUnsubscribe,
   IRpcClient,
 } from './types';
-import { RpcCoder } from './RpcCoder';
-import { getUniqId } from './getUniqId';
-import { attachEvent } from '../attachEvent';
-import { EventEmitter } from '../EventEmitter';
-import { Unsubscriber } from '../Unsubscriber';
-import { createTimeout } from '../createTimeout';
+import {
+  RpcCoder, 
+} from './RpcCoder';
+import {
+  getUniqId, 
+} from './getUniqId';
+import {
+  attachEvent, 
+} from '../attachEvent';
+import {
+  EventEmitter, 
+} from '../EventEmitter';
+import {
+  Unsubscriber, 
+} from '../Unsubscriber';
+import {
+  createTimeout, 
+} from '../createTimeout';
 
 
 /**
@@ -30,11 +42,8 @@ import { createTimeout } from '../createTimeout';
  * const result = await client.call('greet', ['world']); // => 'Hello, world!'
  */
 export class RpcClient extends EventEmitter implements IRpcClient {
-  static DEFAULT_EVENTS = [
-    'abort',
-    // 'pause',
-    // 'continue',
-  ];
+  // 'pause' и 'continue' пока не проксируются в события клиента
+  static DEFAULT_EVENTS = ['abort'];
 
   private nextCallbackCallIndex = 0;
   private taskMap = new Map<string, TRpcClientTask>();
@@ -65,18 +74,23 @@ export class RpcClient extends EventEmitter implements IRpcClient {
     super.destroy();
   }
 
-  call<R = any>(method: string, args?: any[], options?: TRpcClientRequestOptions): Promise<R> {
-    return this.callBase(TRpcType.Call, method, args, options);
+  call<R = any>(
+    method: string, args?: any[], options?: TRpcClientRequestOptions,
+  ): Promise<R> {
+    return this.callBase(
+      TRpcType.Call, method, args, options,
+    );
   }
 
-  on(event: string, args?: any[], options?: TRpcClientRequestOptions): TRpcUnsubscribe {
+  on(
+    event: string, args?: any[], options?: TRpcClientRequestOptions,
+  ): TRpcUnsubscribe {
     let unsubscribe: any;
-    this.callBase(TRpcType.Subscribe, event, [
-      new Promise<void>((resolve) => {
+    this.callBase(
+      TRpcType.Subscribe, event, [new Promise<void>((resolve) => {
         unsubscribe = resolve;
-      }),
-      args,
-    ], options);
+      }), args], options,
+    );
     return unsubscribe;
   }
 
@@ -87,8 +101,8 @@ export class RpcClient extends EventEmitter implements IRpcClient {
 
     let terminate: any;
     return this.proxyInstancePromise = new Promise((resolve, reject) => {
-      this.callBase(TRpcType.MetaCall, 'proxy', [
-        (exports: any) => {
+      this.callBase(
+        TRpcType.MetaCall, 'proxy', [(exports: any) => {
           const originTerminate = exports.terminate;
           resolve({
             ...exports,
@@ -103,20 +117,19 @@ export class RpcClient extends EventEmitter implements IRpcClient {
           return new Promise<void>((resolve) => {
             terminate = resolve;
           });
-        },
-      ]).catch(reject);
+        }],
+      ).catch(reject);
     });
   }
 
 
   private sendMessage(data: TRpcClientMessage[1]) {
-    this.postMessage([
-      TRpcAgent.Client,
-      data,
-    ] as TRpcClientMessage);
+    this.postMessage([TRpcAgent.Client, data] as TRpcClientMessage);
   }
 
-  private sendEvent(requestId: string, event: string, detail?: any) {
+  private sendEvent(
+    requestId: string, event: string, detail?: any,
+  ) {
     const task = this.taskMap.get(requestId);
     task && this.sendMessage([
       TRpcType.Event,
@@ -135,7 +148,9 @@ export class RpcClient extends EventEmitter implements IRpcClient {
     return new Promise<R>((resolve, reject) => {
       const requestId = getUniqId();
       const coder = this.serializable ? new RpcCoder((fnIndex) => {
-        return (...params: any[]) => this.callConnectFn(requestId, fnIndex, params);
+        return (...params: any[]) => this.callConnectFn(
+          requestId, fnIndex, params,
+        );
       }, {
         useSymols: true,
       }) : null;
@@ -156,25 +171,29 @@ export class RpcClient extends EventEmitter implements IRpcClient {
           signal,
         } = options;
 
-        function abort(message: string) {
+        const abort = (message: string) => {
           const error = new Error(`${method}: ${message}`);
           error.name = 'AbortError';
           (error as any).code = 20;
           reject(error);
-        }
+        };
 
         timeout && unsubscriber.add(createTimeout(() => {
-          abort(`The method execution timeout has been reached`);
+          abort('The method execution timeout has been reached');
           this.sendEvent(requestId, 'abort');
         }, timeout));
 
         signal && [...RpcClient.DEFAULT_EVENTS, ...(options.events || [])].forEach((eventName) => {
-          unsubscriber.add(attachEvent(signal, eventName, (e: Event) => {
-            if (eventName === 'abort') {
-              abort(`The method execution was aborted`);
-            }
-            this.sendEvent(requestId, eventName, (e as CustomEvent).detail);
-          }));
+          unsubscriber.add(attachEvent(
+            signal, eventName, (e: Event) => {
+              if (eventName === 'abort') {
+                abort('The method execution was aborted');
+              }
+              this.sendEvent(
+                requestId, eventName, (e as CustomEvent).detail,
+              );
+            },
+          ));
         });
       }
 
@@ -212,9 +231,11 @@ export class RpcClient extends EventEmitter implements IRpcClient {
 
       const coder = serializable ? new RpcCoder() : null;
 
-      console.error('Client:Call:SubCall', error, {
-        args: coder?.decode(dataArgs[4]) || dataArgs[4] || [],
-      });
+      console.error(
+        'Client:Call:SubCall', error, {
+          args: coder?.decode(dataArgs[4]) || dataArgs[4] || [],
+        },
+      );
 
       this.sendMessage([
         TRpcType.SubResult,
@@ -253,9 +274,11 @@ export class RpcClient extends EventEmitter implements IRpcClient {
         try {
           result = await coder?.invoke(dataArgs[3], args);
         } catch (error: any) {
-          console.error('Client:Call:SubCall', error, {
-            args,
-          });
+          console.error(
+            'Client:Call:SubCall', error, {
+              args,
+            },
+          );
           isError = 1;
           result = error;
         }
@@ -274,7 +297,9 @@ export class RpcClient extends EventEmitter implements IRpcClient {
     console.warn('Client: Unknown server message', data);
   }
 
-  private callConnectFn(requestId: string, fnIndex: number, args: any[]) {
+  private callConnectFn(
+    requestId: string, fnIndex: number, args: any[],
+  ) {
     return new Promise((resolve, reject) => {
       const task = this.taskMap.get(requestId);
 

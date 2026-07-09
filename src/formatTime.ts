@@ -1,19 +1,57 @@
-import { isDefined } from './is/isDefined';
-import { templateProvider } from './templateProvider';
-import { padStart } from './padStart';
+import {
+  isDefined, 
+} from './is/isDefined';
+import {
+  templateProvider, 
+} from './templateProvider';
+import {
+  padStart, 
+} from './padStart';
 
 const REGEXP_TEMPLATE = /\{((?:(?:"[^"]*")|(?:'[^']*')|(?:`[^`]*`)|(?:\{.*?\})|(?:[^}]*?))*?)\}/g; // eslint-disable-line
 const DEFAULT_MASK = '{yyyy}-{mm}-{dd} {HH}:{MM}:{ss}';
 const I18N = {
   days: [
-    'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat',
-    'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
+    'Sun',
+    'Mon',
+    'Tue',
+    'Wed',
+    'Thu',
+    'Fri',
+    'Sat',
+    'Sunday',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
     'Saturday',
   ],
   months: [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov',
-    'Dec', 'January', 'February', 'March', 'April', 'May', 'June', 'July',
-    'August', 'September', 'October', 'November', 'December',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ],
 };
 
@@ -35,7 +73,9 @@ const templateRFC3339 = templateProvider(
 );
 
 function pad(v: number, len?: number) {
-  return padStart('' + v, len || 2, '0');
+  return padStart(
+    '' + v, len || 2, '0',
+  );
 }
 
 /**
@@ -50,10 +90,16 @@ function pad(v: number, len?: number) {
  * formatTime(new Date('2024-06-15T08:05:03'), '{yyyy}-{mm}-{dd}'); // => '2024-06-15'
  * formatTime(new Date('2024-06-15T08:05:03'), '{HH}:{MM}:{ss}');   // => '08:05:03'
  */
-export const formatTime: IFormatTime = (date?: number | string | Date, mask?: string, utc?: boolean, i18n?: Record<string, string[]>) => {
-  const ctx = getData(date, utc, i18n);
+export const formatTime: IFormatTime = (
+  date?: number | string | Date, mask?: string, utc?: boolean, i18n?: Record<string, string[]>,
+) => {
+  const ctx = getData(
+    date, utc, i18n,
+  );
   return ctx
-    ? templateProvider(mask || DEFAULT_MASK, null, REGEXP_TEMPLATE)(ctx)
+    ? templateProvider(
+      mask || DEFAULT_MASK, null, REGEXP_TEMPLATE,
+    )(ctx)
     : '';
 };
 
@@ -95,7 +141,9 @@ export const getData = formatTime.getData = (
   i18n?: Record<string, string[]>,
 ): Record<string, string> | null => {
   const normalizedDate = normalizeDate(date);
-  if (!normalizedDate) return null;
+  if (!normalizedDate) {
+    return null;
+  }
   i18n = i18n || I18N;
 
   function get(key: string): number {
@@ -155,7 +203,5 @@ export const getData = formatTime.getData = (
  * @param utc - Whether to use UTC time.
  * @returns The RFC3339 format.
  */
-export const getRFC3339 = formatTime.getRFC3339 = (
-  time: string | number | Date,
-  utc?: boolean,
-): string => templateRFC3339(getData(time, utc));
+export const getRFC3339 = formatTime.getRFC3339 = (time: string | number | Date,
+  utc?: boolean): string => templateRFC3339(getData(time, utc));

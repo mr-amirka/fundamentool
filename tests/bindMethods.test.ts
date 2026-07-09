@@ -1,17 +1,25 @@
-import { bindMethods } from '../src/bindMethods';
+import {
+  bindMethods, 
+} from '../src/bindMethods';
 
 describe('bindMethods', () => {
   test('binds methods to the object', () => {
     class Counter {
       value = 0;
-      increment() { this.value++; }
-      decrement() { this.value--; }
+      increment() {
+        this.value++; 
+      }
+      decrement() {
+        this.value--; 
+      }
     }
 
     const counter = new Counter();
     bindMethods(counter, ['increment', 'decrement']);
 
-    const { increment, decrement } = counter;
+    const {
+      increment, decrement, 
+    } = counter;
     increment();
     increment();
     decrement();
@@ -19,17 +27,23 @@ describe('bindMethods', () => {
   });
 
   test('returns the same object', () => {
-    const obj = { fn() {} };
+    const obj = {
+      fn() {}, 
+    };
     expect(bindMethods(obj, ['fn'])).toBe(obj);
   });
 
   test('bound method uses object context when called standalone', () => {
     const obj = {
       x: 42,
-      getX() { return (this as any).x; },
+      getX() {
+        return (this as any).x; 
+      },
     };
     bindMethods(obj, ['getX']);
-    const { getX } = obj;
+    const {
+      getX, 
+    } = obj;
     expect(getX()).toBe(42);
   });
 });

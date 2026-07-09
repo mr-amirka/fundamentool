@@ -1,5 +1,9 @@
-import { isFunction } from './is/isFunction';
-import { isPromise } from './is/isPromise';
+import {
+  isFunction, 
+} from './is/isFunction';
+import {
+  isPromise, 
+} from './is/isPromise';
 
 /**
  * Wraps a function so that each new invocation cancels the previous one.
@@ -13,10 +17,8 @@ import { isPromise } from './is/isPromise';
  * singleFunc(); // => 'single'
  * singleFunc();
  */
-export function single<T extends (...args: any[]) => any>(
-  fn: T,
-  ctx?: any,
-): T & { cancel: () => void } {
+export function single<T extends (...args: any[]) => any>(fn: T,
+  ctx?: any): T & { cancel: () => void } {
   let innerCancel: any;
 
   function instance(this: any): any {

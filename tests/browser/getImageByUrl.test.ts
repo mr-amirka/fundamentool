@@ -1,5 +1,9 @@
-import { extractExportedFn } from './testUtils';
-import { setupImageHelpersDom } from './imageDomMocks';
+import {
+  extractExportedFn, 
+} from './testUtils';
+import {
+  setupImageHelpersDom, 
+} from './imageDomMocks';
 
 describe('browser/getImageByUrl', () => {
   beforeEach(() => {
@@ -7,9 +11,7 @@ describe('browser/getImageByUrl', () => {
   });
 
   test('resolves with Image instance', async () => {
-    const getImageByUrl = extractExportedFn(
-      require('../../src/browser/getImageByUrl'),
-    ) as (url: string) => Promise<any>;
+    const getImageByUrl = extractExportedFn(require('../../src/browser/getImageByUrl')) as (url: string) => Promise<any>;
 
     const img = await getImageByUrl('https://example.com/image.png');
     expect(img).toBeInstanceOf((global as any).Image);

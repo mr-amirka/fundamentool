@@ -1,4 +1,6 @@
-import { baseSet } from './set';
+import {
+  setBase, 
+} from './set';
 
 /**
  * A function that maps an array of values to a record.
@@ -24,13 +26,17 @@ export const mapperProvider = (keys: string[]): TMapper => {
   const paths = keys.map((key) => key.split('.'));
   return (values?: any[], dst?: Record<string, any>): Record<string, any> => {
     const result: Record<string, any> = dst || {};
-    if (!values) return result;
+    if (!values) {
+      return result;
+    }
     let i = 0;
     let v: any;
     for (; i < length; i++) {
       v = values[i];
       if (v !== undefined) {
-        baseSet(result, paths[i], v);
+        setBase(
+          result, paths[i], v,
+        );
       }
     }
     return result;

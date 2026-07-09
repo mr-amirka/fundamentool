@@ -11,17 +11,18 @@
  * copyTextToClipboard('Hello, World!');
  * // Copies "Hello, World!" to the system clipboard
  */
-export const copyTextToClipboard = (
-  text: string,
-  win?: { navigator?: any; document?: any },
-): void => {
+export const copyTextToClipboard = (text: string,
+  win?: { navigator?: any;
+document?: any }): void => {
   const ctx: any = win || (typeof window !== 'undefined' ? window : undefined);
   if (!ctx) {
     // No window available (for example, in Node.js) – nothing to do.
     return;
   }
 
-  const { navigator, document } = ctx;
+  const {
+    navigator, document, 
+  } = ctx;
 
   if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).catch((err: unknown) => {
@@ -36,7 +37,9 @@ export const copyTextToClipboard = (
   }
 
   const textArea = document.createElement('textarea');
-  const { style } = textArea;
+  const {
+    style, 
+  } = textArea;
   textArea.value = text;
   style.position = 'fixed';
   style.zIndex = '-1';

@@ -1,5 +1,9 @@
-import { variants } from '../src/variants';
-import { variantsProvider } from '../src/variantsProvider';
+import {
+  variants, 
+} from '../src/variants';
+import {
+  variantsProvider, 
+} from '../src/variantsProvider';
 
 const defaultMn = variantsProvider({
   separator: '|',
@@ -54,8 +58,7 @@ describe('variantsProvider', () => {
         scopeStart: '(',
         scopeEnd: ')',
         maxDepth: Number.NaN,
-      }),
-    ).toThrow(TypeError);
+      })).toThrow(TypeError);
   });
 
   test('maxDepth 1 allows only one nesting level', () => {
@@ -77,7 +80,11 @@ describe('variantsProvider', () => {
       maxDepth: Number.POSITIVE_INFINITY,
     });
     const [out, depth] = slash('P(eter/awel/atrik)');
-    expect(out).toEqual(['Peter', 'Pawel', 'Patrik']);
+    expect(out).toEqual([
+      'Peter',
+      'Pawel',
+      'Patrik',
+    ]);
     expect(depth).toBe(1);
   });
 
@@ -120,8 +127,7 @@ describe('variantsProvider', () => {
         scopeEnd: ')',
         maxDepth: Number.POSITIVE_INFINITY,
         maxOutputCount: Number.NaN,
-      }),
-    ).toThrow(TypeError);
+      })).toThrow(TypeError);
   });
 
   test('rejects identical scopeStart and scopeEnd', () => {
@@ -131,7 +137,6 @@ describe('variantsProvider', () => {
         scopeStart: '##',
         scopeEnd: '##',
         maxDepth: 1,
-      }),
-    ).toThrow(TypeError);
+      })).toThrow(TypeError);
   });
 });

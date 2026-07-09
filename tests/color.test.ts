@@ -1,5 +1,9 @@
-import { color } from '../src/color';
-import { colorRange } from '../src/colorRange';
+import {
+  color, 
+} from '../src/color';
+import {
+  colorRange, 
+} from '../src/colorRange';
 
 describe('color', () => {
   test('converts 6-digit hex to rgb string', () => {
@@ -35,13 +39,28 @@ describe('color', () => {
 
 describe('colorRange', () => {
   test('returns single color for single-element input with precision 0', () => {
-    const result = colorRange([[1, 0, 0, 1]], 0);
+    const result = colorRange([[
+      1,
+      0,
+      0,
+      1,
+    ]], 0);
     expect(result).toHaveLength(1);
     expect(result[0]).toMatch(/^rgba\(/);
   });
 
   test('interpolates between two colors', () => {
-    const result = colorRange([[1, 0, 0, 1], [0, 0, 1, 1]], 1);
+    const result = colorRange([[
+      1,
+      0,
+      0,
+      1,
+    ], [
+      0,
+      0,
+      1,
+      1,
+    ]], 1);
     expect(result.length).toBeGreaterThan(2);
     expect(result[0]).toMatch(/^rgba\(/);
   });

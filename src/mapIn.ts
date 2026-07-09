@@ -18,7 +18,9 @@ export const mapIn = <T = any, R = any>(
   const result: Record<string, R> = output || {};
   let k: string;
   for (k in collection) {
-    result[k] = iteratee.call(ctx, collection[k], k, collection);
+    result[k] = iteratee.call(
+      ctx, collection[k], k, collection,
+    );
   }
   return result;
 };

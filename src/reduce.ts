@@ -14,4 +14,6 @@ export const reduce = (
   collection: any,
   iteratee: (acc: any, value: any, index: number, collection: any) => any,
   accumulator: any,
-): any => originalReduce.call(collection, iteratee, accumulator);
+): any => originalReduce.call(
+  collection, iteratee, accumulator,
+);

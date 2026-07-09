@@ -1,5 +1,9 @@
-import { isFunction } from './is/isFunction';
-import { wrapper } from './wrapper';
+import {
+  isFunction, 
+} from './is/isFunction';
+import {
+  wrapper, 
+} from './wrapper';
 
 /**
  * Maps indices [i, length) to values using provided function.

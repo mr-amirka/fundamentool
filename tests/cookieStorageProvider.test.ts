@@ -1,9 +1,16 @@
-import { cookieStorageProvider, storageInit } from '../src/cookieStorageProvider';
-import { createStore, createApi } from '../src/Store';
+import {
+  cookieStorageProvider, storageInit, 
+} from '../src/cookieStorageProvider';
+import {
+  createStore, createApi, 
+} from '../src/Store';
 
 describe('storageInit', () => {
   test('parses cookie string into object', () => {
-    expect(storageInit('a=1; b=2')).toEqual({ a: 1, b: 2 });
+    expect(storageInit('a=1; b=2')).toEqual({
+      a: 1,
+      b: 2, 
+    });
   });
 
   test('returns empty object for empty string', () => {
@@ -13,13 +20,15 @@ describe('storageInit', () => {
   test('decodes URI-encoded keys and values', () => {
     const key = encodeURIComponent('my key');
     const val = encodeURIComponent(JSON.stringify('hello'));
-    expect(storageInit(`${key}=${val}`)).toEqual({ 'my key': 'hello' });
+    expect(storageInit(`${key}=${val}`)).toEqual({
+      'my key': 'hello', 
+    });
   });
 });
 
 describe('cookieStorageProvider', () => {
   function makeWindow() {
-    let cookieStore: Record<string, string> = {};
+    const cookieStore: Record<string, string> = {};
     const doc = {
       get cookie() {
         return Object.entries(cookieStore)
@@ -36,7 +45,9 @@ describe('cookieStorageProvider', () => {
         }
       },
     };
-    return { document: doc } as any;
+    return {
+      document: doc, 
+    } as any;
   }
 
   test('set and get a value', () => {
@@ -66,7 +77,9 @@ describe('cookieStorageProvider', () => {
     const win = makeWindow();
     let called = false;
     cookieStorageProvider(win, {
-      createStore: (initial) => { called = true; return createStore(initial); },
+      createStore: (initial) => {
+        called = true; return createStore(initial); 
+      },
       createApi,
     });
     expect(called).toBe(true);

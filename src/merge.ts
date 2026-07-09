@@ -1,7 +1,15 @@
-import { isPlainObject } from './is/isPlainObject';
-import { extend } from './extend';
-import { isObjectLike } from './is/isObjectLike';
-import { isDefined } from './is/isDefined';
+import {
+  isPlainObject, 
+} from './is/isPlainObject';
+import {
+  extend, 
+} from './extend';
+import {
+  isObjectLike, 
+} from './is/isObjectLike';
+import {
+  isDefined, 
+} from './is/isDefined';
 
 
 /**
@@ -17,7 +25,9 @@ import { isDefined } from './is/isDefined';
  * merge([{ a: 1 }, { b: 2 }], { c: 3 }) // => { c: 3, a: 1, b: 2 }
  * merge([{ a: 1 }, { b: 2 }], { c: 3 }, true) // => [{ c: 3, a: 1 }, { c: 3, b: 2 }]
  */
-export const merge = (mergingSrc: any[] | any, dst?: any, asArray?: boolean): any => {
+export const merge = (
+  mergingSrc: any[] | any, dst?: any, asArray?: boolean,
+): any => {
   if (!isObjectLike(mergingSrc)) {
     return isDefined(dst) ? dst : mergingSrc;
   }

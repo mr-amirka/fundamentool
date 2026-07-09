@@ -1,13 +1,27 @@
 import crypto from 'node:crypto';
 import http from 'node:http';
 import https from 'node:https';
-import { formatTime } from '../../formatTime';
-import { param } from '../..//param';
-import { urlParse } from '../..//urlParse';
-import { wait } from '../../wait';
-import { createTimeout } from '../../createTimeout';
-import { noop } from '../../noop';
-import { Response } from './Response';
+import {
+  formatTime, 
+} from '../../formatTime';
+import {
+  param,
+} from '../../param';
+import {
+  urlParse,
+} from '../../urlParse';
+import {
+  wait, 
+} from '../../wait';
+import {
+  createTimeout, 
+} from '../../createTimeout';
+import {
+  noop, 
+} from '../../noop';
+import {
+  Response, 
+} from './Response';
 
 export type TRequestOptions = {
   body?: any,
@@ -86,10 +100,7 @@ export class Client {
         const promise = _promiseBetweenLatency
           .catch(noop)
           .then(() => {
-            return Promise.all([
-              Promise.resolve().then(fn),
-              wait(minLatency),
-            ]);
+            return Promise.all([Promise.resolve().then(fn), wait(minLatency)]);
           })
           .then((v) => v[0]);
 
@@ -99,7 +110,9 @@ export class Client {
       })
       : noopHandle;
 
-    function request(method: string, path: string, options: TRequestOptions = {}) {
+    function request(
+      method: string, path: string, options: TRequestOptions = {},
+    ) {
       const {
         sign,
         body,
@@ -120,7 +133,9 @@ export class Client {
             .then(base);
         }
 
-        const query = {...(options.query || {})};
+        const query = {
+          ...(options.query || {}),
+        };
         sign && (query[timestampKey] = time);
         let queryString = param(query);
 
@@ -167,20 +182,26 @@ export class Client {
           let _timeouted = false;
 
           let req = (isHTTPS ? https : http)
-            .request(url, {
-              method,
-              headers: {
-                ...defaultHeaders,
-                ...headers,
+            .request(
+              url, {
+                method,
+                headers: {
+                  ...defaultHeaders,
+                  ...headers,
+                },
+                agent: isHTTPS ? httpsAgent : httpAgent,
+              }, (response) => {
+                if (_timeouted) {
+                  return;
+                }
+                cancelTimeoutCheck();
+                resolve(response);
               },
-              agent: isHTTPS ? httpsAgent : httpAgent,
-            }, (response) => {
-              if (_timeouted) return;
-              cancelTimeoutCheck();
-              resolve(response);
-            })
+            )
             .on('error', (err) => {
-              if (_timeouted) return;
+              if (_timeouted) {
+                return;
+              }
               cancel();
               reject(extendError(err));
             });
@@ -205,11 +226,8 @@ export class Client {
             _lockedTime = Date.now() + timeToWait;
             numberOfRetries++;
             if (numberOfRetries > retryLimit) {
-              throwError({
-                // response: provider(response),
-              }, `${formatTime()} Request ${id} on ${method} ${
-                url
-              }. The retry limit has been exceeded`);
+              throwError({},
+                `${formatTime()} Request ${id} on ${method} ${url}. The retry limit has been exceeded`);
             }
             // eslint-disable-next-line
             console.log(`${formatTime()} Request ${id} on ${method} ${url}. You have reached the rate limit for the API. Please retry in ${
@@ -244,7 +262,9 @@ export class Client {
 
     METHODS.forEach((method: string) => {
       this[method.toLowerCase()] = (path: string, options: TRequestOptions = {}) => {
-        return request(method, path, options);
+        return request(
+          method, path, options,
+        );
       };
     });
   }

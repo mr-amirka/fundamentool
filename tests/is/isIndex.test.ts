@@ -1,4 +1,6 @@
-import { isIndex } from '../../src/is/isIndex';
+import {
+  isIndex, 
+} from '../../src/is/isIndex';
 
 describe('isIndex', () => {
   test('returns true for non-negative integer strings', () => {

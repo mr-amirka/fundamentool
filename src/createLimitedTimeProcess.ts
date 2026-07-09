@@ -53,14 +53,20 @@ export function createLimitedTimeProcess(
     const t0 = now();
     let i = length;
     while (i--) {
-      if (!lastUpdates[i]) lastUpdates[i] = t0;
+      if (!lastUpdates[i]) {
+        lastUpdates[i] = t0;
+      }
     }
     started = true;
   }
 
   function instance() {
-    if (pausedAt) return;
-    if (!started) preStart();
+    if (pausedAt) {
+      return;
+    }
+    if (!started) {
+      preStart();
+    }
 
     const callStart = now();
     let t = callStart;
@@ -90,7 +96,9 @@ export function createLimitedTimeProcess(
 
   /** Suspends processing until `.play()` is called. */
   instance.pause = () => {
-    if (!pausedAt) pausedAt = now();
+    if (!pausedAt) {
+      pausedAt = now();
+    }
   };
 
   /**
@@ -99,8 +107,12 @@ export function createLimitedTimeProcess(
    * values in `processItem` do not include idle time.
    */
   instance.play = () => {
-    if (!pausedAt) return;
-    if (!started) preStart();
+    if (!pausedAt) {
+      return;
+    }
+    if (!started) {
+      preStart();
+    }
 
     const pauseDuration = now() - pausedAt;
     let i = length;

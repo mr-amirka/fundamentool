@@ -1,5 +1,9 @@
-import { GLOBAL_CONTEXT } from '../globalContext';
-import { urlExtend } from '../urlExtend';
+import {
+  GLOBAL_CONTEXT, 
+} from '../globalContext';
+import {
+  urlExtend, 
+} from '../urlExtend';
 
 let _JSONP_CALLBACK_INDEX = 0;
 

@@ -1,10 +1,16 @@
-import { copyTextToClipboard } from '../src/copyTextToClipboard';
+import {
+  copyTextToClipboard, 
+} from '../src/copyTextToClipboard';
 
 describe('copyTextToClipboard', () => {
   test('uses navigator.clipboard.writeText when available', async () => {
     const writeText = jest.fn().mockResolvedValue(undefined);
     const win = {
-      navigator: { clipboard: { writeText } },
+      navigator: {
+        clipboard: {
+          writeText, 
+        }, 
+      },
       document: {},
     };
 
@@ -46,7 +52,9 @@ describe('copyTextToClipboard', () => {
   });
 
   test('does nothing when document is missing', () => {
-    const win = { navigator: {} };
+    const win = {
+      navigator: {}, 
+    };
     expect(() => copyTextToClipboard('text', win as any)).not.toThrow();
   });
 });

@@ -1,4 +1,6 @@
-import { isString } from './isString';
+import {
+  isString, 
+} from './isString';
 
 /**
  * Returns `true` when value is not a string or has length less than required.

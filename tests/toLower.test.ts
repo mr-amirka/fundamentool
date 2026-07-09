@@ -1,4 +1,6 @@
-import { toLower } from '../src/toLower';
+import {
+  toLower, 
+} from '../src/toLower';
 
 describe('toLower', () => {
   test('converts to lowercase', () => {

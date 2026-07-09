@@ -16,7 +16,9 @@ export const createAnimationFrame = (callback: (balance: number) => void, interv
   let _balance = 0;
   let _lastTime = Date.now();
   function step() {
-    if (_stop) return;
+    if (_stop) {
+      return;
+    }
     const _time = Date.now();
     _balance += _time - _lastTime;
     _lastTime = _time;

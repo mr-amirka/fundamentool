@@ -1,4 +1,6 @@
-import { promisify } from '../src/promisify';
+import {
+  promisify, 
+} from '../src/promisify';
 
 describe('promisify', () => {
   test('resolves with callback result on success', async () => {
@@ -15,7 +17,9 @@ describe('promisify', () => {
   });
 
   test('forwards arguments to original function', async () => {
-    const fn = (a: number, b: number, cb: (err: any, val: number) => void) => cb(null, a + b);
+    const fn = (
+      a: number, b: number, cb: (err: any, val: number) => void,
+    ) => cb(null, a + b);
     const wrapped = promisify(fn);
     await expect(wrapped(2, 3)).resolves.toBe(5);
   });

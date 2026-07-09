@@ -14,17 +14,17 @@ export function parseEachLine(input: string, callback: TParseEachLineCallback) {
   const lines = input.split('\n');
 
   for (const line of lines) {
-    callback(
-      line
-        .split(';')
-        .map((column) => {
-          let value = decodeURIComponent(column);
-          try {
-            value = JSON.parse(value);
-          } catch(e) {}
-          return value;
-        })
-    );
+    callback(line
+      .split(';')
+      .map((column) => {
+        let value = decodeURIComponent(column);
+        try {
+          value = JSON.parse(value);
+        } catch (e) {
+          // не JSON — оставляем как декодированную строку
+        }
+        return value;
+      }));
   }
 }
 /**
@@ -53,11 +53,9 @@ export function stringify(data: any[][]) {
   const output = [];
 
   for (const line of data) {
-    output.push(
-      line
-        .map((column) => encodeURIComponent(JSON.stringify(column)))
-        .join(';')
-    );
+    output.push(line
+      .map((column) => encodeURIComponent(JSON.stringify(column)))
+      .join(';'));
   }
 
   return output.join('\n');

@@ -15,10 +15,8 @@ export interface ILimitStream {
  * const next = limitStream(jsonlStream, 50);
  * const batch = await next(); // => up to 50 parsed objects
  */
-export function limitStream(
-  stream: NodeJS.ReadableStream & { close?: () => void },
-  limit: number = DEFAULT_LIMIT,
-): ILimitStream {
+export function limitStream(stream: NodeJS.ReadableStream & { close?: () => void },
+  limit: number = DEFAULT_LIMIT): ILimitStream {
   let hasEnd = false;
   let hasError = false;
   let error: any;

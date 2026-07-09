@@ -1,4 +1,6 @@
-import { isEmpty } from '../src/is/isEmpty';
+import {
+  isEmpty, 
+} from '../src/is/isEmpty';
 
 describe('isEmpty', () => {
   test('returns true for empty object', () => {
@@ -6,6 +8,8 @@ describe('isEmpty', () => {
   });
 
   test('returns false when has keys', () => {
-    expect(isEmpty({ a: 1 })).toBe(false);
+    expect(isEmpty({
+      a: 1, 
+    })).toBe(false);
   });
 });

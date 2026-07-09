@@ -1,4 +1,6 @@
-import { isLength } from '../../src/is/isLength';
+import {
+  isLength, 
+} from '../../src/is/isLength';
 
 describe('isLength', () => {
   test('returns true for valid lengths', () => {

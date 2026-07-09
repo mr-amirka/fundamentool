@@ -1,4 +1,6 @@
-import { isArrayBuffer } from '../../src/is/isArrayBuffer';
+import {
+  isArrayBuffer, 
+} from '../../src/is/isArrayBuffer';
 
 describe('isArrayBuffer', () => {
   test('returns true for ArrayBuffer', () => {

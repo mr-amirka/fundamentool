@@ -1,5 +1,9 @@
-import { createStore, createApi } from '../src/Store';
-import type { TStoreAdapter } from '../src/Store';
+import {
+  createStore, createApi, 
+} from '../src/Store';
+import type {
+  TStoreAdapter, 
+} from '../src/Store';
 
 describe('createStore', () => {
   test('getState — returns initial value', () => {
@@ -78,10 +82,18 @@ describe('createStore', () => {
 
 describe('createApi', () => {
   test('dispatches action to store', () => {
-    const store = createStore({ count: 0 });
+    const store = createStore({
+      count: 0, 
+    });
     const api = createApi(store, {
-      increment: (state, n: number) => ({ ...state, count: state.count + n }),
-      reset: (state) => ({ ...state, count: 0 }),
+      increment: (state, n: number) => ({
+        ...state,
+        count: state.count + n, 
+      }),
+      reset: (state) => ({
+        ...state,
+        count: 0, 
+      }),
     });
     api.increment(3);
     expect(store.getState().count).toBe(3);
@@ -90,14 +102,26 @@ describe('createApi', () => {
   });
 
   test('multiple actions update store independently', () => {
-    const store = createStore({ a: 0, b: 0 });
+    const store = createStore({
+      a: 0,
+      b: 0, 
+    });
     const api = createApi(store, {
-      setA: (state, v: number) => ({ ...state, a: v }),
-      setB: (state, v: number) => ({ ...state, b: v }),
+      setA: (state, v: number) => ({
+        ...state,
+        a: v, 
+      }),
+      setB: (state, v: number) => ({
+        ...state,
+        b: v, 
+      }),
     });
     api.setA(10);
     api.setB(20);
-    expect(store.getState()).toEqual({ a: 10, b: 20 });
+    expect(store.getState()).toEqual({
+      a: 10,
+      b: 20, 
+    });
   });
 });
 
@@ -117,7 +141,9 @@ describe('TStoreAdapter — DI', () => {
     };
 
     const store = adapter.createStore(0);
-    adapter.createApi(store, { set: (_, v: number) => v });
+    adapter.createApi(store, {
+      set: (_, v: number) => v, 
+    });
 
     expect(calls).toEqual(['createStore', 'createApi']);
   });

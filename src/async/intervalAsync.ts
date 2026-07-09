@@ -1,6 +1,12 @@
-import { asAsync } from '../asAsync';
-import { createTimeout } from '../createTimeout';
-import { noop } from '../noop';
+import {
+  asAsync, 
+} from '../asAsync';
+import {
+  createTimeout, 
+} from '../createTimeout';
+import {
+  noop, 
+} from '../noop';
 
 /**
  * Runs `fn` periodically with the given delay.

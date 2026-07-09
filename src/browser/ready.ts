@@ -1,4 +1,6 @@
-import { readyProvider } from '../readyProvider';
+import {
+  readyProvider, 
+} from '../readyProvider';
 
 declare const window: Window;
 

@@ -1,4 +1,6 @@
-import { delimiterToCamelCase } from '../src/delimiterToCamelCase';
+import {
+  delimiterToCamelCase, 
+} from '../src/delimiterToCamelCase';
 
 describe('delimiterToCamelCase', () => {
   test('converts underscore-delimited to camelCase', () => {

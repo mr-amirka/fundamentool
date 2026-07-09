@@ -1,5 +1,9 @@
-import { isPlainObject } from './is/isPlainObject';
-import { isObject } from './is/isObject';
+import {
+  isPlainObject, 
+} from './is/isPlainObject';
+import {
+  isObject, 
+} from './is/isObject';
 
 interface IExtendDepth {
   /**
@@ -27,9 +31,15 @@ interface IExtendDepth {
  * extendDepth({ a: { x: 1 } }, { a: { y: 2 } }, 1); // => { a: { x: 1, y: 2 } }
  */
 export const extendDepth: IExtendDepth = <T extends Record<string, any>>(dst: T, src: T, depth: number = 0): T => {
-  if (src === undefined) return dst;
-  if (depth < 0 || !isPlainObject(src)) return src;
-  return base(isObject(dst) ? dst : ({} as T), src, depth) as T;
+  if (src === undefined) {
+    return dst;
+  }
+  if (depth < 0 || !isPlainObject(src)) {
+    return src;
+  }
+  return base(
+    isObject(dst) ? dst : ({} as T), src, depth,
+  ) as T;
 };
 
 const base = extendDepth.base = <T extends Record<string, any>>(dst: T, src: T, depth: number): T => {
@@ -40,10 +50,14 @@ const base = extendDepth.base = <T extends Record<string, any>>(dst: T, src: T, 
   let to: any;
   for (k in src) {
     from = src[k];
-    if (from === undefined) continue;
+    if (from === undefined) {
+      continue;
+    }
     if (deep && isPlainObject(from)) {
       to = dst[k];
-      base(isObject(to) ? to : (dst[k] = {} as T[keyof T]), from, depth);
+      base(
+        isObject(to) ? to : (dst[k] = {} as T[keyof T]), from, depth,
+      );
       continue;
     }
     dst[k] = from;

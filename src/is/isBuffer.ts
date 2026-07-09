@@ -1,4 +1,6 @@
-import { providerOfIsClass } from '../providerOfIsClass';
+import {
+  providerOfIsClass, 
+} from '../providerOfIsClass';
 
 /**
  * Checks whether value is a Buffer (in Node.js environments).

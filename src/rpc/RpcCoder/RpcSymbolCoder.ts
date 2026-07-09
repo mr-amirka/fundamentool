@@ -20,7 +20,11 @@ export class RpcSymbolCoder {
     let fnIndex = this.externals.indexOf(symbolValue);
 
     if (fnIndex > -1) {
-      return [1, fnIndex, stringIndex];
+      return [
+        1,
+        fnIndex,
+        stringIndex,
+      ];
     }
 
     const {
@@ -32,7 +36,11 @@ export class RpcSymbolCoder {
       fnIndex = internals.length;
       internals.push(symbolValue);
     }
-    return [0, fnIndex, stringIndex];
+    return [
+      0,
+      fnIndex,
+      stringIndex,
+    ];
   }
 
   decode(encodedSymbol: TRpcEncodedValueSymbol, strings: string[]): symbol {

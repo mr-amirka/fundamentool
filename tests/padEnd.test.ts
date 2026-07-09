@@ -1,4 +1,6 @@
-import { padEnd } from '../src/padEnd';
+import {
+  padEnd, 
+} from '../src/padEnd';
 
 describe('padEnd', () => {
   test('pads to length', () => {
@@ -10,6 +12,8 @@ describe('padEnd', () => {
   });
 
   test('custom pad string', () => {
-    expect(padEnd('x', 4, '0')).toBe('x000');
+    expect(padEnd(
+      'x', 4, '0',
+    )).toBe('x000');
   });
 });

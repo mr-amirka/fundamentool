@@ -1,4 +1,6 @@
-import { createTimeout } from './createTimeout';
+import {
+  createTimeout, 
+} from './createTimeout';
 
 declare function setImmediate(handler: (...args: any[]) => void, ...args: any[]): any;
 declare function clearImmediate(handle: any): void;
@@ -23,19 +25,21 @@ export const defer = (
   ctx?: any,
 ): () => void => {
   try {
-    function base() {
+    const base = () => {
       const _fn: Fn = fn;
       if (_fn) {
         fn = 0;
         _fn.apply(ctx, args || []);
       }
-    }
+    };
     const _t1 = setImmediate(base);
     return () => {
       fn = 0;
       clearImmediate(_t1);
     };
   } catch {
-    return createTimeout(fn as any, 0, args, ctx);
+    return createTimeout(
+fn as any, 0, args, ctx,
+    );
   }
 };

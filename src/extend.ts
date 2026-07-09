@@ -13,7 +13,9 @@ export const extend = <
 >(dst: D, src?: S | undefined | null): D & S => {
   if (src) {
     let k: string;
-    for (k in src) (dst as any)[k] = src[k];
+    for (k in src) {
+      (dst as any)[k] = src[k];
+    }
   }
   return dst as D & S;
 };

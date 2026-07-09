@@ -1,7 +1,15 @@
-import { entries } from '../entries';
-import { fromPairs } from '../fromPairs';
-import { checkNoop } from './checkNoop';
-import { mapAsync } from './mapAsync';
+import {
+  entries, 
+} from '../entries';
+import {
+  fromPairs, 
+} from '../fromPairs';
+import {
+  checkNoop, 
+} from './checkNoop';
+import {
+  mapAsync, 
+} from './mapAsync';
 
 /**
  * Asynchronous map over object.
@@ -24,7 +32,9 @@ export function mapInAsync<T>(
 ): Promise<Record<string, T>> {
   return mapAsync(
     entries(collection),
-    async (line: [string, T]) => [line[0], await iteratee.call(ctx, line[1], line[0], collection)] as [string, T],
+    async (line: [string, T]) => [line[0], await iteratee.call(
+      ctx, line[1], line[0], collection,
+    )] as [string, T],
     ctx,
     checkFn,
   )

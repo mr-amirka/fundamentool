@@ -1,4 +1,6 @@
-import { noop } from '../noop';
+import {
+  noop, 
+} from '../noop';
 
 /**
  * Wraps function so that calls are executed sequentially: each waits for the previous.
@@ -10,10 +12,8 @@ import { noop } from '../noop';
  * seq(); // first call starts immediately
  * seq(); // waits for first to finish, then runs
  */
-export function sequence<T extends (...args: any[]) => any>(
-  fn: T,
-  ctx?: any,
-): (...args: Parameters<T>) => Promise<ReturnType<T>> {
+export function sequence<T extends (...args: any[]) => any>(fn: T,
+  ctx?: any): (...args: Parameters<T>) => Promise<ReturnType<T>> {
   let promise: Promise<any> = Promise.resolve();
   return function(): Promise<ReturnType<T>> {
     const self = ctx || this;

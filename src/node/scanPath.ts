@@ -1,6 +1,12 @@
-import { noop } from '../noop';
-import { extend } from '../extend';
-import { each } from  './searchFiles/each';
+import {
+  noop, 
+} from '../noop';
+import {
+  extend, 
+} from '../extend';
+import {
+  each, 
+} from  './searchFiles/each';
 
 export interface IScanPathOptions {
   path: string;
@@ -24,13 +30,11 @@ export interface IScanPathOptions {
 export function scanPath(options: IScanPathOptions): Promise<void> {
   const _each = options.each || noop;
   const _exclude = options.exclude || noop;
-  return each(
-    options.path,
+  return each(options.path,
     extend(extend({} as any, options), {
       iteratee: (path: string) => {
         _exclude(path) || _each('found', path);
       },
-    }),
-  );
+    }));
 }
 

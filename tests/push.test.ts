@@ -1,10 +1,20 @@
-import { push } from '../src/push';
+import {
+  push, 
+} from '../src/push';
 
 describe('push', () => {
   test('pushes multiple items into the array', () => {
     const arr = [1, 2];
-    push(arr, 3, 4, 5);
-    expect(arr).toEqual([1, 2, 3, 4, 5]);
+    push(
+      arr, 3, 4, 5,
+    );
+    expect(arr).toEqual([
+      1,
+      2,
+      3,
+      4,
+      5,
+    ]);
   });
 
   test('returns the same array reference', () => {

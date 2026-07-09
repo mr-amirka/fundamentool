@@ -8,9 +8,7 @@
  * const setName = changeField('name');
  * setName('Alice'); // calls setState({ name: 'Alice' })
  */
-export function changeProviderProviderSimple<TState>(
-  set: (partial: Partial<TState>) => void,
-) {
+export function changeProviderProviderSimple<TState>(set: (partial: Partial<TState>) => void) {
   return (name: keyof TState & string) => {
     return (value: any) => {
       set({

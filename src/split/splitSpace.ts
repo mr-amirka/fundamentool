@@ -1,4 +1,6 @@
-import { splitProvider } from './splitProvider';
+import {
+  splitProvider, 
+} from './splitProvider';
 
 /**
  * Splits string by whitespace.

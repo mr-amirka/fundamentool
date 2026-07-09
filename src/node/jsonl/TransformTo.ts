@@ -1,5 +1,9 @@
-import { Transform } from 'stream';
-import { ProviderOfTransformTo } from '../../jsonl/ProviderOfTransformTo';
+import {
+  Transform, 
+} from 'stream';
+import {
+  ProviderOfTransformTo, 
+} from '../../jsonl/ProviderOfTransformTo';
 
 /**
  * Node.js `Transform` stream that serializes JS objects into a JSONL byte stream.

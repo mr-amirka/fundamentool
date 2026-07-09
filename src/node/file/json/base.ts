@@ -13,10 +13,16 @@ import {
  * @example
  * await write('/config/settings', { theme: 'dark' });
  */
-export const write = (path: string, data: any, options?: {
+export const write = (
+  path: string, data: any, options?: {
   minify?: boolean
-} | null) => {
-  return writeFile(path + '.json', JSON.stringify(data, null, options?.minify ? '' : ' '), "utf8");
+} | null,
+) => {
+  return writeFile(
+    path + '.json', JSON.stringify(
+      data, null, options?.minify ? '' : ' ',
+    ), 'utf8',
+  );
 };
 
 /**

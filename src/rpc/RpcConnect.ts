@@ -14,10 +14,18 @@ import {
   IRpcConnect,
   TRpcConnectOptionsInit,
 } from './types';
-import { Unsubscriber } from '../Unsubscriber';
-import { wait } from '../wait';
-import { RpcCoder } from './RpcCoder';
-import { getWithContext } from '../get';
+import {
+  Unsubscriber, 
+} from '../Unsubscriber';
+import {
+  wait, 
+} from '../wait';
+import {
+  RpcCoder, 
+} from './RpcCoder';
+import {
+  getWithContext, 
+} from '../get';
 
 /**
  * Server-side RPC connection handler.
@@ -63,17 +71,11 @@ export class RpcConnect {
   }
 
   dispatchEncoded(encodedData: TRpcEncodedData) {
-    this.sendMessage([
-      TRpcType.Dispatch,
-      encodedData,
-    ]);
+    this.sendMessage([TRpcType.Dispatch, encodedData]);
   }
 
   private sendMessage(data: TRpcConnectMessage[1]) {
-    this.postMessage([
-      TRpcAgent.Server,
-      data,
-    ] as TRpcConnectMessage);
+    this.postMessage([TRpcAgent.Server, data] as TRpcConnectMessage);
   }
   private async invokeBase(
     requestId: string,
@@ -81,7 +83,9 @@ export class RpcConnect {
     middleware: (args: any) => Promise<[isError: number, result: any]> | [isError: number, result: any],
   ) {
     const coder = this.serializable ? new RpcCoder((fnIndex: number) => {
-      return (...params) => this.callClientFn(requestId, fnIndex, params);
+      return (...params) => this.callClientFn(
+        requestId, fnIndex, params,
+      );
     }, {
       useSymols: true,
     }) : null;
@@ -109,7 +113,7 @@ export class RpcConnect {
     this.slotTaskMap.set(requestId, [
       context,
       coder,
-      new Map()
+      new Map(),
     ]);
 
     const [isError, result] = await middleware(coder?.decode(encodedArgs) || encodedArgs || []);
@@ -129,39 +133,43 @@ export class RpcConnect {
     encodedArgs: any,
     middleware?: (fn: (args: any) => Promise<any>, args: any) => Promise<any>,
   ) {
-    return this.invokeBase(requestId, encodedArgs, async (args) => {
-      let result: any;
-      let isError = 0;
+    return this.invokeBase(
+      requestId, encodedArgs, async (args) => {
+        let result: any;
+        let isError = 0;
 
-      const methodPath = methodName.split('.');
-      const exports = this.exports;
-      const methodCtx = getWithContext(exports, methodPath);
-      const method = methodCtx?.[1];
+        const methodPath = methodName.split('.');
+        const exports = this.exports;
+        const methodCtx = getWithContext(exports, methodPath);
+        const method = methodCtx?.[1];
             
-      try {
-        if (method) {
-          const callback = (args: any) => method.apply(methodCtx?.[0], args);
-          result = await (middleware ? middleware(callback, args) : callback(args));
-        } else {
+        try {
+          if (method) {
+            const callback = (args: any) => method.apply(methodCtx?.[0], args);
+            result = await (middleware ? middleware(callback, args) : callback(args));
+          } else {
+            isError = 1;
+            result = new Error(`Method "${methodName}" is not exist. All methods: ${
+              Object.keys(exports).join(', ')
+            } and their subfields`);
+          }
+        } catch(error: any) {
+          console.error(
+            'Connect:Call:error', error, {
+              methodName,
+              encodedArgs,
+              args,
+              method,
+            },
+          );
           isError = 1;
-          result = new Error(`Method "${methodName}" is not exist. All methods: ${
-            Object.keys(exports).join(', ')
-          } and their subfields`);
+          result = new Error(`${methodPath}: ${error.toString()}`);
+          result.name = error.name;
+          result.code = error.code;
         }
-      } catch(error: any) {
-        console.error('Connect:Call:error', error, {
-          methodName,
-          encodedArgs,
-          args,
-          method,
-        });
-        isError = 1;
-        result = new Error(`${methodPath}: ${error.toString()}`);
-        result.name = error.name;
-        result.code = error.code;
-      }
-      return [isError, result];
-    });
+        return [isError, result];
+      },
+    );
   }
 
   private async proxyProvide(args: [callback: (exports: Record<string, any>) => any]) {
@@ -181,25 +189,33 @@ export class RpcConnect {
         const method = dataArgs[2];
         switch (method) {
           case 'proxy': {
-            return this.invokeBase(requestId, dataArgs[3], this.proxyProvide.bind(this));
+            return this.invokeBase(
+              requestId, dataArgs[3], this.proxyProvide.bind(this),
+            );
           }
         }
         console.warn('Connect: Unknown meta method', data);
-        return this.invokeBase(requestId, dataArgs[3], () => {
-          return [1, new Error(`Connect: Unknown meta method: ${method}`)];
-        });
+        return this.invokeBase(
+          requestId, dataArgs[3], () => {
+            return [1, new Error(`Connect: Unknown meta method: ${method}`)];
+          },
+        );
       }
       case TRpcType.Call:
-        return this.invoke(requestId, dataArgs[2], dataArgs[3]);
+        return this.invoke(
+          requestId, dataArgs[2], dataArgs[3],
+        );
 
       case TRpcType.Subscribe:
-        return this.invoke(requestId, dataArgs[2], dataArgs[3], async (fn, param: [Promise<void>, any[]]) => {
-          const unsubscribe = await fn(param[1]);
-          await param[0];
-          if (typeof unsubscribe === 'function') {
-            unsubscribe();
-          }
-        });
+        return this.invoke(
+          requestId, dataArgs[2], dataArgs[3], async (fn, param: [Promise<void>, any[]]) => {
+            const unsubscribe = await fn(param[1]);
+            await param[0];
+            if (typeof unsubscribe === 'function') {
+              unsubscribe();
+            }
+          },
+        );
 
       case TRpcType.SubCall: {
         let encodedResult: TRpcEncodedData;
@@ -216,7 +232,9 @@ export class RpcConnect {
             args = coder?.decode(dataArgs[4]) || dataArgs[4] || [];
             result = await coder?.invoke(dataArgs[3], args);
           } catch (error: any) {
-            console.error('Connect:SubCall:error', error, args);
+            console.error(
+              'Connect:SubCall:error', error, args,
+            );
             isError = 1;
             result = error;
           }
@@ -258,7 +276,9 @@ export class RpcConnect {
     console.warn('Connect: Unknown client message', data);
   }
 
-  private callClientFn(requestId: string, fnIndex: number, args: any[]) {
+  private callClientFn(
+    requestId: string, fnIndex: number, args: any[],
+  ) {
     return new Promise((resolve, reject) => {
       const task = this.slotTaskMap.get(requestId);
 

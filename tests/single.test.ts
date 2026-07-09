@@ -1,4 +1,6 @@
-import { single } from '../src/single';
+import {
+  single, 
+} from '../src/single';
 
 describe('single', () => {
   test('calls the wrapped function', () => {

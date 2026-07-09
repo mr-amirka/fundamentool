@@ -1,7 +1,15 @@
-import { isArray } from '../../is/isArray';
-import { forEachParallel } from './forEachParallel';
-import { forInParallel } from './forInParallel';
-import { checkNoop } from '../checkNoop';
+import {
+  isArray, 
+} from '../../is/isArray';
+import {
+  forEachParallel, 
+} from './forEachParallel';
+import {
+  forInParallel, 
+} from './forInParallel';
+import {
+  checkNoop, 
+} from '../checkNoop';
 
 /**
  * Chooses parallel iterator (`forEach` for arrays, `forIn` for objects via `forInParallel`)
@@ -24,7 +32,7 @@ export function eachParallel<A extends any[] | Record<string, any>>(
   checkFn: () => boolean = checkNoop,
 ): Promise<A> {
   return (isArray(collection) ? forEachParallel : forInParallel as any)(
-    collection, iteratee, ctx, taskLimit, checkFn
+    collection, iteratee, ctx, taskLimit, checkFn,
   );
 }
 

@@ -1,4 +1,6 @@
-import { isEmail } from '../../src/is/isEmail';
+import {
+  isEmail, 
+} from '../../src/is/isEmail';
 
 describe('isEmail', () => {
   test('returns true for valid emails', () => {

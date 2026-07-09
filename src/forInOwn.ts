@@ -1,4 +1,6 @@
-import { hasOwn } from './hasOwn';
+import {
+  hasOwn, 
+} from './hasOwn';
 
 /**
  * Iterates over own enumerable properties of `obj`
@@ -19,7 +21,9 @@ export const forInOwn = <T extends Record<string, any>>(
   let k: string;
   for (k in obj) {
     if (hasOwn(obj, k)) {
-      iteratee.call(ctx, obj[k], k as keyof T & string, obj);
+      iteratee.call(
+        ctx, obj[k], k as keyof T & string, obj,
+      );
     }
   }
 };

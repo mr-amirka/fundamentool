@@ -1,5 +1,9 @@
-import { createReadStream } from 'fs';
-import { TransformFrom } from './TransformFrom';
+import {
+  createReadStream, 
+} from 'fs';
+import {
+  TransformFrom, 
+} from './TransformFrom';
 
 /**
  * Creates a readable stream of parsed JSONL records from a file.
@@ -12,5 +16,5 @@ import { TransformFrom } from './TransformFrom';
  */
 export function read(path: string, options?: any): NodeJS.ReadableStream {
   return createReadStream(path, options).pipe(new (TransformFrom as any)());
-};
+}
 

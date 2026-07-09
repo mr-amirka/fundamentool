@@ -1,4 +1,6 @@
-import { half, halfLast } from '../src/half';
+import {
+  half, halfLast, 
+} from '../src/half';
 
 describe('half', () => {
   test('splits on first occurrence', () => {

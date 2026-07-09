@@ -1,5 +1,9 @@
-import { isArray } from './isArray';
-import { isPlainObject } from './isPlainObject';
+import {
+  isArray, 
+} from './isArray';
+import {
+  isPlainObject, 
+} from './isPlainObject';
 
 /**
  * Checks whether value is a "standard" object: plain object or array.

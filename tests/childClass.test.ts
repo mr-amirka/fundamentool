@@ -1,4 +1,6 @@
-import { childClass } from '../src/childClass';
+import {
+  childClass, 
+} from '../src/childClass';
 
 function Parent(this: any, v: number) {
   (this as any).value = v;
@@ -14,7 +16,9 @@ describe('childClass', () => {
   test('wraps Parent constructor with custom constructor logic', () => {
     const C = childClass(
       Parent as any,
-      (self, superFn, v: number) => {
+      (
+        self, superFn, v: number,
+      ) => {
         superFn(v * 2);
         (self as any).extra = v;
       },

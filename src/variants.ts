@@ -1,4 +1,6 @@
-import { variantsProvider } from './variantsProvider';
+import {
+  variantsProvider, 
+} from './variantsProvider';
 
 /**
  * Разбор MN-выражения со скобками и `|`: экземпляр `variantsProvider` с `separator: '|'`, `scopeStart: '('`, `scopeEnd: ')'`, безлимитной `maxDepth`, **без** `maxOutputCount` (без лимита числа строк). Свой лимит — через `variantsProvider({ ..., maxOutputCount: n })`.

@@ -14,9 +14,15 @@ import {
  * @example
  * await write('/config/settings', { theme: 'dark' });
  */
-export const write: (typeof originWriteJson) = async (path, data, options) => {
-  await originWriteJson(path, data, options);
-  return originWriteJson(path + '.recov', data, options);
+export const write: (typeof originWriteJson) = async (
+  path, data, options,
+) => {
+  await originWriteJson(
+    path, data, options,
+  );
+  return originWriteJson(
+    path + '.recov', data, options,
+  );
 };
 
 /**
@@ -31,11 +37,15 @@ export const write: (typeof originWriteJson) = async (path, data, options) => {
 export const read = (path: string, onInit?: (() => any) | null | undefined) => {
   return originReadJson(path)
     .catch((error) => {
-      console.warn('Original snapshot in not available', path, error);
+      console.warn(
+        'Original snapshot in not available', path, error,
+      );
       return originReadJson(path + '.recov');
     })
     .catch((error) => {
-      console.error('Recovery snapshot in not available', path, error);
+      console.error(
+        'Recovery snapshot in not available', path, error,
+      );
       return onInit ? onInit() : null;
     });
 };

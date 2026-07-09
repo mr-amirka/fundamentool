@@ -1,4 +1,6 @@
-import { withoutEmpty } from './withoutEmpty';
+import {
+  withoutEmpty, 
+} from './withoutEmpty';
 
 const PARAM_WITHOUT_EMPTY_DEFAULT_DEPTH = 10;
 
@@ -11,24 +13,24 @@ const PARAM_WITHOUT_EMPTY_DEFAULT_DEPTH = 10;
  * param({ a: 1, b: 'x' }); // => 'a=1&b=x'
  */
 export const param = (v: any): string => {
-  if (v === null || typeof v !== 'object') return '';
+  if (v === null || typeof v !== 'object') {
+    return '';
+  }
   const s: string[] = [];
   let k: any;
   let l: any;
   function paramBuild(p: string, v: any) {
     v = withoutEmpty(v, PARAM_WITHOUT_EMPTY_DEFAULT_DEPTH);
     v === null
-      || s.push(
-        paramEscape(p)
+      || s.push(paramEscape(p)
           + '='
-          + paramEscape(
-            v !== null && typeof v === 'object' ? JSON.stringify(v) : '' + v,
-          ),
-      );
+          + paramEscape(v !== null && typeof v === 'object' ? JSON.stringify(v) : '' + v));
     return s;
   }
   if (Array.isArray(v)) {
-    for (k = 0, l = v.length; k < l; k++) paramBuild('' + k, v[k]);
+    for (k = 0, l = v.length; k < l; k++) {
+      paramBuild('' + k, v[k]);
+    }
   } else {
     for (k in v) paramBuild(k, (v as any)[k]); // eslint-disable-line
   }

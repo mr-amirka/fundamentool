@@ -1,5 +1,9 @@
-import { checkNoop } from '../checkNoop';
-import { loopParallel } from './loopParallel';
+import {
+  checkNoop, 
+} from '../checkNoop';
+import {
+  loopParallel, 
+} from './loopParallel';
 
 /**
  * Parallel asynchronous reduce over an array-like `input`.
@@ -31,7 +35,9 @@ export function reduceParallel<T, A>(
     () => index < length && checkFn(),
     async () => {
       const i = index++;
-      accumulator = await iteratee.call(ctx, accumulator, input[i], i, input);
+      accumulator = await iteratee.call(
+        ctx, accumulator, input[i], i, input,
+      );
     },
     taskLimit,
   )

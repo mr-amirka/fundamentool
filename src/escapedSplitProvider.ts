@@ -1,7 +1,15 @@
-import { regexpNormalizeText } from './regexpNormalizeText';
-import { unslash } from './unslash';
-import { map } from './map';
-import { joinOnly } from './join/joinOnly';
+import {
+  regexpNormalizeText, 
+} from './regexpNormalizeText';
+import {
+  unslash, 
+} from './unslash';
+import {
+  map, 
+} from './map';
+import {
+  joinOnly, 
+} from './join/joinOnly';
 
 /**
  * A splitter that respects escaped separators.
@@ -37,10 +45,8 @@ interface IEscapedSplit {
  * split('a,b,c');       // => ['a', 'b', 'c']
  * split('a\\,b,c');     // => ['a,b', 'c']
  */
-export const escapedSplitProvider = (
-  separator: string,
-  escaped?: string,
-): IEscapedSplit => {
+export const escapedSplitProvider = (separator: string,
+  escaped?: string): IEscapedSplit => {
   const sep = regexpNormalizeText(separator);
   const esc = escaped ? regexpNormalizeText(escaped) : '\\\\.';
   const regexp = new RegExp('(' + esc + ')|(' + sep + ')', 'g');
@@ -54,7 +60,9 @@ export const escapedSplitProvider = (
     let v: string[] = [];
     const output: string[] = [];
 
-    input.replace(regexp, (all, escapedMatch, separatorMatch, offset: number) => {
+    input.replace(regexp, (
+      all, escapedMatch, separatorMatch, offset: number,
+    ) => {
       v.push(input.slice(lastOffset, offset));
       if (escapedMatch) {
         v.push(escapedMatch);
@@ -72,7 +80,7 @@ export const escapedSplitProvider = (
     v.push(input.slice(lastOffset));
     output.push(joinOnly(v));
     return output;
-  }
+  };
 
   return escapedSplit;
-}
+};

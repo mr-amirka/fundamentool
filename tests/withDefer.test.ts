@@ -1,4 +1,6 @@
-import { withDefer } from '../src/withDefer';
+import {
+  withDefer, 
+} from '../src/withDefer';
 
 describe('withDefer', () => {
   beforeEach(() => {
@@ -35,7 +37,9 @@ describe('withDefer', () => {
   });
 
   test('returns the provided result value immediately', () => {
-    const debounced = withDefer(jest.fn(), undefined, 'stub');
+    const debounced = withDefer(
+      jest.fn(), undefined, 'stub',
+    );
     expect(debounced()).toBe('stub');
   });
 

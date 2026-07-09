@@ -16,7 +16,11 @@ export const findIndexLast = <T = any>(
   const length = collection?.length || 0;
   let i = length - 1;
   for (; i >= 0; i--) {
-    if (iteratee.call(ctx, collection[i], i, collection)) return i;
+    if (iteratee.call(
+      ctx, collection[i], i, collection,
+    )) {
+      return i;
+    }
   }
   return -1;
 };

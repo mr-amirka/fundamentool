@@ -1,4 +1,6 @@
-import { cancelProvider } from '../src/cancelProvider';
+import {
+  cancelProvider, 
+} from '../src/cancelProvider';
 
 describe('cancelProvider', () => {
   test('calls clearFn with id when invoked', () => {

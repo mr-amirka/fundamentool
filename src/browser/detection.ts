@@ -1,12 +1,41 @@
-import { joinSpace } from '../join/joinSpace';
-import { addOf } from '../addOf';
-import { toLower } from '../toLower';
+import {
+  joinSpace, 
+} from '../join/joinSpace';
+import {
+  addOf, 
+} from '../addOf';
+import {
+  toLower, 
+} from '../toLower';
 
 const AGENTS: string[] = [
-  'linux', 'mozilla', 'firefox', 'opera', 'trident', 'edge',
-  'chrome', 'ubuntu', 'chromium', 'safari', 'msie', 'webkit', 'applewebkit',
-  'mobile', 'ie', 'webtv', 'konqueror', 'blackberry', 'android', 'iron',
-  'iphone', 'ipod', 'ipad', 'mac', 'darwin', 'windows', 'freebsd',
+  'linux',
+  'mozilla',
+  'firefox',
+  'opera',
+  'trident',
+  'edge',
+  'chrome',
+  'ubuntu',
+  'chromium',
+  'safari',
+  'msie',
+  'webkit',
+  'applewebkit',
+  'mobile',
+  'ie',
+  'webtv',
+  'konqueror',
+  'blackberry',
+  'android',
+  'iron',
+  'iphone',
+  'ipod',
+  'ipad',
+  'mac',
+  'darwin',
+  'windows',
+  'freebsd',
 ];
 
 /**

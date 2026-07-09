@@ -1,4 +1,6 @@
-import { isBoolean } from '../src/is/isBoolean';
+import {
+  isBoolean, 
+} from '../src/is/isBoolean';
 
 describe('isBoolean', () => {
   test('returns true for boolean', () => {

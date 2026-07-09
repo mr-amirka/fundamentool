@@ -21,7 +21,9 @@ export const filter = <T>(
   let v: T;
   for (; i < length; i++) {
     v = collection[i];
-    if (iteratee.call(ctx, v, i, collection)) {
+    if (iteratee.call(
+      ctx, v, i, collection,
+    )) {
       result.push(v);
     }
   }

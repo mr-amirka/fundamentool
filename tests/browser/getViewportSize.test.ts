@@ -19,7 +19,9 @@ describe('browser/getViewportSize', () => {
   });
 
   test('returns tuple [width, height]', () => {
-    const { getViewportSize } = require('../../src/browser/getViewportSize') as {
+    const {
+      getViewportSize, 
+    } = require('../../src/browser/getViewportSize') as {
       getViewportSize: () => [number, number];
     };
 

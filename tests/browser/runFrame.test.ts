@@ -1,4 +1,6 @@
-import { extractExportedFn } from './testUtils';
+import {
+  extractExportedFn, 
+} from './testUtils';
 
 describe('browser/runFrame', () => {
   test('calls callback and can be stopped', () => {

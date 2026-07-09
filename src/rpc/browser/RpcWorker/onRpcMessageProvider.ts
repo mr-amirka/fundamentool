@@ -1,4 +1,6 @@
-import { attachEvent } from "../../../attachEvent";
+import {
+  attachEvent, 
+} from '../../../attachEvent';
 
 /**
  * Returns an `onMessage` subscription factory for any `EventTarget` that emits `MessageEvent`s.
@@ -10,7 +12,9 @@ import { attachEvent } from "../../../attachEvent";
  * const unsub = onMessage((data) => console.log(data));
  */
 export function onRpcMessageProvider(ctx: EventTarget) {
-  return (listener: (data: any) => any) => attachEvent(ctx, 'message', (e) => {
-    listener(e.data);
-  });
+  return (listener: (data: any) => any) => attachEvent(
+    ctx, 'message', (e) => {
+      listener(e.data);
+    },
+  );
 }

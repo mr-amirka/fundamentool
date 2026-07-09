@@ -1,4 +1,6 @@
-import { bind } from '../src/bind';
+import {
+  bind, 
+} from '../src/bind';
 
 describe('bind', () => {
   test('add args', () => {
@@ -7,7 +9,9 @@ describe('bind', () => {
       log,
     };
 
-    const logInfo = bind(consoleObj.log, consoleObj, ['info:']);
+    const logInfo = bind(
+      consoleObj.log, consoleObj, ['info:'],
+    );
     expect(log.mock.calls.length).toBe(0);
 
     logInfo('Хрю!');
@@ -21,12 +25,22 @@ describe('bind', () => {
       log,
     };
 
-    const logBinded = bind(consoleObj.log, consoleObj, ['a', 'b']);
+    const logBinded = bind(
+      consoleObj.log, consoleObj, ['a', 'b'],
+    );
     expect(log.mock.calls.length).toBe(0);
 
-    logBinded('c', 'd', 'e');
+    logBinded(
+      'c', 'd', 'e',
+    );
     expect(log.mock.calls.length).toBe(1);
-    expect(log.mock.calls[0]).toEqual(['a', 'b', 'c', 'd', 'e']);
+    expect(log.mock.calls[0]).toEqual([
+      'a',
+      'b',
+      'c',
+      'd',
+      'e',
+    ]);
   });
 
   test('context', () => {
@@ -38,7 +52,9 @@ describe('bind', () => {
       log,
     };
 
-    const logInfo = bind(consoleObj.log, consoleObj, ['info:']);
+    const logInfo = bind(
+      consoleObj.log, consoleObj, ['info:'],
+    );
     expect(ctx).toBe(null);
 
     logInfo('Ups!');

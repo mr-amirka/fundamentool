@@ -1,8 +1,12 @@
-import { isBlob } from '../../src/is/isBlob';
+import {
+  isBlob, 
+} from '../../src/is/isBlob';
 
 describe('isBlob', () => {
   test('returns true for Blob instances when Blob is available', () => {
-    if (typeof Blob === 'undefined') return;
+    if (typeof Blob === 'undefined') {
+      return;
+    }
     expect(isBlob(new Blob(['data']))).toBe(true);
   });
 

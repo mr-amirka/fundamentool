@@ -1,7 +1,15 @@
-import { Readable } from 'stream';
-import { readSlice } from './readSlice';
-import { childClass } from '../../childClass';
-import { extend } from '../../extend';
+import {
+  Readable, 
+} from 'stream';
+import {
+  readSlice, 
+} from './readSlice';
+import {
+  childClass, 
+} from '../../childClass';
+import {
+  extend, 
+} from '../../extend';
 
 const DEFAULT_BUFFER_LENGTH = 1024 * 8;
 const DEFAULT_ADDITIONAL_ATTEMPT_LIMIT = 2;
@@ -15,9 +23,10 @@ interface IReadUnopenedOptions {
   [key: string]: any;
 }
 
-const ReadUnopened = childClass(
-  Readable,
-  (self: any, _super: any, options: IReadUnopenedOptions) => {
+const ReadUnopened = childClass(Readable,
+  (
+    self: any, _super: any, options: IReadUnopenedOptions,
+  ) => {
     const opts: any = extend({}, options);
     const filePath = options.path;
     const bufferLength = options.bufferLength || DEFAULT_BUFFER_LENGTH;
@@ -46,7 +55,8 @@ const ReadUnopened = childClass(
       ).then(onRead, onCatch);
     }
 
-    function onRead(data: { buffer: Buffer | null; position: number }): void {
+    function onRead(data: { buffer: Buffer | null;
+position: number }): void {
       position = data.position;
       if (nextFlag) {
         nextFlag = false;
@@ -75,8 +85,7 @@ const ReadUnopened = childClass(
       reading = true;
       readChunk();
     };
-  },
-);
+  });
 
 /**
  * Creates a `Readable` stream that polls the file at `path` in chunks until EOF.
@@ -89,10 +98,8 @@ const ReadUnopened = childClass(
  * readUnopened('./log.txt').pipe(process.stdout);
  */
 export function readUnopened(path: string, options?: Partial<IReadUnopenedOptions>): Readable {
-  return new (ReadUnopened as any)(
-    extend(extend({}, options), {
-      path,
-    }),
-  );
+  return new (ReadUnopened as any)(extend(extend({}, options), {
+    path,
+  }));
 }
 
