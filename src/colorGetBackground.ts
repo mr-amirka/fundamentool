@@ -88,7 +88,7 @@ export const colorGetBackground = (input: string, alt?: boolean): string[] => {
   let hasAlpha = 0;
 
   for (i = 0; i < l; i++) {
-    pmatches = regexpBg.exec((v = vls[i])) as RegExpExecArray;
+    pmatches = (regexpBg.exec((v = vls[i])) || []) as RegExpExecArray;
     suffix =
       ' '
       + (pmatches[4] || (end ? Math.round((i * 100) / end) : 0))

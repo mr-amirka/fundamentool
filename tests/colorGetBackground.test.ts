@@ -44,4 +44,11 @@ describe('colorGetBackground', () => {
     const result = colorGetBackground('ff0000-ffffff');
     expect(Array.isArray(result)).toBe(true);
   });
+
+  test('не падает на именованных синонимах цвета (regexpBg их не матчит)', () => {
+    expect(() => colorGetBackground('Transparent')).not.toThrow();
+    expect(colorGetBackground('Transparent')).toEqual(['transparent']);
+    expect(colorGetBackground('T')).toEqual(['Transparent']);
+    expect(colorGetBackground('CT')).toEqual(['currentColor']);
+  });
 });
