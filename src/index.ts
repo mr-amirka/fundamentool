@@ -70,6 +70,7 @@ export * from './findIndexLast';
 export * from './findKey';
 export * from './flags';
 export * from './flagsByString';
+export * from './flatFlags';
 export * from './flattenDeep';
 export * from './forEach';
 export * from './forIn';
