@@ -59,6 +59,11 @@ const REGEXP_KEY = /:([_A-Za-z0-9.]+)/g;
  *
  * @param route - The route to parse.
  * @param keys - The list of keys to populate.
+ * @param anchored - обернуть скомпилированный regexp в `^...$` (полное совпадение
+ *   всей строки, поведение по умолчанию — нужно для маршрутизации путей). `false` —
+ *   не оборачивать, тогда `exec()` находит совпадение ГДЕ УГОДНО в строке (нужно,
+ *   когда несколько независимых паттернов ищут каждый свой фрагмент в одной общей
+ *   строке — см. `SHADOW_PATTERNS` в minotation).
  * @returns A RegExp and a list of keys.
  * @example
  * const keys: string[] = [];
@@ -66,7 +71,9 @@ const REGEXP_KEY = /:([_A-Za-z0-9.]+)/g;
  * keys; // => ['all', 'id']
  * re.exec('/user/42'); // => ['/user/42', '42']
  */
-export const routeParseProviderBase = (route: string, keys: string[]): RegExp => {
+export const routeParseProviderBase = (
+  route: string, keys: string[], anchored: boolean = true,
+): RegExp => {
   const scope = scopeSplit(
     route, '(', ')',
   );
@@ -115,13 +122,15 @@ export const routeParseProviderBase = (route: string, keys: string[]): RegExp =>
     }
   }
 
-  return new RegExp(`^${scopeJoin(scope)}$`);
+  const body = scopeJoin(scope);
+  return new RegExp(anchored ? `^${body}$` : body);
 };
 
 /**
  * Parses a route and returns a RegExp mapper.
  *
  * @param route - The route to parse.
+ * @param anchored - см. {@link routeParseProviderBase}.
  * @returns A `TRouteMapper`: `(path, dst?) => boolean`, filling `dst` with named/positional params on match.
  * @example
  * const mapper = routeParseProvider('/user/:id');
@@ -130,9 +139,11 @@ export const routeParseProviderBase = (route: string, keys: string[]): RegExp =>
  * params; // => { all: '/user/42', id: '42' }
  * mapper('/nope', params); // => false
  */
-export const routeParseProvider = (route: string) => {
+export const routeParseProvider = (route: string, anchored: boolean = true) => {
   const keys: string[] = [];
-  return regexpMapperProvider(routeParseProviderBase(route, keys), keys);
+  return regexpMapperProvider(routeParseProviderBase(
+    route, keys, anchored,
+  ), keys);
 };
 
 
