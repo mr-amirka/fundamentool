@@ -5,7 +5,7 @@ import {
   push, 
 } from './push';
 
-export type TPrefixedAttrs = Record<string, Record<string, boolean> | boolean>;
+export type TPrefixedAttrs = Record<string, Record<string, boolean> | boolean | number>;
 export type TPrefixes = Record<string, boolean>;
 export type TCssProps = Record<string, string | string[]>;
 
@@ -47,7 +47,7 @@ export const cssPropertiesStringifyProvider = (prefixedAttrs: TPrefixedAttrs = {
     let prefix: string;
     let propPrefix: string;
     let propertyName: string;
-    let localPrefixes: Record<string, boolean> | boolean | undefined;
+    let localPrefixes: Record<string, boolean> | boolean | number | undefined;
 
     // eslint-disable-next-line guard-for-in
     for (propertyName in props) {
@@ -64,7 +64,15 @@ export const cssPropertiesStringifyProvider = (prefixedAttrs: TPrefixedAttrs = {
 
       localPrefixes = prefixedAttrs[propertyName];
       if (localPrefixes) {
-        if (localPrefixes === true) {
+        // Любое truthy-НЕ-объектное значение (не только буквальный `true`) означает
+        // «использовать общий `prefixes`». Оригинал (v1, mn-utils) проверял через
+        // `isObject(_prefixes) || (_prefixes = prefixes)` — а не строгое `=== true`.
+        // Разница реальна: идиоматичный способ строить такие флаг-карты в этом
+        // кодбейзе — `flags([...])`, которая пишет числовую `1`, а не булев `true`;
+        // строгая проверка `=== true` эту `1` не ловила, и все свойства, помеченные
+        // через `flags()` (а не буквальным `{prop: true}`), молча оставались без
+        // vendor-префиксов.
+        if (typeof localPrefixes !== 'object') {
           localPrefixes = prefixes;
         }
         for (; vi < vl; vi++) {
