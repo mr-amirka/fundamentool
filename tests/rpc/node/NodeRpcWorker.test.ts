@@ -40,6 +40,10 @@ jest.mock('node:worker_threads', () => {
     postMessage(data: any) {
       this._serverHandler?.(data);
     }
+
+    terminate() {
+      return Promise.resolve(0);
+    }
   }
 
   const parentPort = new EventEmitter();

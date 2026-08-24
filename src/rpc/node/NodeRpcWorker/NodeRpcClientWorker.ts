@@ -27,6 +27,8 @@ export type TNodeRpcClientWorkerOptions = {
  * const result = await client.call('compute', [data]);
  */
 export class NodeRpcClientWorker extends RpcClient {
+  private worker: Worker;
+
   constructor(url: string, options?: TNodeRpcClientWorkerOptions) {
     const worker = new Worker(url, {
       workerData: options?.workerData,
@@ -47,5 +49,16 @@ export class NodeRpcClientWorker extends RpcClient {
       },
       serializable: true,
     });
+
+    this.worker = worker;
+  }
+
+  /**
+   * Unsubscribes from the worker's messages and terminates the underlying
+   * `worker_threads.Worker` so it stops keeping the host process alive.
+   */
+  destroy() {
+    super.destroy();
+    this.worker.terminate().catch(noop);
   }
 }
