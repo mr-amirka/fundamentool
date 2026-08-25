@@ -74,9 +74,9 @@ export function wsSeriesRequestProvider<TResponse = any>(wsUrl: string,
       socket.close(1000, 'Connection closed');
       (socket as any).onclose =
         (socket as any).onerror =
-        (socket as any).onmessage =
-        (socket as any).onopen =
-          null;
+          (socket as any).onmessage =
+            (socket as any).onopen =
+              null;
       socket = undefined;
     }
   }

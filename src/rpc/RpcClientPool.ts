@@ -18,7 +18,7 @@ export type TRpcClientPoolOptions<Client extends IRpcClient = IRpcClient> = {
 /** Factory function that returns `TRpcClientPoolOptions` (used for lazy init). */
 export type TRpcClientWorkerPoolOptionsInit<
   Client extends IRpcClient = IRpcClient,
-> = () => TRpcClientPoolOptions<Client>
+> = () => TRpcClientPoolOptions<Client>;
 
 /**
  * Pool of `RpcClient` instances that distributes calls to the least-busy worker.

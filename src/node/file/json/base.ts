@@ -15,8 +15,8 @@ import {
  */
 export const write = (
   path: string, data: any, options?: {
-  minify?: boolean
-} | null,
+    minify?: boolean
+  } | null,
 ) => {
   return writeFile(
     path + '.json', JSON.stringify(

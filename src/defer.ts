@@ -39,7 +39,7 @@ export const defer = (
     };
   } catch {
     return createTimeout(
-fn as any, 0, args, ctx,
+      fn as any, 0, args, ctx,
     );
   }
 };

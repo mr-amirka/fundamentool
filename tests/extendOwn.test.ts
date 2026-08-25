@@ -86,7 +86,7 @@ describe('extendDepth', () => {
       }, 
     };
     extendDepth(
-{} as any, src as any, 1,
+      {} as any, src as any, 1,
     );
     expect(src).toEqual({
       a: {

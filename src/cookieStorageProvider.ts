@@ -85,7 +85,7 @@ export const cookieStorageProvider = (ctx: TCookieWindowContext,
   $instance.watch(({
     key, value, 
   }: { key: string;
-value: any }) => {
+    value: any }) => {
     if (value === cache[key]) {
       return;
     }

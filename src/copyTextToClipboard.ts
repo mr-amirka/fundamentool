@@ -13,7 +13,7 @@
  */
 export const copyTextToClipboard = (text: string,
   win?: { navigator?: any;
-document?: any }): void => {
+    document?: any }): void => {
   const ctx: any = win || (typeof window !== 'undefined' ? window : undefined);
   if (!ctx) {
     // No window available (for example, in Node.js) – nothing to do.

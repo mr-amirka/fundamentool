@@ -13,7 +13,7 @@ import {
  */
 const base = (
   src: Array<{ id?: any;
-parent?: any }> | null | undefined,
+    parent?: any }> | null | undefined,
   id: any,
   dst: any[],
   depth: number,
@@ -61,7 +61,7 @@ parent?: any }> | null | undefined,
  */
 export const getTree = (
   src: Array<{ id?: any;
-parent?: any }> | null | undefined,
+    parent?: any }> | null | undefined,
   id: any,
   dst?: any[],
   depth: number = 10,

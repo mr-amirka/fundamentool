@@ -16,7 +16,7 @@ export const forEach = <T>(
   ctx?: any,
 ): void => {
   NATIVE_FOR_EACH.call(
-src as any, fn, ctx,
+    src as any, fn, ctx,
   );
 };
 

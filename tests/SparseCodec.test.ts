@@ -6,9 +6,9 @@ import {
 
 const codec = createSparseCodec<{
   phys?: { grav?: number;
-steps?: number };
+    steps?: number };
   ui?: { zoom?: number;
-label?: string };
+    label?: string };
 }>({
   version: 0x01,
   fields: [

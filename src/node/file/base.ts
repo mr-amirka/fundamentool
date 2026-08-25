@@ -107,12 +107,12 @@ export const write = (
  * const content = await read('./data.json'); // => '{"a":1}'
  */
 export const read = (path: string, options: BufferEncoding | ({
-    encoding?: null | undefined;
-    flag?: string | undefined;
-    /**
+  encoding?: null | undefined;
+  flag?: string | undefined;
+  /**
     * When provided the corresponding `AbortController` can be used to cancel an asynchronous action.
     */
-    signal?: AbortSignal | undefined;
+  signal?: AbortSignal | undefined;
 }) | undefined | null = 'utf8') => {
   return new Promise<any>((resolve, reject) => {
     readFile(

@@ -5,7 +5,7 @@ import {
 export type TStylesRenderDocument = TSetStyleSheetDocument & {
   getElementById(id: string): any;
   head: { appendChild(node: any): any;
-removeChild?(node: any): any } | null | undefined;
+    removeChild?(node: any): any } | null | undefined;
   createElement(tagName: string): any;
 };
 

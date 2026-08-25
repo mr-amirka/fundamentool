@@ -45,13 +45,13 @@ export const readyProvider = (w: TReadyWindowContext): TReadyFn => {
   let hasReady = isDocumentStateReady(w);
 
   attachEvent(
-d as any, 'readystatechange', onChange, false,
+    d as any, 'readystatechange', onChange, false,
   );
   attachEvent(
-d as any, 'DOMContentLoaded', onReady, false,
+    d as any, 'DOMContentLoaded', onReady, false,
   );
   attachEvent(
-w as any, 'load', onReady, false,
+    w as any, 'load', onReady, false,
   );
 
   return (
@@ -59,7 +59,7 @@ w as any, 'load', onReady, false,
   ): TReadyUnsubscribe | void => {
     if (hasReady) {
       return defer(
-fn as any, args, ctx,
+        fn as any, args, ctx,
       ) as TReadyUnsubscribe;
     }
     let watcher: any[] | null = [

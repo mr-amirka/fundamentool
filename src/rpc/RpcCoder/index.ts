@@ -32,7 +32,7 @@ const ENCODED_NAN: TRpcEncodedValue = [TRpcEncodedType.Other, TRpcEncodedValueOt
 function storeProvider<A = any>(): [
     indexOf: (value: A) => number | undefined,
     add: (value: A) => number,
-    ] {
+] {
   const valueMap = new Map<A, number>();
 
   return [(value: A) => valueMap.get(value), (value: A) => {
@@ -67,8 +67,8 @@ export class RpcCoder {
   private internalPromises: Promise<any>[] = [];
 
   constructor(extrenalFnProvider?: TRpcExtrernalFnProvider | null, options?: {
-        useSymols?: boolean,
-    }) {
+    useSymols?: boolean,
+  }) {
     const useSymols = options?.useSymols ?? true;
     this.fnCoder = extrenalFnProvider ? new RpcFnCoder(extrenalFnProvider) : null;
     this.symbolCoder = useSymols ? new RpcSymbolCoder() : null;

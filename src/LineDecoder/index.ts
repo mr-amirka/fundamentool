@@ -83,7 +83,9 @@ export class LineDecoder<T = any> {
         try {
           output.push(parse(line) as T);
         } catch (error: any) {
-          throw new Error(`Parse error on line ${lineCount}:\n${error.toString()}`);
+          throw new Error(`Parse error on line ${lineCount}:\n${error.toString()}`, {
+            cause: error, 
+          });
         }
       }
 

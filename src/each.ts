@@ -24,5 +24,5 @@ export const each = <T = any, C extends T[] | Record<string, T> = T[] | Record<s
   iteratee: (this: any, value: T, key: keyof C, collection: C) => void,
   ctx?: any,
 ): void => (isArray(collection) ? forEach : forIn as any)(
-    collection, iteratee, ctx,
-  );
+  collection, iteratee, ctx,
+);

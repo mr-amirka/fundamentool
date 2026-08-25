@@ -35,8 +35,8 @@ describe('core basics', () => {
 
   test('attachEvent registers and unregisters listener', () => {
     const calls: Array<{ type: string;
-listener: any;
-options: any }> = [];
+      listener: any;
+      options: any }> = [];
 
     const target = {
       addEventListener(

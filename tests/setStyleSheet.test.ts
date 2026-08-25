@@ -37,7 +37,7 @@ describe('setStyleSheet', () => {
     const doc = makeDocument();
 
     setStyleSheet(
-node as any, 'body { margin: 0; }', doc as any,
+      node as any, 'body { margin: 0; }', doc as any,
     );
 
     expect(doc.createTextNode).toHaveBeenCalledWith('body { margin: 0; }');
@@ -49,7 +49,7 @@ node as any, 'body { margin: 0; }', doc as any,
     const doc = makeDocument();
 
     setStyleSheet(
-node as any, '.new {}', doc as any,
+      node as any, '.new {}', doc as any,
     );
 
     expect(node.removeChild).toHaveBeenCalledTimes(1);

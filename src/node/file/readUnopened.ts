@@ -56,7 +56,7 @@ const ReadUnopened = childClass(Readable,
     }
 
     function onRead(data: { buffer: Buffer | null;
-position: number }): void {
+      position: number }): void {
       position = data.position;
       if (nextFlag) {
         nextFlag = false;

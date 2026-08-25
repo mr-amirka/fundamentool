@@ -40,15 +40,15 @@ export * from './urlParse';
  */
 export const urlExtend = (_first?:
     | (Partial<TUrlOptions> & {
-        child?: Partial<TUrlOptions> | null;
-      })
+      child?: Partial<TUrlOptions> | null;
+    })
     | string
     | null
     | undefined,
 _src?:
     | (Partial<TUrlOptions> & {
-        child?: Partial<TUrlOptions> | null;
-      })
+      child?: Partial<TUrlOptions> | null;
+    })
     | string
     | null
     | undefined): TUrlProps => {

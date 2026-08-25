@@ -114,14 +114,14 @@ export const localStorageProvider = (win: TLocalStorageWindowContext,
     return keys;
   }
   attachEvent(
-win as any, 'storage', (event: any) => {
-  locked = true;
-  emit({
-    key: event.key,
-    value: tryJsonParse(event.newValue),
-  });
-  locked = false;
-},
+    win as any, 'storage', (event: any) => {
+      locked = true;
+      emit({
+        key: event.key,
+        value: tryJsonParse(event.newValue),
+      });
+      locked = false;
+    },
   );
   $instance.watch(({
     key, value, 
