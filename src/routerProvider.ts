@@ -1,6 +1,6 @@
 import type {
-  Store, TStoreAdapter, 
-} from './Store/types';
+  Observable, TObservableAdapter,
+} from './Observable/types';
 
 type TElementType = any;
 type TAnchorProps = Record<string, any>;
@@ -257,7 +257,7 @@ export function routerForObservableMapProvider<T>(_routes: TRouteArgs<T>[],
  * @example
  * routerByLocationProviderProvider($state); // => <Router />
  */
-export function routerByLocationProviderProvider<A extends TRouterState>($state: Store<A>) {
+export function routerByLocationProviderProvider<A extends TRouterState>($state: Observable<A>) {
   return function routerByLocationProvider<T>(routes: TRouteArgs<T>[],
     notFoundHandler?: TRouteHandler<T>) {
     return $state.map(routerForObservableMapProvider(routes, notFoundHandler));
@@ -272,13 +272,13 @@ export function routerByLocationProviderProvider<A extends TRouterState>($state:
  * @param useEffect - The useEffect.
  * @param createElement - The createElement.
  * @param forwardRef - The forwardRef.
- * @param createStore - The createStore.
+ * @param createObservable - The createObservable.
  * @param createApi - The createApi.
  * @returns A router.
  * @example
- * routerProviderBase({ window: window, Component: Component, useEffect: useEffect, createElement: createElement, forwardRef: forwardRef, createStore: createStore, createApi: createApi }); // => <Router />
+ * routerProviderBase({ window: window, Component: Component, useEffect: useEffect, createElement: createElement, forwardRef: forwardRef, createObservable: createObservable, createApi: createApi }); // => <Router />
  */
-export type TRouterProviderDeps = TStoreAdapter & {
+export type TRouterProviderDeps = TObservableAdapter & {
   window: Window;
   Component: TElementType;
   useEffect: (...args: any[]) => void;
@@ -292,7 +292,7 @@ export type TRouterProviderDeps = TStoreAdapter & {
  * @param options - The router provider options.
  * @returns A router.
  * @example
- * routerProviderBase({ window: window, Component: Component, useEffect: useEffect, createElement: createElement, forwardRef: forwardRef, createStore: createStore, createApi: createApi }); // => <Router />
+ * routerProviderBase({ window: window, Component: Component, useEffect: useEffect, createElement: createElement, forwardRef: forwardRef, createObservable: createObservable, createApi: createApi }); // => <Router />
  */
 function routerProviderBase({
   Component,
@@ -300,7 +300,7 @@ function routerProviderBase({
   createElement,
   forwardRef,
   useEffect,
-  createStore,
+  createObservable,
   createApi,
 }: TRouterProviderDeps) {
   const {
@@ -320,7 +320,7 @@ function routerProviderBase({
   let _finishCallbacks: (() => Promise<void>)[] = [];
   const _backStack: TBackStackItem[] = [];
 
-  const $state = createStore<TRouterState>({
+  const $state = createObservable<TRouterState>({
     depth: _currentDepth,
     prev: getPrevLocation(),
     location: _currentLocation,
@@ -343,7 +343,7 @@ function routerProviderBase({
     },
   });
 
-  const $trasitionState = createStore<TRouterState>($state.getState());
+  const $trasitionState = createObservable<TRouterState>($state.getState());
   const {
     emitTransition, 
   } = createApi($trasitionState, {
@@ -353,7 +353,7 @@ function routerProviderBase({
     }),
   });
 
-  const $historyDepth = createStore<number>(_currentDepth);
+  const $historyDepth = createObservable<number>(_currentDepth);
   const {
     emitHistoryDepth, 
   } = createApi($historyDepth, {
@@ -871,7 +871,7 @@ function routerProviderBase({
         addition);
     });
   }
-  function NavLinkProvider(Link: TElementType, $location: Store<any>): TElementType {
+  function NavLinkProvider(Link: TElementType, $location: Observable<any>): TElementType {
     return childClassOfReact(Component, (self) => {
       let subscription: (() => any) | 0;
       const setState = self.setState.bind(self);
@@ -912,8 +912,8 @@ function routerProviderBase({
     }) as any;
   }
 
-  function paramStorageProvider($query: Store<TParams>, pushLocation: TPushLocation) {
-    const $params = createStore({});
+  function paramStorageProvider($query: Observable<TParams>, pushLocation: TPushLocation) {
+    const $params = createObservable({});
     const {
       emit, 
     } = createApi($params, {

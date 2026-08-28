@@ -2,8 +2,8 @@ import {
   localStorageProvider, 
 } from '../src/localStorageProvider';
 import {
-  createStore, createApi, 
-} from '../src/Store';
+  createObservable, createApi, 
+} from '../src/Observable';
 
 function makeLocalStorageMock() {
   const store: Record<string, string> = {};
@@ -87,12 +87,12 @@ describe('localStorageProvider', () => {
     expect(ls.getKeys()).toEqual([]);
   });
 
-  test('deps — custom createStore is called', () => {
+  test('deps — custom createObservable is called', () => {
     const win = makeLocalStorageWin();
     let called = false;
     localStorageProvider(win, {
-      createStore: (initial) => {
-        called = true; return createStore(initial); 
+      createObservable: (initial) => {
+        called = true; return createObservable(initial); 
       },
       createApi,
     });

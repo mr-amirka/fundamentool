@@ -1,9 +1,9 @@
 import {
-  createStore as _createStore, createApi as _createApi, StoreWritable, 
-} from './Store';
+  createObservable as _createObservable, createApi as _createApi, ObservableWritable,
+} from './Observable';
 import type {
-  TStoreAdapter, 
-} from './Store';
+  TObservableAdapter,
+} from './Observable';
 import {
   tryJsonParse, 
 } from './tryJsonParse';
@@ -14,7 +14,7 @@ export type TCookieWindowContext = {
   };
 };
 
-export type TCookieStorage = StoreWritable<any> & {
+export type TCookieStorage = ObservableWritable<any> & {
   set: (key: string, value: any) => TCookieStorage;
   get: (key: string) => any;
   remove: (key: string) => TCookieStorage;
@@ -56,11 +56,11 @@ export const storageInit = (cookie: string): any => {
  * storage.remove('token');
  */
 export const cookieStorageProvider = (ctx: TCookieWindowContext,
-  deps: Partial<TStoreAdapter> = {}): TCookieStorage => {
+  deps: Partial<TObservableAdapter> = {}): TCookieStorage => {
   const {
-    createStore = _createStore, createApi = _createApi, 
+    createObservable = _createObservable, createApi = _createApi,
   } = deps;
-  const $instance = createStore<any>({} as any);
+  const $instance = createObservable<any>({} as any);
   const {
     emit, 
   } = createApi($instance, {

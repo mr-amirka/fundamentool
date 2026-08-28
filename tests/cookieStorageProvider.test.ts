@@ -2,8 +2,8 @@ import {
   cookieStorageProvider, storageInit, 
 } from '../src/cookieStorageProvider';
 import {
-  createStore, createApi, 
-} from '../src/Store';
+  createObservable, createApi, 
+} from '../src/Observable';
 
 describe('storageInit', () => {
   test('parses cookie string into object', () => {
@@ -73,12 +73,12 @@ describe('cookieStorageProvider', () => {
     expect(storage.getKeys().sort()).toEqual(['a', 'b']);
   });
 
-  test('deps — custom createStore is called', () => {
+  test('deps — custom createObservable is called', () => {
     const win = makeWindow();
     let called = false;
     cookieStorageProvider(win, {
-      createStore: (initial) => {
-        called = true; return createStore(initial); 
+      createObservable: (initial) => {
+        called = true; return createObservable(initial); 
       },
       createApi,
     });

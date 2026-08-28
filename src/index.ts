@@ -152,7 +152,7 @@ export * from './sortBy';
 export * from './SparseCodec';
 export * from './stackProvider';
 export * from './startsWith';
-export * from './Store';
+export * from './Observable';
 export * from './storeProvider';
 export * from './stripTags';
 export * from './stylesRenderProvider';

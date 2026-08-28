@@ -1,9 +1,9 @@
 import {
-  createStore as _createStore, createApi as _createApi, StoreWritable as Store, 
-} from './Store';
+  createObservable as _createObservable, createApi as _createApi, ObservableWritable,
+} from './Observable';
 import type {
-  TStoreAdapter, 
-} from './Store';
+  TObservableAdapter,
+} from './Observable';
 
 import {
   tryJsonParse, 
@@ -24,7 +24,7 @@ export type TLocalStorageWindowContext = {
   removeEventListener(type: string, listener: (event: any) => void, options?: any): void;
 };
 
-export type TLocalStorage = Store<any> & {
+export type TLocalStorage = ObservableWritable<any> & {
   /**
    * Sets a value in the local storage.
    * 
@@ -83,12 +83,12 @@ export type TLocalStorageEvent = {
  * storage.remove('user');
  */
 export const localStorageProvider = (win: TLocalStorageWindowContext,
-  deps: Partial<TStoreAdapter> = {}): TLocalStorage => {
+  deps: Partial<TObservableAdapter> = {}): TLocalStorage => {
   const {
-    createStore = _createStore, createApi = _createApi, 
+    createObservable = _createObservable, createApi = _createApi,
   } = deps;
   let locked = false;
-  const $instance = createStore<TLocalStorageEvent>({
+  const $instance = createObservable<TLocalStorageEvent>({
     key: '', 
   });
   const {

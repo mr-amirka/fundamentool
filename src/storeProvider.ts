@@ -5,8 +5,8 @@ import {
   isEqual, 
 } from './is/isEqual';
 import type {
-  StoreWritable, 
-} from './Store/types';
+  ObservableWritable,
+} from './Observable/types';
 
 /** Key-value persistence port (e.g. `localStorage`, a settings file) `storeProvider` reads/writes through. */
 export type TStorage = {
@@ -38,7 +38,7 @@ export type TStoreProviderDeps = {
  * @param deps - Store-library DI ports (`createStore`/`createApi`).
  * @param storage - Persistence port to read/write/watch values through.
  * @param originalPrefix - Optional prefix prepended to every store's name/key.
- * @returns A factory `(name, defaultValue?, isObjectExtension?) => StoreWritable<A>`.
+ * @returns A factory `(name, defaultValue?, isObjectExtension?) => ObservableWritable<A>`.
  * @example
  * const createPersistedStore = storeProvider({ createStore, createApi }, localStorageProvider(window));
  * const $theme = createPersistedStore('theme', 'light');
@@ -57,7 +57,7 @@ export const storeProvider = (
     originalName: string,
     defaultValue: A | null | TNormalize<A> = null,
     isObjectExtension?: boolean,
-  ): StoreWritable<A> => {
+  ): ObservableWritable<A> => {
     const name = prefix + originalName;
     const defaultValueIsFunc = typeof defaultValue === 'function';
     const normalize: TNormalize<A> = isObjectExtension
@@ -92,6 +92,6 @@ export const storeProvider = (
       emit(normalize(v));
     };
 
-    return $store as unknown as StoreWritable<A>;
+    return $store as unknown as ObservableWritable<A>;
   };
 };
