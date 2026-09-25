@@ -279,3 +279,50 @@ describe('routeParseProvider (TRouteMapper)', () => {
   });
 });
 
+
+/**
+ * Якоря и альтернация верхнего уровня.
+ *
+ * `^${body}$` ломается на маршруте вида `A|B`: получается `^A|B$` — «A с начала
+ * строки ИЛИ B до конца строки», и ни одна ветка не обязана совпасть со строкой
+ * целиком. Маршрут матчился началом, а хвост молча игнорировался.
+ * Найдено 2026-09-25 через minotation: токен `ratio16/9` давал
+ * `padding-top:16%` вместо ошибки, потому что ловушка `(.*):other` в конце
+ * альтернации не срабатывала никогда.
+ */
+describe('анкоринг при альтернации верхнего уровня', () => {
+  test('ветка альтернации обязана совпасть со строкой ЦЕЛИКОМ', () => {
+    const keys: string[] = [];
+    const re = routeParseProviderBase('^(\\d+):num|(.*):other', keys);
+
+    expect(re.test('16')).toBe(true);
+    expect(re.test('16/9')).toBe(true); // ловит вторая ветка, а не обрезается первая
+  });
+
+  test('хвост после первой ветки уходит во вторую, а не отбрасывается', () => {
+    const parse = routeParseProvider('^((\\d+):num)?|(.*):other');
+    const params: Record<string, string> = {};
+
+    parse('16/9', params);
+
+    expect(params.other).toBe('16/9');
+    expect(params.num).toBeUndefined();
+  });
+
+  test('без альтернации поведение не изменилось', () => {
+    const parse = routeParseProvider('/user/:id');
+    const params: Record<string, string> = {};
+
+    expect(parse('/user/42', params)).toBe(true);
+    expect(params.id).toBe('42');
+    expect(parse('/user/42/extra')).toBe(false);
+  });
+
+  test('anchored: false по-прежнему ищет фрагмент где угодно', () => {
+    const parse = routeParseProvider('(r|R)(\\-?[0-9]+):r', false);
+    const params: Record<string, string> = {};
+
+    expect(parse('19r3c43F', params)).toBe(true);
+    expect(params.r).toBe('3');
+  });
+});
