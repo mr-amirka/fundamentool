@@ -160,6 +160,7 @@ export * from './subscribe';
 export * from './templatePartsJoin';
 export * from './templateProvider';
 export * from './textEllipsis';
+export * from './toFixed';
 export * from './toHTML';
 export * from './toLower';
 export * from './toPlainFields';
