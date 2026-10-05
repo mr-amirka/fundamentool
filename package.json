@@ -22,7 +22,7 @@
     "test:watch": "jest --watch --no-coverage --config=./jest.config.js",
     "test:coverage": "jest --coverage --config=./jest.config.js",
     "validate": "npm run lint && npm run test",
-    "build": "tsc",
+    "build": "node -e \"require('fs').rmSync('dist/esm',{recursive:true,force:true})\" && tsc && tsc -p tsconfig.esm.json",
     "prepublishOnly": "npm run build"
   },
   "exports": {
