@@ -13,17 +13,19 @@
   "sideEffects": false,
   "scripts": {
     "docs:api": "typedoc --options ./typedoc.json",
-    "docs:dev": "npm run docs:api && vitepress dev docs",
-    "docs:build": "npm run docs:api && vitepress build docs",
+    "docs:dev": "pnpm docs:api && vitepress dev docs",
+    "docs:build": "pnpm docs:api && vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "lint": "eslint . --ext .ts,.tsx,.js",
     "lint:fix": "eslint . --ext .ts,.tsx,.js --fix --quiet",
     "test": "jest --config=./jest.config.js",
     "test:watch": "jest --watch --no-coverage --config=./jest.config.js",
     "test:coverage": "jest --coverage --config=./jest.config.js",
-    "validate": "npm run lint && npm run test",
-    "build": "node -e \"require('fs').rmSync('dist/esm',{recursive:true,force:true})\" && tsc && tsc -p tsconfig.esm.json",
-    "prepublishOnly": "npm run build"
+    "validate": "pnpm lint && pnpm test",
+    "build": "node scripts/build.mjs",
+    "prepublishOnly": "pnpm build && pnpm test:dist",
+    "test:dist": "node scripts/check-dist.mjs",
+    "prepare": "node scripts/build.mjs"
   },
   "exports": {
     ".": {
@@ -33,46 +35,57 @@
     },
     "./async": {
       "types": "./dist/async/index.d.ts",
+      "import": "./dist/esm/async/index.js",
       "default": "./dist/async/index.js"
     },
     "./is": {
       "types": "./dist/is/index.d.ts",
+      "import": "./dist/esm/is/index.js",
       "default": "./dist/is/index.js"
     },
     "./join": {
       "types": "./dist/join/index.d.ts",
+      "import": "./dist/esm/join/index.js",
       "default": "./dist/join/index.js"
     },
     "./split": {
       "types": "./dist/split/index.d.ts",
+      "import": "./dist/esm/split/index.js",
       "default": "./dist/split/index.js"
     },
     "./jsonl": {
       "types": "./dist/jsonl/index.d.ts",
+      "import": "./dist/esm/jsonl/index.js",
       "default": "./dist/jsonl/index.js"
     },
     "./scheduler": {
       "types": "./dist/scheduler/index.d.ts",
+      "import": "./dist/esm/scheduler/index.js",
       "default": "./dist/scheduler/index.js"
     },
     "./rpc": {
       "types": "./dist/rpc/index.d.ts",
+      "import": "./dist/esm/rpc/index.js",
       "default": "./dist/rpc/index.js"
     },
     "./browser": {
       "types": "./dist/browser/index.d.ts",
+      "import": "./dist/esm/browser/index.js",
       "default": "./dist/browser/index.js"
     },
     "./node": {
       "types": "./dist/node/index.d.ts",
+      "import": "./dist/esm/node/index.js",
       "default": "./dist/node/index.js"
     },
     "./rpc/browser": {
       "types": "./dist/rpc/browser/index.d.ts",
+      "import": "./dist/esm/rpc/browser/index.js",
       "default": "./dist/rpc/browser/index.js"
     },
     "./rpc/node": {
       "types": "./dist/rpc/node/index.d.ts",
+      "import": "./dist/esm/rpc/node/index.js",
       "default": "./dist/rpc/node/index.js"
     }
   },
@@ -117,6 +130,7 @@
     "ts-jest": "^29.4.6",
     "typedoc": "^0.28.19",
     "typedoc-plugin-markdown": "^4.11.0",
+    "typescript": "^5.9.3",
     "vitepress": "^1.6.4"
   }
 }
