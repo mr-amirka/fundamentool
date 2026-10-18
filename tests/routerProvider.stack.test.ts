@@ -611,6 +611,51 @@ describe('routerProvider — the stack', () => {
     expect(paths()).toEqual(['/a']);
   });
 
+  it('leavePage: back to the previous page of the app (windows over the page close too); the first page is replaced', async () => {
+    const {
+      router, paths, win,
+    } = setup();
+    await router.pushLocation({
+      path: '/a/level',
+    });
+    void router.open('Menu');
+    await waitFor(() => expect(paths()).toEqual([
+      '/a',
+      '/a/level',
+      'window',
+    ]));
+    await router.leavePage({
+      fallback: {
+        path: '/a',
+      },
+    });
+    expect(paths()).toEqual(['/a']);
+
+    await router.startOverLocation({
+      path: '/a/locked',
+    });
+    await router.leavePage({
+      fallback: {
+        path: '/a',
+      },
+    });
+    expect(paths()).toEqual(['/a']);
+    expect(win.location.pathname).toBe('/a');
+  });
+
+  it('leavePage checks its options', async () => {
+    const {
+      router,
+    } = setup();
+    await expect(router.leavePage(null as never)).rejects.toThrow(/leavePage: expects an options object, got null/);
+    await expect(router.leavePage({
+      fallbak: {},
+    } as never)).rejects.toThrow(/Did you mean "fallback"/);
+    await expect(router.leavePage({
+      fallback: '/',
+    } as never)).rejects.toThrow(/"fallback" expects a location/);
+  });
+
   it('subscribe / unsubscribe', async () => {
     const {
       nav,

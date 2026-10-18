@@ -339,6 +339,22 @@ describe('routerProvider — going back', () => {
   });
 });
 
+describe('hashRouterProvider — leavePage', () => {
+  it('the fallback is a hash path', async () => {
+    const {
+      router, win,
+    } = setup('http://localhost/app#/level/9', 'hash');
+    await router.leavePage({
+      fallback: {
+        path: '/',
+      },
+    });
+    expect(win.location.hash).toBe('#/');
+    expect(win.location.pathname).toBe('/app');
+    expect(router.$path.getState()).toBe('/');
+  });
+});
+
 describe('routerProvider — inherited bugs, fixed (2026-10-18)', () => {
   it('a Link whose onClick returns false doesn\'t lock the other links of the router', async () => {
     const {

@@ -21,6 +21,9 @@ one router, one state (`$state` holds the address and the stack; fundamentool D-
 - **Going back several steps** (`backToDepth`, `backRepeat`, `backToStart`) is one browser move: the pages between
   are never shown. Leave confirmations are asked top first, and a refusal stops there; `{ force: true }` skips them
   (sign out, a forced return to the start); `{ quiet: true }` — `$location` and the rest don't follow (D-026).
+- **A page without access leaves by itself** (D-031, D-032): the page checks access; without it,
+  `router.leavePage({ fallback: { path: '/' } })` goes back to the previous page of the app if there is one (windows
+  over the page close too), otherwise replaces the page with `fallback`. Or the page shows "unavailable" in its place.
 - **Tabs**: `sections` + `sectionHistory: 'separate'` — every section keeps its own history; `switchSection(name)` on
   the shown section rolls it back to its main page; back from a section's main page goes to the first section.
 - **Watchers**: `onBeforeUnload(cb)` — asked before the current entry is left by back (`false` keeps it; may be async);

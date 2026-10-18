@@ -189,6 +189,12 @@ export type TOpenOptions = {
   reopen?: boolean;
 };
 
+/** Options of `router.leavePage`. */
+export type TLeavePageOptions = {
+  /** Where to go when the history has no earlier page of the app (for `hashRouterProvider` — the hash part). */
+  fallback: Partial<TUrlProps>;
+};
+
 /** What a window renders with: its params, whether it is open (false while it plays its exit), how to close it. */
 export type TWindowProps<P = unknown, R = unknown> = {
   params: P;
@@ -360,6 +366,9 @@ export const ROUTER_DEPS_KEYS = [
 
 /** The single list of accepted keys of {@link TOpenOptions}. */
 export const OPEN_OPTION_KEYS = ['reopen'] as const;
+
+/** The single list of accepted keys of {@link TLeavePageOptions}. */
+export const LEAVE_PAGE_OPTION_KEYS = ['fallback'] as const;
 
 /** The single list of accepted keys of {@link TRouterViewOptions}. */
 export const VIEW_OPTION_KEYS = ['renderPage', 'renderWindow'] as const;
@@ -1869,6 +1878,38 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     });
   }
 
+  /**
+   * Leaves the shown page — e.g. a page the player may not open (fundamentool D-031): back to the previous page of the
+   * app if the history has one (windows over the page close too), otherwise the page is replaced with `fallback`.
+   * Resolves when done; a leave confirmation that refuses keeps the page.
+   *
+   * @example
+   * if (!progress.isUnlocked(levelId)) {
+   *   await router.leavePage({ fallback: { path: '/' } });
+   * }
+   */
+  async function leavePageWith(options: TLeavePageOptions, replaceWith: (fallback: Partial<TUrlProps>) => Promise<unknown>): Promise<void> {
+    if (!isObject(options) || isArray(options)) {
+      throw new TypeError(`${ROUTER_WHERE} leavePage: expects an options object, got ${describeValue(options)}`);
+    }
+    assertKnownOptions(
+      `${ROUTER_WHERE} leavePage`, options, LEAVE_PAGE_OPTION_KEYS,
+    );
+    const fallback = options.fallback;
+    if (!isObject(fallback)) {
+      throw new TypeError(`${ROUTER_WHERE} leavePage: "fallback" expects a location ({ path, query, … }), got ${describeValue(fallback)}`);
+    }
+    // The page's place is read when the step's turn comes (a window closing before it may have changed the stack).
+    if (entries.lastIndexOf(topPage(entries)) > 0) {
+      await backTo(() => entries.lastIndexOf(topPage(entries)) - 1, false);
+    } else {
+      await replaceWith(fallback);
+    }
+  }
+
+  const leavePage = (options: TLeavePageOptions) => leavePageWith(options, replaceLocation);
+  const leaveHashPage = (options: TLeavePageOptions) => leavePageWith(options, replaceHashLocation);
+
   /** Is the entry at `depth` being left right now (its watchers are being asked)? */
   function isTryClosingLocation(depth: number) {
     const entry = entries[depth];
@@ -1987,6 +2028,8 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     storageReplaceHashLocation,
     startOverLocation,
     startOverHashLocation,
+    leavePage,
+    leaveHashPage,
     backLocation,
     backToDepth,
     backRepeat,
@@ -2076,6 +2119,7 @@ export function hashRouterProvider(deps: TRouterProviderDeps) {
     getNextLocation: instance.getNextHashLocation,
     getFromLocation: instance.getFromHashLocation,
     startOverLocation: instance.startOverHashLocation,
+    leavePage: instance.leaveHashPage,
     pushParam: (query: Record<string, any>) => pushLocation({
       query,
     }),
