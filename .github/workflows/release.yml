@@ -1,18 +1,18 @@
-# Lint and tests on every push and PR. On a push to main whose package.json version
-# is not on npm yet, that version is published (D-007): a release is a commit that
-# changes "version".
+# Lint and tests on every push and PR. A push to main whose commits change
+# package.json "version" publishes that version (D-007, D-021): a release is a commit
+# that changes "version". "Run workflow" (manual) publishes the current version if it
+# isn't on npm yet — e.g. the first time after Trusted Publishing is linked.
 #
 # npm access: Trusted Publishing (OIDC), no token. Linked once on npmjs.com →
 # fundamentool → Settings → Trusted Publisher: GitHub Actions,
-# mr-amirka/fundamentool, workflow release.yml. Then switched on with the repository
-# variable NPM_PUBLISH = on (GitHub → Settings → Secrets and variables → Actions →
-# Variables); until then pushes only validate (D-019).
+# mr-amirka/fundamentool, workflow release.yml.
 name: release
 
 on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -27,6 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the version before the push is read from history
 
       - uses: pnpm/action-setup@v4
         with:
@@ -43,13 +45,20 @@ jobs:
 
       - run: pnpm validate
 
-      - name: Is this version already on npm?
+      - name: Did this push change the version? Is it on npm already?
         id: version
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          BEFORE: ${{ github.event.before }}
+          MANUAL: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           version=$(node -p "require('./package.json').version")
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          if npm view "fundamentool@$version" version > /dev/null 2>&1; then
+          previous=$(git show "$BEFORE:package.json" 2>/dev/null | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{console.log(JSON.parse(s).version)}catch{console.log('')}})")
+          if [ "$MANUAL" != "true" ] && [ "$previous" = "$version" ]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "version unchanged ($version), nothing to publish"
+          elif npm view "fundamentool@$version" version > /dev/null 2>&1; then
             echo "publish=false" >> "$GITHUB_OUTPUT"
             echo "fundamentool@$version is already published, nothing to do"
           else
@@ -58,12 +67,8 @@ jobs:
 
       # Trusted publishing needs npm >= 11.5.1. prepublishOnly runs build and
       # test:dist (scripts/check-dist.mjs) before anything is uploaded.
-      - name: Publishing is switched off
-        if: steps.version.outputs.publish == 'true' && vars.NPM_PUBLISH != 'on'
-        run: echo "fundamentool@${{ steps.version.outputs.version }} is not on npm, but NPM_PUBLISH is not 'on' — skipped"
-
       - name: Publish
-        if: steps.version.outputs.publish == 'true' && vars.NPM_PUBLISH == 'on'
+        if: steps.version.outputs.publish == 'true'
         run: |
           npm install -g npm@^11.5.1
           npm publish
