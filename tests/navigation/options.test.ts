@@ -1,15 +1,21 @@
 import {
   NAVIGATION_OPTION_KEYS,
-  NAVIGATION_VIEW_OPTION_KEYS,
-  createBrowserHistory,
   createNavigation,
-  createNavigationView,
-} from '../../src/navigation';
+} from '../../src/navigation/createNavigation';
 import type {
   TNavigationOptions,
+} from '../../src/navigation/createNavigation';
+import {
+  NAVIGATION_VIEW_OPTION_KEYS,
+  createNavigationView,
+} from '../../src/navigation/createNavigationView';
+import type {
   TNavigationViewOptions,
   TViewKit,
-} from '../../src/navigation';
+} from '../../src/navigation/createNavigationView';
+import {
+  createBrowserHistory,
+} from '../../src/navigation/history';
 import {
   fakeHistory,
 } from './_fakeHistory';
