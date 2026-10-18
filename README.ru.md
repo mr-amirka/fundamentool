@@ -38,6 +38,7 @@ npm run docs:api
 |-------------|------------|
 | `fundamentool` | Универсальные утилиты (строки, объекты, массивы, типовые проверки и т.д.) |
 | `fundamentool/async` | Асинхронные итераторы, параллельное выполнение, последовательность |
+| `fundamentool/navigation` | Страницы и окна, синхронные с историей браузера, кэш страниц, вкладки, представление из внедрённого React / Preact — см. [src/navigation/README.ru.md](src/navigation/README.ru.md) |
 | `fundamentool/is` | Предикаты типов (`isString`, `isEqual`, `isMatch` и др.) |
 | `fundamentool/join` | Утилиты склейки строк |
 | `fundamentool/split` | Утилиты разбиения строк |

@@ -1,0 +1,429 @@
+import {
+  createNavigation,
+} from '../../src/navigation/createNavigation';
+import type {
+  TNavigationOptions,
+  TPageInfo,
+} from '../../src/navigation/createNavigation';
+import {
+  fakeHistory,
+  settle,
+  waitFor,
+} from './_fakeHistory';
+
+/** Routes of a small app: two sections, kept list pages, a "start over" page. */
+function describe_(path: string): TPageInfo {
+  if (path === '/welcome') {
+    return {
+      startsOver: true, 
+    };
+  }
+  const section = path.split('/')[1] || 'home';
+  return {
+    section,
+    sectionHome: path.split('/').length === 2,
+    keep: path.includes('list'), 
+  };
+}
+
+function setup(overrides: Partial<TNavigationOptions> = {}, start = '/a') {
+  const browser = fakeHistory(start);
+  const timers: (() => void)[] = [];
+  const nav = createNavigation({
+    history: browser.port,
+    describe: describe_,
+    sections: {
+      a: '/a',
+      b: '/b', 
+    },
+    schedule: (callback) => {
+      timers.push(callback);
+    },
+    ...overrides,
+  });
+  const paths = () => nav.getState().entries.map((entry) => (entry.kind === 'page' ? entry.path : 'window'));
+  return {
+    nav,
+    browser,
+    timers,
+    paths, 
+  };
+}
+
+describe('createNavigation', () => {
+  it('starts with the page in the address; the browser entry is ours', () => {
+    const {
+      nav, browser, 
+    } = setup();
+    const state = nav.getState();
+    expect(state.entries).toHaveLength(1);
+    expect(state.page).toMatchObject({
+      path: '/a',
+      depth: 0,
+      info: {
+        section: 'a',
+        sectionHome: true, 
+      }, 
+    });
+    expect(state.section).toBe('a');
+    expect(browser.port.state()).toMatchObject({
+      depth: 0, 
+    });
+  });
+
+  it('go pushes a page and a history entry; back — ours or the browser\'s — removes it', async () => {
+    const {
+      nav, browser, paths, 
+    } = setup();
+    await nav.go('/a/1');
+    await nav.go('/a/1/2');
+    expect(paths()).toEqual([
+      '/a',
+      '/a/1',
+      '/a/1/2',
+    ]);
+    expect(browser.paths()).toEqual([
+      '/a',
+      '/a/1',
+      '/a/1/2',
+    ]);
+
+    await nav.back();
+    expect(paths()).toEqual(['/a', '/a/1']);
+    browser.userBack();
+    await settle();
+    expect(paths()).toEqual(['/a']);
+    await nav.back(); // at the bottom: nothing
+    expect(paths()).toEqual(['/a']);
+  });
+
+  it('open resolves with the result it closed with; back / Android back gives null; the exit plays, then it\'s gone', async () => {
+    const {
+      nav, browser, timers, paths, 
+    } = setup();
+    const first = nav.open<string>('Editor', {
+      text: 'hi', 
+    });
+    await settle();
+    const win = nav.getState().entries[1];
+    expect(win).toMatchObject({
+      kind: 'window',
+      window: 'Editor',
+      params: {
+        text: 'hi', 
+      }, 
+    });
+    expect(browser.paths()).toEqual(['/a', '/a']); // the address keeps the page
+    await nav.close(win.id, 'saved');
+    await expect(first).resolves.toBe('saved');
+    expect(nav.getState().leaving).toHaveLength(1);
+    timers.forEach((run) => run());
+    expect(nav.getState().leaving).toHaveLength(0);
+
+    const second = nav.open('Editor');
+    await settle();
+    browser.userBack();
+    await expect(second).resolves.toBeNull();
+    expect(paths()).toEqual(['/a']);
+  });
+
+  it('close: of an entry under others closes those too; an unknown id or the bottom page — nothing', async () => {
+    const {
+      nav, paths, 
+    } = setup();
+    const lower = nav.open('A');
+    await settle();
+    const id = nav.getState().entries[1].id;
+    const upper = nav.open('B');
+    await settle();
+    await nav.close(id, 1);
+    await expect(lower).resolves.toBe(1);
+    await expect(upper).resolves.toBeNull();
+    await nav.close(999);
+    await nav.close(nav.getState().entries[0].id);
+    expect(paths()).toEqual(['/a']);
+  });
+
+  it('kept pages stay mounted while covered (within the limit); others unmount', async () => {
+    const {
+      nav, 
+    } = setup({
+      keep: 1, 
+    });
+    await nav.go('/a/list1');
+    await nav.go('/a/list2');
+    await nav.go('/a/detail');
+    const [
+      home,
+      list1,
+      list2,
+      detail,
+    ] = nav.getState().entries;
+    const mounted = nav.getState().mounted;
+    expect([
+      home,
+      list1,
+      list2,
+      detail,
+    ].map((entry) => mounted.has(entry.id))).toEqual([
+      false,
+      false,
+      true,
+      true,
+    ]);
+  });
+
+  it('the tab bar section is the nearest page with one; backToSection returns to its main page', async () => {
+    const {
+      nav, paths, 
+    } = setup();
+    await nav.go('/a/1');
+    await nav.go('/a/1/2');
+    nav.open('W');
+    await settle();
+    await nav.backToSection();
+    expect(paths()).toEqual(['/a']);
+    await nav.backToSection(); // already there
+    expect(paths()).toEqual(['/a']);
+
+    await nav.switchSection('b');
+    await nav.go('/b/1');
+    expect(nav.getState().section).toBe('b');
+    await nav.switchSection('b'); // the current tab again → its main page
+    expect(paths()).toEqual(['/a', '/b']);
+    await nav.switchSection('c'); // no main page known
+    expect(paths()).toEqual(['/a', '/b']);
+  });
+
+  it('backToSection without the main page in the history opens it; without a section — nothing', async () => {
+    const deep = setup({}, '/b/7');
+    await deep.nav.backToSection();
+    expect(deep.paths()).toEqual(['/b/7', '/b']);
+
+    const none = setup({
+      sections: {}, 
+    }, '/b/7');
+    await none.nav.backToSection();
+    expect(none.paths()).toEqual(['/b/7']);
+
+    const plain = setup({
+      describe: () => ({}), 
+    });
+    await plain.nav.backToSection();
+    expect(plain.nav.getState().section).toBeNull();
+  });
+
+  it('startOver drops everything: windows resolve null, the history is back at its first entry', async () => {
+    const {
+      nav, browser, paths, 
+    } = setup();
+    await nav.go('/a/1');
+    const win = nav.open('W');
+    await settle();
+    await nav.startOver('/b');
+    await expect(win).resolves.toBeNull();
+    expect(paths()).toEqual(['/b']);
+    expect(browser.index()).toBe(0);
+    expect(browser.port.path()).toBe('/b');
+
+    await nav.go('/welcome'); // a page that always starts over
+    expect(paths()).toEqual(['/welcome']);
+  });
+
+  it('whileOpen: runs at once, cleaned up when the entry starts closing, unsubscribing cleans up too', async () => {
+    const {
+      nav, 
+    } = setup();
+    await nav.go('/a/1');
+    const id = nav.getState().page.id;
+    const log: string[] = [];
+    nav.whileOpen(id, () => {
+      log.push('open');
+      return () => log.push('close');
+    });
+    await nav.back();
+    expect(log).toEqual(['open', 'close']);
+
+    const stop = nav.whileOpen(nav.getState().page.id, () => () => log.push('unmounted'));
+    stop();
+    stop();
+    expect(log).toEqual([
+      'open',
+      'close',
+      'unmounted',
+    ]);
+  });
+
+  it('onForward: pages only by default; its cleanup runs on return; false cancels; a promise delays', async () => {
+    const {
+      nav, paths, 
+    } = setup();
+    const id = nav.getState().page.id;
+    const log: string[] = [];
+    const stop = nav.onForward(id, () => {
+      log.push('forward');
+      return () => log.push('back on top');
+    });
+    const result = nav.open('W');
+    await settle();
+    expect(log).toEqual([]); // a window isn't "forward" unless asked
+    await nav.back();
+    await expect(result).resolves.toBeNull();
+
+    await nav.go('/a/1');
+    expect(log).toEqual(['forward']);
+    await nav.back();
+    expect(log).toEqual(['forward', 'back on top']);
+    stop();
+
+    nav.onForward(
+      id, () => false, {
+        windows: true, 
+      },
+    );
+    await expect(nav.go('/a/2')).resolves.toBe(false);
+    await expect(nav.open('W')).resolves.toBeNull();
+    expect(paths()).toEqual(['/a']);
+  });
+
+  it('onForward: a promise holds the step until it settles', async () => {
+    const {
+      nav, paths, 
+    } = setup();
+    let release: () => void = () => undefined;
+    nav.onForward(
+      nav.getState().page.id, () => new Promise<void>((resolve) => {
+        release = resolve;
+      }), {
+        windows: true, 
+      },
+    );
+    const going = nav.go('/a/1');
+    await settle();
+    expect(paths()).toEqual(['/a']);
+    release();
+    await expect(going).resolves.toBe(true);
+    expect(paths()).toEqual(['/a', '/a/1']);
+  });
+
+  it('onBeforeLeave: a refusal keeps the entry (the browser is stepped forward again) and reopens whileOpen', async () => {
+    const {
+      nav, browser, paths, 
+    } = setup();
+    await nav.go('/a/form');
+    const id = nav.getState().page.id;
+    const log: string[] = [];
+    nav.whileOpen(id, () => {
+      log.push('open');
+      return () => log.push('close');
+    });
+    let allow = false;
+    const stop = nav.onBeforeLeave(id, () => allow);
+    browser.userBack();
+    await waitFor(() => expect(log).toEqual([
+      'open',
+      'close',
+      'open',
+    ]));
+    expect(paths()).toEqual(['/a', '/a/form']);
+    await waitFor(() => expect(browser.index()).toBe(1));
+
+    allow = true;
+    await nav.back();
+    await waitFor(() => expect(paths()).toEqual(['/a']));
+    expect(browser.index()).toBe(0);
+    stop();
+  });
+
+  it('a guard may open a window to ask ("discard changes?") — it works while the leave waits', async () => {
+    const {
+      nav, paths, 
+    } = setup();
+    await nav.go('/a/form');
+    nav.onBeforeLeave(nav.getState().page.id, async () => (await nav.open<boolean>('Confirm')) === true);
+    void nav.back();
+    await waitFor(() => expect(paths()).toEqual([
+      '/a',
+      '/a/form',
+      'window',
+    ]));
+    await nav.close(nav.getState().entries[2].id, true);
+    await waitFor(() => expect(paths()).toEqual(['/a']));
+  });
+
+  it('a leave confirmed after the stack changed meanwhile does nothing more', async () => {
+    const {
+      nav, paths, 
+    } = setup();
+    await nav.go('/a/form');
+    let answer: ((value: boolean) => void) | null = null;
+    nav.onBeforeLeave(nav.getState().page.id, () => new Promise<boolean>((resolve) => {
+      answer = resolve;
+    }));
+    void nav.back();
+    await waitFor(() => expect(answer).not.toBeNull());
+    await nav.startOver('/a');
+    (answer as unknown as (value: boolean) => void)(true);
+    await settle(50);
+    expect(paths()).toEqual(['/a']);
+  });
+
+  it('the browser\'s forward is undone; an entry from another session (before a reload) starts over at its path', async () => {
+    const {
+      nav, browser, paths, 
+    } = setup();
+    await nav.go('/a/1');
+    await nav.back();
+    browser.userForward();
+    await waitFor(() => expect(browser.index()).toBe(0));
+    expect(paths()).toEqual(['/a']);
+
+    browser.foreign('/b/old');
+    await waitFor(() => expect(paths()).toEqual(['/b/old']));
+  });
+
+  it('a failed step (e.g. the history refuses) rejects it but doesn\'t block the next ones', async () => {
+    const {
+      nav, browser, paths, 
+    } = setup();
+    const push = browser.port.push;
+    browser.port.push = () => {
+      throw new Error('quota');
+    };
+    await expect(nav.go('/a/1')).rejects.toThrow('quota');
+    browser.port.push = push;
+    await nav.go('/a/2');
+    expect(paths()).toEqual(['/a', '/a/2']);
+  });
+
+  it('subscribe / unsubscribe', async () => {
+    const {
+      nav, 
+    } = setup();
+    const listener = jest.fn();
+    const stop = nav.subscribe(listener);
+    await nav.go('/a/1');
+    expect(listener).toHaveBeenCalledTimes(1);
+    stop();
+    await nav.go('/a/2');
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it('defaults: a real timer for the exit, a keep limit of 10', async () => {
+    jest.useFakeTimers();
+    const browser = fakeHistory('/a');
+    const nav = createNavigation({
+      history: browser.port,
+      describe: describe_, 
+    });
+    const result = nav.open('W');
+    await jest.advanceTimersByTimeAsync(1);
+    browser.userBack();
+    await jest.advanceTimersByTimeAsync(1);
+    await expect(result).resolves.toBeNull();
+    expect(nav.getState().leaving).toHaveLength(1);
+    await jest.advanceTimersByTimeAsync(300);
+    expect(nav.getState().leaving).toHaveLength(0);
+    jest.useRealTimers();
+  });
+});
