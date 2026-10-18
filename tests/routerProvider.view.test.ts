@@ -2,6 +2,9 @@
  * @jest-environment jsdom
  * @jest-environment-options {"customExportConditions": ["require", "node", "default"]}
  */
+/**
+ * `router.view` and the router's hooks on React and on Preact — the view library is injected (fundamentool D-013).
+ */
 
 // React 19 warns on every `act()` unless the environment declares itself an act environment.
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -13,41 +16,39 @@ import {
   createRoot,
 } from 'react-dom/client';
 import * as preact from 'preact';
+import * as preactCompat from 'preact/compat';
 import * as preactHooks from 'preact/hooks';
 import {
   act as preactAct,
 } from 'preact/test-utils';
-import {
-  createNavigation,
-} from '../../src/navigation/createNavigation';
 import type {
-  TNavigation,
   TPageEntry,
+  TRouterState,
   TWindowEntry,
-} from '../../src/navigation/createNavigation';
-import {
-  createNavigationView,
-} from '../../src/navigation/createNavigationView';
-import type {
-  TNavigationView,
-  TViewKit,
   TWindowProps,
-} from '../../src/navigation/createNavigationView';
+} from '../src/routerProvider';
 import {
-  fakeHistory,
   settle,
+  setup,
   waitFor,
-} from './_fakeHistory';
+} from './_routerHarness';
+import type {
+  THarnessOptions,
+} from './_routerHarness';
 
-/** A view library under test: its kit and how to mount into a container. */
+type TView = { NavigationHost: () => unknown };
+
+/** A view library under test: its functions for the router and how to mount into a container. */
 type TLibrary = {
-  kit: TViewKit;
-  mount: (view: TNavigationView, container: HTMLElement) => () => void;
+  deps: THarnessOptions;
+  createElement: (...args: any[]) => unknown;
+  mount: (view: TView, container: HTMLElement) => () => void;
   act: (work: () => Promise<void> | void) => Promise<void>;
 };
 
 const REACT: TLibrary = {
-  kit: React as unknown as TViewKit,
+  deps: {},
+  createElement: React.createElement as (...args: any[]) => unknown,
   mount: (view, container) => {
     const root = createRoot(container);
     reactAct(() => root.render(React.createElement(view.NavigationHost as () => React.ReactElement)));
@@ -61,14 +62,17 @@ const REACT: TLibrary = {
 };
 
 const PREACT: TLibrary = {
-  kit: {
-    createElement: preact.h as unknown as TViewKit['createElement'],
-    createContext: preact.createContext as unknown as TViewKit['createContext'],
-    useContext: preactHooks.useContext as unknown as TViewKit['useContext'],
-    useEffect: preactHooks.useEffect as unknown as TViewKit['useEffect'],
-    useRef: preactHooks.useRef as unknown as TViewKit['useRef'],
-    useState: preactHooks.useState as unknown as TViewKit['useState'],
+  deps: {
+    Component: preact.Component,
+    createElement: preact.h,
+    forwardRef: preactCompat.forwardRef,
+    createContext: preact.createContext,
+    useContext: preactHooks.useContext,
+    useEffect: preactHooks.useEffect,
+    useRef: preactHooks.useRef,
+    useState: preactHooks.useState,
   },
+  createElement: preact.h as (...args: any[]) => unknown,
   mount: (view, container) => {
     preactAct(() => {
       preact.render(preact.h(view.NavigationHost as unknown as preact.FunctionComponent, null), container);
@@ -82,59 +86,61 @@ const PREACT: TLibrary = {
   },
 };
 
-describe.each([['React', REACT], ['Preact', PREACT]])('createNavigationView with %s', (_name, library) => {
+describe.each([['React', REACT], ['Preact', PREACT]])('router.view with %s', (_name, library) => {
   let container: HTMLElement;
   let unmount: () => void;
-  let nav: TNavigation;
-  let view: TNavigationView;
-  let browser: ReturnType<typeof fakeHistory>;
+  let harness: ReturnType<typeof setup>;
+  let nav: ReturnType<typeof setup>['nav'];
+  let router: ReturnType<typeof setup>['router'];
+  let browser: ReturnType<typeof setup>['browser'];
+  let view: TView;
   const log: string[] = [];
-  /** Exit animations wait here until a test runs them. */
-  let timers: (() => void)[] = [];
 
   /** A page: shows its path, registers the hooks and logs what they see. */
-  function Page(props: { entry: TPageEntry }): unknown {
-    const h = library.kit.createElement;
-    const entry = view.useEntry();
-    view.useWhileOpen(() => {
+  function Page(props: { entry: TPageEntry;
+    path: string }): unknown {
+    const h = library.createElement;
+    const entry = router.useEntry();
+    router.useWhileOpen(() => {
       log.push(`open ${entry.depth}`);
       return () => log.push(`close ${entry.depth}`);
     });
-    view.useOnForward(() => {
+    router.useOnForward(() => {
       log.push(`forward ${entry.depth}`);
     });
-    view.useBeforeLeave(() => props.entry.path !== '/locked');
+    router.useBeforeLeave(() => props.path !== '/locked');
     return h(
       'p', {
-        'data-page': props.entry.path, 
-      }, props.entry.path,
+        'data-page': props.path, 
+      }, props.path,
     );
   }
 
   /** A page that reacts to windows too, and refuses to be left forward by a page when its path says so. */
-  function Watcher(props: { entry: TPageEntry }): unknown {
-    view.useOnForward(() => {
+  function Watcher(props: { entry: TPageEntry;
+    path: string }): unknown {
+    router.useOnForward(() => {
       log.push('covered');
       return () => log.push('uncovered');
     }, {
       windows: true, 
     });
-    view.useOnForward(() => (props.entry.path === '/w/block' ? false : undefined));
-    return library.kit.createElement(
+    router.useOnForward(() => (props.path === '/w/block' ? false : undefined));
+    return library.createElement(
       'p', {
-        'data-page': props.entry.path, 
-      }, props.entry.path,
+        'data-page': props.path, 
+      }, props.path,
     );
   }
 
   function Window(props: TWindowProps<string>): unknown {
-    return library.kit.createElement(
+    return library.createElement(
       'dialog', {
         open: props.open,
         'data-window': props.params,
         'data-open': String(props.open), 
       },
-      library.kit.createElement(
+      library.createElement(
         'button', {
           onClick: () => props.close('ok'), 
         }, 'ok',
@@ -144,25 +150,22 @@ describe.each([['React', REACT], ['Preact', PREACT]])('createNavigationView with
 
   beforeEach(() => {
     log.length = 0;
-    timers = [];
-    browser = fakeHistory('/list');
-    nav = createNavigation({
-      history: browser.port,
+    harness = setup({
+      ...library.deps,
       describe: (path) => ({
         keep: path === '/list', 
       }),
-      schedule: (callback) => {
-        timers.push(callback);
-      },
-    });
-    view = createNavigationView(
-      library.kit, nav, {
-        renderPage: (entry) => library.kit.createElement(entry.path.startsWith('/w/') ? Watcher : Page, {
-          entry, 
-        }),
-        renderWindow: (entry: TWindowEntry, props) => library.kit.createElement(entry.window, props as unknown as Record<string, unknown>),
-      },
-    );
+    }, '/list');
+    ({
+      nav, router, browser, 
+    } = harness);
+    view = router.view({
+      renderPage: (entry, location) => library.createElement(location.path.startsWith('/w/') ? Watcher : Page, {
+        entry,
+        path: location.path, 
+      }),
+      renderWindow: (entry: TWindowEntry, props) => library.createElement(entry.window, props as unknown as Record<string, unknown>),
+    }) as TView;
     container = document.createElement('div');
     document.body.appendChild(container);
     unmount = library.mount(view, container);
@@ -229,9 +232,9 @@ describe.each([['React', REACT], ['Preact', PREACT]])('createNavigationView with
     });
     await expect(result).resolves.toBe('ok');
     await library.act(() => waitFor(() => expect(container.querySelector('[data-window="edit"]')?.getAttribute('data-open')).toBe('false')));
-    await library.act(() => {
-      timers.forEach((run) => run());
-    });
+    // The exit ends on a timer: wait for the state, then let the view render it.
+    await waitFor(() => expect(nav.getState().leaving).toHaveLength(0));
+    await library.act(() => settle(1));
     expect(container.querySelector('[data-window]')).toBeNull();
   });
 
@@ -253,13 +256,14 @@ describe.each([['React', REACT], ['Preact', PREACT]])('createNavigationView with
     await library.act(async () => {
       await expect(nav.go('/next')).resolves.toBe(false);
     });
-    expect(nav.getState().page.path).toBe('/w/block');
+    expect(nav.getState().page.location.path).toBe('/w/block');
   });
 
   it('a page whose guard refuses stays when the player goes back', async () => {
     await library.act(() => nav.go('/locked').then(() => undefined));
     await library.act(async () => {
       browser.userBack();
+      await settle(50);
       await waitFor(() => expect(browser.index()).toBe(1)); // stepped forward again: the guard said no
     });
     expect(container.querySelector('[data-page="/locked"]')).not.toBeNull();
@@ -268,7 +272,7 @@ describe.each([['React', REACT], ['Preact', PREACT]])('createNavigationView with
 
   it('a navigation hook outside a page or a window is an error', () => {
     const Outside = (): unknown => {
-      view.useEntry();
+      router.useEntry();
       return null;
     };
     const host = document.createElement('div');
@@ -284,20 +288,27 @@ describe.each([['React', REACT], ['Preact', PREACT]])('createNavigationView with
     error.mockRestore();
   });
 
-  it('exposes the core', () => {
-    let seen: TNavigation | null = null;
+  it('useRouterState gives the router\'s state and follows it', async () => {
+    const seen: TRouterState[] = [];
     const Probe = (): unknown => {
-      seen = view.useNavigation();
+      seen.push(router.useRouterState());
       return null;
     };
     const host = document.createElement('div');
+    let stop: () => void;
     if (library === REACT) {
       const root = createRoot(host);
       reactAct(() => root.render(React.createElement(Probe as () => null)));
-      reactAct(() => root.unmount());
+      stop = () => reactAct(() => root.unmount());
     } else {
-      preact.render(preact.h(Probe as unknown as preact.FunctionComponent, null), host);
+      preactAct(() => {
+        preact.render(preact.h(Probe as unknown as preact.FunctionComponent, null), host);
+      });
+      stop = () => preact.render(null, host);
     }
-    expect(seen).toBe(nav);
+    expect(seen.at(-1)).toBe(router.$state.getState());
+    await library.act(() => nav.go('/next').then(() => undefined));
+    expect(seen.at(-1)?.location.path).toBe('/next');
+    stop();
   });
 });

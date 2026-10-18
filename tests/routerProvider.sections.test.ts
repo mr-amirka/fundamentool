@@ -1,48 +1,28 @@
+/**
+ * @jest-environment jsdom
+ * @jest-environment-options {"customExportConditions": ["require", "node", "default"]}
+ */
+/**
+ * The router with `sectionHistory: 'separate'` — every section (tab) keeps its own history (fundamentool D-017).
+ */
 import {
-  createNavigation,
-} from '../../src/navigation/createNavigation';
-import type {
-  TNavigationOptions,
-  TPageInfo,
-} from '../../src/navigation/createNavigation';
-import {
-  fakeHistory,
+  setup as harness,
   settle,
   waitFor,
-} from './_fakeHistory';
+} from './_routerHarness';
+import type {
+  THarnessOptions,
+} from './_routerHarness';
 
-/** Sections a (first) and b; `list` pages are kept; `/form` pages may have guards. */
-function describe_(path: string): TPageInfo {
-  const section = path.split('/')[1];
-  return {
-    section,
-    sectionHome: path.split('/').length === 2,
-    keep: path.includes('list'), 
-  };
-}
-
-function setup(start = '/a', overrides: Partial<TNavigationOptions> = {}) {
-  const browser = fakeHistory(start);
-  const nav = createNavigation({
-    history: browser.port,
-    describe: describe_,
-    sections: {
-      a: '/a',
-      b: '/b', 
-    },
+/** Sections a (first) and b with their own histories; `list` pages are kept. */
+function setup(start = '/a', overrides: THarnessOptions = {}) {
+  return harness({
     sectionHistory: 'separate',
-    schedule: () => undefined,
     ...overrides,
-  });
-  const paths = () => nav.getState().entries.map((entry) => (entry.kind === 'page' ? entry.path : 'window'));
-  return {
-    nav,
-    browser,
-    paths, 
-  };
+  }, start);
 }
 
-describe('createNavigation — a separate history per section', () => {
+describe('routerProvider — a separate history per section', () => {
   it('every tab keeps its own stack; the browser history holds the shown one over the first tab\'s main page', async () => {
     const {
       nav, browser, paths, 
@@ -99,6 +79,7 @@ describe('createNavigation — a separate history per section', () => {
     let allow = false;
     nav.onBeforeLeave(nav.getState().page.id, () => allow);
     browser.userGo(-2);
+    await settle(50);
     await waitFor(() => expect(browser.index()).toBe(2)); // stepped forward again: the guard said no
     expect(paths()).toEqual([
       '/a',
@@ -107,6 +88,7 @@ describe('createNavigation — a separate history per section', () => {
     ]);
     allow = true;
     browser.userGo(-2);
+    await settle(50);
     await waitFor(() => expect(paths()).toEqual(['/a', '/b']));
     expect(nav.getState().section).toBe('b');
   });
@@ -118,6 +100,7 @@ describe('createNavigation — a separate history per section', () => {
     await nav.switchSection('b');
     await nav.go('/b/1');
     browser.userGo(-2);
+    await settle(50);
     await waitFor(() => expect(paths()).toEqual(['/a']));
     await nav.switchSection('b');
     expect(paths()).toEqual(['/a', '/b']);
@@ -134,8 +117,8 @@ describe('createNavigation — a separate history per section', () => {
     await nav.switchSection('b');
     await expect(win).resolves.toBeNull();
     const state = nav.getState();
-    expect(state.mounted.has(kept)).toBe(true);
-    expect(state.layers.map((entry) => entry.path)).toEqual(['/a/list', '/b']);
+    expect(state.layers.some((entry) => entry.id === kept)).toBe(true);
+    expect(state.layers.map((entry) => entry.location.path)).toEqual(['/a/list', '/b']);
     await nav.switchSection('a'); // no windows to close now
     expect(nav.getState().page.id).toBe(kept);
   });
@@ -166,7 +149,7 @@ describe('createNavigation — a separate history per section', () => {
     await nav.switchSection('b');
     await nav.startOver('/a');
     expect(paths()).toEqual(['/a']);
-    expect(nav.getState().layers.map((entry) => entry.path)).toEqual(['/a']);
+    expect(nav.getState().layers.map((entry) => entry.location.path)).toEqual(['/a']);
     await nav.startOver('/b/x');
     expect(paths()).toEqual(['/a', '/b/x']);
   });
@@ -174,6 +157,6 @@ describe('createNavigation — a separate history per section', () => {
   it('needs sections', () => {
     expect(() => setup('/a', {
       sections: {}, 
-    })).toThrow(/needs `sections`/);
+    })).toThrow(/`sections` beside "separate"/);
   });
 });

@@ -1,11 +1,11 @@
 # Router: pages and windows
 
-[Русская версия](./README.ru.md)
+[Русская версия](./routerProvider.ru.md)
 
 `routerProvider` / `hashRouterProvider` (`import { hashRouterProvider } from 'fundamentool'`) — the URL model and the
 observables the router always had (`$location`, `$path`, `$query`, `Link`, `NavLink`, `paramStorage`,
-`routerByLocationProvider`, `onBeforeUnload`, …), built on the engine in this folder (fundamentool D-022). The engine
-is internal: use the router.
+`routerByLocationProvider`, `onBeforeUnload`, …) and a stack of pages and windows in step with the browser history —
+one router, one state (`$state` holds the address and the stack; fundamentool D-022, D-025).
 
 - **Every page and every window is a history entry** — back (browser, Android, Escape) closes the top one.
   `await router.open(Window, params)` resolves with what the window closed with (`null` — closed by back). A window
@@ -23,18 +23,21 @@ is internal: use the router.
 - **Watchers**: `onBeforeUnload(cb)` — asked before the current entry is left by back (`false` keeps it; may be async);
   with `{ forwards: true }` — before a page or a window opens over it, including by the browser's Forward. `useRouteIsFocus(effect)` — runs while the
   entry is open, cleaned up when it starts being left, again if leaving is refused.
-- **View**: `router.view(kit, { renderPage, renderWindow })` — the host and the hooks `useWhileOpen`, `useOnForward`,
-  `useBeforeLeave`, `useEntry`, `useNavigationState`, `useNavigation` (the engine — navigate with the router's methods).
-  The kit is `React`, or `preact` + `preact/hooks`; the window and the view library are injected, never imported.
+- **View**: `router.view({ renderPage, renderWindow })` — the host; the hooks are the router's: `useWhileOpen` (the same
+  as the old `useRouteIsFocus`), `useOnForward`, `useBeforeLeave`, `useEntry`, `useRouterState`. The view library
+  comes with the dependencies (`useState`, `useRef`, `createContext`, `useContext` beside `useEffect`,
+  `createElement`, … — from React, or `preact` + `preact/hooks`); the window and the library are injected, never
+  imported.
 
 ```ts
 const router = hashRouterProvider({
-  window, Component, useEffect, createElement, forwardRef, createObservable, createApi,
+  window, Component, useEffect, useState, useRef, createContext, useContext, createElement, forwardRef,
+  createObservable, createApi,
   describe: (location) => ({ section: location.path.split('/')[1], keep: location.path.endsWith('/list') }),
   sections: { catalog: '/catalog', notes: '/notes' },
   sectionHistory: 'separate',
 });
-const view = router.view(React, {
+const view = router.view({
   renderPage: (entry, location) => <Page path={location.path} />,
   renderWindow: (entry, props) => <entry.window {...props} />,
 });

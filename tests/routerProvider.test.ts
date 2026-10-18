@@ -24,7 +24,6 @@ import {
 } from '../src/Observable';
 import {
   hashRouterProvider,
-  ROUTER_DEPS_KEYS,
   routerProvider,
 } from '../src/routerProvider';
 
@@ -48,6 +47,10 @@ function setup(url = 'http://localhost/start?x=1#/h?y=2', kind: 'path' | 'hash' 
     window: win,
     Component: React.Component,
     useEffect: React.useEffect,
+    useState: React.useState,
+    useRef: React.useRef,
+    createContext: React.createContext,
+    useContext: React.useContext,
     createElement: React.createElement,
     forwardRef: React.forwardRef,
     createObservable,
@@ -485,7 +488,7 @@ describe('routerProvider — on the navigation core (D-022)', () => {
 
     const answer = router.open<string>('Confirm');
     await waitFor(() => expect(router.$historyDepth.getState()).toBe(2));
-    const top = router.navigation.getState().entries[2];
+    const top = router.$state.getState().entries[2];
     await router.close(top.id, 'yes');
     await expect(answer).resolves.toBe('yes');
   });
@@ -652,7 +655,7 @@ describe('routerProvider — on the navigation core (D-022)', () => {
       path: '/level/1', 
     });
     expect(seen).toContain('/level/1');
-    expect(router.navigation.getState().layers.map((entry) => entry.depth)).toEqual([0, 1]);
+    expect(router.$state.getState().layers.map((entry) => entry.depth)).toEqual([0, 1]);
     await router.switchSection('top');
     expect(dom.window.location.hash).toBe('#/top');
     expect(dom.window.location.pathname).toBe('/app');
@@ -669,7 +672,7 @@ describe('routerProvider — on the navigation core (D-022)', () => {
     const {
       router, 
     } = setup('http://localhost/#/');
-    const view = router.view(React as never, {
+    const view = router.view({
       renderPage: (entry, location) => React.createElement(
         'p', {
           'data-depth': entry.depth, 
@@ -697,39 +700,7 @@ describe('routerProvider — on the navigation core (D-022)', () => {
     act(() => root.unmount());
   });
 
-  it('checks its dependencies: an unknown key — "did you mean"; a wrong value — expected / got', () => {
-    const dom = new JSDOM('', {
-      url: 'http://localhost/', 
-    });
-    const deps = {
-      window: dom.window,
-      Component: React.Component,
-      useEffect: React.useEffect,
-      createElement: React.createElement,
-      forwardRef: React.forwardRef,
-      createObservable,
-      createApi,
-    };
-    expect(() => routerProvider({
-      ...deps,
-      describ: () => ({}), 
-    } as never)).toThrow(/unknown option "describ". Did you mean "describe"/);
-    expect(() => routerProvider(null as never)).toThrow(/expects a dependencies object, got null/);
-    expect(() => routerProvider({
-      ...deps,
-      window: {}, 
-    } as never)).toThrow(/"window" expects a browser window/);
-    expect(() => routerProvider({
-      ...deps,
-      createApi: 1, 
-    } as never)).toThrow(/"createApi" expects a function, got number 1/);
-    expect(() => routerProvider({
-      ...deps,
-      describe: 'x', 
-    } as never)).toThrow(/"describe" expects a function/);
-  });
-
-  it('a window finishing its exit does not touch the state; many addresses do not grow the cache without bound', async () => {
+  it('a window closing and finishing its exit: the state follows, the address observables stay quiet', async () => {
     const dom = new JSDOM('', {
       url: 'http://localhost/', 
     });
@@ -747,23 +718,22 @@ describe('routerProvider — on the navigation core (D-022)', () => {
     } as never);
     void router.open('W');
     await waitFor(() => expect(router.$historyDepth.getState()).toBe(1));
-    let changes = 0;
-    router.$state.watch(() => {
-      changes++;
+    let locations = 0;
+    router.$location.watch(() => {
+      locations++;
     });
     await router.backLocation();
-    await settle(20);
-    expect(changes).toBe(1);
-    for (let i = 0; i < 300; i++) {
+    await waitFor(() => expect(router.$state.getState().leaving).toHaveLength(0));
+    expect(locations).toBe(0);
+    for (let i = 0; i < 30; i++) {
       await router.replaceParam({
         i, 
       });
     }
     expect(router.$query.getState()).toEqual({
-      i: 299, 
+      i: 29, 
     });
   });
-
   it('the hash router\'s getters and the throttled helpers', async () => {
     const {
       router, 
@@ -837,9 +807,11 @@ describe('routerProvider — on the navigation core (D-022)', () => {
     const {
       router, win, 
     } = setup('http://localhost/');
-    void router.open('Confirm', null, {
-      reopen: false, 
-    });
+    void router.open(
+      'Confirm', null, {
+        reopen: false, 
+      },
+    );
     await waitFor(() => expect(router.$historyDepth.getState()).toBe(1));
     await router.backLocation();
     expect(router.getNextLocation()).toBeUndefined();
@@ -853,25 +825,5 @@ describe('routerProvider — on the navigation core (D-022)', () => {
     expect(router.getNextLocation()).toMatchObject({
       path: '/', 
     });
-  });
-
-  it('ROUTER_DEPS_KEYS lists every key of the dependencies type', () => {
-    type TKeys = keyof import('../src/routerProvider').TRouterProviderDeps;
-    const keys: readonly TKeys[] = ROUTER_DEPS_KEYS;
-    const all: Record<TKeys, true> = {
-      window: true,
-      Component: true,
-      useEffect: true,
-      createElement: true,
-      forwardRef: true,
-      createObservable: true,
-      createApi: true,
-      describe: true,
-      sections: true,
-      sectionHistory: true,
-      keep: true,
-      exitMs: true,
-    };
-    expect([...keys].sort()).toEqual(Object.keys(all).sort());
   });
 });

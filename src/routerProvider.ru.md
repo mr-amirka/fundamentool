@@ -1,11 +1,11 @@
 # Роутер: страницы и окна
 
-[English version](./README.md)
+[English version](./routerProvider.md)
 
 `routerProvider` / `hashRouterProvider` (`import { hashRouterProvider } from 'fundamentool'`) — модель URL и
 наблюдаемые значения, которые у роутера были всегда (`$location`, `$path`, `$query`, `Link`, `NavLink`,
-`paramStorage`, `routerByLocationProvider`, `onBeforeUnload`, …), на движке из этой папки (fundamentool D-022). Движок
-внутренний: пользуйтесь роутером.
+`paramStorage`, `routerByLocationProvider`, `onBeforeUnload`, …) и стек страниц и окон, синхронный с историей
+браузера, — один роутер, одно состояние (`$state` хранит и адрес, и стек; fundamentool D-022, D-025).
 
 - **Каждая страница и каждое окно — запись истории**: «назад» (браузер, Android, Escape) закрывает верхнее.
   `await router.open(Window, params)` возвращает то, с чем окно закрылось (`null` — закрыто кнопкой «назад»). Окно
@@ -26,8 +26,10 @@
   числе кнопкой браузера «вперёд».
   `useRouteIsFocus(effect)` — работает, пока запись открыта, снимается, когда с неё начали уходить, и запускается снова,
   если уход отменён.
-- **Представление**: `router.view(kit, { renderPage, renderWindow })` — хост и хуки `useWhileOpen`, `useOnForward`,
-  `useBeforeLeave`, `useEntry`, `useNavigationState`, `useNavigation` (движок — переходы делайте методами роутера).
-  Набор — `React` или `preact` + `preact/hooks`; окно браузера и библиотека отображения внедряются, а не импортируются.
+- **Представление**: `router.view({ renderPage, renderWindow })` — хост; хуки — у самого роутера: `useWhileOpen` (то же,
+  что прежний `useRouteIsFocus`), `useOnForward`, `useBeforeLeave`, `useEntry`, `useRouterState`. Библиотека
+  отображения приходит в зависимостях (`useState`, `useRef`, `createContext`, `useContext` рядом с `useEffect`,
+  `createElement`, … — из React или `preact` + `preact/hooks`); окно браузера и библиотека внедряются, а не
+  импортируются.
 
-Пример — в [README.md](./README.md). Тестовое приложение с пятью вкладками: web-games `frontend/labs/navigation`.
+Пример — в [routerProvider.md](./routerProvider.md). Тестовое приложение с пятью вкладками: web-games `frontend/labs/navigation`.

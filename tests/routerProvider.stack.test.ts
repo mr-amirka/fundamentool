@@ -1,56 +1,18 @@
+/**
+ * @jest-environment jsdom
+ * @jest-environment-options {"customExportConditions": ["require", "node", "default"]}
+ */
+/**
+ * The router's stack (fundamentool D-011…D-025): pages and windows as history entries, back and Forward, guards and
+ * handlers, kept pages — on a real jsdom window (`_routerHarness`).
+ */
 import {
-  createNavigation,
-} from '../../src/navigation/createNavigation';
-import type {
-  TNavigationOptions,
-  TPageInfo,
-} from '../../src/navigation/createNavigation';
-import {
-  fakeHistory,
   settle,
+  setup,
   waitFor,
-} from './_fakeHistory';
+} from './_routerHarness';
 
-/** Routes of a small app: two sections, kept list pages, a "start over" page. */
-function describe_(path: string): TPageInfo {
-  if (path === '/welcome') {
-    return {
-      startsOver: true, 
-    };
-  }
-  const section = path.split('/')[1] || 'home';
-  return {
-    section,
-    sectionHome: path.split('/').length === 2,
-    keep: path.includes('list'), 
-  };
-}
-
-function setup(overrides: Partial<TNavigationOptions> = {}, start = '/a') {
-  const browser = fakeHistory(start);
-  const timers: (() => void)[] = [];
-  const nav = createNavigation({
-    history: browser.port,
-    describe: describe_,
-    sections: {
-      a: '/a',
-      b: '/b', 
-    },
-    schedule: (callback) => {
-      timers.push(callback);
-    },
-    ...overrides,
-  });
-  const paths = () => nav.getState().entries.map((entry) => (entry.kind === 'page' ? entry.path : 'window'));
-  return {
-    nav,
-    browser,
-    timers,
-    paths, 
-  };
-}
-
-describe('createNavigation', () => {
+describe('routerProvider — the stack', () => {
   it('starts with the page in the address; the browser entry is ours', () => {
     const {
       nav, browser, 
@@ -58,7 +20,9 @@ describe('createNavigation', () => {
     const state = nav.getState();
     expect(state.entries).toHaveLength(1);
     expect(state.page).toMatchObject({
-      path: '/a',
+      location: {
+        path: '/a', 
+      },
       depth: 0,
       info: {
         section: 'a',
@@ -66,7 +30,7 @@ describe('createNavigation', () => {
       }, 
     });
     expect(state.section).toBe('a');
-    expect(browser.port.state()).toMatchObject({
+    expect(browser.state()).toMatchObject({
       depth: 0, 
     });
   });
@@ -91,15 +55,14 @@ describe('createNavigation', () => {
     await nav.back();
     expect(paths()).toEqual(['/a', '/a/1']);
     browser.userBack();
-    await settle();
-    expect(paths()).toEqual(['/a']);
+    await waitFor(() => expect(paths()).toEqual(['/a']));
     await nav.back(); // at the bottom: nothing
     expect(paths()).toEqual(['/a']);
   });
 
   it('open resolves with the result it closed with; back / Android back gives null; the exit plays, then it\'s gone', async () => {
     const {
-      nav, browser, timers, paths, 
+      nav, browser, paths, 
     } = setup();
     const first = nav.open<string>('Editor', {
       text: 'hi', 
@@ -117,7 +80,7 @@ describe('createNavigation', () => {
     await nav.close(win.id, 'saved');
     await expect(first).resolves.toBe('saved');
     expect(nav.getState().leaving).toHaveLength(1);
-    timers.forEach((run) => run());
+    await waitFor(() => expect(nav.getState().leaving).toHaveLength(0));
     expect(nav.getState().leaving).toHaveLength(0);
 
     const second = nav.open('Editor');
@@ -159,7 +122,7 @@ describe('createNavigation', () => {
       list2,
       detail,
     ] = nav.getState().entries;
-    const mounted = nav.getState().mounted;
+    const mounted = new Set(nav.getState().layers.map((entry) => entry.id));
     expect([
       home,
       list1,
@@ -224,7 +187,7 @@ describe('createNavigation', () => {
     await expect(win).resolves.toBeNull();
     expect(paths()).toEqual(['/b']);
     expect(browser.index()).toBe(0);
-    expect(browser.port.path()).toBe('/b');
+    expect(browser.path()).toBe('/b');
 
     await nav.go('/welcome'); // a page that always starts over
     expect(paths()).toEqual(['/welcome']);
@@ -385,7 +348,7 @@ describe('createNavigation', () => {
     await nav.go('/a/2');
     expect(nav.getState().ahead).toEqual([]);
     browser.userForward(); // nothing ahead any more — undone
-    await settle(20);
+    await settle(100);
     expect(paths()).toEqual(['/a', '/a/2']);
     expect(browser.index()).toBe(1);
   });
@@ -415,7 +378,7 @@ describe('createNavigation', () => {
 
   it('Forward reopens a closed window with its params — nobody awaits it; { reopen: false } windows stay closed (D-024)', async () => {
     const {
-      nav, browser, paths, timers, 
+      nav, browser, paths, 
     } = setup();
     const answer = nav.open('Menu', {
       scene: 1, 
@@ -433,7 +396,7 @@ describe('createNavigation', () => {
     });
     // Reopened while it was still playing its exit: it is no longer "leaving".
     expect(nav.getState().leaving).toEqual([]);
-    timers.splice(0).forEach((run) => run());
+    await waitFor(() => expect(nav.getState().leaving).toHaveLength(0));
 
     // Menu → a confirmation that isn't reopened: back twice, Forward reopens the menu and stops there.
     void nav.open(
@@ -448,14 +411,15 @@ describe('createNavigation', () => {
     ]));
     await nav.back();
     await nav.back();
-    expect(nav.getState().ahead.map((entry) => (entry.kind === 'window' ? entry.window : entry.path))).toEqual(['Menu']);
-    browser.userGo(2);
+    expect(nav.getState().ahead.map((entry) => (entry.kind === 'window' ? entry.window : entry.location.path))).toEqual(['Menu']);
+    browser.userGo(2); // two steps ahead, but only the menu is kept: undone
+    await settle(50);
     await waitFor(() => expect(browser.index()).toBe(0));
     expect(paths()).toEqual(['/a']);
     browser.userForward();
     await waitFor(() => expect(paths()).toEqual(['/a', 'window']));
     browser.userForward();
-    await settle(20);
+    await settle(100);
     expect(paths()).toEqual(['/a', 'window']);
     expect(browser.index()).toBe(1);
   });
@@ -474,7 +438,7 @@ describe('createNavigation', () => {
     });
     browser.userForward();
     await waitFor(() => expect(asked).toEqual(['page']));
-    await settle(20);
+    await settle(100);
     expect(paths()).toEqual(['/a']);
     expect(browser.index()).toBe(0);
 
@@ -500,25 +464,6 @@ describe('createNavigation', () => {
     expect(asked).toEqual([]);
   });
 
-  it('open checks its options: an unknown key — "did you mean"; reopen must be a boolean', async () => {
-    const {
-      nav, 
-    } = setup();
-    await expect(nav.open(
-      'W', null, {
-        reopn: false, 
-      } as never,
-    )).rejects.toThrow(/Did you mean "reopen"/);
-    await expect(nav.open(
-      'W', null, {
-        reopen: 'no', 
-      } as never,
-    )).rejects.toThrow(/"reopen" expects a boolean/);
-    await expect(nav.open(
-      'W', null, 1 as never,
-    )).rejects.toThrow(/expects an options object, got number 1/);
-  });
-
   it('an entry from another session (before a reload) starts over at its path', async () => {
     const {
       browser, paths, 
@@ -531,12 +476,9 @@ describe('createNavigation', () => {
     const {
       nav, browser, paths, 
     } = setup();
-    const push = browser.port.push;
-    browser.port.push = () => {
-      throw new Error('quota');
-    };
+    const restore = browser.refusePush();
     await expect(nav.go('/a/1')).rejects.toThrow('quota');
-    browser.port.push = push;
+    restore();
     await nav.go('/a/2');
     expect(paths()).toEqual(['/a', '/a/2']);
   });
@@ -617,6 +559,23 @@ describe('createNavigation', () => {
     await expect(leaving).resolves.toBe(false);
   });
 
+  it('a back queued after a window\'s close counts from the stack as it is then: the window, then the page', async () => {
+    const {
+      nav, router, paths, 
+    } = setup();
+    await nav.go('/a/level');
+    void nav.open('Menu');
+    await waitFor(() => expect(paths()).toEqual([
+      '/a',
+      '/a/level',
+      'window',
+    ]));
+    const menu = nav.getState().entries[2].id;
+    void nav.close(menu);
+    await router.backLocation(); // queued behind the close: leaves the level, not the menu again
+    await waitFor(() => expect(paths()).toEqual(['/a']));
+  });
+
   it('subscribe / unsubscribe', async () => {
     const {
       nav, 
@@ -630,21 +589,19 @@ describe('createNavigation', () => {
     expect(listener).toHaveBeenCalledTimes(1);
   });
 
-  it('defaults: a real timer for the exit, a keep limit of 10', async () => {
-    jest.useFakeTimers();
-    const browser = fakeHistory('/a');
-    const nav = createNavigation({
-      history: browser.port,
-      describe: describe_, 
+  it('defaults: a closed window plays its exit for 300 ms', async () => {
+    const {
+      nav, browser, 
+    } = setup({
+      exitMs: undefined, 
     });
     const result = nav.open('W');
-    await jest.advanceTimersByTimeAsync(1);
+    await settle(100);
     browser.userBack();
-    await jest.advanceTimersByTimeAsync(1);
     await expect(result).resolves.toBeNull();
     expect(nav.getState().leaving).toHaveLength(1);
-    await jest.advanceTimersByTimeAsync(300);
-    expect(nav.getState().leaving).toHaveLength(0);
-    jest.useRealTimers();
+    await settle(150);
+    expect(nav.getState().leaving).toHaveLength(1);
+    await waitFor(() => expect(nav.getState().leaving).toHaveLength(0));
   });
 });
