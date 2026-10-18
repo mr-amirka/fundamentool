@@ -56,9 +56,9 @@ npm run docs:api
 
 ### Universal (`fundamentool`)
 
-**Events:** `attachEvent`, `EventEmitter`, `subscribe`, `Unsubscriber`  
+**Events:** `attachEvent`, `EventEmitter`, `subscribe`, `Unsubscriber`, `keyedRegistry` (subscriptions by key)  
 **Store:** `createStore`, `createApi`, `TStoreAdapter` — reactive store with optional DI (swap implementation via `deps`)  
-**Timers:** `wait`, `createTimeout`, `createInterval`, `createAnimationFrame`, `queueProvider`, `sendingQueue`  
+**Timers:** `wait`, `createTimeout`, `createInterval`, `createAnimationFrame`, `queueProvider`, `sendingQueue`, `withAsyncLock` (ignores calls while one runs — a double tap)  
 **URL:** `urlParse`, `urlExtend`, `unparam`, `param`, `routeParseProvider`  
 **Strings:** `half`, `trim`, `toLower`, `toUpper`, `lowerFirst`, `upperFirst`, `repeat`, `escapeRegExp`, case converters (`kebabToCamelCase`, `snakeToCamelCase`, …)  
 **Objects & arrays:** `merge`, `extend`, `without`, `withoutEmpty`, `pick`, `set`, `get`, `keys`, `values`, `entries`, `fromPairs`, `push`, `pushArray`, `find`, `findIndex`, `indexOf`, `includes`, `some`, `every`, `sort`, `sortBy`, `uniqWith`  

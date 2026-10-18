@@ -46,6 +46,9 @@ import {
   once,
 } from '../once';
 import {
+  keyedRegistry,
+} from '../keyedRegistry';
+import {
   queueProvider,
 } from '../queueProvider';
 import {
@@ -60,6 +63,9 @@ import {
 import {
   wait,
 } from '../wait';
+import {
+  withAsyncLock,
+} from '../withAsyncLock';
 import {
   wrapper,
 } from '../wrapper';
@@ -315,6 +321,11 @@ type TRouterCore = {
 /** An empty query, shared (never mutated). */
 const NOOP_OBJECT: TParams = {};
 
+/** The `…Throttled` steps: calls within 300 ms of an accepted one (or while it runs) are ignored — a double tap. */
+const THROTTLE = {
+  minMs: 300,
+};
+
 /**
  * The default lock watcher options.
  *
@@ -473,25 +484,6 @@ function assertOpenOptions(options: unknown): asserts options is TOpenOptions | 
   }
 }
 
-/** Per-entry registrations (hooks, guards, handlers): added and removed by their owners, dropped with the entry. */
-function entryRegistry<T>() {
-  const map = new Map<number, Set<T>>();
-  return {
-    add: (id: number, item: T) => {
-      const set = map.get(id) ?? new Set<T>();
-      map.set(id, set.add(item));
-      return () => {
-        set.delete(item);
-      };
-    },
-    list: (id: number): T[] => [...(map.get(id) ?? [])],
-    has: (id: number) => (map.get(id)?.size ?? 0) > 0,
-    forget: (id: number) => {
-      map.delete(id);
-    },
-  };
-}
-
 /**
  * Merges two URL properties.
  *
@@ -617,19 +609,6 @@ export function routerByLocationProviderProvider<A extends TRouterState>($state:
   };
 }
 
-/** Drops calls made within 300 ms of the last accepted one (a double tap on a link or a button). */
-function debounceLocation<A extends any[]>(callback: (...args: A) => unknown) {
-  let _debounced = false;
-  return async (...args: Parameters<typeof callback>) => {
-    if (_debounced) {
-      return;
-    }
-    _debounced = true;
-    await Promise.all([wait(300), callback(...args)]);
-    _debounced = false;
-  };
-}
-
 /**
  * `Link` components of one router: an anchor that pushes its address on click. One click at a time across the router's
  * links (a double tap doesn't push twice).
@@ -638,7 +617,19 @@ function createLinkProvider({
   createElement,
   forwardRef,
 }: Pick<TRouterProviderDeps, 'createElement' | 'forwardRef'>) {
-  let _hasDurationLink = false;
+  /** One click at a time across the router's links; released however the click ends. */
+  const click = withAsyncLock(async (
+    e: TClickEvent, onClick: (event: TClickEvent) => unknown, url: string, options: TUrlProps, pushLocation: TPushLocation,
+    timeout: number,
+  ) => {
+    if (timeout) {
+      await wait(timeout);
+    }
+    // `false` from the link's own handler cancels the step.
+    if ((await onClick(e)) !== false && url) {
+      await pushLocation(options);
+    }
+  });
   return function LinkProvider({
     pushLocation,
     hasHash,
@@ -662,25 +653,12 @@ function createLinkProvider({
 
       addition.href = url ? (hasHash ? `#${url}` : url) : undefined;
       addition.ref = ref;
-      addition.onClick = async (e: any) => {
+      addition.onClick = async (e: TClickEvent) => {
         e.preventDefault && e.preventDefault();
-        if (_hasDurationLink || props.active) {
-          return false;
-        }
-
-        _hasDurationLink = true;
-        try {
-          const timeout = props.timeout || 0;
-          if (timeout) {
-            await wait(timeout);
-          }
-          // `false` from the link's own handler cancels the step.
-          if ((await onClick(e)) !== false && url) {
-            await pushLocation(options);
-          }
-        } finally {
-          // Always released: a cancelled or failed click must not lock every link of the router.
-          _hasDurationLink = false;
+        if (!props.active) {
+          await click(
+            e, onClick, url, options, pushLocation, props.timeout || 0,
+          );
         }
         return false;
       };
@@ -1036,13 +1014,13 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
   const results = new Map<number, unknown>();
   const resolvers = new Map<number, (result: unknown) => void>();
   /** Effects running while their entry is open. */
-  const opened = entryRegistry<TOpenedEffect>();
+  const opened = keyedRegistry<number, TOpenedEffect>();
   /** Asked before something opens over the entry. */
-  const forward = entryRegistry<TForwardItem>();
+  const forward = keyedRegistry<number, TForwardItem>();
   /** Asked before the entry is left by going back. */
-  const guards = entryRegistry<TLeaveGuard>();
+  const guards = keyedRegistry<number, TLeaveGuard>();
   /** Cleanups returned by forward handlers — run when their entry is on top again. */
-  const returns = entryRegistry<() => void>();
+  const returns = keyedRegistry<number, () => void>();
   /** Entries being left while their guards are asked. */
   const closing = new Set<number>();
 
@@ -2059,9 +2037,9 @@ export function routerProvider(deps: TRouterProviderDeps) {
     replaceParam: (query: Record<string, any>) => replaceLocation({
       query,
     }),
-    pushLocationThrottled: debounceLocation(pushLocation),
-    replaceLocationThrottled: debounceLocation(replaceLocation),
-    backLocationThrottled: debounceLocation(instance.backLocation),
+    pushLocationThrottled: withAsyncLock(pushLocation, THROTTLE),
+    replaceLocationThrottled: withAsyncLock(replaceLocation, THROTTLE),
+    backLocationThrottled: withAsyncLock(instance.backLocation, THROTTLE),
   };
 }
 
@@ -2104,8 +2082,8 @@ export function hashRouterProvider(deps: TRouterProviderDeps) {
     replaceParam: (query: Record<string, any>) => replaceLocation({
       query,
     }),
-    pushLocationThrottled: debounceLocation(pushLocation),
-    replaceLocationThrottled: debounceLocation(replaceLocation),
-    backLocationThrottled: debounceLocation(instance.backLocation),
+    pushLocationThrottled: withAsyncLock(pushLocation, THROTTLE),
+    replaceLocationThrottled: withAsyncLock(replaceLocation, THROTTLE),
+    backLocationThrottled: withAsyncLock(instance.backLocation, THROTTLE),
   } as TRouter;
 }

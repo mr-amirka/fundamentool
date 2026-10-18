@@ -56,7 +56,7 @@ MIT
 
 - **URL**: `urlParse`, `urlExtend`, `unparam`, `param` — разбор и расширение URL, query-строки
 - **Время**: `formatTime`, `normalizeDate`, `getData` — форматирование и нормализация дат
-- **События**: `attachEvent`, `EventEmitter`, `subscribe`, `Unsubscriber`
+- **События**: `attachEvent`, `EventEmitter`, `subscribe`, `Unsubscriber`, `keyedRegistry`
 - **Асинхронность**: `wait`, `createTimeout`, `createInterval`, `createAnimationFrame`
 - **Объекты и массивы**: `merge`, `without`, `extend`-подобная логика, `get` по пути
 - **Строки**: `half`, `halfLast` — разбиение по разделителю
@@ -71,6 +71,7 @@ MIT
 
 - **attachEvent** (`attachEvent.ts`): безопасная подписка на DOM-событие с возвратом функции отписки.
 - **EventEmitter** (`EventEmitter/`): типизированный emitter с методами `subscribe`, `once`, `clear`, `destroy`.
+- **keyedRegistry** (`keyedRegistry.ts`): наборы элементов по ключу (подписки на уровень, юнит, канал чата): `add` возвращает своё удаление, `list`, `has`, `forget` — убрать ключ целиком.
 - **subscribe** (`subscribe.ts`): утилита для добавления/удаления слушателей в произвольную коллекцию.
 - **Unsubscriber** (`Unsubscriber/`): агрегатор отписок (`add`, `unsubscribe`), удобен для сборки всех unsubscribe‑функций.
 - **noop** (`noop.ts`): пустая функция, часто используется как дефолтный колбэк.
@@ -82,6 +83,7 @@ MIT
 - **createInterval** (`createInterval.ts`): реализация интервала на базе `setTimeout` с контролем жизненного цикла и отменой.
 - **createAnimationFrame** (`createAnimationFrame.ts`): loop на `requestAnimationFrame` с учётом накопленного времени.
 - **queueProvider** (`queueProvider.ts`): последовательная очередь выполнения асинхронных задач (одна задача за раз).
+- **withAsyncLock** (`withAsyncLock.ts`): асинхронная функция, вызовы которой игнорируются, пока идёт предыдущий (и `minMs` от его начала) — защита от двойного нажатия.
 - **sendingQueue** (`sendingQueue.ts`): очередь промисов с аккумуляцией ошибок и методом `drain()` для ожидания завершения всех.
 
 ### URL, роутинг и HTTP‑окружение
