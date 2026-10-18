@@ -396,6 +396,43 @@ describe('createNavigation', () => {
     expect(paths()).toEqual(['/a', '/a/2']);
   });
 
+  it('replace swaps the top page in place: no new history entry, its whileOpen cleaned up', async () => {
+    const {
+      nav, browser, paths, 
+    } = setup();
+    await nav.go('/a/1');
+    const log: string[] = [];
+    nav.whileOpen(nav.getState().page.id, () => () => log.push('closed /a/1'));
+    await nav.replace('/a/2');
+    expect(paths()).toEqual(['/a', '/a/2']);
+    expect(browser.paths()).toEqual(['/a', '/a/2']);
+    expect(log).toEqual(['closed /a/1']);
+    await nav.back();
+    expect(paths()).toEqual(['/a']);
+  });
+
+  it('replace closes windows over the page first; a window that refuses to close keeps everything', async () => {
+    const {
+      nav, paths, 
+    } = setup();
+    await nav.go('/a/1');
+    const win = nav.open('W');
+    await settle();
+    await nav.replace('/a/2');
+    await expect(win).resolves.toBeNull();
+    expect(paths()).toEqual(['/a', '/a/2']);
+
+    void nav.open('Form');
+    await settle();
+    nav.onBeforeLeave(nav.getState().entries[2].id, () => false);
+    await nav.replace('/a/3');
+    await waitFor(() => expect(paths()).toEqual([
+      '/a',
+      '/a/2',
+      'window',
+    ]));
+  });
+
   it('subscribe / unsubscribe', async () => {
     const {
       nav, 

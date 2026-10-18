@@ -174,6 +174,11 @@ export type TNavigation = {
   subscribe: (listener: (state: TNavigationState) => void) => () => void;
   /** Opens a page over the current one; `false` if a forward handler cancelled it. */
   go: (path: string) => Promise<boolean>;
+  /**
+   * Swaps the top page for another one in place — no new history entry (e.g. "next level": back still leads home).
+   * Windows over it close first (their leave guards are asked); the old page's `whileOpen` cleanups run.
+   */
+  replace: (path: string) => Promise<void>;
   /** Opens a window; resolves with what it closed with (`null` — closed by back / backdrop / Escape / cancelled). */
   open: <R = unknown>(window: unknown, params?: unknown) => Promise<R | null>;
   /** Closes a window with a result (and every entry above it). */
@@ -606,6 +611,25 @@ export function createNavigation(options: TNavigationOptions): TNavigation {
       await enqueue(async () => push(page(path, entries.length), path));
       return true;
     },
+    replace: (path) => enqueue(async () => {
+      const current = entries.length - 1;
+      const index = entries.lastIndexOf(topPage(entries));
+      if (index < current) {
+        await settle(await travel(index - current));
+        if (entries.length - 1 !== index) {
+          return; // a window's guard kept it open
+        }
+      }
+      const old = entries[index];
+      runOpened([old], 'close');
+      forget(old);
+      history.replace({
+        nav: session,
+        depth: index, 
+      } satisfies TOurState, path);
+      entries = [...entries.slice(0, index), page(path, index)];
+      publish();
+    }),
     open: async <R>(window: unknown, params?: unknown) => {
       if (!(await askForward('window'))) {
         return null;

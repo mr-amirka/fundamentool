@@ -32,6 +32,7 @@ const view = createNavigationView(React, nav, {
 root.render(<view.NavigationHost />);
 
 const text = await nav.open(EditWindow, { text: 'Hi' }); // a window; null if closed by back
+nav.replace('/level/2');                                  // swap the top page in place (no new history entry)
 nav.startOver('/welcome');                                // sign out: every page before is gone
 ```
 
