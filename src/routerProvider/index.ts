@@ -672,9 +672,13 @@ function createNavLinkProvider({
     return childClassOfReact(Component, (self) => {
       let subscription: (() => any) | 0;
       const setState = self.setState.bind(self);
-      self.state = $location.getState();
-      self.componentWillMount = () => {
+      const initial = $location.getState();
+      self.state = initial;
+      // Subscribes once mounted (`componentWillMount` is deprecated) and catches up with a change made in between.
+      self.componentDidMount = () => {
         subscription || (subscription = $location.watch(setState));
+        const now = $location.getState();
+        now === initial || setState(now);
       };
       self.componentWillUnmount = () => {
       subscription && (subscription(), subscription = 0); // eslint-disable-line
@@ -1106,10 +1110,10 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
   });
 
   /** The transition state: follows `$state`, except during a quiet or multi-step back (it catches up at the end). */
-  const $trasitionState = createObservable<TRouterState>(state);
+  const $transitionState = createObservable<TRouterState>(state);
   const {
     emitTransition,
-  } = createApi($trasitionState, {
+  } = createApi($transitionState, {
     emitTransition: (_, payload: TRouterState) => payload,
   });
 
@@ -1673,20 +1677,20 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     prev: value.prev?.child || {},
   }));
 
-  const $trasitionStateHash = $trasitionState.map((value) => ({
+  const $transitionStateHash = $transitionState.map((value) => ({
     ...value,
     location: value.location?.child || {},
     prev: value.prev?.child || {},
   }));
 
-  const $prevLocation = $trasitionState.map((value) => value.prev || {});
+  const $prevLocation = $transitionState.map((value) => value.prev || {});
   const $prevQuery = $prevLocation.map(getQuery);
   const $prevPath = $prevLocation.map(getPath);
   const $prevHashLocation = $prevLocation.map(getChild);
   const $prevHashQuery = $prevHashLocation.map(getQuery);
   const $prevHashPath = $prevHashLocation.map(getPath);
 
-  const $location = $trasitionState.map((value) => value.location);
+  const $location = $transitionState.map((value) => value.location);
   const $query = $location.map(getQuery);
   const $path = $location.map(getPath);
   const $hashLocation = $location.map(getChild);
@@ -1705,12 +1709,12 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
   const NavLink = NavLinkProvider(Link, $location);
   const HashNavLink = NavLinkProvider(HashLink, $hashLocation);
 
-  const $immeidateLocation = $state.map((value) => value.location);
-  const $immeidateQuery = $immeidateLocation.map(getQuery);
-  const $immeidatePath = $immeidateLocation.map(getPath);
-  const $immeidateHashLocation = $immeidateLocation.map(getChild);
-  const $immeidateHashQuery = $immeidateHashLocation.map(getQuery);
-  const $immeidateHashPath = $immeidateHashLocation.map(getPath);
+  const $immediateLocation = $state.map((value) => value.location);
+  const $immediateQuery = $immediateLocation.map(getQuery);
+  const $immediatePath = $immediateLocation.map(getPath);
+  const $immediateHashLocation = $immediateLocation.map(getChild);
+  const $immediateHashQuery = $immediateHashLocation.map(getQuery);
+  const $immediateHashPath = $immediateHashLocation.map(getPath);
 
   /** A push or a replace of a whole location; `options.onBeforeUnload` — a watcher on the new entry. */
   async function changeLocation(
@@ -1917,8 +1921,8 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
 
   return {
     $historyDepth,
-    $trasitionState,
-    $trasitionStateHash,
+    $transitionState,
+    $transitionStateHash,
     $state,
     $stateHash,
     $location,
@@ -1928,12 +1932,12 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     $hashQuery,
     $hashPath,
 
-    $immeidateLocation,
-    $immeidateQuery,
-    $immeidatePath,
-    $immeidateHashLocation,
-    $immeidateHashQuery,
-    $immeidateHashPath,
+    $immediateLocation,
+    $immediateQuery,
+    $immediatePath,
+    $immediateHashLocation,
+    $immediateHashQuery,
+    $immediateHashPath,
 
     $prevLocation,
     $prevQuery,
@@ -1945,8 +1949,8 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     LinkProvider,
     routerForObservableMapProvider,
     paramStorageProvider,
-    routerByLocationProvider: routerByLocationProviderProvider($trasitionState),
-    routerByHashLocationProvider: routerByLocationProviderProvider($trasitionStateHash as any),
+    routerByLocationProvider: routerByLocationProviderProvider($transitionState),
+    routerByHashLocationProvider: routerByLocationProviderProvider($transitionStateHash as any),
     paramStorage: paramStorageProvider($query, storagePushLocation),
     hashParamStorage: paramStorageProvider($hashQuery, storagePushHashLocation),
     paramReplaceStorage: paramStorageProvider($query, storageReplaceLocation),
@@ -2052,7 +2056,7 @@ export function hashRouterProvider(deps: TRouterProviderDeps) {
     $location: instance.$hashLocation,
     $path: instance.$hashPath,
     $query: instance.$hashQuery,
-    $immeidateQuery: instance.$immeidateHashQuery,
+    $immediateQuery: instance.$immediateHashQuery,
     paramStorage: instance.hashParamStorage,
     paramReplaceStorage: instance.hashParamReplaceStorage,
     routerByLocationProvider: instance.routerByHashLocationProvider,

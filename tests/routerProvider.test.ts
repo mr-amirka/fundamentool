@@ -381,6 +381,33 @@ describe('routerProvider — inherited bugs, fixed (2026-10-18)', () => {
     host.remove();
   });
 
+  it('NavLink follows the location while mounted, without React\'s deprecation warning', async () => {
+    const {
+      router, 
+    } = setup('http://localhost/');
+    const errors = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const warnings = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const host = document.createElement('div');
+    const root = createRoot(host);
+    act(() => root.render(React.createElement(
+      router.NavLink, {
+        href: '/go', 
+      }, 'go',
+    )));
+    const link = host.querySelector('a') as HTMLAnchorElement;
+    expect(link.className).not.toContain('active');
+    await act(async () => {
+      await router.pushLocation({
+        path: '/go', 
+      });
+    });
+    expect((host.querySelector('a') as HTMLAnchorElement).className).toContain('active');
+    expect([...errors.mock.calls, ...warnings.mock.calls].map(String).join('\n')).not.toMatch(/componentWillMount/);
+    act(() => root.unmount());
+    errors.mockRestore();
+    warnings.mockRestore();
+  });
+
   it('a route\'s `-` / `_` match each other before its first group, and the group is left as written', async () => {
     const {
       router, 
@@ -659,12 +686,12 @@ describe('routerProvider — on the navigation core (D-022)', () => {
     await router.backLocation({
       quiet: true, 
     });
-    expect(router.$immeidatePath.getState()).toBe('/a');
+    expect(router.$immediatePath.getState()).toBe('/a');
     expect(router.$path.getState()).toBe('/b');
     await router.backToDepth(0, {
       quiet: true, 
     });
-    expect(router.$immeidatePath.getState()).toBe('/');
+    expect(router.$immediatePath.getState()).toBe('/');
     expect(router.$path.getState()).toBe('/b');
     await expect(router.backToDepth(0)).resolves.toEqual({
       locked: true, 
