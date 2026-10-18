@@ -1,6 +1,6 @@
 # Router: pages and windows
 
-[Русская версия](./routerProvider.ru.md)
+[Русская версия](./README.ru.md)
 
 `routerProvider` / `hashRouterProvider` (`import { hashRouterProvider } from 'fundamentool'`) — the URL model and the
 observables the router always had (`$location`, `$path`, `$query`, `Link`, `NavLink`, `paramStorage`,

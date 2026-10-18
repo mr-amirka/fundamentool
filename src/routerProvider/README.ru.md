@@ -1,6 +1,6 @@
 # Роутер: страницы и окна
 
-[English version](./routerProvider.md)
+[English version](./README.md)
 
 `routerProvider` / `hashRouterProvider` (`import { hashRouterProvider } from 'fundamentool'`) — модель URL и
 наблюдаемые значения, которые у роутера были всегда (`$location`, `$path`, `$query`, `Link`, `NavLink`,
@@ -36,4 +36,4 @@
   `createElement`, … — из React или `preact` + `preact/hooks`); окно браузера и библиотека внедряются, а не
   импортируются.
 
-Пример — в [routerProvider.md](./routerProvider.md). Тестовое приложение с пятью вкладками: web-games `frontend/labs/navigation`.
+Пример — в [routerProvider.md](./README.md). Тестовое приложение с пятью вкладками: web-games `frontend/labs/navigation`.

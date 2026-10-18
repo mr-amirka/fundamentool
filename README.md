@@ -82,7 +82,7 @@ const storage2 = localStorageProvider(window, effectorAdapter);
 
 ### Router (`routerProvider`, `hashRouterProvider`)
 
-Every page and window is a history entry (back closes it; `router.open(Window)` resolves the window's result), covered pages stay mounted with their scroll, separate history per tab, `router.view({ renderPage, renderWindow })` with hooks `useWhileOpen` / `useOnForward` / `useBeforeLeave` — see [src/routerProvider.md](src/routerProvider.md).
+Every page and window is a history entry (back closes it; `router.open(Window)` resolves the window's result), covered pages stay mounted with their scroll, separate history per tab, `router.view({ renderPage, renderWindow })` with hooks `useWhileOpen` / `useOnForward` / `useBeforeLeave` — see [src/routerProvider/README.md](src/routerProvider/README.md).
 
 ### Async (`fundamentool/async`)
 

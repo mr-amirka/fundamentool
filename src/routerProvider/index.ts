@@ -1,65 +1,81 @@
+// The router (fundamentool D-022…D-026): an address model and a stack of pages and windows in step with the
+// browser history — see README.md.
+import {
+  assertKnownOptions,
+} from '../assertKnownOptions';
+import {
+  childClassOfReact,
+} from '../childClassOfReact';
+import {
+  describeValue,
+} from '../describeValue';
+import {
+  extend,
+} from '../extend';
+import {
+  isEqual,
+} from '../is/isEqual';
+import {
+  isFunction,
+} from '../is/isFunction';
+import {
+  isMatch,
+} from '../is/isMatch';
+import {
+  noop,
+} from '../noop';
+import {
+  once,
+} from '../once';
+import {
+  routeParseProvider,
+} from '../routeParseProvider';
+import {
+  urlExtend,
+} from '../urlExtend';
+import {
+  urlParse,
+} from '../urlParse';
+import {
+  wait,
+} from '../wait';
+import {
+  wrapper,
+} from '../wrapper';
 import type {
-  Observable, TObservableAdapter,
-} from './Observable/types';
-
-type TElementType = any;
-type TAnchorProps = Record<string, any>;
-type TClickEvent = { preventDefault?: () => void } & Record<string, any>;
-type TEffectCallback = () => void | (() => void | undefined);
-type TDependencyList = ReadonlyArray<unknown>;
-
-import {
-  wait, 
-} from './wait';
-import {
-  wrapper, 
-} from './wrapper';
-import {
-  urlParse, TUrlProps, 
-} from './urlParse';
-import {
-  urlExtend, 
-} from './urlExtend';
-import {
-  TParams, 
-} from './unparam';
-import {
-  routeParseProvider, 
-} from './routeParseProvider';
-import {
-  TRouteMapper, 
-} from './regexpMapperProvider';
-import {
-  isMatch, 
-} from './is/isMatch';
-import {
-  isEqual, 
-} from './is/isEqual';
-import {
-  childClassOfReact, 
-} from './childClassOfReact';
-import {
-  noop, 
-} from './noop';
-import {
-  extend, 
-} from './extend';
-import {
-  isFunction, 
-} from './is/isFunction';
-import {
-  once, 
-} from './once';
-import {
-  assertKnownOptions, 
-} from './assertKnownOptions';
-import {
-  describeValue, 
-} from './describeValue';
+  Observable,
+  TObservableAdapter,
+} from '../Observable/types';
+import type {
+  TRouteMapper,
+} from '../regexpMapperProvider';
+import type {
+  TParams,
+} from '../unparam';
+import type {
+  TUrlProps,
+} from '../urlParse';
 
 export type {
-  TUrlProps, TParams, TRouteMapper, 
-};
+  TParams,
+} from '../unparam';
+export type {
+  TRouteMapper,
+} from '../regexpMapperProvider';
+export type {
+  TUrlProps,
+} from '../urlParse';
+
+/** A component of the injected view library. */
+type TElementType = any;
+/** Props of an anchor element. */
+type TAnchorProps = Record<string, any>;
+/** A click event, as much as `Link` uses. */
+type TClickEvent = { preventDefault?: () => void } & Record<string, any>;
+/** An effect with an optional cleanup (`useEffect`'s shape). */
+type TEffectCallback = () => void | (() => void | undefined);
+/** A hook's dependency list. */
+type TDependencyList = ReadonlyArray<unknown>;
 
 export type TRouteProps = {
   route: TRoute;
@@ -190,145 +206,6 @@ export type TBackLocationResponse = {
   locked: boolean;
 };
 
-const NOOP_OBJECT: TParams = {};
-
-/**
- * The default lock watcher options.
- * 
- * @type {Object}
- * @property {boolean} forwards - Whether to watch forwards.
- * @property {boolean} backwards - Whether to watch backwards.
- */
-export const DEFAULT_LOCK_WATCHER_OPTIONS = {
-  forwards: false,
-  backwards: true,
-};
-
-/**
- * Merges two URL properties.
- * 
- * @param prev - The previous URL properties.
- * @param extend - The extended URL properties.
- * @returns The merged URL properties.
- * @example
- * mergeLocation({ path: '/user', query: { id: 1 } }, { path: '/user/1', query: { name: 'John' } }); // => { path: '/user/1', query: { id: 1, name: 'John' } }
- */
-export function mergeLocation(prev: Partial<TUrlProps>, exten: Partial<TUrlProps>) {
-  const child: Partial<TUrlProps> = exten.child || {};
-  const prevChild: Partial<TUrlProps> = prev.child || {};
-  return urlExtend(exten.path || prev.path, {
-    query: exten.query || null,
-    child: urlExtend(child.path || prevChild.path, {
-      query: child.query || null,
-    }),
-  });
-}
-
-/**
- * Gets the path from a URL properties.
- * 
- * @param v - The URL properties.
- * @returns The path.
- * @example
- * getPath({ path: '/user' }); // => '/user'
- */
-function getPath(v: Partial<TUrlProps>) {
-  return v.path || '';
-}
-
-/**
- * Gets the child from a URL properties.
- * 
- * @param v - The URL properties.
- * @returns The child.
- * @example
- * getChild({ child: { path: '/user' } }); // => { path: '/user' }
- */
-function getChild(v: Partial<TUrlProps>): TUrlProps {
-  return urlExtend(v.child);
-}
-
-/**
- * Gets the query from a URL properties.
- * 
- * @param v - The URL properties.
- * @returns The query.
- * @example
- * getQuery({ query: { id: 1 } }); // => { id: 1 }
- */
-function getQuery(v: Partial<TUrlProps>): TParams {
-  return v.query || NOOP_OBJECT;
-}
-
-/**
- * Creates a router for an observable map.
- * 
- * @param _routes - The routes.
- * @param notFoundHandler - The not found handler.
- * @returns A router.
- * @example
- * routerForObservableMapProvider([['/user', (params, location) => <User />]], (params, location) => <NotFound />); // => <Router />
- */
-export function routerForObservableMapProvider<T>(_routes: TRouteArgs<T>[],
-  notFoundHandler?: TRouteHandler<T>) {
-  const routes: [TRouteMapper, TRouteHandler<T>][] = _routes.map(([route, render]) => {
-    let scopePos = route.indexOf('(');
-    const length = route.length;
-    if (scopePos > -1) {
-      scopePos = length;
-    }
-
-    const handler = (isFunction(render) ? render : wrapper(render)) as TRouteHandler<T>;
-
-    return [routeParseProvider(route.slice(0, scopePos).replace(/[-_]/gim, '[-_]') + route.slice(scopePos, length)), handler];
-  });
-  return (state: TRouterState): T & TRoute => {
-    const {
-      location, 
-    } = state;
-    const path = location.path || '';
-    const length = routes.length;
-    let i = 0,
-      params: TParams = {},
-      result: any,
-      route: [TRouteMapper, TRouteHandler<T>];
-    for (; i < length; i++) {
-      route = routes[i];
-      if (route[0](path, (params = {})) && (result = route[1](params, location))) {
-        break;
-      }
-    }
-
-    if (!result && notFoundHandler) {
-      result = notFoundHandler(params, location);
-    }
-
-    return {
-      ...state,
-      index: i,
-      params,
-      location,
-      ...(result || {}),
-    };
-  };
-}
-
-/**
- * Creates a router for a location.
- * 
- * @param $state - The state.
- * @returns A router.
- * @example
- * routerByLocationProviderProvider($state); // => <Router />
- */
-export function routerByLocationProviderProvider<A extends TRouterState>($state: Observable<A>) {
-  return function routerByLocationProvider<T>(routes: TRouteArgs<T>[],
-    notFoundHandler?: TRouteHandler<T>) {
-    return $state.map(routerForObservableMapProvider(routes, notFoundHandler));
-  };
-}
-
-
 /**
  * The router's options besides its dependencies: how pages behave in the stack.
  */
@@ -373,6 +250,59 @@ export type TRouterViewOptions = {
   renderWindow: (entry: TWindowEntry, props: TWindowProps) => unknown;
 };
 
+/** What the router writes into `history.state`: whose entry it is, how deep, which entry (Forward checks it). */
+type TOurState = {
+  nav: string;
+  depth: number;
+  id: number;
+};
+
+/** How a step back ended: `left` settles `true` when the entries were left, `false` when a guard kept them. */
+type TOutcome = {
+  left: Promise<boolean>;
+};
+
+/** An effect registered with `whileOpen`, and the cleanup it returned last. */
+type TOpenedEffect = {
+  effect: () => void | (() => void);
+  cleanup: (() => void) | void;
+};
+
+/** A forward handler and whether windows trigger it too. */
+type TForwardItem = {
+  handler: TForwardHandler;
+  windows: boolean;
+};
+
+/** What the hooks and the view need from the router's stack. */
+type TRouterCore = {
+  /** The router's state. */
+  $state: Observable<TRouterState>;
+  /** The entries now, bottom to top. */
+  entries: () => readonly TEntry[];
+  /** The location a page renders with: the hash part for the hash router. */
+  own: (location: TUrlProps) => TUrlProps;
+  close: (entryId: number, result?: unknown) => Promise<void>;
+  whileOpen: (entryId: number, effect: () => void | (() => void)) => () => void;
+  onForward: (entryId: number, handler: TForwardHandler, options?: { windows?: boolean }) => () => void;
+  onBeforeLeave: (entryId: number, guard: TLeaveGuard) => () => void;
+};
+
+/** An empty query, shared (never mutated). */
+const NOOP_OBJECT: TParams = {};
+
+/**
+ * The default lock watcher options.
+ *
+ * @type {Object}
+ * @property {boolean} forwards - Whether to watch forwards.
+ * @property {boolean} backwards - Whether to watch backwards.
+ */
+export const DEFAULT_LOCK_WATCHER_OPTIONS = {
+  forwards: false,
+  backwards: true,
+};
+
 /** The single list of accepted keys of the router's dependencies — checked against the type in tests. */
 export const ROUTER_DEPS_KEYS = [
   'window',
@@ -410,6 +340,24 @@ const VIEW_DEPS = [
 ] as const;
 
 const ROUTER_WHERE = '[fundamentool] routerProvider';
+
+/** How a step back ended: the entries were left. */
+const LEFT: TOutcome = {
+  left: Promise.resolve(true),
+};
+
+/** How a step back ended: a guard kept the entries (or there was nothing to leave). */
+const STAYED: TOutcome = {
+  left: Promise.resolve(false),
+};
+
+/** A page layer: its own scroll container (keeps its scroll under `display: none` — research 02 §6.1). */
+const LAYER = {
+  position: 'absolute',
+  inset: 0,
+  overflowY: 'auto',
+  overscrollBehavior: 'contain',
+};
 
 /** "What was expected, what came" for one option. */
 function invalid(
@@ -516,27 +464,486 @@ function entryRegistry<T>() {
   };
 }
 
-/** What the router writes into `history.state`: whose entry it is, how deep, which entry (Forward checks it). */
-type TOurState = { nav: string;
-  depth: number;
-  id: number };
+/**
+ * Merges two URL properties.
+ *
+ * @param prev - The previous URL properties.
+ * @param extend - The extended URL properties.
+ * @returns The merged URL properties.
+ * @example
+ * mergeLocation({ path: '/user', query: { id: 1 } }, { path: '/user/1', query: { name: 'John' } }); // => { path: '/user/1', query: { id: 1, name: 'John' } }
+ */
+export function mergeLocation(prev: Partial<TUrlProps>, exten: Partial<TUrlProps>) {
+  const child: Partial<TUrlProps> = exten.child || {};
+  const prevChild: Partial<TUrlProps> = prev.child || {};
+  return urlExtend(exten.path || prev.path, {
+    query: exten.query || null,
+    child: urlExtend(child.path || prevChild.path, {
+      query: child.query || null,
+    }),
+  });
+}
 
-/** How a step back ended: `left` settles `true` when the entries were left, `false` when a guard kept them. */
-type TOutcome = { left: Promise<boolean> };
-const LEFT: TOutcome = {
-  left: Promise.resolve(true),
-};
-const STAYED: TOutcome = {
-  left: Promise.resolve(false),
-};
+/**
+ * Gets the path from a URL properties.
+ *
+ * @param v - The URL properties.
+ * @returns The path.
+ * @example
+ * getPath({ path: '/user' }); // => '/user'
+ */
+function getPath(v: Partial<TUrlProps>) {
+  return v.path || '';
+}
 
-/** A page layer: its own scroll container (keeps its scroll under `display: none` — research 02 §6.1). */
-const LAYER = {
-  position: 'absolute',
-  inset: 0,
-  overflowY: 'auto',
-  overscrollBehavior: 'contain',
-};
+/**
+ * Gets the child from a URL properties.
+ *
+ * @param v - The URL properties.
+ * @returns The child.
+ * @example
+ * getChild({ child: { path: '/user' } }); // => { path: '/user' }
+ */
+function getChild(v: Partial<TUrlProps>): TUrlProps {
+  return urlExtend(v.child);
+}
+
+/**
+ * Gets the query from a URL properties.
+ *
+ * @param v - The URL properties.
+ * @returns The query.
+ * @example
+ * getQuery({ query: { id: 1 } }); // => { id: 1 }
+ */
+function getQuery(v: Partial<TUrlProps>): TParams {
+  return v.query || NOOP_OBJECT;
+}
+
+/**
+ * Creates a router for an observable map.
+ *
+ * @param _routes - The routes.
+ * @param notFoundHandler - The not found handler.
+ * @returns A router.
+ * @example
+ * routerForObservableMapProvider([['/user', (params, location) => <User />]], (params, location) => <NotFound />); // => <Router />
+ */
+export function routerForObservableMapProvider<T>(_routes: TRouteArgs<T>[],
+  notFoundHandler?: TRouteHandler<T>) {
+  const routes: [TRouteMapper, TRouteHandler<T>][] = _routes.map(([route, render]) => {
+    // `-` and `_` match each other in the plain part of a route, before its first group — never inside the group.
+    let scopePos = route.indexOf('(');
+    const length = route.length;
+    if (scopePos < 0) {
+      scopePos = length;
+    }
+
+    const handler = (isFunction(render) ? render : wrapper(render)) as TRouteHandler<T>;
+
+    return [routeParseProvider(route.slice(0, scopePos).replace(/[-_]/gim, '[-_]') + route.slice(scopePos, length)), handler];
+  });
+  return (state: TRouterState): T & TRoute => {
+    const {
+      location,
+    } = state;
+    const path = location.path || '';
+    const length = routes.length;
+    let i = 0,
+      params: TParams = {},
+      result: any,
+      route: [TRouteMapper, TRouteHandler<T>];
+    for (; i < length; i++) {
+      route = routes[i];
+      if (route[0](path, (params = {})) && (result = route[1](params, location))) {
+        break;
+      }
+    }
+
+    if (!result && notFoundHandler) {
+      result = notFoundHandler(params, location);
+    }
+
+    return {
+      ...state,
+      index: i,
+      params,
+      location,
+      ...(result || {}),
+    };
+  };
+}
+
+/**
+ * Creates a router for a location.
+ *
+ * @param $state - The state.
+ * @returns A router.
+ * @example
+ * routerByLocationProviderProvider($state); // => <Router />
+ */
+export function routerByLocationProviderProvider<A extends TRouterState>($state: Observable<A>) {
+  return function routerByLocationProvider<T>(routes: TRouteArgs<T>[],
+    notFoundHandler?: TRouteHandler<T>) {
+    return $state.map(routerForObservableMapProvider(routes, notFoundHandler));
+  };
+}
+
+/** Drops calls made within 300 ms of the last accepted one (a double tap on a link or a button). */
+function debounceLocation<A extends any[]>(callback: (...args: A) => unknown) {
+  let _debounced = false;
+  return async (...args: Parameters<typeof callback>) => {
+    if (_debounced) {
+      return;
+    }
+    _debounced = true;
+    await Promise.all([wait(300), callback(...args)]);
+    _debounced = false;
+  };
+}
+
+/**
+ * `Link` components of one router: an anchor that pushes its address on click. One click at a time across the router's
+ * links (a double tap doesn't push twice).
+ */
+function createLinkProvider({
+  createElement,
+  forwardRef,
+}: Pick<TRouterProviderDeps, 'createElement' | 'forwardRef'>) {
+  let _hasDurationLink = false;
+  return function LinkProvider({
+    pushLocation,
+    hasHash,
+  }: {
+    pushLocation: TPushLocation;
+    hasHash?: boolean | number;
+  }): TElementType {
+    return forwardRef((props: TLinkProps, ref: any) => {
+      const {
+        options: _originOptions,
+        component,
+        timeout,
+        activeAsParent,
+        active,
+        ...addition
+      } = props;
+
+      const onClick: any = props.onClick || noop;
+      const options = urlExtend(props.href, _originOptions);
+      const url = options.href;
+
+      addition.href = url ? (hasHash ? `#${url}` : url) : undefined;
+      addition.ref = ref;
+      addition.onClick = async (e: any) => {
+        e.preventDefault && e.preventDefault();
+        if (_hasDurationLink || props.active) {
+          return false;
+        }
+
+        _hasDurationLink = true;
+        try {
+          const timeout = props.timeout || 0;
+          if (timeout) {
+            await wait(timeout);
+          }
+          // `false` from the link's own handler cancels the step.
+          if ((await onClick(e)) !== false && url) {
+            await pushLocation(options);
+          }
+        } finally {
+          // Always released: a cancelled or failed click must not lock every link of the router.
+          _hasDurationLink = false;
+        }
+        return false;
+      };
+
+      return createElement(props.component || 'a',
+        addition);
+    });
+  };
+}
+
+/** `NavLink` components of one router: a `Link` marked `active` while its address is the current one. */
+function createNavLinkProvider({
+  Component,
+  createElement,
+}: Pick<TRouterProviderDeps, 'Component' | 'createElement'>) {
+  return function NavLinkProvider(Link: TElementType, $location: Observable<any>): TElementType {
+    return childClassOfReact(Component, (self) => {
+      let subscription: (() => any) | 0;
+      const setState = self.setState.bind(self);
+      self.state = $location.getState();
+      self.componentWillMount = () => {
+        subscription || (subscription = $location.watch(setState));
+      };
+      self.componentWillUnmount = () => {
+      subscription && (subscription(), subscription = 0); // eslint-disable-line
+      };
+      self.render = () => {
+        const props = extend({}, self.props);
+        const forwardedRef = props.forwardedRef;
+        const {
+          state,
+        } = self;
+        const path = state.path || '/';
+        const matchs = urlExtend(props.href, props.options);
+        const targetPath = matchs.path;
+        // A page without a query has `query` undefined — it still matches a link without one.
+        const hasActive = path === targetPath && isMatch(state.query || {}, matchs.query);
+
+        if (forwardedRef) {
+          delete props.forwardedRef;
+          props.ref = forwardedRef;
+        }
+
+        if (
+          hasActive ||
+        (props.activeAsParent &&
+          path.startsWith(targetPath.slice(-1) === '/' ? targetPath : targetPath + '/'))
+        ) {
+          props.active = hasActive;
+          props.className = 'active ' + (props.className || '');
+        }
+
+        return createElement(Link, props);
+      };
+    }) as any;
+  };
+}
+
+/**
+ * Param storages of one router: the query's keys as a key-value store (`set` / `get` / `remove`, a change event per
+ * key). The storages of a router share one lock, so a change one of them makes isn't echoed back to it.
+ */
+function createParamStorageProvider({
+  createObservable,
+  createApi,
+}: Pick<TRouterProviderDeps, 'createObservable' | 'createApi'>) {
+  let _locked = 0;
+  return function paramStorageProvider($query: Observable<TParams>, pushLocation: TPushLocation) {
+    const $params = createObservable({});
+    const {
+      emit,
+    } = createApi($params, {
+      emit: (_, payload: Record<string, any>) => payload,
+    });
+
+    let state = $query.getState();
+
+    const instance = {
+      set,
+      get: (key: string) => state[key],
+      remove: (key: string) => set(key),
+      getKeys: () => Object.keys(state),
+      clear: () => {
+        setState({});
+        return instance;
+      },
+      watch: (watcher: (state: Record<string, any>) => any) => $params.watch(watcher),
+    };
+
+    function setState(query: Record<string, any>) {
+      _locked = 1;
+      pushLocation({
+        query,
+      });
+      changeState(query);
+      _locked = 0;
+    }
+    function set(key: string, v?: any) {
+      if (!isEqual(v, state[key])) {
+        const nextState: Record<string, any> = {
+          ...state,
+        };
+        nextState[key] = v;
+        setState(nextState);
+      }
+      return instance;
+    }
+    function changeState(nextState: Record<string, any>) {
+      const prev = state;
+      const exclude: Record<string, any> = {};
+      const changed: Record<string, any> = {};
+      let v: any, k: string;
+      state = nextState;
+    for (k in state) { // eslint-disable-line
+        exclude[k] = 1;
+        isEqual(prev[k], (v = state[k])) || (changed[k] = v);
+      }
+      for (k in prev) {
+        exclude[k] || isEqual(prev[k], (v = state[k])) || (changed[k] = v);
+      }
+      for (k in changed) {
+        emit({
+          key: k,
+          value: changed[k],
+        });
+      }
+    }
+    $query.watch((state) => {
+      _locked || changeState(state || {});
+    });
+    return instance;
+  };
+}
+
+/**
+ * The router's hooks and its view, over its stack (`core`) and the injected view library (`deps`). Outside the view's
+ * host a hook belongs to the top entry at render (the old `useRouteIsFocus` use).
+ */
+function createRouterView(deps: TRouterProviderDeps, core: TRouterCore) {
+  const {
+    createElement,
+    useEffect,
+  } = deps;
+  // ── the view ──────────────────────────────────────────────────────────────────────────────────────────────────
+
+  /** The entry a component is rendered in (inside `router.view`'s host). */
+  const EntryContext = deps.createContext ? deps.createContext(null) : null;
+
+  /** The entry a component belongs to: the one it is rendered in, or (outside the host) the top entry at render. */
+  function currentEntry(): TEntry {
+    const entry = EntryContext && deps.useContext ? deps.useContext(EntryContext) as TEntry | null : null;
+    return entry || core.entries()[core.entries().length - 1];
+  }
+
+  /**
+   * `effect` while the entry this component is rendered in is open: cleaned up when it starts being left (before its
+   * watchers are asked), run again if leaving is refused. `useWhileOpen` is the same with the latest `effect`.
+   */
+  const useRouteIsFocus = (effect: TEffectCallback, deps_?: TDependencyList) => {
+    const entryId = currentEntry().id;
+    useEffect(() => core.whileOpen(entryId, effect as () => void | (() => void)), deps_ || []);
+  };
+
+  /** Keeps the latest callback in a ref, so a registration made once calls what the component rendered last. */
+  function useLatest<T>(value: T): { current: T } {
+    const ref = (deps.useRef as NonNullable<TRouterProviderDeps['useRef']>)(value);
+    ref.current = value;
+    return ref;
+  }
+
+  /** The router's state, re-rendering on change. */
+  function useRouterState(): TRouterState {
+    const [value, setValue] = (deps.useState as NonNullable<TRouterProviderDeps['useState']>)(core.$state.getState);
+    useEffect(() => core.$state.watch(setValue), []);
+    return value;
+  }
+
+  /**
+   * The view over the stack: the host (page layers — the shown page and the kept ones, each its own scroll container,
+   * hidden ones `display: none` — and the windows) and the hooks.
+   *
+   * @example
+   * const view = router.view({
+   *   renderPage: (entry, location) => <Page path={location.path} />,
+   *   renderWindow: (entry, props) => <entry.window {...props} />,
+   * });
+   * root.render(<view.NavigationHost />);
+   */
+  function view(options: TRouterViewOptions) {
+    const missing = VIEW_DEPS.filter((key) => !isFunction(deps[key]));
+    if (missing.length) {
+      throw new TypeError(`${ROUTER_WHERE} view: the dependencies lack ${missing.join(', ')} (from React, or preact + preact/hooks)`);
+    }
+    if (typeof options !== 'object' || options === null) {
+      throw new TypeError(`${ROUTER_WHERE} view: expects an options object, got ${describeValue(options)}`);
+    }
+    assertKnownOptions(
+      `${ROUTER_WHERE} view`, options, VIEW_OPTION_KEYS,
+    );
+    for (const key of VIEW_OPTION_KEYS) {
+      if (!isFunction(options[key])) {
+        throw new TypeError(`${ROUTER_WHERE} view: "${key}" expects a function, got ${describeValue(options[key])}`);
+      }
+    }
+    const h = createElement;
+
+    function withEntry(entry: TEntry, child: unknown): unknown {
+      return h(
+        (EntryContext as { Provider: unknown }).Provider, {
+          value: entry,
+          key: entry.id,
+        }, child,
+      );
+    }
+
+    function NavigationHost(): unknown {
+      const value = useRouterState();
+      // Layers of every section's stack, in a stable order: a layer that moved in the DOM would lose its scroll.
+      const layers = value.layers.map((entry) => h(
+        'div', {
+          key: entry.id,
+          'data-nav-layer': entry.depth,
+          'aria-hidden': entry === value.page ? undefined : 'true',
+          style: {
+            ...LAYER,
+            display: entry === value.page ? 'block' : 'none',
+          },
+        }, withEntry(entry, options.renderPage(entry, core.own(entry.location))),
+      ));
+      const shownWindows = value.entries.filter((entry): entry is TWindowEntry => entry.kind === 'window');
+      const windows = [...shownWindows, ...value.leaving].map((entry) => withEntry(entry, options.renderWindow(entry, {
+        params: entry.params,
+        open: shownWindows.includes(entry),
+        close: (result?: unknown) => {
+          void core.close(entry.id, result);
+        },
+      })));
+      return h(
+        'div', {
+          'data-nav-host': '',
+          style: {
+            position: 'absolute',
+            inset: 0,
+          },
+        }, ...layers, ...windows,
+      );
+    }
+
+    return {
+      NavigationHost,
+    };
+  }
+
+  /** The entry this component is rendered in (inside `view`'s host). */
+  function useEntry(): TEntry {
+    const entry = EntryContext && deps.useContext ? deps.useContext(EntryContext) as TEntry | null : null;
+    if (!entry) {
+      throw new Error('routerProvider: useEntry is used outside a page or a window of router.view');
+    }
+    return entry;
+  }
+
+  return {
+    useRouteIsFocus,
+    view,
+    useEntry,
+    useRouterState,
+    /** `effect` while this component's entry is open (the latest `effect` is used; see `useRouteIsFocus`). */
+    useWhileOpen: (effect: () => void | (() => void)) => {
+      const latest = useLatest(effect);
+      useRouteIsFocus(() => latest.current(), []);
+    },
+    /** `handler` before a page (with `{ windows: true }` — also a window) opens over this component's entry. */
+    useOnForward: (handler: TForwardHandler, options?: { windows?: boolean }) => {
+      const entryId = currentEntry().id;
+      const latest = useLatest(handler);
+      const windows = Boolean(options?.windows);
+      useEffect(() => core.onForward(
+        entryId, () => latest.current(), {
+          windows,
+        },
+      ), [windows]);
+    },
+    /** `guard` before this component's entry is left by going back — "discard changes?". */
+    useBeforeLeave: (guard: TLeaveGuard) => {
+      const entryId = currentEntry().id;
+      const latest = useLatest(guard);
+      useEffect(() => core.onBeforeLeave(entryId, () => latest.current()), []);
+    },
+  };
+}
 
 /**
  * The router (fundamentool D-022, D-025): an address model (path, query, the hash part as a child location) and a
@@ -591,11 +998,9 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
   const results = new Map<number, unknown>();
   const resolvers = new Map<number, (result: unknown) => void>();
   /** Effects running while their entry is open. */
-  const opened = entryRegistry<{ effect: () => void | (() => void);
-    cleanup: (() => void) | void }>();
+  const opened = entryRegistry<TOpenedEffect>();
   /** Asked before something opens over the entry. */
-  const forward = entryRegistry<{ handler: TForwardHandler;
-    windows: boolean }>();
+  const forward = entryRegistry<TForwardItem>();
   /** Asked before the entry is left by going back. */
   const guards = entryRegistry<TLeaveGuard>();
   /** Cleanups returned by forward handlers — run when their entry is on top again. */
@@ -634,8 +1039,6 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
   let _quiet = false;
   /** Going back several steps: the transition state follows only at the end. */
   let _quietTransition = false;
-  let _hasDurationLink = false;
-  let _locked = 0;
   let _fromLocation: TUrlProps | null = null;
 
   /** The stack as the state: what `$state` holds after every change (unless the change is quiet). */
@@ -1289,6 +1692,9 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
   const $hashLocation = $location.map(getChild);
   const $hashQuery = $hashLocation.map(getQuery);
   const $hashPath = $hashLocation.map(getPath);
+  const LinkProvider = createLinkProvider(deps);
+  const NavLinkProvider = createNavLinkProvider(deps);
+  const paramStorageProvider = createParamStorageProvider(deps);
   const Link = LinkProvider({
     pushLocation,
   });
@@ -1491,285 +1897,23 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     return once(() => stops.forEach((stop) => stop()));
   }
 
-  function LinkProvider({
-    pushLocation,
-    hasHash,
-  }: {
-    pushLocation: TPushLocation;
-    hasHash?: boolean | number;
-  }): TElementType {
-    return forwardRef((props: TLinkProps, ref: any) => {
-      const {
-        options: _originOptions,
-        component,
-        timeout,
-        activeAsParent,
-        active,
-        ...addition
-      } = props;
-
-      const onClick: any = props.onClick || noop;
-      const options = urlExtend(props.href, _originOptions);
-      const url = options.href;
-
-      addition.href = url ? (hasHash ? `#${url}` : url) : undefined;
-      addition.ref = ref;
-      addition.onClick = async (e: any) => {
-        e.preventDefault && e.preventDefault();
-        if (_hasDurationLink || props.active) {
-          return false;
-        }
-
-        _hasDurationLink = true;
-
-        const timeout = props.timeout || 0;
-
-        if (timeout) {
-          await wait(timeout);
-        }
-
-        if ((await onClick(e)) === false) {
-          return;
-        }
-
-        if (url) {
-          await pushLocation(options);
-        }
-
-        _hasDurationLink = false;
-        return false;
-      };
-
-      return createElement(props.component || 'a',
-        addition);
-    });
-  }
-  function NavLinkProvider(Link: TElementType, $location: Observable<any>): TElementType {
-    return childClassOfReact(Component, (self) => {
-      let subscription: (() => any) | 0;
-      const setState = self.setState.bind(self);
-      self.state = $location.getState();
-      self.componentWillMount = () => {
-        subscription || (subscription = $location.watch(setState));
-      };
-      self.componentWillUnmount = () => {
-        subscription && (subscription(), subscription = 0); // eslint-disable-line
-      };
-      self.render = () => {
-        const props = extend({}, self.props);
-        const forwardedRef = props.forwardedRef;
-        const {
-          state, 
-        } = self;
-        const path = state.path || '/';
-        const matchs = urlExtend(props.href, props.options);
-        const targetPath = matchs.path;
-        // A page without a query has `query` undefined — it still matches a link without one.
-        const hasActive = path === targetPath && isMatch(state.query || {}, matchs.query);
-
-        if (forwardedRef) {
-          delete props.forwardedRef;
-          props.ref = forwardedRef;
-        }
-
-        if (
-          hasActive ||
-          (props.activeAsParent &&
-            path.startsWith(targetPath.slice(-1) === '/' ? targetPath : targetPath + '/'))
-        ) {
-          props.active = hasActive;
-          props.className = 'active ' + (props.className || '');
-        }
-
-        return createElement(Link, props);
-      };
-    }) as any;
-  }
-
-  function paramStorageProvider($query: Observable<TParams>, pushLocation: TPushLocation) {
-    const $params = createObservable({});
-    const {
-      emit, 
-    } = createApi($params, {
-      emit: (_, payload: Record<string, any>) => payload,
-    });
-
-    let state = $query.getState();
-
-    const instance = {
-      set,
-      get: (key: string) => state[key],
-      remove: (key: string) => set(key),
-      getKeys: () => Object.keys(state),
-      clear: () => {
-        setState({});
-        return instance;
-      },
-      watch: (watcher: (state: Record<string, any>) => any) => $params.watch(watcher),
-    };
-
-    function setState(query: Record<string, any>) {
-      _locked = 1;
-      pushLocation({
-        query, 
-      });
-      changeState(query);
-      _locked = 0;
-    }
-    function set(key: string, v?: any) {
-      if (!isEqual(v, state[key])) {
-        const nextState: Record<string, any> = {
-          ...state, 
-        };
-        nextState[key] = v;
-        setState(nextState);
-      }
-      return instance;
-    }
-    function changeState(nextState: Record<string, any>) {
-      const prev = state;
-      const exclude: Record<string, any> = {};
-      const changed: Record<string, any> = {};
-      let v: any, k: string;
-      state = nextState;
-      for (k in state) { // eslint-disable-line
-        exclude[k] = 1;
-        isEqual(prev[k], (v = state[k])) || (changed[k] = v);
-      }
-      for (k in prev) {
-        exclude[k] || isEqual(prev[k], (v = state[k])) || (changed[k] = v);
-      }
-      for (k in changed) {
-        emit({
-          key: k,
-          value: changed[k],
-        });
-      }
-    }
-    $query.watch((state) => {
-      _locked || changeState(state || {});
-    });
-    return instance;
-  }
-
-  // ── the view ──────────────────────────────────────────────────────────────────────────────────────────────────
-
-  /** The entry a component is rendered in (inside `router.view`'s host). */
-  const EntryContext = deps.createContext ? deps.createContext(null) : null;
-
-  /** The entry a component belongs to: the one it is rendered in, or (outside the host) the top entry at render. */
-  function currentEntry(): TEntry {
-    const entry = EntryContext && deps.useContext ? deps.useContext(EntryContext) as TEntry | null : null;
-    return entry || entries[entries.length - 1];
-  }
-
-  /**
-   * `effect` while the entry this component is rendered in is open: cleaned up when it starts being left (before its
-   * watchers are asked), run again if leaving is refused. `useWhileOpen` is the same with the latest `effect`.
-   */
-  const useRouteIsFocus = (effect: TEffectCallback, deps_?: TDependencyList) => {
-    const entryId = currentEntry().id;
-    useEffect(() => whileOpen(entryId, effect as () => void | (() => void)), deps_ || []);
-  };
-
-  /** Keeps the latest callback in a ref, so a registration made once calls what the component rendered last. */
-  function useLatest<T>(value: T): { current: T } {
-    const ref = (deps.useRef as NonNullable<TRouterProviderDeps['useRef']>)(value);
-    ref.current = value;
-    return ref;
-  }
-
-  /** The router's state, re-rendering on change. */
-  function useRouterState(): TRouterState {
-    const [value, setValue] = (deps.useState as NonNullable<TRouterProviderDeps['useState']>)($state.getState);
-    useEffect(() => $state.watch(setValue), []);
-    return value;
-  }
-
-  /**
-   * The view over the stack: the host (page layers — the shown page and the kept ones, each its own scroll container,
-   * hidden ones `display: none` — and the windows) and the hooks.
-   *
-   * @example
-   * const view = router.view({
-   *   renderPage: (entry, location) => <Page path={location.path} />,
-   *   renderWindow: (entry, props) => <entry.window {...props} />,
-   * });
-   * root.render(<view.NavigationHost />);
-   */
-  function view(options: TRouterViewOptions) {
-    const missing = VIEW_DEPS.filter((key) => !isFunction(deps[key]));
-    if (missing.length) {
-      throw new TypeError(`${ROUTER_WHERE} view: the dependencies lack ${missing.join(', ')} (from React, or preact + preact/hooks)`);
-    }
-    if (typeof options !== 'object' || options === null) {
-      throw new TypeError(`${ROUTER_WHERE} view: expects an options object, got ${describeValue(options)}`);
-    }
-    assertKnownOptions(
-      `${ROUTER_WHERE} view`, options, VIEW_OPTION_KEYS,
-    );
-    for (const key of VIEW_OPTION_KEYS) {
-      if (!isFunction(options[key])) {
-        throw new TypeError(`${ROUTER_WHERE} view: "${key}" expects a function, got ${describeValue(options[key])}`);
-      }
-    }
-    const h = createElement;
-
-    function withEntry(entry: TEntry, child: unknown): unknown {
-      return h(
-        (EntryContext as { Provider: unknown }).Provider, {
-          value: entry,
-          key: entry.id,
-        }, child,
-      );
-    }
-
-    function NavigationHost(): unknown {
-      const value = useRouterState();
-      // Layers of every section's stack, in a stable order: a layer that moved in the DOM would lose its scroll.
-      const layers = value.layers.map((entry) => h(
-        'div', {
-          key: entry.id,
-          'data-nav-layer': entry.depth,
-          'aria-hidden': entry === value.page ? undefined : 'true',
-          style: {
-            ...LAYER,
-            display: entry === value.page ? 'block' : 'none',
-          },
-        }, withEntry(entry, options.renderPage(entry, own(entry.location))),
-      ));
-      const shownWindows = value.entries.filter((entry): entry is TWindowEntry => entry.kind === 'window');
-      const windows = [...shownWindows, ...value.leaving].map((entry) => withEntry(entry, options.renderWindow(entry, {
-        params: entry.params,
-        open: shownWindows.includes(entry),
-        close: (result?: unknown) => {
-          void close(entry.id, result);
-        },
-      })));
-      return h(
-        'div', {
-          'data-nav-host': '',
-          style: {
-            position: 'absolute',
-            inset: 0,
-          },
-        }, ...layers, ...windows,
-      );
-    }
-
-    return {
-      NavigationHost,
-    };
-  }
-
-  /** The entry this component is rendered in (inside `view`'s host). */
-  function useEntry(): TEntry {
-    const entry = EntryContext && deps.useContext ? deps.useContext(EntryContext) as TEntry | null : null;
-    if (!entry) {
-      throw new Error('routerProvider: useEntry is used outside a page or a window of router.view');
-    }
-    return entry;
-  }
+  const {
+    useRouteIsFocus,
+    view,
+    useEntry,
+    useRouterState,
+    useWhileOpen,
+    useOnForward,
+    useBeforeLeave,
+  } = createRouterView(deps, {
+    $state,
+    entries: () => entries,
+    own,
+    close,
+    whileOpen,
+    onForward,
+    onBeforeLeave,
+  });
 
   return {
     $historyDepth,
@@ -1851,50 +1995,26 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     view,
     useEntry,
     useRouterState,
-    /** `effect` while this component's entry is open (the latest `effect` is used; see `useRouteIsFocus`). */
-    useWhileOpen: (effect: () => void | (() => void)) => {
-      const latest = useLatest(effect);
-      useRouteIsFocus(() => latest.current(), []);
-    },
-    /** `handler` before a page (with `{ windows: true }` — also a window) opens over this component's entry. */
-    useOnForward: (handler: TForwardHandler, options?: { windows?: boolean }) => {
-      const entryId = currentEntry().id;
-      const latest = useLatest(handler);
-      const windows = Boolean(options?.windows);
-      useEffect(() => onForward(
-        entryId, () => latest.current(), {
-          windows,
-        },
-      ), [windows]);
-    },
-    /** `guard` before this component's entry is left by going back — "discard changes?". */
-    useBeforeLeave: (guard: TLeaveGuard) => {
-      const entryId = currentEntry().id;
-      const latest = useLatest(guard);
-      useEffect(() => onBeforeLeave(entryId, () => latest.current()), []);
-    },
+    useWhileOpen,
+    useOnForward,
+    useBeforeLeave,
   };
 }
 
-function debounceLocation<A extends any[]>(callback: (...args: A) => unknown) {
-  let _debounced = false;
-  return async (...args: Parameters<typeof callback>) => {
-    if (_debounced) {
-      return;
-    }
-    _debounced = true;
-    await Promise.all([wait(300), callback(...args)]);
-    _debounced = false;
-  };
-}
-
+/**
+ * The router over the whole address: path, query and the hash part as a child location (see README).
+ *
+ * @example
+ * const router = routerProvider({ window, Component, useEffect, useState, useRef, createContext, useContext,
+ *   createElement, forwardRef, createObservable, createApi });
+ * await router.pushLocation({ path: '/notes/3' });
+ */
 export function routerProvider(deps: TRouterProviderDeps) {
   const instance = routerProviderBase(deps, false);
   const {
     pushLocation,
     replaceLocation,
   } = instance;
-
 
   return {
     ...instance,
@@ -1910,6 +2030,13 @@ export function routerProvider(deps: TRouterProviderDeps) {
   };
 }
 
+export type TRouterProvider = typeof routerProvider;
+export type TRouter = ReturnType<TRouterProvider>;
+
+/**
+ * The router over the hash part of the address (`https://game.example/#/level/2`): the hash part is the location —
+ * for static hosting and iframes (VK, Telegram, FB Instant). The rest of the address stays as it is.
+ */
 export function hashRouterProvider(deps: TRouterProviderDeps) {
   const instance = routerProviderBase(deps, true);
   const {
@@ -1947,6 +2074,3 @@ export function hashRouterProvider(deps: TRouterProviderDeps) {
     backLocationThrottled: debounceLocation(instance.backLocation),
   } as TRouter;
 }
-
-export type TRouterProvider = typeof routerProvider;
-export type TRouter = ReturnType<TRouterProvider>;

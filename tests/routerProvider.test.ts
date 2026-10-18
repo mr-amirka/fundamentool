@@ -338,6 +338,69 @@ describe('routerProvider — going back', () => {
   });
 });
 
+describe('routerProvider — inherited bugs, fixed (2026-10-18)', () => {
+  it('a Link whose onClick returns false doesn\'t lock the other links of the router', async () => {
+    const {
+      router, win, 
+    } = setup('http://localhost/');
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    const root = createRoot(host);
+    act(() => root.render(React.createElement(
+      'div', null,
+      React.createElement(
+        router.Link, {
+          href: '/cancelled',
+          onClick: () => false, 
+        }, 'cancelled',
+      ),
+      React.createElement(
+        router.Link, {
+          href: '/next', 
+        }, 'next',
+      ),
+    )));
+    const [cancelled, next] = Array.from(host.querySelectorAll('a'));
+    await act(async () => {
+      cancelled.dispatchEvent(new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true, 
+      }));
+      await settle();
+    });
+    expect(win.location.pathname).toBe('/');
+    await act(async () => {
+      next.dispatchEvent(new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true, 
+      }));
+      await settle();
+    });
+    expect(win.location.pathname).toBe('/next');
+    act(() => root.unmount());
+    host.remove();
+  });
+
+  it('a route\'s `-` / `_` match each other before its first group, and the group is left as written', async () => {
+    const {
+      router, 
+    } = setup('http://localhost/');
+    const $route = router.routerByLocationProvider<{ page: string }>([['/my-items/([a-z]+)', () => ({
+      page: 'items', 
+    })]], () => ({
+      page: 'none', 
+    }));
+    await router.pushLocation({
+      path: '/my_items/abc', 
+    });
+    expect($route.getState().page).toBe('items');
+    await router.pushLocation({
+      path: '/my-items/a-c', 
+    });
+    expect($route.getState().page).toBe('none'); // `-` isn't in [a-z]: the group was not rewritten
+  });
+});
+
 describe('routerProvider — routes, params, links, focus', () => {
   it('routerByLocationProvider maps the location to a route with params; not found → the fallback', async () => {
     const {
