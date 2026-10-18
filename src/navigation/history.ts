@@ -16,8 +16,11 @@ export type THistoryPort = {
   listen: (listener: (state: unknown) => void) => () => void;
 };
 
-/** How the path is kept in the address. */
-export type THistoryMode = 'hash' | 'path';
+/**
+ * How the path is kept in the address: `hash` — after `#`; `path` — the address path; `url` — the whole address is
+ * the path (path, query and hash — what `routerProvider` works with).
+ */
+export type THistoryMode = 'hash' | 'path' | 'url';
 
 /**
  * The browser history behind the port.
@@ -30,13 +33,19 @@ export type THistoryMode = 'hash' | 'path';
  * const nav = createNavigation({ history: createBrowserHistory(window, 'path'), … });  // /notes/3
  */
 export function createBrowserHistory(win: Window, mode: THistoryMode = 'hash'): THistoryPort {
-  if (mode !== 'hash' && mode !== 'path') {
-    throw new TypeError(`[fundamentool] createBrowserHistory: mode expects "hash" or "path", got ${String(mode)}`);
+  if (mode !== 'hash' && mode !== 'path' && mode !== 'url') {
+    throw new TypeError(`[fundamentool] createBrowserHistory: mode expects "hash", "path" or "url", got ${String(mode)}`);
   }
   const url = (path: string): string => (mode === 'hash' ? `#${path}` : path);
+  const read = (): string => {
+    if (mode === 'url') {
+      return win.location.href;
+    }
+    return (mode === 'hash' ? win.location.hash.replace(/^#/, '') : win.location.pathname) || '/';
+  };
   return {
     state: () => win.history.state as unknown,
-    path: () => (mode === 'hash' ? win.location.hash.replace(/^#/, '') : win.location.pathname) || '/',
+    path: read,
     push: (state, path) => win.history.pushState(
       state, '', url(path),
     ),

@@ -183,8 +183,8 @@ export type TNavigation = {
   open: <R = unknown>(window: unknown, params?: unknown) => Promise<R | null>;
   /** Closes a window with a result (and every entry above it). */
   close: (entryId: number, result?: unknown) => Promise<void>;
-  /** One step back — like the browser's or Android's back. */
-  back: () => Promise<void>;
+  /** One step back — like the browser's or Android's back; `true` if the entry was left, `false` if a guard kept it. */
+  back: () => Promise<boolean>;
   /** Back through history to the current section's main page. */
   backToSection: () => Promise<void>;
   /** A tab was tapped: its section (its own stack with `separate` history) — or back to its main page if it is current. */
@@ -197,6 +197,8 @@ export type TNavigation = {
   onForward: (entryId: number, handler: TForwardHandler, options?: { windows?: boolean }) => () => void;
   /** `guard` is asked before this entry is left by going back. */
   onBeforeLeave: (entryId: number, guard: TLeaveGuard) => () => void;
+  /** Is this entry being left right now (its leave guards are being asked)? */
+  isClosing: (entryId: number) => boolean;
 };
 
 /** What the core writes into `history.state`: whose entry it is and how deep. */
@@ -249,6 +251,8 @@ export function createNavigation(options: TNavigationOptions): TNavigation {
   const forward = new Map<number, Set<{ handler: TForwardHandler;
     windows: boolean }>>();
   const guards = new Map<number, Set<TLeaveGuard>>();
+  /** Entries being left while their guards are asked. */
+  const closing = new Set<number>();
   /** Cleanups returned by forward handlers — run when their entry is on top again. */
   const returns = new Map<number, (() => void)[]>();
 
@@ -413,6 +417,7 @@ export function createNavigation(options: TNavigationOptions): TNavigation {
   }
 
   function forget(entry: TEntry): void {
+    closing.delete(entry.id);
     opened.delete(entry.id);
     forward.delete(entry.id);
     guards.delete(entry.id);
@@ -451,18 +456,27 @@ export function createNavigation(options: TNavigationOptions): TNavigation {
    * The browser is now at `value` — make the stack match. Going back past entries with leave guards: step forward
    * again, ask the guards (they may open windows, so outside the queue), and leave only if all agree.
    */
-  async function settle(value: unknown): Promise<void> {
+  /** What a step back ended with: `left` settles `true` when the entries were left, `false` when a guard kept them. */
+  type TOutcome = { left: Promise<boolean> };
+  const LEFT: TOutcome = {
+    left: Promise.resolve(true), 
+  };
+  const STAYED: TOutcome = {
+    left: Promise.resolve(false), 
+  };
+
+  async function settle(value: unknown): Promise<TOutcome> {
     const current = entries.length - 1;
     if (!isOurs(value)) {
       reset(history.path());
-      return;
+      return LEFT;
     }
     const target = value.depth;
     if (target >= current) {
       if (target > current) {
         await travel(current - target); // no forward stack: the browser's "forward" is undone
       }
-      return;
+      return STAYED;
     }
     if (separate && target === 0 && shown !== homeSection) {
       // Back past a section's main page: that section keeps its main page, the first section is shown.
@@ -471,14 +485,15 @@ export function createNavigation(options: TNavigationOptions): TNavigation {
       const asked = removed.flatMap((entry) => [...(guards.get(entry.id) ?? [])]).reverse();
       if (asked.length) {
         await travel(current);
-        void confirmLeave(
-          1, removed, asked,
-        );
-        return;
+        return {
+          left: confirmLeave(
+            1, removed, asked,
+          ), 
+        };
       }
       removeAbove(1);
       rebuild(homeSection);
-      return;
+      return LEFT;
     }
     const removed = entries.slice(target + 1);
     runOpened(removed, 'close');
@@ -488,29 +503,40 @@ export function createNavigation(options: TNavigationOptions): TNavigation {
     }
     if (!asked.length) {
       removeAbove(target);
-      return;
+      return LEFT;
     }
     await travel(current - target);
-    void confirmLeave(
-      target, removed, asked,
-    );
+    // Asked outside the queue (a guard may open a window); the caller may wait for the answer through `left`.
+    return {
+      left: confirmLeave(
+        target, removed, asked,
+      ), 
+    };
   }
 
   async function confirmLeave(
     target: number, removed: readonly TEntry[], asked: readonly TLeaveGuard[],
-  ): Promise<void> {
+  ): Promise<boolean> {
+    for (const entry of removed) {
+      closing.add(entry.id);
+    }
     for (const guard of asked) {
       if (!(await guard())) {
+        for (const entry of removed) {
+          closing.delete(entry.id);
+        }
         runOpened(removed, 'reopen');
-        return;
+        return false;
       }
     }
-    await enqueue(async () => {
+    return enqueue(async () => {
       const current = entries.length - 1;
       if (current > target) {
         await travel(target - current);
         removeAbove(target);
+        return true;
       }
+      return false;
     });
   }
 
@@ -658,11 +684,10 @@ export function createNavigation(options: TNavigationOptions): TNavigation {
       }
       await settle(await travel(entry.depth - 1 - (entries.length - 1)));
     }),
-    back: () => enqueue(async () => {
-      if (entries.length > 1) {
-        await settle(await travel(-1));
-      }
-    }),
+    back: async () => {
+      const outcome = await enqueue(async () => (entries.length > 1 ? settle(await travel(-1)) : STAYED));
+      return outcome.left;
+    },
     backToSection: () => enqueue(async () => {
       const section = state.section;
       if (section === null) {
@@ -743,6 +768,7 @@ export function createNavigation(options: TNavigationOptions): TNavigation {
         set.delete(item);
       };
     },
+    isClosing: (entryId) => closing.has(entryId),
     onBeforeLeave: (entryId, guard) => {
       const set = guards.get(entryId) ?? new Set();
       guards.set(entryId, set.add(guard));

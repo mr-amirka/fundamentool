@@ -433,6 +433,45 @@ describe('createNavigation', () => {
     ]));
   });
 
+  it('back tells whether the entry was left; isClosing is true while its guards are asked', async () => {
+    const {
+      nav, 
+    } = setup();
+    await expect(nav.back()).resolves.toBe(false); // nothing to go back to
+    await nav.go('/a/form');
+    const id = nav.getState().page.id;
+    let answer: (value: boolean) => void = () => undefined;
+    nav.onBeforeLeave(id, () => new Promise<boolean>((resolve) => {
+      answer = resolve;
+    }));
+    const first = nav.back();
+    await waitFor(() => expect(nav.isClosing(id)).toBe(true));
+    answer(false);
+    await expect(first).resolves.toBe(false);
+    expect(nav.isClosing(id)).toBe(false);
+    const second = nav.back();
+    await waitFor(() => expect(nav.isClosing(id)).toBe(true));
+    answer(true);
+    await expect(second).resolves.toBe(true);
+    expect(nav.isClosing(id)).toBe(false);
+  });
+
+  it('back after the stack changed while a guard was asked: nothing more to leave', async () => {
+    const {
+      nav, 
+    } = setup();
+    await nav.go('/a/form');
+    let answer: (value: boolean) => void = () => undefined;
+    nav.onBeforeLeave(nav.getState().page.id, () => new Promise<boolean>((resolve) => {
+      answer = resolve;
+    }));
+    const leaving = nav.back();
+    await waitFor(() => expect(nav.isClosing(nav.getState().page.id)).toBe(true));
+    await nav.startOver('/a');
+    answer(true);
+    await expect(leaving).resolves.toBe(false);
+  });
+
   it('subscribe / unsubscribe', async () => {
     const {
       nav, 

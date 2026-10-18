@@ -30,6 +30,12 @@ describe('createBrowserHistory', () => {
     }]);
   });
 
+  it('url mode: the whole address is the path (what routerProvider works with)', () => {
+    const history = createBrowserHistory(window, 'url');
+    history.push(null, '/shop?item=3#/cart');
+    expect(history.path()).toBe('http://localhost/shop?item=3#/cart');
+  });
+
   it('path mode: the path is the address path', () => {
     const history = createBrowserHistory(window, 'path');
     history.push(null, '/feed');

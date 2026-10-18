@@ -239,6 +239,6 @@ describe('createNavigationView arguments', () => {
 
 describe('createBrowserHistory arguments', () => {
   it('an unknown mode → a clear error', () => {
-    expect(() => createBrowserHistory({} as Window, 'memory' as never)).toThrow('[fundamentool] createBrowserHistory: mode expects "hash" or "path", got memory');
+    expect(() => createBrowserHistory({} as Window, 'memory' as never)).toThrow('[fundamentool] createBrowserHistory: mode expects "hash", "path" or "url", got memory');
   });
 });
