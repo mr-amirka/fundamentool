@@ -406,15 +406,17 @@ function assertRouterDeps(deps: unknown): asserts deps is TRouterProviderDeps {
     'createObservable',
     'createApi',
   ] as const) {
-    if (!isFunction(raw[key])) {
+    const value = raw[key];
+    if (!isFunction(value)) {
       throw invalid(
-        key, 'a function', raw[key],
+        key, 'a function', value,
       );
     }
   }
-  if (isDefined(raw.describe) && !isFunction(raw.describe)) {
+  const describe = raw.describe;
+  if (isDefined(describe) && !isFunction(describe)) {
     throw invalid(
-      'describe', 'a function (location) => page info', raw.describe,
+      'describe', 'a function (location) => page info', describe,
     );
   }
   const sections = raw.sections;
@@ -431,14 +433,15 @@ function assertRouterDeps(deps: unknown): asserts deps is TRouterProviderDeps {
       );
     }
   }
-  if (isDefined(raw.sectionHistory) && raw.sectionHistory !== 'shared' && raw.sectionHistory !== 'separate') {
+  const sectionHistory = raw.sectionHistory;
+  if (isDefined(sectionHistory) && sectionHistory !== 'shared' && sectionHistory !== 'separate') {
     throw invalid(
-      'sectionHistory', '"shared" or "separate"', raw.sectionHistory,
+      'sectionHistory', '"shared" or "separate"', sectionHistory,
     );
   }
-  if (raw.sectionHistory === 'separate' && !(sections && Object.keys(sections).length)) {
+  if (sectionHistory === 'separate' && !(sections && Object.keys(sections).length)) {
     throw invalid(
-      'sectionHistory', '`sections` beside "separate"', raw.sectionHistory,
+      'sectionHistory', '`sections` beside "separate"', sectionHistory,
     );
   }
 }
@@ -820,11 +823,17 @@ function createRouterView(deps: TRouterProviderDeps, core: TRouterCore) {
   // ── the view ──────────────────────────────────────────────────────────────────────────────────────────────────
 
   /** The entry a component is rendered in (inside `router.view`'s host). */
-  const EntryContext = deps.createContext ? deps.createContext(null) : null;
+  const {
+    createContext,
+    useContext,
+    useRef,
+    useState,
+  } = deps;
+  const EntryContext = createContext ? createContext(null) : null;
 
   /** The entry a component belongs to: the one it is rendered in, or (outside the host) the top entry at render. */
   function currentEntry(): TEntry {
-    const entry = EntryContext && deps.useContext ? deps.useContext(EntryContext) as TEntry | null : null;
+    const entry = EntryContext && useContext ? useContext(EntryContext) as TEntry | null : null;
     return entry || core.entries()[core.entries().length - 1];
   }
 
@@ -839,14 +848,14 @@ function createRouterView(deps: TRouterProviderDeps, core: TRouterCore) {
 
   /** Keeps the latest callback in a ref, so a registration made once calls what the component rendered last. */
   function useLatest<T>(value: T): { current: T } {
-    const ref = (deps.useRef as NonNullable<TRouterProviderDeps['useRef']>)(value);
+    const ref = (useRef as NonNullable<TRouterProviderDeps['useRef']>)(value);
     ref.current = value;
     return ref;
   }
 
   /** The router's state, re-rendering on change. */
   function useRouterState(): TRouterState {
-    const [value, setValue] = (deps.useState as NonNullable<TRouterProviderDeps['useState']>)(core.$state.getState);
+    const [value, setValue] = (useState as NonNullable<TRouterProviderDeps['useState']>)(core.$state.getState);
     useEffect(() => core.$state.watch(setValue), []);
     return value;
   }
@@ -929,7 +938,7 @@ function createRouterView(deps: TRouterProviderDeps, core: TRouterCore) {
 
   /** The entry this component is rendered in (inside `view`'s host). */
   function useEntry(): TEntry {
-    const entry = EntryContext && deps.useContext ? deps.useContext(EntryContext) as TEntry | null : null;
+    const entry = EntryContext && useContext ? useContext(EntryContext) as TEntry | null : null;
     if (!entry) {
       throw new Error('routerProvider: useEntry is used outside a page or a window of router.view');
     }
@@ -1772,12 +1781,13 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
   async function backBy(
     target: (current: number) => number, options: TLocationNavigationOptions | undefined, several: boolean,
   ): Promise<TBackLocationResponse> {
-    _quietTransition = several || !!options?.quiet;
+    const quiet = !!options?.quiet;
+    _quietTransition = several || quiet;
     try {
       return await backTo(target, !!options?.force);
     } finally {
       _quietTransition = false;
-      several && !options?.quiet && immediateTransition();
+      several && !quiet && immediateTransition();
     }
   }
 
