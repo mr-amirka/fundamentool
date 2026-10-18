@@ -60,7 +60,7 @@ import {
   createNavigation, 
 } from './navigation/createNavigation';
 import type {
-  TEntry, TNavigationState, TPageEntry, TPageInfo, 
+  TEntry, TNavigationState, TOpenOptions, TPageEntry, TPageInfo, 
 } from './navigation/createNavigation';
 import {
   createNavigationView, 
@@ -77,7 +77,7 @@ export type {
 };
 // What the router's windows, pages and view are typed with (the engine itself is internal — D-022).
 export type {
-  TEntry, TNavigation, TNavigationState, TPageEntry, TPageInfo, TWindowEntry, 
+  TEntry, TNavigation, TNavigationState, TOpenOptions, TPageEntry, TPageInfo, TWindowEntry, 
 } from './navigation/createNavigation';
 export type {
   TNavigationView, TViewKit, TWindowProps, 
@@ -488,7 +488,8 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     }
     _shownPage = pageId;
     _routerState = next;
-    _nextLocation = next.depth < prev.depth ? prev.history[next.depth + 1] ?? undefined : undefined;
+    const first = state.ahead[0];
+    _nextLocation = first && (first.kind === 'page' ? parse(first.path) : next.location);
     if (next.location !== _currentLocation) {
       _fromLocation = _currentLocation;
       _currentLocation = next.location;
@@ -768,9 +769,16 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     });
   }
 
-  /** Opens a window over the current entry (a history entry: back closes it); resolves its result, `null` if dismissed. */
-  function open<R = unknown>(win: unknown, params?: unknown): Promise<R | null> {
-    return core.open<R>(win, params);
+  /**
+   * Opens a window over the current entry (a history entry: back closes it); resolves its result, `null` if dismissed.
+   * The browser's Forward reopens it after it was closed, unless `{ reopen: false }` (confirmations — D-024).
+   */
+  function open<R = unknown>(
+    win: unknown, params?: unknown, options?: TOpenOptions,
+  ): Promise<R | null> {
+    return core.open<R>(
+      win, params, options,
+    );
   }
 
   /** Clears the history and starts from this address (e.g. the game's home after a reset). */

@@ -368,16 +368,161 @@ describe('createNavigation', () => {
     expect(paths()).toEqual(['/a']);
   });
 
-  it('the browser\'s forward is undone; an entry from another session (before a reload) starts over at its path', async () => {
+  it('the browser\'s Forward brings back the page left by back — the same entry; a new step forgets it (D-024)', async () => {
+    const {
+      nav, browser, paths, 
+    } = setup();
+    await nav.go('/a/1');
+    const left = nav.getState().page;
+    await nav.back();
+    expect(nav.getState().ahead).toEqual([left]);
+    browser.userForward();
+    await waitFor(() => expect(paths()).toEqual(['/a', '/a/1']));
+    expect(nav.getState().page).toBe(left);
+    expect(nav.getState().ahead).toEqual([]);
+
+    await nav.back();
+    await nav.go('/a/2');
+    expect(nav.getState().ahead).toEqual([]);
+    browser.userForward(); // nothing ahead any more — undone
+    await settle(20);
+    expect(paths()).toEqual(['/a', '/a/2']);
+    expect(browser.index()).toBe(1);
+  });
+
+  it('Forward over several steps; replace and start over forget what is ahead', async () => {
+    const {
+      nav, browser, paths, 
+    } = setup();
+    await nav.go('/a/1');
+    await nav.go('/a/2');
+    await nav.back();
+    await nav.back();
+    browser.userGo(2);
+    await waitFor(() => expect(paths()).toEqual([
+      '/a',
+      '/a/1',
+      '/a/2',
+    ]));
+
+    await nav.back();
+    await nav.replace('/a/3');
+    expect(nav.getState().ahead).toEqual([]);
+    await nav.back();
+    await nav.startOver('/a');
+    expect(nav.getState().ahead).toEqual([]);
+  });
+
+  it('Forward reopens a closed window with its params — nobody awaits it; { reopen: false } windows stay closed (D-024)', async () => {
+    const {
+      nav, browser, paths, timers, 
+    } = setup();
+    const answer = nav.open('Menu', {
+      scene: 1, 
+    });
+    await waitFor(() => expect(paths()).toEqual(['/a', 'window']));
+    await nav.back();
+    await expect(answer).resolves.toBeNull();
+    browser.userForward();
+    await waitFor(() => expect(paths()).toEqual(['/a', 'window']));
+    expect(nav.getState().entries[1]).toMatchObject({
+      window: 'Menu',
+      params: {
+        scene: 1, 
+      }, 
+    });
+    // Reopened while it was still playing its exit: it is no longer "leaving".
+    expect(nav.getState().leaving).toEqual([]);
+    timers.splice(0).forEach((run) => run());
+
+    // Menu → a confirmation that isn't reopened: back twice, Forward reopens the menu and stops there.
+    void nav.open(
+      'Confirm', undefined, {
+        reopen: false, 
+      },
+    );
+    await waitFor(() => expect(paths()).toEqual([
+      '/a',
+      'window',
+      'window',
+    ]));
+    await nav.back();
+    await nav.back();
+    expect(nav.getState().ahead.map((entry) => (entry.kind === 'window' ? entry.window : entry.path))).toEqual(['Menu']);
+    browser.userGo(2);
+    await waitFor(() => expect(browser.index()).toBe(0));
+    expect(paths()).toEqual(['/a']);
+    browser.userForward();
+    await waitFor(() => expect(paths()).toEqual(['/a', 'window']));
+    browser.userForward();
+    await settle(20);
+    expect(paths()).toEqual(['/a', 'window']);
+    expect(browser.index()).toBe(1);
+  });
+
+  it('Forward asks the forward handlers of the page first: false keeps the player where they are', async () => {
     const {
       nav, browser, paths, 
     } = setup();
     await nav.go('/a/1');
     await nav.back();
+    let allow = false;
+    const asked: string[] = [];
+    nav.onForward(nav.getState().page.id, () => {
+      asked.push('page');
+      return allow ? undefined : false;
+    });
     browser.userForward();
-    await waitFor(() => expect(browser.index()).toBe(0));
+    await waitFor(() => expect(asked).toEqual(['page']));
+    await settle(20);
     expect(paths()).toEqual(['/a']);
+    expect(browser.index()).toBe(0);
 
+    allow = true;
+    browser.userForward();
+    await waitFor(() => expect(paths()).toEqual(['/a', '/a/1']));
+    expect(browser.index()).toBe(1);
+  });
+
+  it('a window\'s Forward asks only handlers registered with { windows: true }', async () => {
+    const {
+      nav, browser, paths, 
+    } = setup();
+    void nav.open('W');
+    await waitFor(() => expect(paths()).toEqual(['/a', 'window']));
+    await nav.back();
+    const asked: string[] = [];
+    nav.onForward(nav.getState().page.id, () => {
+      asked.push('pages only');
+    });
+    browser.userForward();
+    await waitFor(() => expect(paths()).toEqual(['/a', 'window']));
+    expect(asked).toEqual([]);
+  });
+
+  it('open checks its options: an unknown key — "did you mean"; reopen must be a boolean', async () => {
+    const {
+      nav, 
+    } = setup();
+    await expect(nav.open(
+      'W', null, {
+        reopn: false, 
+      } as never,
+    )).rejects.toThrow(/Did you mean "reopen"/);
+    await expect(nav.open(
+      'W', null, {
+        reopen: 'no', 
+      } as never,
+    )).rejects.toThrow(/"reopen" expects a boolean/);
+    await expect(nav.open(
+      'W', null, 1 as never,
+    )).rejects.toThrow(/expects an options object, got number 1/);
+  });
+
+  it('an entry from another session (before a reload) starts over at its path', async () => {
+    const {
+      browser, paths, 
+    } = setup();
     browser.foreign('/b/old');
     await waitFor(() => expect(paths()).toEqual(['/b/old']));
   });

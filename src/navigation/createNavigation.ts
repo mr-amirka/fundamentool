@@ -39,7 +39,18 @@ export type TWindowEntry = {
   depth: number;
   window: unknown;
   params: unknown;
+  /** `false`: the browser's Forward doesn't reopen it after it was closed (confirmations — D-024). */
+  reopen: boolean;
 };
+
+/** Options of {@link TNavigation.open}. */
+export type TOpenOptions = {
+  /** Reopen this window when the player goes Forward after closing it (default `true`; `false` for confirmations — D-024). */
+  reopen?: boolean;
+};
+
+/** The single list of accepted keys of {@link TOpenOptions}. */
+export const OPEN_OPTION_KEYS = ['reopen'] as const;
 
 export type TEntry = TPageEntry | TWindowEntry;
 
@@ -57,6 +68,8 @@ export type TNavigationState = {
   layers: readonly TPageEntry[];
   /** The section lit in the tab bar: the nearest page with a section, from the top down. */
   section: string | null;
+  /** Entries left by going back that the browser's Forward brings back, nearest first (D-024). */
+  ahead: readonly TEntry[];
 };
 
 /** What runs when something opens over a page; see {@link TNavigation.onForward}. */
@@ -168,6 +181,25 @@ function assertOptions(options: unknown): asserts options is TNavigationOptions 
   }
 }
 
+/** Checks `open`'s options (cold path: once per window). */
+function assertOpenOptions(options: unknown): asserts options is TOpenOptions | undefined {
+  if (options === undefined) {
+    return;
+  }
+  if (typeof options !== 'object' || options === null || Array.isArray(options)) {
+    throw new TypeError(`${WHERE} open: expects an options object, got ${describeValue(options)}`);
+  }
+  assertKnownOptions(
+    `${WHERE} open`, options, OPEN_OPTION_KEYS,
+  );
+  const reopen = (options as TOpenOptions).reopen;
+  if (reopen !== undefined && typeof reopen !== 'boolean') {
+    throw invalid(
+      'reopen', 'a boolean', reopen,
+    );
+  }
+}
+
 /** The navigation core. */
 export type TNavigation = {
   getState: () => TNavigationState;
@@ -179,8 +211,11 @@ export type TNavigation = {
    * Windows over it close first (their leave guards are asked); the old page's `whileOpen` cleanups run.
    */
   replace: (path: string) => Promise<void>;
-  /** Opens a window; resolves with what it closed with (`null` — closed by back / backdrop / Escape / cancelled). */
-  open: <R = unknown>(window: unknown, params?: unknown) => Promise<R | null>;
+  /**
+   * Opens a window; resolves with what it closed with (`null` — closed by back / backdrop / Escape / cancelled).
+   * The browser's Forward reopens it later (a new window — nobody awaits it) unless `{ reopen: false }` (D-024).
+   */
+  open: <R = unknown>(window: unknown, params?: unknown, options?: TOpenOptions) => Promise<R | null>;
   /** Closes a window with a result (and every entry above it). */
   close: (entryId: number, result?: unknown) => Promise<void>;
   /** One step back — like the browser's or Android's back; `true` if the entry was left, `false` if a guard kept it. */
@@ -193,7 +228,10 @@ export type TNavigation = {
   startOver: (path: string) => Promise<void>;
   /** Runs `effect` now; its cleanup runs when the entry starts closing, and it runs again if closing is refused. */
   whileOpen: (entryId: number, effect: () => void | (() => void)) => () => void;
-  /** `handler` runs when a page (or, with `windows`, a window) is about to open over this entry. */
+  /**
+   * `handler` runs when a page (or, with `windows`, a window) is about to open over this entry — by `go` / `open` or
+   * by the browser's Forward (D-024).
+   */
   onForward: (entryId: number, handler: TForwardHandler, options?: { windows?: boolean }) => () => void;
   /** `guard` is asked before this entry is left by going back. */
   onBeforeLeave: (entryId: number, guard: TLeaveGuard) => () => void;
@@ -201,9 +239,10 @@ export type TNavigation = {
   isClosing: (entryId: number) => boolean;
 };
 
-/** What the core writes into `history.state`: whose entry it is and how deep. */
+/** What the core writes into `history.state`: whose entry it is, how deep, which entry (Forward checks it — D-024). */
 type TOurState = { nav: string;
-  depth: number };
+  depth: number;
+  id: number };
 
 /**
  * The navigation core (fundamentool D-011…D-019; proven in the web-games navigation lab, D-012): a stack of pages and
@@ -240,6 +279,8 @@ export function createNavigation(options: TNavigationOptions): TNavigation {
   let nextId = 1;
   let entries: TEntry[] = [];
   let leaving: TWindowEntry[] = [];
+  /** Entries left by going back, nearest first — what the browser's Forward restores (D-024). */
+  let ahead: TEntry[] = [];
   let state: TNavigationState;
 
   /** Window results and resolvers, by entry id. */
@@ -313,7 +354,8 @@ export function createNavigation(options: TNavigationOptions): TNavigation {
       mounted,
       page: top,
       section,
-      layers, 
+      layers,
+      ahead, 
     };
     listeners.forEach((listener) => listener(state));
   }
@@ -341,17 +383,12 @@ export function createNavigation(options: TNavigationOptions): TNavigation {
   /** `separate`: the browser is at its first entry — write a section's stack into the history and show it. */
   function rebuild(section: string): void {
     const list = layout(section);
-    history.replace({
-      nav: session,
-      depth: 0, 
-    } satisfies TOurState, (list[0] as TPageEntry).path);
+    history.replace(mark(list[0]), (list[0] as TPageEntry).path);
     for (let i = 1; i < list.length; i++) {
-      history.push({
-        nav: session,
-        depth: i, 
-      } satisfies TOurState, (list[i] as TPageEntry).path);
+      history.push(mark(list[i]), (list[i] as TPageEntry).path);
     }
     entries = list;
+    ahead = [];
     shown = section;
     publish();
   }
@@ -363,6 +400,7 @@ export function createNavigation(options: TNavigationOptions): TNavigation {
       return;
     }
     const windows = entries.slice(first) as TWindowEntry[];
+    ahead = [];
     runOpened(windows, 'close');
     entries = entries.slice(0, first);
     for (const entry of windows) {
@@ -374,6 +412,15 @@ export function createNavigation(options: TNavigationOptions): TNavigation {
   }
 
   // ── history ───────────────────────────────────────────────────────────────────────────────────────────────────
+
+  /** The state written into the browser entry of `entry`. */
+  function mark(entry: TEntry): TOurState {
+    return {
+      nav: session,
+      depth: entry.depth,
+      id: entry.id, 
+    };
+  }
 
   function isOurs(value: unknown): value is TOurState {
     return typeof value === 'object' && value !== null && (value as TOurState).nav === session
@@ -428,6 +475,9 @@ export function createNavigation(options: TNavigationOptions): TNavigation {
   function removeAbove(depth: number): void {
     const removed = entries.slice(depth + 1);
     entries = entries.slice(0, depth + 1);
+    // What was left goes ahead (the browser's Forward brings it back), up to a window that isn't reopened (D-024).
+    const stop = removed.findIndex((entry) => entry.kind === 'window' && !entry.reopen);
+    ahead = stop < 0 ? [...removed, ...ahead] : removed.slice(0, stop);
     const windows = removed.filter((entry): entry is TWindowEntry => entry.kind === 'window');
     for (const entry of removed) {
       forget(entry);
@@ -472,10 +522,11 @@ export function createNavigation(options: TNavigationOptions): TNavigation {
       return LEFT;
     }
     const target = value.depth;
-    if (target >= current) {
-      if (target > current) {
-        await travel(current - target); // no forward stack: the browser's "forward" is undone
-      }
+    if (target > current) {
+      return forwardTo(target, value.id);
+    }
+    /* istanbul ignore next -- a browser never reports the entry it is already on (history.go(0) reloads) */
+    if (target === current) {
       return STAYED;
     }
     if (separate && target === 0 && shown !== homeSection) {
@@ -514,6 +565,47 @@ export function createNavigation(options: TNavigationOptions): TNavigation {
     };
   }
 
+  /**
+   * The browser went Forward to `target` (D-024): the entries ahead come back — pages with their address, windows
+   * reopened (nobody awaits them). Not ours / not what we keep ahead (a window that isn't reopened) — undone. Forward
+   * handlers of the current top are asked first (outside the queue: they may open windows).
+   */
+  async function forwardTo(target: number, id: number): Promise<TOutcome> {
+    const current = entries.length - 1;
+    const count = target - current;
+    const restore = ahead.slice(0, count);
+    if (restore.length < count || restore[count - 1].id !== id) {
+      await travel(current - target);
+      return STAYED;
+    }
+    const kind = restore[0].kind;
+    if (!hasForward(kind)) {
+      restoreAhead(restore);
+      return LEFT;
+    }
+    await travel(current - target);
+    void askForward(kind).then((go) => (go ? enqueue(async () => {
+      if (entries.length - 1 === current && ahead[count - 1] === restore[count - 1]) {
+        await travel(count);
+        restoreAhead(restore);
+      }
+    }) : undefined));
+    return STAYED;
+  }
+
+  function hasForward(kind: 'page' | 'window'): boolean {
+    const top = entries[entries.length - 1];
+    return [...(forward.get(top.id) ?? [])].some((item) => kind === 'page' || item.windows);
+  }
+
+  function restoreAhead(restore: readonly TEntry[]): void {
+    ahead = ahead.slice(restore.length);
+    const ids = new Set(restore.map((entry) => entry.id));
+    leaving = leaving.filter((entry) => !ids.has(entry.id));
+    entries = [...entries, ...restore];
+    publish();
+  }
+
   async function confirmLeave(
     target: number, removed: readonly TEntry[], asked: readonly TLeaveGuard[],
   ): Promise<boolean> {
@@ -548,23 +640,15 @@ export function createNavigation(options: TNavigationOptions): TNavigation {
       shown = sectionOf(path);
       stacks.set(shown, [page(path, 0)]);
       entries = layout(shown);
-      history.replace({
-        nav: session,
-        depth: 0, 
-      } satisfies TOurState, (entries[0] as TPageEntry).path);
+      history.replace(mark(entries[0]), (entries[0] as TPageEntry).path);
       if (entries.length > 1) {
-        history.push({
-          nav: session,
-          depth: 1, 
-        } satisfies TOurState, path);
+        history.push(mark(entries[1]), path);
       }
     } else {
       entries = [page(path, 0)];
-      history.replace({
-        nav: session,
-        depth: 0, 
-      } satisfies TOurState, path);
+      history.replace(mark(entries[0]), path);
     }
+    ahead = [];
     for (const entry of all) {
       forget(entry);
       if (entry.kind === 'window') {
@@ -596,11 +680,9 @@ export function createNavigation(options: TNavigationOptions): TNavigation {
 
   /** History first: if the browser refuses the entry, the stack stays as it was. */
   function push(entry: TEntry, path: string): void {
-    history.push({
-      nav: session,
-      depth: entry.depth, 
-    } satisfies TOurState, path);
+    history.push(mark(entry), path);
     entries = [...entries, entry];
+    ahead = []; // a new step forgets what was ahead, as the browser does
     publish();
   }
 
@@ -649,14 +731,14 @@ export function createNavigation(options: TNavigationOptions): TNavigation {
       const old = entries[index];
       runOpened([old], 'close');
       forget(old);
-      history.replace({
-        nav: session,
-        depth: index, 
-      } satisfies TOurState, path);
-      entries = [...entries.slice(0, index), page(path, index)];
+      const fresh = page(path, index);
+      history.replace(mark(fresh), path);
+      entries = [...entries.slice(0, index), fresh];
+      ahead = [];
       publish();
     }),
-    open: async <R>(window: unknown, params?: unknown) => {
+    open: async <R>(window: unknown, params?: unknown, openOptions?: TOpenOptions) => {
+      assertOpenOptions(openOptions);
       if (!(await askForward('window'))) {
         return null;
       }
@@ -667,7 +749,8 @@ export function createNavigation(options: TNavigationOptions): TNavigation {
             id: nextId++,
             depth: entries.length,
             window,
-            params, 
+            params,
+            reopen: openOptions?.reopen !== false, 
           };
           resolvers.set(entry.id, resolve as (result: unknown) => void);
           push(entry, topPage(entries).path);

@@ -807,6 +807,54 @@ describe('routerProvider — on the navigation core (D-022)', () => {
     });
   });
 
+  it('the browser\'s Forward returns to the page left by back; a forwards watcher is asked first (D-024)', async () => {
+    const {
+      router, win, 
+    } = setup('http://localhost/');
+    await router.pushLocation({
+      path: '/a', 
+    });
+    await router.backLocation();
+    expect(router.getNextLocation()).toMatchObject({
+      path: '/a', 
+    });
+    let allow = false;
+    router.onBeforeUnload(() => allow, {
+      forwards: true,
+      backwards: false, 
+    });
+    win.history.forward();
+    await settle();
+    expect(router.$path.getState()).toBe('/');
+    allow = true;
+    win.history.forward();
+    await waitFor(() => expect(router.$path.getState()).toBe('/a'));
+    expect(win.location.pathname).toBe('/a');
+    expect(router.$historyDepth.getState()).toBe(1);
+  });
+
+  it('open(…, { reopen: false }): Forward doesn\'t bring the window back', async () => {
+    const {
+      router, win, 
+    } = setup('http://localhost/');
+    void router.open('Confirm', null, {
+      reopen: false, 
+    });
+    await waitFor(() => expect(router.$historyDepth.getState()).toBe(1));
+    await router.backLocation();
+    expect(router.getNextLocation()).toBeUndefined();
+    win.history.forward();
+    await settle();
+    expect(router.$historyDepth.getState()).toBe(0);
+    void router.open('Menu');
+    await waitFor(() => expect(router.$historyDepth.getState()).toBe(1));
+    await router.backLocation();
+    // A window ahead: the next location is the page it opens over.
+    expect(router.getNextLocation()).toMatchObject({
+      path: '/', 
+    });
+  });
+
   it('ROUTER_DEPS_KEYS lists every key of the dependencies type', () => {
     type TKeys = keyof import('../src/routerProvider').TRouterProviderDeps;
     const keys: readonly TKeys[] = ROUTER_DEPS_KEYS;

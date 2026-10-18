@@ -10,6 +10,9 @@ is internal: use the router.
 - **Every page and every window is a history entry** — back (browser, Android, Escape) closes the top one.
   `await router.open(Window, params)` resolves with what the window closed with (`null` — closed by back). A window
   keeps the page's address; the address never shows the window stack.
+- **Forward works**: what back left stays ahead, and the browser's Forward brings it back — a page with its address, a
+  window reopened with the same params (a new window, nobody awaits its answer). Confirmations opt out:
+  `router.open(ConfirmWindow, params, { reopen: false })` — Forward stops before them (D-024).
 - **Covered pages stay mounted**, hidden with `display: none`; each page layer is its own scroll container, so a page
   comes back with its scroll and its data (checked in Chromium, WebKit, Firefox). Which pages: `describe` returns
   `keep: true`, at most `keep` (option, default 10) of them.
@@ -18,7 +21,7 @@ is internal: use the router.
 - **Tabs**: `sections` + `sectionHistory: 'separate'` — every section keeps its own history; `switchSection(name)` on
   the shown section rolls it back to its main page; back from a section's main page goes to the first section.
 - **Watchers**: `onBeforeUnload(cb)` — asked before the current entry is left by back (`false` keeps it; may be async);
-  with `{ forwards: true }` — before a page or a window opens over it. `useRouteIsFocus(effect)` — runs while the
+  with `{ forwards: true }` — before a page or a window opens over it, including by the browser's Forward. `useRouteIsFocus(effect)` — runs while the
   entry is open, cleaned up when it starts being left, again if leaving is refused.
 - **View**: `router.view(kit, { renderPage, renderWindow })` — the host and the hooks `useWhileOpen`, `useOnForward`,
   `useBeforeLeave`, `useEntry`, `useNavigationState`, `useNavigation` (the engine — navigate with the router's methods).
