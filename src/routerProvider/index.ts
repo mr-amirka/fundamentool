@@ -46,6 +46,9 @@ import {
   once,
 } from '../once';
 import {
+  queueProvider,
+} from '../queueProvider';
+import {
   routeParseProvider,
 } from '../routeParseProvider';
 import {
@@ -73,6 +76,9 @@ import type {
 import type {
   TUrlProps,
 } from '../urlParse';
+import {
+  keys,
+} from '../keys';
 
 export type {
   TParams,
@@ -399,14 +405,16 @@ function assertRouterDeps(deps: unknown): asserts deps is TRouterProviderDeps {
       'window', 'a browser window', win,
     );
   }
-  for (const key of [
+  let key: string;
+  let value: unknown;
+  for (key of [
     'useEffect',
     'createElement',
     'forwardRef',
     'createObservable',
     'createApi',
   ] as const) {
-    const value = raw[key];
+    value = raw[key];
     if (!isFunction(value)) {
       throw invalid(
         key, 'a function', value,
@@ -425,8 +433,8 @@ function assertRouterDeps(deps: unknown): asserts deps is TRouterProviderDeps {
       'sections', 'an object section → main page path', sections,
     );
   }
-  for (const key of ['keep', 'exitMs']) {
-    const value = raw[key];
+  for (key of ['keep', 'exitMs']) {
+    value = raw[key];
     if (isDefined(value) && !(isNumber(value) && value >= 0 && Number.isFinite(value))) {
       throw invalid(
         key, 'a number ≥ 0', value,
@@ -439,7 +447,7 @@ function assertRouterDeps(deps: unknown): asserts deps is TRouterProviderDeps {
       'sectionHistory', '"shared" or "separate"', sectionHistory,
     );
   }
-  if (sectionHistory === 'separate' && !(sections && Object.keys(sections).length)) {
+  if (sectionHistory === 'separate' && !(sections && keys(sections).length)) {
     throw invalid(
       'sectionHistory', '`sections` beside "separate"', sectionHistory,
     );
@@ -758,7 +766,7 @@ function createParamStorageProvider({
       set,
       get: (key: string) => state[key],
       remove: (key: string) => set(key),
-      getKeys: () => Object.keys(state),
+      getKeys: () => keys(state),
       clear: () => {
         setState({});
         return instance;
@@ -1011,7 +1019,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
       child: urlParse(path),
     }) : urlParse(path);
   }
-  const homeSection = Object.keys(sections)[0];
+  const homeSection = keys(sections)[0];
 
   // ── the stack ─────────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -1250,13 +1258,9 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     });
   }
 
-  /** One navigation step at a time, in call order. */
-  let chain: Promise<unknown> = Promise.resolve();
-  function enqueue<T>(work: () => Promise<T> | T): Promise<T> {
-    const result = chain.then(work);
-    chain = result.catch(noop);
-    return result;
-  }
+  /** One navigation step at a time, in call order (fundamentool's `queueProvider`). */
+  const queue = queueProvider()((work: () => unknown) => work());
+  const enqueue = <T>(work: () => Promise<T> | T): Promise<T> => queue(work) as Promise<T>;
 
   // ── stack changes ─────────────────────────────────────────────────────────────────────────────────────────────
 
