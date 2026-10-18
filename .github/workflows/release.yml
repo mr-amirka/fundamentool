@@ -4,7 +4,9 @@
 #
 # npm access: Trusted Publishing (OIDC), no token. Linked once on npmjs.com →
 # fundamentool → Settings → Trusted Publisher: GitHub Actions,
-# mr-amirka/fundamentool, workflow release.yml.
+# mr-amirka/fundamentool, workflow release.yml. Then switched on with the repository
+# variable NPM_PUBLISH = on (GitHub → Settings → Secrets and variables → Actions →
+# Variables); until then pushes only validate (D-019).
 name: release
 
 on:
@@ -56,8 +58,12 @@ jobs:
 
       # Trusted publishing needs npm >= 11.5.1. prepublishOnly runs build and
       # test:dist (scripts/check-dist.mjs) before anything is uploaded.
+      - name: Publishing is switched off
+        if: steps.version.outputs.publish == 'true' && vars.NPM_PUBLISH != 'on'
+        run: echo "fundamentool@${{ steps.version.outputs.version }} is not on npm, but NPM_PUBLISH is not 'on' — skipped"
+
       - name: Publish
-        if: steps.version.outputs.publish == 'true'
+        if: steps.version.outputs.publish == 'true' && vars.NPM_PUBLISH == 'on'
         run: |
           npm install -g npm@^11.5.1
           npm publish
