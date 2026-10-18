@@ -1,26 +1,26 @@
 import {
-  tmpdir, 
+  tmpdir,
 } from 'os';
 import {
-  join, 
+  join,
 } from 'path';
 import {
-  mkdirSync, writeFileSync, rmSync, 
+  mkdirSync, writeFileSync, rmSync,
 } from 'fs';
 import {
-  readLimited, 
+  readLimited,
 } from '../../../src/node/jsonl/readLimited';
 import {
-  readUnopened, 
+  readUnopened,
 } from '../../../src/node/jsonl/readUnopened';
 import {
-  readUnopenedLimited, 
+  readUnopenedLimited,
 } from '../../../src/node/jsonl/readUnopenedLimited';
 
 function tmpDir() {
   const dir = join(tmpdir(), `fundamentool-jlimit-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   mkdirSync(dir, {
-    recursive: true, 
+    recursive: true,
   });
   return dir;
 }
@@ -37,30 +37,30 @@ describe('node/jsonl/readLimited', () => {
     const path = join(dir, 'data.jsonl');
     writeJsonl(path, [
       {
-        n: 1, 
+        n: 1,
       },
       {
-        n: 2, 
+        n: 2,
       },
       {
-        n: 3, 
+        n: 3,
       },
       {
-        n: 4, 
+        n: 4,
       },
       {
-        n: 5, 
+        n: 5,
       },
     ]);
 
     const next = readLimited(path, {
-      limit: 2, 
+      limit: 2,
     });
     const batch1 = await next();
     expect(batch1.length).toBeLessThanOrEqual(2);
     next.close();
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -68,18 +68,18 @@ describe('node/jsonl/readLimited', () => {
     const dir = tmpDir();
     const path = join(dir, 'data.jsonl');
     writeJsonl(path, [{
-      n: 1, 
+      n: 1,
     }]);
 
     const next = readLimited(path, {
-      limit: 10, 
+      limit: 10,
     });
     await next(); // consume all
     const done = await next();
     expect(done).toEqual([]);
     next.close();
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -88,18 +88,18 @@ describe('node/jsonl/readLimited', () => {
     const path = join(dir, 'data.jsonl');
     writeJsonl(path, [
       {
-        n: 1, 
+        n: 1,
       },
       {
-        n: 2, 
+        n: 2,
       },
       {
-        n: 3, 
+        n: 3,
       },
     ]);
 
     const next = readLimited(path, {
-      limit: 2, 
+      limit: 2,
     });
     const all: any[] = [];
     let batch: any[];
@@ -108,18 +108,18 @@ describe('node/jsonl/readLimited', () => {
     }
     expect(all).toEqual([
       {
-        n: 1, 
+        n: 1,
       },
       {
-        n: 2, 
+        n: 2,
       },
       {
-        n: 3, 
+        n: 3,
       },
     ]);
     next.close();
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -127,9 +127,9 @@ describe('node/jsonl/readLimited', () => {
     const dir = tmpDir();
     const path = join(dir, 'data.jsonl');
     writeJsonl(path, Array.from({
-      length: 50, 
+      length: 50,
     }, (_, i) => ({
-      i, 
+      i,
     })));
 
     const next = readLimited(path);
@@ -137,7 +137,7 @@ describe('node/jsonl/readLimited', () => {
     expect(batch.length).toBe(50);
     next.close();
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 });
@@ -149,9 +149,9 @@ describe('node/jsonl/readUnopened', () => {
     const dir = tmpDir();
     const path = join(dir, 'data.jsonl');
     writeJsonl(path, [{
-      a: 1, 
+      a: 1,
     }, {
-      a: 2, 
+      a: 2,
     }]);
 
     const items: any[] = [];
@@ -159,12 +159,12 @@ describe('node/jsonl/readUnopened', () => {
     stream.on('data', (obj) => items.push(obj));
     stream.on('end', () => {
       expect(items).toEqual([{
-        a: 1, 
+        a: 1,
       }, {
-        a: 2, 
+        a: 2,
       }]);
       rmSync(dir, {
-        recursive: true, 
+        recursive: true,
       });
       done();
     });
@@ -180,27 +180,27 @@ describe('node/jsonl/readUnopenedLimited', () => {
     const path = join(dir, 'data.jsonl');
     writeJsonl(path, [
       {
-        n: 1, 
+        n: 1,
       },
       {
-        n: 2, 
+        n: 2,
       },
       {
-        n: 3, 
+        n: 3,
       },
       {
-        n: 4, 
+        n: 4,
       },
     ]);
 
     const next = readUnopenedLimited(path, {
-      limit: 2, 
+      limit: 2,
     });
     const batch = await next();
     expect(batch.length).toBeLessThanOrEqual(2);
     next.close();
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -209,18 +209,18 @@ describe('node/jsonl/readUnopenedLimited', () => {
     const path = join(dir, 'data.jsonl');
     writeJsonl(path, [
       {
-        n: 1, 
+        n: 1,
       },
       {
-        n: 2, 
+        n: 2,
       },
       {
-        n: 3, 
+        n: 3,
       },
     ]);
 
     const next = readUnopenedLimited(path, {
-      limit: 2, 
+      limit: 2,
     });
     const all: any[] = [];
     let batch: any[];
@@ -229,18 +229,18 @@ describe('node/jsonl/readUnopenedLimited', () => {
     }
     expect(all).toEqual([
       {
-        n: 1, 
+        n: 1,
       },
       {
-        n: 2, 
+        n: 2,
       },
       {
-        n: 3, 
+        n: 3,
       },
     ]);
     next.close();
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 });

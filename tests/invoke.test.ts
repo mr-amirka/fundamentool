@@ -1,11 +1,11 @@
 import {
-  invoke, 
+  invoke,
 } from '../src/invoke';
 
 describe('invoke', () => {
   test('invokes method by string path', () => {
     const obj = {
-      fn: (x: number) => x * 2, 
+      fn: (x: number) => x * 2,
     };
     expect(invoke(
       obj, 'fn', [5],
@@ -16,9 +16,9 @@ describe('invoke', () => {
     const obj = {
       a: {
         b: {
-          fn: (x: number) => x + 1, 
-        }, 
-      }, 
+          fn: (x: number) => x + 1,
+        },
+      },
     };
     expect(invoke(
       obj, 'a.b.fn', [10],
@@ -29,7 +29,7 @@ describe('invoke', () => {
     const obj = {
       value: 42,
       getVal(this: any) {
-        return this.value; 
+        return this.value;
       },
     };
     expect(invoke(obj, 'getVal')).toBe(42);
@@ -41,12 +41,12 @@ describe('invoke', () => {
 
   test('accepts custom context', () => {
     const ctx = {
-      x: 100, 
+      x: 100,
     };
     const obj = {
       fn: function(this: any) {
-        return this.x; 
-      }, 
+        return this.x;
+      },
     };
     expect(invoke(
       obj, 'fn', [], ctx,

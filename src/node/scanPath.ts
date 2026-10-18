@@ -1,11 +1,11 @@
 import {
-  noop, 
+  noop,
 } from '../noop';
 import {
-  extend, 
+  extend,
 } from '../extend';
 import {
-  each, 
+  each,
 } from  './searchFiles/each';
 
 export interface IScanPathOptions {

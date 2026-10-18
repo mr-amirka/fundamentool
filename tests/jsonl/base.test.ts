@@ -1,20 +1,20 @@
 import {
-  parse, stringify, 
+  parse, stringify,
 } from '../../src/jsonl/base';
 
 describe('jsonl/base', () => {
   describe('parse', () => {
     test('parses single JSON line', () => {
       expect(parse('{"a":1}')).toEqual([{
-        a: 1, 
+        a: 1,
       }]);
     });
 
     test('parses multiple JSON lines', () => {
       expect(parse('{"a":1}\n{"b":2}')).toEqual([{
-        a: 1, 
+        a: 1,
       }, {
-        b: 2, 
+        b: 2,
       }]);
     });
 
@@ -34,15 +34,15 @@ describe('jsonl/base', () => {
   describe('stringify', () => {
     test('stringifies a single object to one line', () => {
       expect(stringify([{
-        a: 1, 
+        a: 1,
       }])).toBe('{"a":1}');
     });
 
     test('stringifies multiple objects separated by newline', () => {
       expect(stringify([{
-        a: 1, 
+        a: 1,
       }, {
-        b: 2, 
+        b: 2,
       }])).toBe('{"a":1}\n{"b":2}');
     });
 
@@ -58,10 +58,10 @@ describe('jsonl/base', () => {
   test('round-trips through stringify → parse', () => {
     const data = [{
       id: 1,
-      name: 'Alice', 
+      name: 'Alice',
     }, {
       id: 2,
-      name: 'Bob', 
+      name: 'Bob',
     }];
     expect(parse(stringify(data))).toEqual(data);
   });

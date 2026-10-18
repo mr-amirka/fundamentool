@@ -1,5 +1,5 @@
 import {
-  isArray, 
+  isArray,
 } from '../src/is/isArray';
 
 describe('isArray', () => {

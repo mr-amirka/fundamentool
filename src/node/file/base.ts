@@ -25,7 +25,6 @@ type BufferEncoding =
   | 'binary'
   | 'hex';
 
-
 /**
  * Checks whether a file is readable (exists and has read permission).
  *
@@ -86,7 +85,7 @@ export const write = (
         error ? reject(error) : write();
       },
     ) : write();
-    
+
     function write() {
       writeFile(
         path, data, options, (error: any) => {

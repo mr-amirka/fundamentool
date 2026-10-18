@@ -1,8 +1,8 @@
 import {
-  set, 
+  set,
 } from './set';
 import {
-  reduce, 
+  reduce,
 } from './reduce';
 
 type TFlagsObject = Record<string, any>;

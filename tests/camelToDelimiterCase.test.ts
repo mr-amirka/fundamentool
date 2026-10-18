@@ -1,8 +1,8 @@
 import {
-  camelToDelimiterCase, 
+  camelToDelimiterCase,
 } from '../src/camelToDelimiterCase';
 import {
-  delimiterToCamelCase, 
+  delimiterToCamelCase,
 } from '../src/delimiterToCamelCase';
 
 describe('camelToDelimiterCase', () => {

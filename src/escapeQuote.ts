@@ -2,7 +2,7 @@ const REGEXP = /(["\\])/g;
 
 /**
  * Escapes double quotes and backslashes.
- * 
+ *
  * @param v - The string to escape.
  * @returns The escaped string.
  * @example

@@ -1,5 +1,5 @@
 import {
-  providerOfIsClass, 
+  providerOfIsClass,
 } from '../providerOfIsClass';
 
 /**

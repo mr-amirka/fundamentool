@@ -1,5 +1,5 @@
 import {
-  loop, 
+  loop,
 } from '../src/loop';
 
 describe('loop', () => {

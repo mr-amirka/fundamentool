@@ -1,5 +1,5 @@
 import {
-  createInterval, 
+  createInterval,
 } from '../src/createInterval';
 
 describe('createInterval', () => {

@@ -1,5 +1,5 @@
 import {
-  extractExportedFn, 
+  extractExportedFn,
 } from './testUtils';
 
 describe('browser/convertBlobToBase64', () => {
@@ -31,7 +31,7 @@ describe('browser/convertBlobToBase64', () => {
     const convertBlobToBase64 = extractExportedFn(require('../../src/browser/convertBlobToBase64')) as (blob: Blob) => Promise<string>;
 
     const blob = new Blob(['test'], {
-      type: 'text/plain', 
+      type: 'text/plain',
     });
     const result = await convertBlobToBase64(blob);
 

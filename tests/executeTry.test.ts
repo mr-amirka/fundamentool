@@ -1,5 +1,5 @@
 import {
-  executeTry, 
+  executeTry,
 } from '../src/executeTry';
 
 describe('executeTry', () => {
@@ -10,7 +10,7 @@ describe('executeTry', () => {
 
   test('returns undefined when function throws', () => {
     expect(executeTry(() => {
-      throw new Error('fail'); 
+      throw new Error('fail');
     })).toBeUndefined();
   });
 
@@ -19,7 +19,7 @@ describe('executeTry', () => {
     const error = new Error('oops');
     executeTry(
       () => {
-        throw error; 
+        throw error;
       }, [], null, onError,
     );
     expect(onError).toHaveBeenCalledWith(error);

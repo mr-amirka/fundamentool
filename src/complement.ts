@@ -1,8 +1,8 @@
 import {
-  isPlainObject, 
+  isPlainObject,
 } from './is/isPlainObject';
 import {
-  isObject, 
+  isObject,
 } from './is/isObject';
 
 export type ComplementTarget = Record<string, any> | undefined;
@@ -15,7 +15,7 @@ export interface IComplement {
 
 /**
  * Fills missing keys from src into dst.
- * 
+ *
  * @param dst - The destination object.
  * @param src - The source object.
  * @param depth - The depth of the object.
@@ -45,7 +45,7 @@ export const complement: IComplement = <TDst extends ComplementTarget, TSrc exte
 
 /**
  * Fills missing keys from src into dst.
- * 
+ *
  * @param dst - The destination object.
  * @param src - The source object.
  * @param depth - The depth of the object.
@@ -81,5 +81,4 @@ const base = complement.base = (
   }
   return dst;
 };
-
 

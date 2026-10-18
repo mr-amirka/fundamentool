@@ -1,5 +1,5 @@
 import {
-  providerOfIsClass, 
+  providerOfIsClass,
 } from '../src/providerOfIsClass';
 
 class Foo {}

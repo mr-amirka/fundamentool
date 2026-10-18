@@ -1,14 +1,14 @@
 import {
-  regexpNormalizeText, 
+  regexpNormalizeText,
 } from './regexpNormalizeText';
 import {
-  unslash, 
+  unslash,
 } from './unslash';
 import {
-  map, 
+  map,
 } from './map';
 import {
-  joinOnly, 
+  joinOnly,
 } from './join/joinOnly';
 
 /**
@@ -17,7 +17,7 @@ import {
 interface IEscapedSplit {
   /**
    * Splits the input string into an array of strings.
-   * 
+   *
    * @param input - The input string to split.
    * @param dstSeparators - The destination separators.
    * @returns The array of strings with escaped fragments.
@@ -26,7 +26,7 @@ interface IEscapedSplit {
 
   /**
    * Splits the input string into an array of strings without escaped fragments.
-   * 
+   *
    * @param input - The input string to split.
    * @param dstSeparators - The destination separators.
    * @returns The array of strings without escaped fragments.

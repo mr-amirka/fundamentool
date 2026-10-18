@@ -1,5 +1,5 @@
 import {
-  bind, 
+  bind,
 } from '../src/bind';
 
 describe('bind', () => {

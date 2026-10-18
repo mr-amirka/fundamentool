@@ -1,5 +1,5 @@
 import {
-  normalizeStep, 
+  normalizeStep,
 } from '../src/normalizeStep';
 
 describe('normalizeStep', () => {

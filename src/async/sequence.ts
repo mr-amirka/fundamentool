@@ -1,5 +1,5 @@
 import {
-  noop, 
+  noop,
 } from '../noop';
 
 /**

@@ -1,6 +1,6 @@
 /**
  * Filters object properties into a new object.
- * 
+ *
  * @param collection - The object to filter.
  * @param iteratee - The function to call for each property.
  * @param output - The object to filter into.

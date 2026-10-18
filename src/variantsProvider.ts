@@ -1,14 +1,14 @@
 import {
-  escapedSplitProvider, 
+  escapedSplitProvider,
 } from './escapedSplitProvider';
 import {
-  joinArrays, 
+  joinArrays,
 } from './join/joinArrays';
 import {
-  joinOnly, 
+  joinOnly,
 } from './join/joinOnly';
 import {
-  unslash, 
+  unslash,
 } from './unslash';
 
 export type TVariantsResult = readonly [strings: string[], maxDepth: number];
@@ -46,7 +46,6 @@ export interface IVariantsProviderOptions {
 
 export type VariantsChild = [string, VariantsChild[]];
 
-
 /** Дискриминант логического токена разбора scope (числа — без строковых тегов). */
 const SCOPE_PREFIX = 0;
 const SCOPE_OPEN = 1;
@@ -57,7 +56,6 @@ export type TScopeToken =
   | readonly [typeof SCOPE_PREFIX, string]
   | readonly [typeof SCOPE_OPEN]
   | readonly [typeof SCOPE_CLOSE];
-
 
 function maxLimitNormalize(value: unknown,
   label: string): number {
@@ -102,12 +100,12 @@ function maxLimitNormalize(value: unknown,
  */
 export function variantsProvider(options: IVariantsProviderOptions): TVariants {
   const {
-    scopeStart, scopeEnd, 
+    scopeStart, scopeEnd,
   } = options;
 
   const scopeStartLength = scopeStart.length;
   const scopeEndLength = scopeEnd.length;
-  
+
   if (typeof scopeStart !== 'string' || scopeStartLength < 1) {
     throw new TypeError('scopeStart must be a non-empty string');
   }
@@ -117,7 +115,7 @@ export function variantsProvider(options: IVariantsProviderOptions): TVariants {
   if (scopeStart === scopeEnd) {
     throw new TypeError('scopeStart and scopeEnd must differ');
   }
-  
+
   const splitBySep = escapedSplitProvider(options.separator).base;
 
   const maxDepthLimit = maxLimitNormalize(options.maxDepth, 'maxDepth');

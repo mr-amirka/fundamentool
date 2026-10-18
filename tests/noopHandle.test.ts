@@ -1,5 +1,5 @@
 import {
-  noopHandle, 
+  noopHandle,
 } from '../src/noopHandle';
 
 describe('noopHandle', () => {
@@ -12,7 +12,7 @@ describe('noopHandle', () => {
 
   test('returns the same object reference', () => {
     const obj = {
-      a: 1, 
+      a: 1,
     };
     expect(noopHandle(obj)).toBe(obj);
   });

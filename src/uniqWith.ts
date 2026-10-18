@@ -1,11 +1,11 @@
 import {
-  isMatch, 
+  isMatch,
 } from './is/isMatch';
 
 /**
  * Returns unique items from input using a custom comparator.
  * Default comparator is isMatch (deep equality).
- * 
+ *
  * @param input - The input array to filter.
  * @param comparator - The comparator function to use.
  * @param output - The output array to write to.

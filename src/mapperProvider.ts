@@ -1,10 +1,10 @@
 import {
-  setBase, 
+  setBase,
 } from './set';
 
 /**
  * A function that maps an array of values to a record.
- * 
+ *
  * @param keys - The keys to map the values to.
  * @param values - The values to map.
  * @param dst - The destination record to map the values to.
@@ -17,7 +17,7 @@ export type TMapper = (values?: any[], dst?: Record<string, any>) => Record<stri
 
 /**
  * Creates a new mapper provider.
- * 
+ *
  * @param keys - The keys to map the values to.
  * @returns The mapper provider.
  */

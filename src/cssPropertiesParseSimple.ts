@@ -1,11 +1,11 @@
 import {
-  kebabToCamelCase, 
+  kebabToCamelCase,
 } from './kebabToCamelCase';
 import {
-  includes, 
+  includes,
 } from './includes';
 import {
-  splitProvider, 
+  splitProvider,
 } from './split/splitProvider';
 
 const splitLine = splitProvider(/\s*;\s*/);

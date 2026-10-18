@@ -1,5 +1,5 @@
 import {
-  single, 
+  single,
 } from '../src/single';
 
 describe('single', () => {

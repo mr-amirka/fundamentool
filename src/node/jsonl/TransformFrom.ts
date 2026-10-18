@@ -1,11 +1,11 @@
 import {
-  ProviderOfTransformFrom, 
+  ProviderOfTransformFrom,
 } from '../../jsonl/ProviderOfTransformFrom';
 import {
-  Transform, 
+  Transform,
 } from 'stream';
 import {
-  StringDecoder, 
+  StringDecoder,
 } from 'string_decoder';
 
 /**

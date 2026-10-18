@@ -1,5 +1,5 @@
 import {
-  isEqual, 
+  isEqual,
 } from '../../src/is/isEqual';
 
 describe('isEqual', () => {
@@ -17,22 +17,22 @@ describe('isEqual', () => {
 
   test('compares shallow object keys at depth 0 (default)', () => {
     expect(isEqual({
-      a: 1, 
+      a: 1,
     }, {
-      a: 1, 
+      a: 1,
     })).toBe(true);
     expect(isEqual({
-      a: 1, 
+      a: 1,
     }, {
-      a: 2, 
+      a: 2,
     })).toBe(false);
   });
 
   test('compares nested objects by reference at depth 0', () => {
     expect(isEqual({
-      a: {}, 
+      a: {},
     }, {
-      a: {}, 
+      a: {},
     })).toBe(false);
   });
 
@@ -40,39 +40,39 @@ describe('isEqual', () => {
     expect(isEqual(
       {
         a: {
-          b: 1, 
-        }, 
+          b: 1,
+        },
       }, {
         a: {
-          b: 1, 
-        }, 
+          b: 1,
+        },
       }, 1,
     )).toBe(true);
     expect(isEqual(
       {
         a: {
-          b: 1, 
-        }, 
+          b: 1,
+        },
       }, {
         a: {
-          b: 2, 
-        }, 
+          b: 2,
+        },
       }, 1,
     )).toBe(false);
   });
 
   test('returns false when key sets differ', () => {
     expect(isEqual({
-      a: 1, 
+      a: 1,
     }, {
       a: 1,
-      b: 2, 
+      b: 2,
     })).toBe(false);
     expect(isEqual({
       a: 1,
-      b: 2, 
+      b: 2,
     }, {
-      a: 1, 
+      a: 1,
     })).toBe(false);
   });
 });

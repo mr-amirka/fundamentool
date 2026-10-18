@@ -1,5 +1,5 @@
 import {
-  regexpMapperProvider, 
+  regexpMapperProvider,
 } from '../src/regexpMapperProvider';
 
 describe('regexpMapperProvider', () => {

@@ -1,5 +1,5 @@
 import {
-  destroyProvider, 
+  destroyProvider,
 } from '../src/destroyProvider';
 
 describe('destroyProvider', () => {

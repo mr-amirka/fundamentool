@@ -1,6 +1,6 @@
 /**
  * Filters array‑like collection into an array.
- * 
+ *
  * @param collection - The array to filter.
  * @param iteratee - The function to call for each item.
  * @param output - The array to filter into.

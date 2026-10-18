@@ -1,8 +1,8 @@
 import {
-  map, 
+  map,
 } from '../src/map';
 import {
-  mapIn, 
+  mapIn,
 } from '../src/mapIn';
 
 describe('map', () => {
@@ -23,7 +23,7 @@ describe('map', () => {
     map(['a', 'b'], (
       v, i, c,
     ) => {
-      calls.push([v, i]); return v; 
+      calls.push([v, i]); return v;
     });
     expect(calls).toEqual([['a', 0], ['b', 1]]);
   });
@@ -45,21 +45,21 @@ describe('mapIn', () => {
   test('maps each value of an object', () => {
     expect(mapIn({
       a: 1,
-      b: 2, 
+      b: 2,
     }, (v) => v * 3)).toEqual({
       a: 3,
-      b: 6, 
+      b: 6,
     });
   });
 
   test('passes value, key, collection to iteratee', () => {
     const calls: any[] = [];
     mapIn({
-      x: 5, 
+      x: 5,
     }, (
       v, k, c,
     ) => {
-      calls.push([v, k]); return v; 
+      calls.push([v, k]); return v;
     });
     expect(calls).toEqual([[5, 'x']]);
   });
@@ -68,11 +68,11 @@ describe('mapIn', () => {
     const dst: Record<string, number> = {};
     mapIn(
       {
-        a: 1, 
+        a: 1,
       }, (v) => v + 100, dst,
     );
     expect(dst).toEqual({
-      a: 101, 
+      a: 101,
     });
   });
 });

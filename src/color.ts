@@ -1,5 +1,5 @@
 import {
-  lowerFirst, 
+  lowerFirst,
 } from './lowerFirst';
 
 const regexpTrimZero = /^0+|0+$/g;
@@ -25,7 +25,7 @@ export interface IColor {
 
 /**
  * Converts a color string to an array of color strings.
- * 
+ *
  * @param v - The color string to convert.
  * @param alt - Whether to include alternative color strings.
  * @returns An array of color strings.
@@ -57,7 +57,7 @@ export const color: IColor = (v: string, alt?: boolean): string[] => {
 
 /**
  * Converts a single color value to a number.
- * 
+ *
  * @param v - The color value to convert.
  * @returns The converted number.
  */
@@ -65,7 +65,7 @@ const one = color.one = (v: string): number => parseInt(v, 16) * MULTIPLIER_ONE;
 
 /**
  * Converts a double color value to a number.
- * 
+ *
  * @param v - The color value to convert.
  * @param start - The start index of the color value.
  * @returns The converted number.
@@ -74,7 +74,7 @@ const double = color.double = (v: string, start: number): number => parseInt(v.s
 
 /**
  * Normalizes a color string to an array of color values.
- * 
+ *
  * @param v - The color string to normalize.
  * @param alpha - The alpha value to use.
  * @param w - The width of the color value.
@@ -162,7 +162,7 @@ const normalize = color.normalize = (
 
 /**
  * Converts a color value to a string.
- * 
+ *
  * @param rgbaColor - The color value to convert.
  * @param alt - Whether to include alternative color strings.
  * @returns An array of color strings.
@@ -192,7 +192,7 @@ const base = color.base = (rgbaColor: [number, number, number, number], alt?: bo
 
 /**
  * Converts a color value to a string.
- * 
+ *
  * @param rgb - The color value to convert.
  * @returns The converted string.
  */

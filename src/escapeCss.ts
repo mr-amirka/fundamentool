@@ -1,12 +1,12 @@
 import {
-  executeTry, 
+  executeTry,
 } from './executeTry';
 
 const regexpEscape = /([[\]#.*^$()><+~=|:;,"'`\s@%\\!/])/g;
 
 /**
  * Экранирует строку для безопасного использования в CSS‑селекторе.
- * 
+ *
  * @param value - The string to escape.
  * @returns The escaped string.
  * @example

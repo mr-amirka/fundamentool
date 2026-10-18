@@ -1,5 +1,5 @@
 import {
-  readUnopenedLimited, 
+  readUnopenedLimited,
 } from '../readUnopenedLimited';
 
 const read = readUnopenedLimited(__dirname + '/input.jsonl', {

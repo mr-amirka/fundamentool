@@ -1,14 +1,14 @@
 import {
-  isBlob, 
+  isBlob,
 } from '../../is/isBlob';
 import {
-  isArrayBuffer, 
+  isArrayBuffer,
 } from '../../is/isArrayBuffer';
 import {
-  isDefined, 
+  isDefined,
 } from '../../is/isDefined';
 import {
-  isObject, 
+  isObject,
 } from '../../is/isObject';
 
 const TYPE_BINARY = 'application/octet-binary';

@@ -1,5 +1,5 @@
 import {
-  trim, 
+  trim,
 } from '../src/trim';
 
 describe('trim', () => {

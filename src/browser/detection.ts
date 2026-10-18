@@ -1,11 +1,11 @@
 import {
-  joinSpace, 
+  joinSpace,
 } from '../join/joinSpace';
 import {
-  addOf, 
+  addOf,
 } from '../addOf';
 import {
-  toLower, 
+  toLower,
 } from '../toLower';
 
 const AGENTS: string[] = [

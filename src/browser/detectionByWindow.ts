@@ -1,11 +1,11 @@
 import {
-  addOf, 
+  addOf,
 } from '../addOf';
 import {
-  isDefined, 
+  isDefined,
 } from '../is/isDefined';
 import {
-  detection, 
+  detection,
 } from './detection';
 
 interface IWindowLike {

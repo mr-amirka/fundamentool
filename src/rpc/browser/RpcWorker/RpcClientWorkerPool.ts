@@ -1,8 +1,9 @@
 import {
-  RpcClientPool, 
+  RpcClientPool,
 } from '../../RpcClientPool';
 import {
-  RpcClientWorker, TRpcClientWorkerOptions, 
+  RpcClientWorker,
+  TRpcClientWorkerOptions,
 } from './RpcClientWorker';
 
 /** Options for `RpcClientWorkerPool`. */

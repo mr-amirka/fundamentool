@@ -1,5 +1,5 @@
 import {
-  physicRenderProvider, 
+  physicRenderProvider,
 } from '../src/physicRenderProvider';
 
 describe('physicRenderProvider', () => {

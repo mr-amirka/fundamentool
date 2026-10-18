@@ -1,5 +1,5 @@
 import {
-  findIndex, 
+  findIndex,
 } from '../src/findIndex';
 
 describe('findIndex', () => {
@@ -26,7 +26,7 @@ describe('findIndex', () => {
   test('passes index and collection to iteratee', () => {
     const indices: number[] = [];
     findIndex([10, 20], (_, i) => {
-      indices.push(i); return false; 
+      indices.push(i); return false;
     });
     expect(indices).toEqual([0, 1]);
   });

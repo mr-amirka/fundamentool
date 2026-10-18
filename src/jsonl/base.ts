@@ -1,5 +1,5 @@
 import {
-  LineBasedFormat, 
+  LineBasedFormat,
 } from '../LineBasedFormat';
 
 /**
@@ -16,5 +16,4 @@ export const {
   parse: JSON.parse,
   stringify: JSON.stringify,
 });
-
 

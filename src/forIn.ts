@@ -1,6 +1,6 @@
 /**
  * Iterates over all enumerable properties (own + inherited) of an object.
- * 
+ *
  * @param obj - The object to iterate over.
  * @param iteratee - The function to call for each property.
  * @param ctx - The `this` context to use for the function.
@@ -18,6 +18,6 @@ export const forIn = <T extends Record<string, any>>(
     iteratee.call(
       ctx, obj[k], k as keyof T & string, obj,
     );
-  } 
+  }
 };
 

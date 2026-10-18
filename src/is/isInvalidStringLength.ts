@@ -1,5 +1,5 @@
 import {
-  isString, 
+  isString,
 } from './isString';
 
 /**

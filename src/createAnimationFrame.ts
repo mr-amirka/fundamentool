@@ -1,6 +1,6 @@
 /**
  * Creates an animation frame.
- * 
+ *
  * @param callback - The callback to call when the animation frame is ready.
  * @param interval - The interval to call the callback.
  * @returns The function to stop the animation frame.

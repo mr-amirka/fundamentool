@@ -1,10 +1,10 @@
 import {
-  delimiterToCamelCase, 
+  delimiterToCamelCase,
 } from './delimiterToCamelCase';
 
 /**
  * Converts snake_case string to camelCase.
- * 
+ *
  * @param value - The string to convert.
  * @returns The converted string.
  * @example

@@ -1,5 +1,5 @@
 import {
-  wait, 
+  wait,
 } from '../src/wait';
 
 describe('wait', () => {

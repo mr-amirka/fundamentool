@@ -1,15 +1,15 @@
 import {
-  cookieStorageProvider, storageInit, 
+  cookieStorageProvider, storageInit,
 } from '../src/cookieStorageProvider';
 import {
-  createObservable, createApi, 
+  createObservable, createApi,
 } from '../src/Observable';
 
 describe('storageInit', () => {
   test('parses cookie string into object', () => {
     expect(storageInit('a=1; b=2')).toEqual({
       a: 1,
-      b: 2, 
+      b: 2,
     });
   });
 
@@ -21,7 +21,7 @@ describe('storageInit', () => {
     const key = encodeURIComponent('my key');
     const val = encodeURIComponent(JSON.stringify('hello'));
     expect(storageInit(`${key}=${val}`)).toEqual({
-      'my key': 'hello', 
+      'my key': 'hello',
     });
   });
 });
@@ -46,7 +46,7 @@ describe('cookieStorageProvider', () => {
       },
     };
     return {
-      document: doc, 
+      document: doc,
     } as any;
   }
 
@@ -78,7 +78,7 @@ describe('cookieStorageProvider', () => {
     let called = false;
     cookieStorageProvider(win, {
       createObservable: (initial) => {
-        called = true; return createObservable(initial); 
+        called = true; return createObservable(initial);
       },
       createApi,
     });

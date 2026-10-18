@@ -1,5 +1,5 @@
 import {
-  isIE, 
+  isIE,
 } from './isIE';
 
 /**

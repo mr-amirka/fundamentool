@@ -1,10 +1,10 @@
 import {
-  camelToDelimiterCase, 
+  camelToDelimiterCase,
 } from './camelToDelimiterCase';
 
 /**
  * Converts camelCase string to kebab-case.
- * 
+ *
  * @param value - The string to convert.
  * @returns The converted string.
  * @example

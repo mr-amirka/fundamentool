@@ -1,16 +1,16 @@
 import type {
-  CreateWriteStreamOptions, 
+  CreateWriteStreamOptions,
 } from 'fs/promises';
 import {
-  createWriteStream, mkdir, 
+  createWriteStream,
+  mkdir,
 } from 'fs';
 import {
-  dirname, 
+  dirname,
 } from 'path';
 import {
-  TransformTo, 
+  TransformTo,
 } from './TransformTo';
-
 
 /**
  * Creates a writable stream for writing JSONL data to a file.

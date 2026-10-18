@@ -1,6 +1,6 @@
 /**
  * Creates a sending queue.
- * 
+ *
  * @param fn - The function to send.
  * @returns The sending queue.
  * @example

@@ -1,6 +1,6 @@
 /**
  * Joins keys from `prefixes` and `suffixes` into a flags map.
- * 
+ *
  * @param prefixes - The prefixes to join.
  * @param suffixes - The suffixes to join.
  * @param separator - The separator to join the prefixes and suffixes with.

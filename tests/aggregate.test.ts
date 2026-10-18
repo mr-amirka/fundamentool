@@ -1,5 +1,5 @@
 import {
-  aggregate, 
+  aggregate,
 } from '../src/aggregate';
 
 describe('aggregate | aggregate functions array into one function', () => {
@@ -32,7 +32,7 @@ describe('aggregate | aggregate functions array into one function', () => {
 
   test('with this', () => {
     const self: { v: number } = {
-      v: 0, 
+      v: 0,
     };
     const aggregateFn = aggregate([
       function (this: { v: number }, v: number) {

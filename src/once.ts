@@ -1,6 +1,6 @@
 /**
  * Wraps a function so that it is executed only once.
- * 
+ *
  * @param func - The function to wrap.
  * @returns The wrapped function.
  * @example

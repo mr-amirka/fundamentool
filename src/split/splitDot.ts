@@ -1,10 +1,10 @@
 import {
-  splitProvider, 
+  splitProvider,
 } from './splitProvider';
 
 /**
  * Splits string by dot.
- * 
+ *
  * @param src - The string to split.
  * @returns The split strings.
  * @example

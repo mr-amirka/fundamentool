@@ -1,5 +1,5 @@
 import {
-  read as simpleRead, 
+  read as simpleRead,
 } from '../read';
 
 /**

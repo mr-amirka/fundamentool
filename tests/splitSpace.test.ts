@@ -1,5 +1,5 @@
 import {
-  splitSpace, 
+  splitSpace,
 } from '../src/split/splitSpace';
 
 describe('splitSpace', () => {

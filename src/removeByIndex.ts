@@ -1,10 +1,10 @@
 import {
-  isDefined, 
+  isDefined,
 } from './is/isDefined';
 
 /**
  * Returns a new array with elements at [index, index+length) removed.
- * 
+ *
  * @param collection - The collection to remove elements from.
  * @param index - The index of the first element to remove.
  * @param length - The number of elements to remove.

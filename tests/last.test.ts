@@ -1,5 +1,5 @@
 import {
-  last, 
+  last,
 } from '../src/last';
 
 describe('last', () => {
@@ -20,7 +20,7 @@ describe('last', () => {
     const like = {
       0: 10,
       1: 20,
-      length: 2, 
+      length: 2,
     };
     expect(last(like)).toBe(20);
   });

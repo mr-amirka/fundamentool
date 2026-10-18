@@ -1,17 +1,17 @@
 import {
-  loopMap, 
+  loopMap,
 } from '../../loopMap';
 import {
-  isLength, 
+  isLength,
 } from '../../is/isLength';
 import {
-  loopAsync, 
+  loopAsync,
 } from '../loopAsync';
 
 /**
  * Runs `statementFn` in parallel with a maximum of `taskLimit` concurrent tasks,
  * advancing while `checkFn` returns true.
- * 
+ *
  * @param checkFn - Function to check if the loop should continue.
  * @param statementFn - Function to execute on each iteration.
  * @param taskLimit - Maximum number of concurrent tasks.

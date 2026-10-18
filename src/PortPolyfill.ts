@@ -1,5 +1,5 @@
 import {
-  GLOBAL_CONTEXT, 
+  GLOBAL_CONTEXT,
 } from './globalContext';
 
 const EventTargetConstructor = (GLOBAL_CONTEXT.EventTarget || function() {
@@ -8,12 +8,12 @@ const EventTargetConstructor = (GLOBAL_CONTEXT.EventTarget || function() {
 
 /**
  * A polyfill for the MessagePort interface.
- * 
+ *
  */
 export class PortPolyfill extends EventTargetConstructor {
   /**
    * Sends a message to the port.
-   * 
+   *
    * @param data - The data to send.
    * @returns The data.
    * @example

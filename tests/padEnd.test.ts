@@ -1,5 +1,5 @@
 import {
-  padEnd, 
+  padEnd,
 } from '../src/padEnd';
 
 describe('padEnd', () => {

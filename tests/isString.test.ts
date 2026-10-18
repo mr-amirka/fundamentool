@@ -1,5 +1,5 @@
 import {
-  isString, 
+  isString,
 } from '../src/is/isString';
 
 describe('isString', () => {

@@ -1,5 +1,5 @@
 import {
-  LineDecoder, 
+  LineDecoder,
 } from '../LineDecoder';
 
 /**

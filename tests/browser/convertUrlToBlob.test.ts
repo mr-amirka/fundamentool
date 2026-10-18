@@ -1,5 +1,5 @@
 import {
-  convertUrlToBlob, 
+  convertUrlToBlob,
 } from '../../src/browser/convertUrlToBlob';
 
 describe('browser/convertUrlToBlob', () => {
@@ -7,7 +7,7 @@ describe('browser/convertUrlToBlob', () => {
     const originalFetch = global.fetch;
     (global as any).fetch = jest.fn().mockResolvedValue({
       blob: async () => new Blob(['ok'], {
-        type: 'text/plain', 
+        type: 'text/plain',
       }),
     });
 

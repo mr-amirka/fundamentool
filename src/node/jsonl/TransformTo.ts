@@ -1,8 +1,8 @@
 import {
-  Transform, 
+  Transform,
 } from 'stream';
 import {
-  ProviderOfTransformTo, 
+  ProviderOfTransformTo,
 } from '../../jsonl/ProviderOfTransformTo';
 
 /**

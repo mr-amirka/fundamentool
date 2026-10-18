@@ -1,5 +1,5 @@
 import {
-  isString, 
+  isString,
 } from './isString';
 
 const REGEXP_HASH = /^[0-9a-f]+$/;

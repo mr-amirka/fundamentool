@@ -3,7 +3,7 @@
  *
  * For every key in `prefixes`, the result will contain
  * `prefix + suffix` with value `1`.
- * 
+ *
  * @param prefixes - The prefixes to join.
  * @param suffix - The suffix to join.
  * @param output - The output map to join the prefixes and suffixes into.

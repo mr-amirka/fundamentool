@@ -1,19 +1,19 @@
 import {
-  entries, 
+  entries,
 } from '../../entries';
 import {
-  fromPairs, 
+  fromPairs,
 } from '../../fromPairs';
 import {
-  checkNoop, 
+  checkNoop,
 } from '../checkNoop';
 import {
-  mapParallel, 
+  mapParallel,
 } from './mapParallel';
 
 /**
  * Parallel asynchronous map over array or object.
- * 
+ *
  * @param collection - Source object.
  * @param iteratee - Mapping function.
  * @param ctx - Optional `this` context.

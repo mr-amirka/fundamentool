@@ -1,5 +1,5 @@
 import {
-  isEmpty, 
+  isEmpty,
 } from '../src/is/isEmpty';
 
 describe('isEmpty', () => {
@@ -9,7 +9,7 @@ describe('isEmpty', () => {
 
   test('returns false when has keys', () => {
     expect(isEmpty({
-      a: 1, 
+      a: 1,
     })).toBe(false);
   });
 });

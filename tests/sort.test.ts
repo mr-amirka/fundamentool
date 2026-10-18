@@ -1,11 +1,11 @@
 import {
-  sort, 
+  sort,
 } from '../src/sort';
 import {
-  sortBy, 
+  sortBy,
 } from '../src/sortBy';
 import {
-  uniqWith, 
+  uniqWith,
 } from '../src/uniqWith';
 
 describe('sort', () => {
@@ -47,24 +47,24 @@ describe('sortBy', () => {
   test('sorts by iteratee result ascending', () => {
     const users = [
       {
-        name: 'John', 
+        name: 'John',
       },
       {
-        name: 'Alice', 
+        name: 'Alice',
       },
       {
-        name: 'Bob', 
+        name: 'Bob',
       },
     ];
     expect(sortBy(users, (u) => u.name)).toEqual([
       {
-        name: 'Alice', 
+        name: 'Alice',
       },
       {
-        name: 'Bob', 
+        name: 'Bob',
       },
       {
-        name: 'John', 
+        name: 'John',
       },
     ]);
   });
@@ -84,10 +84,10 @@ describe('sortBy', () => {
   test('handles stable equal values', () => {
     const result = sortBy([{
       k: 1,
-      v: 'b', 
+      v: 'b',
     }, {
       k: 1,
-      v: 'a', 
+      v: 'a',
     }], (i) => i.k);
     expect(result.map((i) => i.k)).toEqual([1, 1]);
   });
@@ -111,19 +111,19 @@ describe('uniqWith', () => {
   test('removes duplicate objects with custom comparator', () => {
     const result = uniqWith([
       {
-        a: 1, 
+        a: 1,
       },
       {
-        a: 1, 
+        a: 1,
       },
       {
-        a: 2, 
+        a: 2,
       },
     ], (x, y) => x.a === y.a);
     expect(result).toEqual([{
-      a: 1, 
+      a: 1,
     }, {
-      a: 2, 
+      a: 2,
     }]);
   });
 

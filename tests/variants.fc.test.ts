@@ -4,10 +4,10 @@
 
 import fc from 'fast-check';
 import {
-  variants, 
+  variants,
 } from '../src/variants';
 import {
-  variantsProvider, 
+  variantsProvider,
 } from '../src/variantsProvider';
 
 const alphaChars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_';
@@ -15,7 +15,7 @@ const alphaChars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567
 function arbitraryMnExpression(): fc.Arbitrary<string> {
   const alpha = fc.array(fc.constantFrom(...alphaChars.split('')), {
     minLength: 0,
-    maxLength: 5, 
+    maxLength: 5,
   })
     .map(arr => arr.join(''));
   return fc.tuple(

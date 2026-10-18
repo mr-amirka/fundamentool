@@ -1,19 +1,19 @@
 import {
-  Transform, 
+  Transform,
 } from 'stream';
 import {
-  StringDecoder, 
+  StringDecoder,
 } from 'string_decoder';
 import {
-  ProviderOfTransformFrom, 
+  ProviderOfTransformFrom,
 } from '../../src/jsonl/ProviderOfTransformFrom';
 import {
-  ProviderOfTransformTo, 
+  ProviderOfTransformTo,
 } from '../../src/jsonl/ProviderOfTransformTo';
 
 const env = {
   Transform,
-  StringDecoder, 
+  StringDecoder,
 } as any;
 
 function collectFrom(transform: any): Promise<any[]> {
@@ -44,7 +44,7 @@ describe('ProviderOfTransformFrom', () => {
     stream.end();
 
     expect(await resultP).toEqual([{
-      a: 1, 
+      a: 1,
     }]);
   });
 
@@ -57,9 +57,9 @@ describe('ProviderOfTransformFrom', () => {
     stream.end();
 
     expect(await resultP).toEqual([{
-      a: 1, 
+      a: 1,
     }, {
-      b: 2, 
+      b: 2,
     }]);
   });
 
@@ -73,7 +73,7 @@ describe('ProviderOfTransformFrom', () => {
     stream.end();
 
     expect(await resultP).toEqual([{
-      a: 1, 
+      a: 1,
     }]);
   });
 
@@ -86,7 +86,7 @@ describe('ProviderOfTransformFrom', () => {
     stream.end();
 
     expect(await resultP).toEqual([{
-      x: 42, 
+      x: 42,
     }]);
   });
 
@@ -109,7 +109,7 @@ describe('ProviderOfTransformTo', () => {
     const resultP = collectTo(stream);
 
     stream.write({
-      a: 1, 
+      a: 1,
     });
     stream.end();
 
@@ -122,10 +122,10 @@ describe('ProviderOfTransformTo', () => {
     const resultP = collectTo(stream);
 
     stream.write({
-      a: 1, 
+      a: 1,
     });
     stream.write({
-      b: 2, 
+      b: 2,
     });
     stream.end();
 

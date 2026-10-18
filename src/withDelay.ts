@@ -1,5 +1,5 @@
 import {
-  createTimeout, 
+  createTimeout,
 } from './createTimeout';
 
 /**

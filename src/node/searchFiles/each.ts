@@ -1,11 +1,14 @@
 import {
-  Stats, lstat, readdir, 
+  Stats,
+  lstat,
+  readdir,
 } from 'fs';
 import {
-  join, basename, 
+  join,
+  basename,
 } from 'path';
 import {
-  noop, 
+  noop,
 } from '../../noop';
 
 export interface ISearchFilesOptions {

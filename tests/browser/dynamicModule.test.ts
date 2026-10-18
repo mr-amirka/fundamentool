@@ -1,5 +1,5 @@
 import {
-  extractExportedFn, 
+  extractExportedFn,
 } from './testUtils';
 
 describe('browser/dynamicModule', () => {
@@ -11,7 +11,7 @@ describe('browser/dynamicModule', () => {
     const init = async () => {
       calls += 1;
       return {
-        value: 42, 
+        value: 42,
       };
     };
 
@@ -20,10 +20,10 @@ describe('browser/dynamicModule', () => {
     const r2 = await loader();
 
     expect(r1).toEqual({
-      value: 42, 
+      value: 42,
     });
     expect(r2).toEqual({
-      value: 42, 
+      value: 42,
     });
     expect(calls).toBe(1);
   });

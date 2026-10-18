@@ -1,5 +1,5 @@
 import {
-  pushArray, 
+  pushArray,
 } from '../src/pushArray';
 
 describe('pushArray', () => {
@@ -27,7 +27,7 @@ describe('pushArray', () => {
     const src = {
       0: 10,
       1: 20,
-      length: 2, 
+      length: 2,
     };
     pushArray(dst, src);
     expect(dst).toEqual([10, 20]);

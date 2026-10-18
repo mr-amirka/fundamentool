@@ -1,8 +1,8 @@
 import {
-  color, 
+  color,
 } from '../src/color';
 import {
-  colorRange, 
+  colorRange,
 } from '../src/colorRange';
 
 describe('color', () => {

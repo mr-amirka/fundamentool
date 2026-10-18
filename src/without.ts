@@ -1,5 +1,5 @@
 import {
-  indexOf, 
+  indexOf,
 } from './indexOf';
 
 /**

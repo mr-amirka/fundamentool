@@ -1,5 +1,5 @@
 import {
-  toUpper, 
+  toUpper,
 } from './toUpper';
 
 /**

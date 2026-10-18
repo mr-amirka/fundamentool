@@ -1,11 +1,12 @@
 import {
-  regexpMapperProvider, 
+  regexpMapperProvider,
 } from './regexpMapperProvider';
 import {
-  scopeJoin, 
+  scopeJoin,
 } from './scopeJoin';
 import {
-  scopeSplit, ScopeNode, 
+  scopeSplit,
+  ScopeNode,
 } from './scopeSplit';
 
 /**
@@ -151,5 +152,4 @@ export const routeParseProvider = (route: string, anchored: boolean = true) => {
     route, keys, anchored,
   ), keys);
 };
-
 

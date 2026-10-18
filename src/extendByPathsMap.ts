@@ -1,17 +1,17 @@
 import {
-  extend, 
+  extend,
 } from './extend';
 import {
-  isPlainObject, 
+  isPlainObject,
 } from './is/isPlainObject';
 import {
-  isObject, 
+  isObject,
 } from './is/isObject';
 import {
-  get, 
+  get,
 } from './get';
 import {
-  set, 
+  set,
 } from './set';
 
 /**
@@ -19,7 +19,7 @@ import {
  *
  * Map shape: { toPath: fromPath | '' }.
  * Empty `fromPath` means copy whole `src` (optionally shallow‑extend).
- * 
+ *
  * @param dst - The destination object.
  * @param src - The source object.
  * @param map - The map of paths.

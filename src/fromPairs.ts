@@ -1,6 +1,6 @@
 /**
  * Converts array of [key, value] pairs into an object.
- * 
+ *
  * @param entries - The array of [key, value] pairs to convert.
  * @param dst - The destination object to convert into.
  * @returns The converted object.

@@ -1,8 +1,8 @@
 import {
-  flags, 
+  flags,
 } from './flags';
 import {
-  splitSpace, 
+  splitSpace,
 } from './split/splitSpace';
 
 /**

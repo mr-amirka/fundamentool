@@ -1,8 +1,8 @@
 import {
-  extractExportedFn, 
+  extractExportedFn,
 } from './testUtils';
 import {
-  setupBrowserDomMocks, 
+  setupBrowserDomMocks,
 } from './browserDomMocks';
 
 describe('browser/download', () => {
@@ -12,7 +12,7 @@ describe('browser/download', () => {
     jest.useRealTimers();
     jest.resetModules();
     ({
-      clickMock, 
+      clickMock,
     } = setupBrowserDomMocks());
   });
 

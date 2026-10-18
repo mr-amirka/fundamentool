@@ -1,15 +1,15 @@
 import {
-  isArrayLike, 
+  isArrayLike,
 } from './is/isArrayLike';
 import {
-  each, 
+  each,
 } from './each';
 
 type TFn = (...args: any[]) => any;
 
 /**
  * Applies all functions from `funcs` with the same args and context.
- * 
+ *
  * @param funcs - The functions to apply.
  * @param args - The arguments to pass to the functions.
  * @param context - The context to pass to the functions.

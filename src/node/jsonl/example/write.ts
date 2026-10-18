@@ -1,11 +1,11 @@
 import {
-  intervalAsync, 
+  intervalAsync,
 } from '../../../async/intervalAsync';
 import {
-  createTimeout, 
+  createTimeout,
 } from '../../../createTimeout';
 import {
-  write, 
+  write,
 } from '../write';
 
 const writer = write(__dirname + '/output.jsonl');

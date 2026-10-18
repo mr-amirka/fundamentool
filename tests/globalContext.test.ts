@@ -1,5 +1,5 @@
 import {
-  GLOBAL_CONTEXT, 
+  GLOBAL_CONTEXT,
 } from '../src/globalContext';
 
 describe('globalContext', () => {

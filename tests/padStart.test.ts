@@ -1,5 +1,5 @@
 import {
-  padStart, 
+  padStart,
 } from '../src/padStart';
 
 describe('padStart', () => {

@@ -1,5 +1,5 @@
 import {
-  toLower, 
+  toLower,
 } from '../src/toLower';
 
 describe('toLower', () => {

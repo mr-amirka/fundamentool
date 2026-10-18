@@ -1,8 +1,8 @@
 import {
-  wsSeriesRequestProvider, 
+  wsSeriesRequestProvider,
 } from '../../src/browser/wsSeriesRequestProvider';
 import {
-  FakeWebSocket, 
+  FakeWebSocket,
 } from './wsFakeWebSocket';
 
 describe('browser/wsSeriesRequestProvider', () => {
@@ -37,10 +37,10 @@ describe('browser/wsSeriesRequestProvider', () => {
     const request = wsSeriesRequestProvider('ws://example.com');
 
     const p1 = request('one', {
-      a: 1, 
+      a: 1,
     });
     const p2 = request('two', {
-      b: 2, 
+      b: 2,
     });
 
     await Promise.resolve();
@@ -52,7 +52,7 @@ describe('browser/wsSeriesRequestProvider', () => {
 
     socket.onmessage?.({
       data: new Blob([JSON.stringify({
-        data: 10, 
+        data: 10,
       })], {
         type: 'text/plain',
       }),
@@ -62,17 +62,17 @@ describe('browser/wsSeriesRequestProvider', () => {
 
     socket.onmessage?.({
       data: new Blob([JSON.stringify({
-        data: 20, 
+        data: 20,
       })], {
         type: 'text/plain',
       }),
     } as any);
 
     await expect(p1).resolves.toEqual({
-      data: 10, 
+      data: 10,
     });
     await expect(p2).resolves.toEqual({
-      data: 20, 
+      data: 20,
     });
   });
 });

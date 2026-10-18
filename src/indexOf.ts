@@ -2,7 +2,7 @@ const NATIVE_INDEX_OF = Array.prototype.indexOf;
 
 /**
  * Safe wrapper around `Array.prototype.indexOf` with a manual fallback.
- * 
+ *
  * @param collection - The array to search in.
  * @param v - The item to search for.
  * @returns The index of the item, or `-1` if not found.

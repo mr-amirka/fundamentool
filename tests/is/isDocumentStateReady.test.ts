@@ -1,13 +1,13 @@
 import {
-  isDocumentStateReady, 
+  isDocumentStateReady,
 } from '../../src/is/isDocumentStateReady';
 
 const makeWindow = (readyState: string, userAgent = 'Chrome') => ({
   navigator: {
-    userAgent, 
+    userAgent,
   },
   document: {
-    readyState, 
+    readyState,
   },
 });
 

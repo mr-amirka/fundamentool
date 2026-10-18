@@ -1,14 +1,14 @@
 import {
-  isFunction, 
+  isFunction,
 } from './is/isFunction';
 import {
-  isPromise, 
+  isPromise,
 } from './is/isPromise';
 
 /**
  * Wraps a function so that each new invocation cancels the previous one.
  * The wrapped function returns a cancel handle (function or promise with .cancel).
- * 
+ *
  * @param fn - The function to wrap.
  * @param ctx - The context to wrap the function in.
  * @returns The wrapped function.

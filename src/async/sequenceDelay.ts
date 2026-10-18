@@ -1,13 +1,13 @@
 import {
-  noop, 
+  noop,
 } from '../noop';
 import {
-  wait, 
+  wait,
 } from '../wait';
 
 /**
  * Like `sequence`, but adds a delay before each execution.
- * 
+ *
  * @param fn - Function to wrap.
  * @param delayMs - Delay in milliseconds.
  * @param ctx - Optional `this` context for the function.

@@ -1,16 +1,16 @@
 import {
-  wait, 
+  wait,
 } from './wait';
 import {
-  isPromise, 
+  isPromise,
 } from './is/isPromise';
 import {
-  noop, 
+  noop,
 } from './noop';
 
 /**
  * Creates a queue provider.
- * 
+ *
  * @param options - The options for the queue provider.
  * @returns The queue provider.
  * @example

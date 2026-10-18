@@ -1,8 +1,8 @@
 import {
-  loopParallel, 
+  loopParallel,
 } from './loopParallel';
 import {
-  checkNoop, 
+  checkNoop,
 } from '../checkNoop';
 
 /**
@@ -38,5 +38,4 @@ export function forEachParallel<T>(
   )
     .then(() => items);
 }
-
 

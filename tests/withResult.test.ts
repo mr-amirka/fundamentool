@@ -1,5 +1,5 @@
 import {
-  withResult, 
+  withResult,
 } from '../src/withResult';
 
 describe('withResult', () => {
@@ -18,12 +18,12 @@ describe('withResult', () => {
 
   test('uses provided context', () => {
     const ctx = {
-      value: 42, 
+      value: 42,
     };
     let capturedThis: any;
     const handler = withResult(
       function(this: any) {
-        capturedThis = this; 
+        capturedThis = this;
       }, null, ctx,
     );
     handler();

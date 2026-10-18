@@ -1,5 +1,5 @@
 import {
-  isDate, 
+  isDate,
 } from '../../src/is/isDate';
 
 describe('isDate', () => {

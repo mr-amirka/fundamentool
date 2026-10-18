@@ -1,5 +1,5 @@
 import {
-  cancelProvider, 
+  cancelProvider,
 } from '../src/cancelProvider';
 
 describe('cancelProvider', () => {

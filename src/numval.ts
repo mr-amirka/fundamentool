@@ -1,16 +1,15 @@
 import {
-  isBoolean, 
+  isBoolean,
 } from './is/isBoolean';
 import {
-  isNumber, 
+  isNumber,
 } from './is/isNumber';
 import {
-  isDefined, 
+  isDefined,
 } from './is/isDefined';
 import {
-  isNaN, 
+  isNaN,
 } from './is/isNaN';
-
 
 function normalize(
   value: number, minVal?: number, maxVal?: number,
@@ -55,7 +54,7 @@ function numvalProvider(parse: (v: any) => number) {
 
 /**
  * Parses a number string and returns the integer value.
- * 
+ *
  * @param value - The value to parse.
  * @param def - The default value.
  * @param minVal - The minimum value.

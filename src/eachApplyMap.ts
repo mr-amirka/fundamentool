@@ -1,11 +1,11 @@
 import {
-  map, 
+  map,
 } from './map';
 import {
-  mapIn, 
+  mapIn,
 } from './mapIn';
 import {
-  isArrayLike, 
+  isArrayLike,
 } from './is/isArrayLike';
 
 type TFn = (...args: any[]) => any;
@@ -13,7 +13,7 @@ type TFn = (...args: any[]) => any;
 /**
  * Applies all functions from `fns` and returns mapped results
  * (array for array‑like input, object otherwise).
- * 
+ *
  * @param fns - The functions to apply.
  * @param args - The arguments to pass to the functions.
  * @param ctx - The context to pass to the functions.

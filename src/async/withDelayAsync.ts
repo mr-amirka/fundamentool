@@ -1,7 +1,7 @@
 /**
  * Debounced async wrapper: schedules function execution after `delayMs`.
  * Returns a promise resolved with the last call result.
- * 
+ *
  * @param fn - Function to wrap.
  * @param delayMs - Delay in milliseconds.
  * @param ctx - Optional `this` context for the function.
@@ -50,5 +50,4 @@ export function withDelayAsync<T extends (...args: any[]) => any>(
     return promise as Promise<ReturnType<T>>;
   };
 }
-
 

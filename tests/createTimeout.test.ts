@@ -1,5 +1,5 @@
 import {
-  createTimeout, 
+  createTimeout,
 } from '../src/createTimeout';
 
 describe('createTimeout', () => {
@@ -29,7 +29,7 @@ describe('createTimeout', () => {
   test('passes args and ctx', () => {
     const fn = jest.fn();
     const ctx = {
-      x: 1, 
+      x: 1,
     };
     createTimeout(
       fn, 50, ['a', 'b'], ctx,

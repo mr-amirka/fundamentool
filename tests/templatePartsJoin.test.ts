@@ -1,5 +1,5 @@
 import {
-  templatePartsJoin, 
+  templatePartsJoin,
 } from '../src/templatePartsJoin';
 
 describe('templatePartsJoin', () => {
@@ -19,7 +19,7 @@ describe('templatePartsJoin', () => {
       () => '!',
     ]);
     expect(render({
-      name: 'Alice', 
+      name: 'Alice',
     })).toBe('Hi, Alice!');
   });
 

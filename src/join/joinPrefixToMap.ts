@@ -1,6 +1,6 @@
 /**
  * Adds prefix to all keys in `suffixes` and writes into `output` map.
- * 
+ *
  * @param prefix - The prefix to add to the keys.
  * @param suffixes - The suffixes to join.
  * @param output - The output map to join the prefixes and suffixes into.

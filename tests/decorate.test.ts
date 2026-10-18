@@ -1,5 +1,5 @@
 import {
-  decorate, 
+  decorate,
 } from '../src/decorate';
 
 describe('decorate', () => {
@@ -18,9 +18,9 @@ describe('decorate', () => {
     const calls: string[] = [];
     const fn = decorate((x: number) => x,
       [((emit: any) => (x: number) => {
-        calls.push('first'); return emit(x); 
+        calls.push('first'); return emit(x);
       }) as any, ((emit: any) => (x: number) => {
-        calls.push('second'); return emit(x); 
+        calls.push('second'); return emit(x);
       }) as any]);
     (fn as any)(1);
     // d2 wraps d1, so d2 ('second') runs before d1 ('first')
@@ -31,7 +31,7 @@ describe('decorate', () => {
     const calls: string[] = [];
     const fn = decorate((x: number) => x, [] as any[]);
     fn.use(((emit: any) => (x: number) => {
-      calls.push('extra'); return emit(x); 
+      calls.push('extra'); return emit(x);
     }) as any);
     (fn as any)(1);
     expect(calls).toEqual(['extra']);

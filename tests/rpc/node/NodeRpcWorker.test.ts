@@ -1,20 +1,20 @@
 import {
-  EventEmitter, 
+  EventEmitter,
 } from 'events';
 import {
-  RpcClient, 
+  RpcClient,
 } from '../../../src/rpc/RpcClient';
 import {
-  RpcConnect, 
+  RpcConnect,
 } from '../../../src/rpc/RpcConnect';
 import {
-  NodeRpcClientWorker, 
+  NodeRpcClientWorker,
 } from '../../../src/rpc/node/NodeRpcWorker/NodeRpcClientWorker';
 import {
-  NodeRpcClientWorkerPool, 
+  NodeRpcClientWorkerPool,
 } from '../../../src/rpc/node/NodeRpcWorker/NodeRpcClientWorkerPool';
 import {
-  NodeRpcConnectWorker, 
+  NodeRpcConnectWorker,
 } from '../../../src/rpc/node/NodeRpcWorker/NodeRpcConnectWorker';
 
 // Variables prefixed with "mock" are accessible inside jest.mock factories despite hoisting.
@@ -26,7 +26,7 @@ var mockParentPort: any;
 
 jest.mock('node:worker_threads', () => {
   const {
-    EventEmitter, 
+    EventEmitter,
   } = require('events');
 
   class MockWorkerInner extends EventEmitter {
@@ -62,12 +62,12 @@ function attachServer(worker: any, exports: Record<string, any>): RpcConnect {
   return new RpcConnect({
     exports,
     postMessage: (data) => {
-      worker.emit('message', data); return noop; 
+      worker.emit('message', data); return noop;
     },
     onMessage: (cb) => {
       worker._serverHandler = cb;
       return () => {
-        worker._serverHandler = null; 
+        worker._serverHandler = null;
       };
     },
   });
@@ -83,7 +83,7 @@ describe('NodeRpcClientWorker', () => {
   test('call resolves with server result', async () => {
     const client = new NodeRpcClientWorker('./fake.js');
     const connect = attachServer(mockWorkerInstances[0], {
-      add: (a: number, b: number) => a + b, 
+      add: (a: number, b: number) => a + b,
     });
 
     expect(await client.call('add', [3, 4])).toBe(7);
@@ -95,7 +95,7 @@ describe('NodeRpcClientWorker', () => {
     const client = new NodeRpcClientWorker('./fake.js');
     const connect = attachServer(mockWorkerInstances[0], {
       fail: () => {
-        throw new Error('boom'); 
+        throw new Error('boom');
       },
     });
 
@@ -132,7 +132,7 @@ describe('NodeRpcClientWorker', () => {
 describe('NodeRpcClientWorkerPool', () => {
   test('distributes calls across workers', async () => {
     const pool = new NodeRpcClientWorkerPool('./fake.js', {
-      maxWorkers: 2, 
+      maxWorkers: 2,
     });
 
     // Force pre-creation of all workers so we can attach servers before calling
@@ -140,7 +140,7 @@ describe('NodeRpcClientWorkerPool', () => {
 
     const connects = mockWorkerInstances.map((w) =>
       attachServer(w, {
-        double: (x: number) => x * 2, 
+        double: (x: number) => x * 2,
       }));
 
     const results = await Promise.all([
@@ -160,7 +160,7 @@ describe('NodeRpcClientWorkerPool', () => {
 
   test('creates up to maxWorkers workers on demand', () => {
     const pool = new NodeRpcClientWorkerPool('./fake.js', {
-      maxWorkers: 3, 
+      maxWorkers: 3,
     });
     pool.getWorkers(3);
     expect(mockWorkerInstances.length).toBe(3);
@@ -178,7 +178,7 @@ describe('NodeRpcConnectWorker', () => {
 
     const client = new RpcClient({
       postMessage: (data) => {
-        mockParentPort.emit('message', data); return noop; 
+        mockParentPort.emit('message', data); return noop;
       },
       onMessage: (cb) => {
         mockParentPort.on('_out', cb);

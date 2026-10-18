@@ -3,7 +3,7 @@
  *
  * This is a thin wrapper around `Array.prototype.sort` to keep
  * a consistent functional style.
- * 
+ *
  * @param src - The array to sort.
  * @param iteratee - The function to compare two elements.
  * @returns The sorted array (mutates `src`).

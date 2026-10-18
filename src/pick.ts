@@ -1,7 +1,7 @@
 /**
  * Picks keys from `input` into `output`.
  * Optionally fills `outOther` with the rest.
- * 
+ *
  * @param input - The input object to pick keys from.
  * @param keys - The keys to pick.
  * @param output - The output object to write into.

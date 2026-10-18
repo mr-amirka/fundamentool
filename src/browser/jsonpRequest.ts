@@ -1,8 +1,8 @@
 import {
-  GLOBAL_CONTEXT, 
+  GLOBAL_CONTEXT,
 } from '../globalContext';
 import {
-  urlExtend, 
+  urlExtend,
 } from '../urlExtend';
 
 let _JSONP_CALLBACK_INDEX = 0;

@@ -1,18 +1,18 @@
 import {
-  entries, 
+  entries,
 } from '../entries';
 import {
-  findAsync, 
+  findAsync,
 } from './findAsync';
 import {
-  checkNoop, 
+  checkNoop,
 } from './checkNoop';
 
 /**
  * Asynchronous find over array or object.
  *
  * Expects `iteratee` to be a function; shorthand/normalize logic is removed.
- * 
+ *
  * @param collection - Source array-like collection.
  * @param iteratee - Predicate function.
  * @param ctx - Optional `this` context.

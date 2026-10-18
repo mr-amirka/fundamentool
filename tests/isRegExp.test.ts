@@ -1,5 +1,5 @@
 import {
-  isRegExp, 
+  isRegExp,
 } from '../src/is/isRegExp';
 
 describe('isRegExp', () => {

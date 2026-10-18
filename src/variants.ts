@@ -1,5 +1,5 @@
 import {
-  variantsProvider, 
+  variantsProvider,
 } from './variantsProvider';
 
 /**

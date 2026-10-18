@@ -1,5 +1,5 @@
 import {
-  isFormData, 
+  isFormData,
 } from '../../src/is/isFormData';
 
 describe('isFormData', () => {

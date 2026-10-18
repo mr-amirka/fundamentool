@@ -1,21 +1,21 @@
 import {
-  entries, 
+  entries,
 } from '../entries';
 import {
-  fromPairs, 
+  fromPairs,
 } from '../fromPairs';
 import {
-  checkNoop, 
+  checkNoop,
 } from './checkNoop';
 import {
-  mapAsync, 
+  mapAsync,
 } from './mapAsync';
 
 /**
  * Asynchronous map over object.
  *
  * Expects `iteratee` to be a function; shorthand/normalize logic is removed.
- * 
+ *
  * @param collection - Source object.
  * @param iteratee - Mapping function.
  * @param ctx - Optional `this` context.
@@ -40,5 +40,4 @@ export function mapInAsync<T>(
   )
     .then((_entries: Array<[string, T]>) => fromPairs(_entries, {}));
 }
-
 

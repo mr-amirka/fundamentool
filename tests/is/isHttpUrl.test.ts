@@ -1,5 +1,5 @@
 import {
-  isHttpUrl, 
+  isHttpUrl,
 } from '../../src/is/isHttpUrl';
 
 describe('isHttpUrl', () => {

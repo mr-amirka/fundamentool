@@ -1,20 +1,19 @@
 import {
-  GLOBAL_CONTEXT, 
+  GLOBAL_CONTEXT,
 } from '../../../globalContext';
 import type {
   TRpcConnectOptionsPostMessage,
   TRpcConnectOptionsOnMessage,
 } from '../../types';
 import {
-  RpcConnect, 
+  RpcConnect,
 } from '../../RpcConnect';
 import {
-  SyntheticWorker, 
+  SyntheticWorker,
 } from '../SyntheticWorker';
 import {
-  onRpcMessageProvider, 
+  onRpcMessageProvider,
 } from './onRpcMessageProvider';
-
 
 /**
  * Server-side RPC handler that runs inside a browser Worker (ordinary, shared, or synthetic).

@@ -64,7 +64,7 @@ describe('parallel async helpers', () => {
   test('forInParallel iterates over object properties', async () => {
     const obj = {
       a: 1,
-      b: 2, 
+      b: 2,
     };
     const keys: string[] = [];
 
@@ -104,7 +104,7 @@ describe('parallel async helpers', () => {
   test('mapInParallel maps object to new object (taskLimit=1)', async () => {
     const obj = {
       a: 1,
-      b: 2, 
+      b: 2,
     };
     const result = await mapInParallel(
       obj,
@@ -115,7 +115,7 @@ describe('parallel async helpers', () => {
 
     expect(result).toEqual({
       a: 4,
-      b: 6, 
+      b: 6,
     });
   });
 
@@ -148,7 +148,7 @@ describe('parallel async helpers', () => {
       a: 1,
       b: 2,
       c: 3,
-      d: 4, 
+      d: 4,
     };
     const result = await filterInParallel(
       obj,
@@ -160,7 +160,7 @@ describe('parallel async helpers', () => {
 
     expect(result).toEqual({
       b: 2,
-      d: 4, 
+      d: 4,
     });
   });
 
@@ -192,7 +192,7 @@ describe('parallel async helpers', () => {
     const obj = {
       a: 1,
       b: 3,
-      c: 4, 
+      c: 4,
     };
     const found = await findInParallel(
       obj,
@@ -234,7 +234,7 @@ describe('parallel async helpers', () => {
     const obj = {
       a: 1,
       b: 2,
-      c: 3, 
+      c: 3,
     };
     const sum = await reduceInParallel(
       obj,

@@ -1,5 +1,5 @@
 import {
-  isNumber, 
+  isNumber,
 } from '../src/is/isNumber';
 
 describe('isNumber', () => {

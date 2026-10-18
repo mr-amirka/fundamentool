@@ -1,5 +1,5 @@
 import {
-  responsibilityChain, 
+  responsibilityChain,
 } from '../src/responsibilityChain';
 
 describe('responsibilityChain', () => {
@@ -42,18 +42,18 @@ describe('responsibilityChain', () => {
     responsibilityChain(
       [
         (req, next) => {
-          log.push(1); return next(req); 
+          log.push(1); return next(req);
         },
         (req, next) => {
-          log.push(2); return next(req); 
+          log.push(2); return next(req);
         },
         (req, next) => {
-          log.push(3); return next(req); 
+          log.push(3); return next(req);
         },
       ],
       null,
       () => {
-        log.push(4); 
+        log.push(4);
       },
     );
     expect(log).toEqual([
@@ -71,13 +71,13 @@ describe('responsibilityChain', () => {
 
     responsibilityChain(
       [(_req, _next) => {
-        throw err; 
+        throw err;
       }, (req, next) => {
-        log.push(2); return next(req); 
+        log.push(2); return next(req);
       }],
       null,
       () => {
-        log.push(3); 
+        log.push(3);
       },
       (e) => errors.push(e),
     );

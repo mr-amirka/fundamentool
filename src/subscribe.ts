@@ -1,6 +1,6 @@
 /**
  * Subscribes to a collection of listeners.
- * 
+ *
  * @param collection - The collection to subscribe to.
  * @param listeners - The listeners to subscribe to.
  * @returns A function that, when called, removes all listeners from the collection.

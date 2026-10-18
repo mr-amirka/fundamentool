@@ -1,8 +1,8 @@
 import {
-  urlExtend, 
+  urlExtend,
 } from '../urlExtend';
 import {
-  script, 
+  script,
 } from './script';
 
 const cache: Record<string, Promise<void>> = {};

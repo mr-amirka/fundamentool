@@ -1,5 +1,5 @@
 import {
-  extractExportedFn, 
+  extractExportedFn,
 } from './testUtils';
 
 describe('browser/script', () => {

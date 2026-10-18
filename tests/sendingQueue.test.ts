@@ -1,5 +1,5 @@
 import {
-  sendingQueue, 
+  sendingQueue,
 } from '../src/sendingQueue';
 
 describe('sendingQueue', () => {
@@ -14,7 +14,7 @@ describe('sendingQueue', () => {
   test('drain waits for all pending', async () => {
     let resolve: () => void;
     const promise = new Promise<void>((r) => {
-      resolve = r; 
+      resolve = r;
     });
     const fn = jest.fn().mockReturnValue(promise);
     const send = sendingQueue(fn);

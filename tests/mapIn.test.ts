@@ -1,15 +1,15 @@
 import {
-  mapIn, 
+  mapIn,
 } from '../src/mapIn';
 
 describe('mapIn', () => {
   test('maps object properties', () => {
     expect(mapIn({
       a: 1,
-      b: 2, 
+      b: 2,
     }, v => v * 10)).toEqual({
       a: 10,
-      b: 20, 
+      b: 20,
     });
   });
 
@@ -17,9 +17,9 @@ describe('mapIn', () => {
     const keys: string[] = [];
     mapIn({
       x: 1,
-      y: 2, 
+      y: 2,
     }, (v, k) => {
-      keys.push(k); return v; 
+      keys.push(k); return v;
     });
     expect(keys).toContain('x');
     expect(keys).toContain('y');
@@ -27,16 +27,16 @@ describe('mapIn', () => {
 
   test('writes into provided output object', () => {
     const output: Record<string, number> = {
-      z: 99, 
+      z: 99,
     };
     mapIn(
       {
-        a: 1, 
+        a: 1,
       }, v => v * 2, output,
     );
     expect(output).toEqual({
       z: 99,
-      a: 2, 
+      a: 2,
     });
   });
 

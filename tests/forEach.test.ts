@@ -1,14 +1,14 @@
 import {
-  forEach, 
+  forEach,
 } from '../src/forEach';
 import {
-  forIn, 
+  forIn,
 } from '../src/forIn';
 import {
-  forInOwn, 
+  forInOwn,
 } from '../src/forInOwn';
 import {
-  each, 
+  each,
 } from '../src/each';
 
 describe('forEach', () => {
@@ -54,7 +54,7 @@ describe('forIn', () => {
     const result: string[] = [];
     forIn({
       a: 1,
-      b: 2, 
+      b: 2,
     }, (v, k) => result.push(k + '=' + v));
     expect(result.sort()).toEqual(['a=1', 'b=2']);
   });
@@ -62,7 +62,7 @@ describe('forIn', () => {
   test('passes value, key, collection', () => {
     const calls: any[] = [];
     forIn({
-      x: 42, 
+      x: 42,
     }, (
       v, k, c,
     ) => calls.push([
@@ -74,7 +74,7 @@ describe('forIn', () => {
       42,
       'x',
       {
-        x: 42, 
+        x: 42,
       },
     ]]);
   });
@@ -83,7 +83,7 @@ describe('forIn', () => {
 describe('forInOwn', () => {
   test('iterates only own properties', () => {
     const proto = {
-      inherited: 1, 
+      inherited: 1,
     };
     const obj = Object.create(proto);
     obj.own = 2;
@@ -112,7 +112,7 @@ describe('each', () => {
     const result: string[] = [];
     each({
       a: 1,
-      b: 2, 
+      b: 2,
     }, (v, k) => result.push(String(k)));
     expect(result.sort()).toEqual(['a', 'b']);
   });

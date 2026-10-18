@@ -1,5 +1,5 @@
 import {
-  getPrototypeOf, 
+  getPrototypeOf,
 } from '../src/getPrototypeOf';
 
 describe('getPrototypeOf', () => {

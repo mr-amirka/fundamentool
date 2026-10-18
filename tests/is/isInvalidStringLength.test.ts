@@ -1,5 +1,5 @@
 import {
-  isInvalidStringLength, 
+  isInvalidStringLength,
 } from '../../src/is/isInvalidStringLength';
 
 describe('isInvalidStringLength', () => {

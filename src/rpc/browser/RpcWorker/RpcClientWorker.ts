@@ -3,13 +3,13 @@ import type {
   TRpcClientOptionsPostMessage,
 } from '../../types';
 import {
-  RpcClient, 
+  RpcClient,
 } from '../../RpcClient';
 import {
-  SyntheticWorker, 
+  SyntheticWorker,
 } from '../SyntheticWorker';
 import {
-  onRpcMessageProvider, 
+  onRpcMessageProvider,
 } from './onRpcMessageProvider';
 
 /** Worker type for `RpcClientWorker`. Falls back automatically if the chosen type is unavailable. */

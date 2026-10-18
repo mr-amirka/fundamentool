@@ -1,46 +1,46 @@
 import {
-  extendOwn, 
+  extendOwn,
 } from '../src/extendOwn';
 import {
-  extendDepth, 
+  extendDepth,
 } from '../src/extendDepth';
 import {
-  extendIfEmpty, 
+  extendIfEmpty,
 } from '../src/extendIfEmpty';
 import {
-  extendByPathsMap, 
+  extendByPathsMap,
 } from '../src/extendByPathsMap';
 
 describe('extendOwn', () => {
   test('copies only own properties', () => {
     const proto = {
-      inherited: 1, 
+      inherited: 1,
     };
     const src = Object.create(proto) as Record<string, any>;
     src.own = 2;
     const dst = extendOwn({}, src);
     expect(dst).toEqual({
-      own: 2, 
+      own: 2,
     });
     expect((dst as any).inherited).toBeUndefined();
   });
 
   test('overwrites existing keys', () => {
     expect(extendOwn({
-      a: 1, 
+      a: 1,
     }, {
-      a: 99, 
+      a: 99,
     })).toEqual({
-      a: 99, 
+      a: 99,
     });
   });
 
   test('returns dst', () => {
     const dst = {
-      a: 1, 
+      a: 1,
     };
     expect(extendOwn(dst, {
-      b: 2, 
+      b: 2,
     })).toBe(dst);
   });
 });
@@ -49,31 +49,31 @@ describe('extendDepth', () => {
   test('deep-merges nested objects at depth 1', () => {
     const dst: any = {
       a: {
-        x: 1, 
-      }, 
+        x: 1,
+      },
     };
     extendDepth(
       dst, {
         a: {
-          y: 2, 
-        }, 
+          y: 2,
+        },
       } as any, 1,
     );
     expect(dst).toEqual({
       a: {
         x: 1,
-        y: 2, 
-      }, 
+        y: 2,
+      },
     });
   });
 
   test('overwrites non-object values at depth 0', () => {
     const dst: any = {
-      a: 1, 
+      a: 1,
     };
     extendDepth(
       dst, {
-        a: 2, 
+        a: 2,
       } as any, 0,
     );
     expect(dst.a).toBe(2);
@@ -82,22 +82,22 @@ describe('extendDepth', () => {
   test('does not mutate src', () => {
     const src = {
       a: {
-        b: 1, 
-      }, 
+        b: 1,
+      },
     };
     extendDepth(
       {} as any, src as any, 1,
     );
     expect(src).toEqual({
       a: {
-        b: 1, 
-      }, 
+        b: 1,
+      },
     });
   });
 
   test('returns dst', () => {
     const dst: any = {
-      a: 1, 
+      a: 1,
     };
     expect(extendDepth(
       dst, {} as any, 0,
@@ -108,24 +108,24 @@ describe('extendDepth', () => {
 describe('extendIfEmpty', () => {
   test('does not overwrite truthy existing values', () => {
     const dst = {
-      a: 1, 
+      a: 1,
     };
     extendIfEmpty(dst, {
       a: 99,
-      b: 2, 
+      b: 2,
     });
     expect(dst).toEqual({
       a: 1,
-      b: 2, 
+      b: 2,
     });
   });
 
   test('overwrites falsy (0) values', () => {
     const dst: Record<string, any> = {
-      a: 0, 
+      a: 0,
     };
     extendIfEmpty(dst, {
-      a: 5, 
+      a: 5,
     });
     expect(dst.a).toBe(5);
   });
@@ -133,7 +133,7 @@ describe('extendIfEmpty', () => {
   test('sets missing keys', () => {
     const dst: Record<string, any> = {};
     extendIfEmpty(dst, {
-      x: 42, 
+      x: 42,
     });
     expect(dst.x).toBe(42);
   });
@@ -144,23 +144,23 @@ describe('extendByPathsMap', () => {
     const result = extendByPathsMap(
       {}, {
         user: {
-          name: 'Ann', 
-        }, 
+          name: 'Ann',
+        },
       }, {
-        name: 'user.name', 
+        name: 'user.name',
       },
     );
     expect(result).toEqual({
-      name: 'Ann', 
+      name: 'Ann',
     });
   });
 
   test('ignores undefined src values', () => {
     const result = extendByPathsMap(
       {}, {
-        a: 1, 
+        a: 1,
       }, {
-        b: 'missing', 
+        b: 'missing',
       },
     );
     expect(result).toEqual({});
@@ -168,7 +168,7 @@ describe('extendByPathsMap', () => {
 
   test('returns dst unchanged when map is undefined', () => {
     const dst = {
-      x: 1, 
+      x: 1,
     };
     expect(extendByPathsMap(
       dst, {}, undefined,

@@ -1,8 +1,8 @@
 import {
-  childClass, 
+  childClass,
 } from '../childClass';
 import {
-  noop, 
+  noop,
 } from '../noop';
 
 const originalStringify = JSON.stringify;
@@ -24,7 +24,7 @@ export interface IJsonlTransformToEnv {
 
 /**
  * Factory that creates a Transform class for converting objects to JSONL.
- * 
+ *
  * @param env - The environment to use for the Transform class.
  * @returns A Transform class for converting objects to JSONL.
  * @example

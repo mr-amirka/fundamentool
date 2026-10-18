@@ -1,8 +1,8 @@
 import {
-  templateProvider, 
+  templateProvider,
 } from '../src/templateProvider';
 import {
-  templatePartsJoin, 
+  templatePartsJoin,
 } from '../src/templatePartsJoin';
 
 describe('templatePartsJoin', () => {
@@ -11,7 +11,7 @@ describe('templatePartsJoin', () => {
     const t = templatePartsJoin(parts);
     expect(t({
       a: 1,
-      b: 2, 
+      b: 2,
     })).toBe('12');
   });
 });
@@ -20,7 +20,7 @@ describe('templateProvider', () => {
   test('replaces {{path}} with scope value', () => {
     const t = templateProvider('Hello {{name}}!');
     expect(t({
-      name: 'World', 
+      name: 'World',
     })).toBe('Hello World!');
   });
   test('multiple placeholders', () => {
@@ -28,15 +28,15 @@ describe('templateProvider', () => {
     expect(t({
       a: 1,
       b: 2,
-      c: 3, 
+      c: 3,
     })).toBe('1-2-3');
   });
   test('nested path', () => {
     const t = templateProvider('{{user.name}}');
     expect(t({
       user: {
-        name: 'Vasya', 
-      }, 
+        name: 'Vasya',
+      },
     })).toBe('Vasya');
   });
 });

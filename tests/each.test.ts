@@ -1,5 +1,5 @@
 import {
-  each, 
+  each,
 } from '../src/each';
 
 describe('each', () => {
@@ -21,7 +21,7 @@ describe('each', () => {
     const result: [string, number][] = [];
     each({
       a: 1,
-      b: 2, 
+      b: 2,
     }, (v, k) => result.push([k as string, v]));
     expect(result).toContainEqual(['a', 1]);
     expect(result).toContainEqual(['b', 2]);

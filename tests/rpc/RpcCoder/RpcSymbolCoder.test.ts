@@ -1,5 +1,5 @@
 import {
-  RpcSymbolCoder, 
+  RpcSymbolCoder,
 } from '../../../src/rpc/RpcCoder/RpcSymbolCoder';
 
 describe('RpcSymbolCoder', () => {

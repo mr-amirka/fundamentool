@@ -1,11 +1,11 @@
 import {
-  tryJsonParse, 
+  tryJsonParse,
 } from './tryJsonParse';
 import {
-  half, 
+  half,
 } from './half';
 import {
-  set, 
+  set,
 } from './set';
 
 const REGEXP_SPACE = /\+/g;
@@ -22,7 +22,7 @@ export const unparamBase = (query: string, output?: any): TParams => {
   if (length < 1) {
     return result || {};
   }
-  
+
   let halfParts: [string, string, string];
   let value: string;
   let normalizedValue: string;

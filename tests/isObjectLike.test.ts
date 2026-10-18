@@ -1,5 +1,5 @@
 import {
-  isObjectLike, 
+  isObjectLike,
 } from '../src/is/isObjectLike';
 
 describe('isObjectLike', () => {

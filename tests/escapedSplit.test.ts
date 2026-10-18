@@ -1,8 +1,8 @@
 import {
-  escapedSplitProvider, 
+  escapedSplitProvider,
 } from '../src/escapedSplitProvider';
 import {
-  escapedHalfProvider, 
+  escapedHalfProvider,
 } from '../src/escapedHalfProvider';
 
 describe('escapedSplitProvider', () => {

@@ -1,5 +1,5 @@
 import {
-  getImageByUrl, 
+  getImageByUrl,
 } from './getImageByUrl';
 
 export interface IGetBase64ImageOptions {

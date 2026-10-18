@@ -1,11 +1,11 @@
 import {
-  hasOwn, 
+  hasOwn,
 } from './hasOwn';
 
 /**
  * Shallowly copies own enumerable properties from `src` to `dst`.
  * Mutates and returns `dst`.
- * 
+ *
  * @param dst - The destination object.
  * @param src - The source object.
  * @returns The destination object.

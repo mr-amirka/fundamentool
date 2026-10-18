@@ -1,5 +1,5 @@
 import {
-  delimiterToCamelCase, 
+  delimiterToCamelCase,
 } from '../src/delimiterToCamelCase';
 
 describe('delimiterToCamelCase', () => {

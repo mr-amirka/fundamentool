@@ -1,5 +1,5 @@
 import {
-  uniqWith, 
+  uniqWith,
 } from '../src/uniqWith';
 
 describe('uniqWith', () => {
@@ -20,19 +20,19 @@ describe('uniqWith', () => {
   test('uses custom comparator', () => {
     const input = [
       {
-        a: 1, 
+        a: 1,
       },
       {
-        a: 1, 
+        a: 1,
       },
       {
-        a: 2, 
+        a: 2,
       },
     ];
     expect(uniqWith(input, (x, y) => x.a === y.a)).toEqual([{
-      a: 1, 
+      a: 1,
     }, {
-      a: 2, 
+      a: 2,
     }]);
   });
 

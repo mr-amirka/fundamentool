@@ -1,8 +1,8 @@
 import {
-  wsAsyncRequestProvider, 
+  wsAsyncRequestProvider,
 } from '../../src/browser/wsAsyncRequestProvider';
 import {
-  FakeWebSocket, 
+  FakeWebSocket,
 } from './wsFakeWebSocket';
 
 describe('browser/wsAsyncRequestProvider', () => {
@@ -39,7 +39,7 @@ describe('browser/wsAsyncRequestProvider', () => {
     });
 
     const p = request('test', {
-      value: 1, 
+      value: 1,
     });
 
     await Promise.resolve();
@@ -54,11 +54,11 @@ describe('browser/wsAsyncRequestProvider', () => {
 
     const response = {
       id: payload.id,
-      data: 123, 
+      data: 123,
     };
     const event = {
       data: new Blob([JSON.stringify(response)], {
-        type: 'text/plain', 
+        type: 'text/plain',
       }),
     };
 

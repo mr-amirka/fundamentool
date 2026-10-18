@@ -1,15 +1,15 @@
 import {
-  reduce, 
+  reduce,
 } from '../src/reduce';
 import {
-  reduceIn, 
+  reduceIn,
 } from '../src/reduceIn';
 
 describe('reduceIn', () => {
   test('reduces over object properties', () => {
     const src = {
       a: 1,
-      b: 2, 
+      b: 2,
     };
     const keys: string[] = [];
     const sum = reduceIn(

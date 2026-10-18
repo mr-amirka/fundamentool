@@ -1,6 +1,10 @@
+import {
+  isDefined,
+} from './is/isDefined';
+
 /**
  * Shortens text to the given limit and appends a suffix if truncated.
- * 
+ *
  * @param text - The text to shorten.
  * @param limit - The limit to shorten the text to.
  * @param suffix - The suffix to append if the text is truncated.
@@ -15,7 +19,7 @@ export const textEllipsis = (
   limit: number = 12,
   suffix: string = '...',
 ): string => {
-  const _text = text === undefined || text === null ? '' : '' + text;
+  const _text = isDefined(text) ? '' + text : '';
   return _text.length > limit ? _text.slice(0, limit) + suffix : _text;
 };
 

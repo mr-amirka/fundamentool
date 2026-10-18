@@ -1,12 +1,12 @@
 import {
-  isArray, 
+  isArray,
 } from './is/isArray';
 
 /**
  * Flattens nested arrays into a single‑level array.
  *
  * Uses an explicit stack to avoid recursion.
- * 
+ *
  * @param input - The array to flatten.
  * @returns The flattened array.
  * @example

@@ -1,5 +1,5 @@
 import {
-  withDefer, 
+  withDefer,
 } from '../src/withDefer';
 
 describe('withDefer', () => {

@@ -1,5 +1,5 @@
 import {
-  range, 
+  range,
 } from '../src/range';
 
 describe('range', () => {

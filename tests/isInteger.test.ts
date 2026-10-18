@@ -1,5 +1,5 @@
 import {
-  isInteger, 
+  isInteger,
 } from '../src/is/isInteger';
 
 describe('isInteger', () => {

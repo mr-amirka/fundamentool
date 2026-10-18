@@ -5,7 +5,7 @@ import type {
   TRpcConnectOptionsPostMessage,
 } from '../../types';
 import {
-  RpcConnect, 
+  RpcConnect,
 } from '../../RpcConnect';
 
 /**

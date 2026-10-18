@@ -1,16 +1,16 @@
 import {
-  getWithContext, 
+  getWithContext,
 } from './get';
 import {
-  isArrayLike, 
+  isArrayLike,
 } from './is/isArrayLike';
 import {
-  getKeyPath, 
+  getKeyPath,
 } from './getKeyPath';
 
 /**
  * Invokes a function by path in the scope.
- * 
+ *
  * @param scope - The scope to invoke the function in.
  * @param path - The path to the function.
  * @param args - The arguments to pass to the function.
@@ -32,7 +32,7 @@ export const invokeBase = (
 
 /**
  * Invokes a function by path in the scope.
- * 
+ *
  * @param scope - The scope to invoke the function in.
  * @param path - The path to the function.
  * @param args - The arguments to pass to the function.

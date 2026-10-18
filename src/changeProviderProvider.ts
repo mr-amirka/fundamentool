@@ -1,8 +1,8 @@
 import {
-  getBase, 
+  getBase,
 } from './get';
 import {
-  noopHandle, 
+  noopHandle,
 } from './noopHandle';
 
 const defaultPath = ['value'];
@@ -25,7 +25,7 @@ export function changeProviderProvider<TState>(set: (partial: Partial<TState>) =
     return (e: any) => {
       const value = map(getBase(e && e.target, path));
       set({
-        [name]: value, 
+        [name]: value,
       } as Partial<TState>);
     };
   };

@@ -1,16 +1,16 @@
 import {
-  filterIn, 
+  filterIn,
 } from './filterIn';
 import {
-  keys, 
+  keys,
 } from './keys';
 import {
-  noopHandle, 
+  noopHandle,
 } from './noopHandle';
 
 /**
  * Returns an array of keys for which the flag value is truthy.
- * 
+ *
  * @param flags - The flags to get the keys for.
  * @returns The keys for which the flag value is truthy.
  * @example

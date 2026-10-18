@@ -1,11 +1,11 @@
 import {
-  defer, 
+  defer,
 } from './defer';
 import {
-  attachEvent, 
+  attachEvent,
 } from './attachEvent';
 import {
-  isDocumentStateReady, 
+  isDocumentStateReady,
 } from './is/isDocumentStateReady';
 
 export type TReadyDocumentContext = {
@@ -30,7 +30,7 @@ export type TReadyFn = (
 
 /**
  * Creates DOM ready helper for given window.
- * 
+ *
  * @param w - The window to create the DOM ready helper for.
  * @returns The DOM ready helper.
  * @example

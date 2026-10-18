@@ -2,7 +2,7 @@
  * Joins two arrays into a new array using the given separator string.
  *
  * If `suffixes` is empty, returns a shallow copy of `prefixes`.
- * 
+ *
  * @param prefixes - The prefixes to join.
  * @param suffixes - The suffixes to join.
  * @param separator - The separator to join the prefixes and suffixes with.

@@ -1,5 +1,5 @@
 import {
-  isFunction, 
+  isFunction,
 } from './isFunction';
 
 /**

@@ -1,5 +1,5 @@
 import {
-  createTimeout, 
+  createTimeout,
 } from './createTimeout';
 
 declare function setImmediate(handler: (...args: any[]) => void, ...args: any[]): any;
@@ -10,7 +10,7 @@ type Fn = ((...args: any[]) => any) | null | 0;
 /**
  * Schedules function execution as soon as possible using `setImmediate`,
  * with a fallback to `delay` when `setImmediate` is not available.
- * 
+ *
  * @param fn - The function to defer.
  * @param args - The arguments to pass to the function.
  * @param ctx - The context to pass to the function.

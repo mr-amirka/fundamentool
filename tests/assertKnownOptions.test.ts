@@ -10,13 +10,13 @@ describe('assertKnownOptions', () => {
     expect(() => assertKnownOptions(
       WHERE, {
         a: 1,
-        b: 2, 
+        b: 2,
       }, ['a', 'b'],
     )).not.toThrow();
     expect(() => assertKnownOptions(
       WHERE, {
         a: 1,
-        extra: undefined, 
+        extra: undefined,
       }, ['a'],
     )).not.toThrow();
   });
@@ -42,7 +42,7 @@ describe('assertKnownOptions', () => {
   ) => {
     expect(() => assertKnownOptions(
       WHERE, {
-        [key]: 1, 
+        [key]: 1,
       }, ['manifestUrl', 'fetchJson'],
     ))
       .toThrow(`${WHERE}: unknown option "${key}". ${message}`);
@@ -51,7 +51,7 @@ describe('assertKnownOptions', () => {
   it('a far-off key — the list of accepted keys', () => {
     expect(() => assertKnownOptions(
       WHERE, {
-        cdn: 1, 
+        cdn: 1,
       }, ['manifestUrl', 'fetchJson'],
     ))
       .toThrow(`${WHERE}: unknown option "cdn". Known options: manifestUrl, fetchJson`);
@@ -60,7 +60,7 @@ describe('assertKnownOptions', () => {
   it('a key of very different length is not compared letter by letter', () => {
     expect(() => assertKnownOptions(
       WHERE, {
-        x: 1, 
+        x: 1,
       }, ['averyveryverylongoption'],
     ))
       .toThrow('Known options: averyveryverylongoption');
@@ -69,7 +69,7 @@ describe('assertKnownOptions', () => {
   it('picks the closest of several candidates', () => {
     expect(() => assertKnownOptions(
       WHERE, {
-        wieght: 1, 
+        wieght: 1,
       }, ['width', 'weight'],
     ))
       .toThrow('Did you mean "weight"?');

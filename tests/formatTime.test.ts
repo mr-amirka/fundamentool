@@ -1,5 +1,5 @@
 import {
-  formatTime, normalizeDate, getData, 
+  formatTime, normalizeDate, getData,
 } from '../src/formatTime';
 
 describe('formatTime', () => {

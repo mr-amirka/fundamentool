@@ -1,5 +1,5 @@
 import {
-  unslash, 
+  unslash,
 } from '../src/unslash';
 
 describe('unslash', () => {

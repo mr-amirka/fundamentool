@@ -1,14 +1,14 @@
 import {
-  eachApply, 
+  eachApply,
 } from '../src/eachApply';
 import {
-  eachApplyMap, 
+  eachApplyMap,
 } from '../src/eachApplyMap';
 import {
-  eachTry, 
+  eachTry,
 } from '../src/eachTry';
 import {
-  executeTry, 
+  executeTry,
 } from '../src/executeTry';
 
 describe('eachApply', () => {
@@ -22,19 +22,19 @@ describe('eachApply', () => {
     const calls: string[] = [];
     eachApply({
       a: () => calls.push('a'),
-      b: () => calls.push('b'), 
+      b: () => calls.push('b'),
     });
     expect(calls.sort()).toEqual(['a', 'b']);
   });
 
   test('passes context to each function', () => {
     const ctx = {
-      value: 42, 
+      value: 42,
     };
     let received: any;
     eachApply(
       [function(this: any) {
-        received = this.value; 
+        received = this.value;
       }], [], ctx,
     );
     expect(received).toBe(42);
@@ -49,10 +49,10 @@ describe('eachApplyMap', () => {
 
   test('maps object of functions to result object', () => {
     const result = eachApplyMap({
-      double: (x: number) => x * 2, 
+      double: (x: number) => x * 2,
     }, [3]);
     expect(result).toEqual({
-      double: 6, 
+      double: 6,
     });
   });
 });
@@ -63,7 +63,7 @@ describe('eachTry', () => {
     eachTry([
       () => result.push(1),
       () => {
-        throw new Error('fail'); 
+        throw new Error('fail');
       },
       () => result.push(3),
     ],
@@ -76,7 +76,7 @@ describe('eachTry', () => {
     const err = new Error('oops');
     eachTry(
       [() => {
-        throw err; 
+        throw err;
       }], [], null, (e) => errors.push(e),
     );
     expect(errors).toEqual([err]);
@@ -90,7 +90,7 @@ describe('executeTry', () => {
 
   test('returns undefined when function throws', () => {
     expect(executeTry(() => {
-      throw new Error('x'); 
+      throw new Error('x');
     })).toBeUndefined();
   });
 
@@ -99,7 +99,7 @@ describe('executeTry', () => {
     const err = new Error('test');
     executeTry(
       () => {
-        throw err; 
+        throw err;
       }, [], null, (e) => errors.push(e),
     );
     expect(errors).toEqual([err]);
@@ -107,11 +107,11 @@ describe('executeTry', () => {
 
   test('passes args and context to function', () => {
     const ctx = {
-      base: 10, 
+      base: 10,
     };
     const result = executeTry(
       function(this: any, x: number) {
-        return this.base + x; 
+        return this.base + x;
       }, [5], ctx,
     );
     expect(result).toBe(15);

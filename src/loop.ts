@@ -1,6 +1,6 @@
 /**
  * Simple synchronous loop utility that calls `fn` for indices [start, length).
- * 
+ *
  * @param length - The length of the loop.
  * @param fn - The function to call for each index.
  * @param start - The start index.

@@ -1,5 +1,5 @@
 import {
-  joinAmp, 
+  joinAmp,
 } from '../../src/join/joinAmp';
 
 describe('joinAmp', () => {

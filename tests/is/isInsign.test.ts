@@ -1,5 +1,5 @@
 import {
-  isInsign, 
+  isInsign,
 } from '../../src/is/isInsign';
 
 describe('isInsign', () => {
@@ -23,7 +23,7 @@ describe('isInsign', () => {
   test('returns false for non-empty collections', () => {
     expect(isInsign([1])).toBe(false);
     expect(isInsign({
-      a: 1, 
+      a: 1,
     })).toBe(false);
   });
 

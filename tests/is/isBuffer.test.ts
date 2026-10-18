@@ -1,5 +1,5 @@
 import {
-  isBuffer, 
+  isBuffer,
 } from '../../src/is/isBuffer';
 
 describe('isBuffer', () => {

@@ -1,5 +1,5 @@
 import {
-  trimQuote, 
+  trimQuote,
 } from '../src/trimQuote';
 
 describe('trimQuote', () => {

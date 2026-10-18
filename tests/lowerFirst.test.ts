@@ -1,5 +1,5 @@
 import {
-  lowerFirst, 
+  lowerFirst,
 } from '../src/lowerFirst';
 
 describe('lowerFirst', () => {

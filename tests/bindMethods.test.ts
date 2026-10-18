@@ -1,5 +1,5 @@
 import {
-  bindMethods, 
+  bindMethods,
 } from '../src/bindMethods';
 
 describe('bindMethods', () => {
@@ -7,10 +7,10 @@ describe('bindMethods', () => {
     class Counter {
       value = 0;
       increment() {
-        this.value++; 
+        this.value++;
       }
       decrement() {
-        this.value--; 
+        this.value--;
       }
     }
 
@@ -18,7 +18,7 @@ describe('bindMethods', () => {
     bindMethods(counter, ['increment', 'decrement']);
 
     const {
-      increment, decrement, 
+      increment, decrement,
     } = counter;
     increment();
     increment();
@@ -28,7 +28,7 @@ describe('bindMethods', () => {
 
   test('returns the same object', () => {
     const obj = {
-      fn() {}, 
+      fn() {},
     };
     expect(bindMethods(obj, ['fn'])).toBe(obj);
   });
@@ -37,12 +37,12 @@ describe('bindMethods', () => {
     const obj = {
       x: 42,
       getX() {
-        return (this as any).x; 
+        return (this as any).x;
       },
     };
     bindMethods(obj, ['getX']);
     const {
-      getX, 
+      getX,
     } = obj;
     expect(getX()).toBe(42);
   });

@@ -3,7 +3,6 @@ import {
   read as originReadJson,
 } from './base';
 
-
 /**
  * Writes a JSON snapshot to both `path` and `path.recov` for redundancy.
  *

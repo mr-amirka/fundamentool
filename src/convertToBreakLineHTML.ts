@@ -1,6 +1,6 @@
 /**
  * Converts a string to a break line HTML.
- * 
+ *
  * @param input - The string to convert.
  * @returns The converted string.
  * @example

@@ -1,5 +1,5 @@
 import {
-  wait, 
+  wait,
 } from '../wait';
 /**
  * Opens the given URL in a new browser tab using a temporary `<a>` element.

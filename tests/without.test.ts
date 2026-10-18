@@ -1,5 +1,5 @@
 import {
-  without, 
+  without,
 } from '../src/without';
 
 describe('without', () => {
@@ -7,12 +7,12 @@ describe('without', () => {
     const src = {
       a: 1,
       b: 2,
-      c: 3, 
+      c: 3,
     };
     const result = without(src, ['b']);
     expect(result).toEqual({
       a: 1,
-      c: 3, 
+      c: 3,
     });
   });
 
@@ -20,23 +20,23 @@ describe('without', () => {
     const src = {
       a: 1,
       b: 2,
-      c: 3, 
+      c: 3,
     };
     const result = without(src, ['a', 'c']);
     expect(result).toEqual({
-      b: 2, 
+      b: 2,
     });
   });
 
   test('returns copy; does not mutate src', () => {
     const src = {
       a: 1,
-      b: 2, 
+      b: 2,
     };
     const result = without(src, ['b']);
     expect(src).toEqual({
       a: 1,
-      b: 2, 
+      b: 2,
     });
     expect(result).not.toBe(src);
   });
@@ -44,7 +44,7 @@ describe('without', () => {
   test('writes into dst when provided', () => {
     const src = {
       a: 1,
-      b: 2, 
+      b: 2,
     };
     const dst: Record<string, number> = {};
     const result = without(
@@ -52,14 +52,14 @@ describe('without', () => {
     );
     expect(result).toBe(dst);
     expect(dst).toEqual({
-      a: 1, 
+      a: 1,
     });
   });
 
   test('keeps all keys when withoutKeys is empty', () => {
     const src = {
       a: 1,
-      b: 2, 
+      b: 2,
     };
     expect(without(src, [])).toEqual(src);
   });

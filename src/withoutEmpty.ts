@@ -1,3 +1,6 @@
+import {
+  isDefined,
+} from './is/isDefined';
 
 /**
  * Recursively removes null, undefined, empty-string and empty-array values.
@@ -20,7 +23,7 @@ export const withoutEmptyBase = (src: any, depth: number): any => {
   let dst: any = null,
     v: any,
     k: string;
-  if (src === null || src === undefined || (type === 'string' && !src)) {
+  if (!isDefined(src) || (type === 'string' && !src)) {
     return null;
   }
   if (type != 'object') return src; // eslint-disable-line

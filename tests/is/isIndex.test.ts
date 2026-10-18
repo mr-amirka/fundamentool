@@ -1,5 +1,5 @@
 import {
-  isIndex, 
+  isIndex,
 } from '../../src/is/isIndex';
 
 describe('isIndex', () => {

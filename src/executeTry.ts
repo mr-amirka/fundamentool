@@ -4,7 +4,7 @@
  *
  * If the function throws, the optional `onError` handler is called
  * and the function returns `undefined`.
- * 
+ *
  * @param fn - The function to execute.
  * @param args - The arguments to pass to the function.
  * @param context - The context to pass to the function.

@@ -1,12 +1,12 @@
 import {
-  keys, 
+  keys,
 } from '../src/keys';
 
 describe('keys', () => {
   test('returns enumerable keys', () => {
     expect(keys({
       a: 1,
-      b: 2, 
+      b: 2,
     })).toEqual(['a', 'b']);
   });
 
@@ -17,7 +17,7 @@ describe('keys', () => {
   test('order follows for-in enumeration', () => {
     const obj = {
       z: 1,
-      a: 2, 
+      a: 2,
     };
     const k = keys(obj);
     expect(k).toContain('a');

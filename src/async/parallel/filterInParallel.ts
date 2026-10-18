@@ -1,21 +1,21 @@
 import {
-  entries, 
+  entries,
 } from '../../entries';
 import {
-  fromPairs, 
+  fromPairs,
 } from '../../fromPairs';
 import {
-  checkNoop, 
+  checkNoop,
 } from '../checkNoop';
 import {
-  filterParallel, 
+  filterParallel,
 } from './filterParallel';
 
 /**
  * Parallel asynchronous filter over object.
  *
  * Expects `iteratee` to be a function; shorthand/normalize logic is removed.
- * 
+ *
  * @param collection - Source object.
  * @param iteratee - Predicate function.
  * @param output - Optional output object.

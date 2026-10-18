@@ -1,14 +1,14 @@
 import {
-  tmpdir, 
+  tmpdir,
 } from 'os';
 import {
-  join, 
+  join,
 } from 'path';
 import {
-  mkdirSync, writeFileSync, rmSync, 
+  mkdirSync, writeFileSync, rmSync,
 } from 'fs';
 import {
-  each, 
+  each,
 } from '../../../src/node/searchFiles/each';
 
 function makeTree() {
@@ -16,7 +16,7 @@ function makeTree() {
   mkdirSync(join(
     root, 'subdir', 'nested',
   ), {
-    recursive: true, 
+    recursive: true,
   });
   writeFileSync(join(root, 'a.txt'), '');
   writeFileSync(join(root, 'b.txt'), '');
@@ -34,11 +34,11 @@ describe('node/searchFiles/each', () => {
     const root = makeTree();
     const found: string[] = [];
     await each(root, {
-      iteratee: (p) => found.push(p), 
+      iteratee: (p) => found.push(p),
     });
     expect(found.length).toBe(4);
     rmSync(root, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -46,7 +46,7 @@ describe('node/searchFiles/each', () => {
     const root = makeTree();
     await expect(each(root, {})).resolves.toBeUndefined();
     rmSync(root, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -60,7 +60,7 @@ describe('node/searchFiles/each', () => {
     // a.txt, b.txt, subdir/c.ts — nested/ excluded
     expect(found.length).toBe(3);
     rmSync(root, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -74,22 +74,22 @@ describe('node/searchFiles/each', () => {
     expect(found.every((p) => p.endsWith('.ts'))).toBe(true);
     expect(found.length).toBe(2);
     rmSync(root, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
   test('resolves immediately for empty directory', async () => {
     const root = join(tmpdir(), `fundamentool-each-empty-${Date.now()}`);
     mkdirSync(root, {
-      recursive: true, 
+      recursive: true,
     });
     const found: string[] = [];
     await each(root, {
-      iteratee: (p) => found.push(p), 
+      iteratee: (p) => found.push(p),
     });
     expect(found).toEqual([]);
     rmSync(root, {
-      recursive: true, 
+      recursive: true,
     });
   });
 

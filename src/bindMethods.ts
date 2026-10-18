@@ -1,5 +1,5 @@
 import {
-  reduce, 
+  reduce,
 } from './reduce';
 
 function iterateeBindMethods<T extends Record<string, any>>(self: T,

@@ -1,8 +1,10 @@
 import {
-  noopHandle, 
+  noopHandle,
 } from '../noopHandle';
 import type {
-  ILineDecoderOptions, ILineDecoderBaseOptions, ILineDecoderConstructor, 
+  ILineDecoderOptions,
+  ILineDecoderBaseOptions,
+  ILineDecoderConstructor,
 } from './types';
 
 export * from './types';
@@ -35,7 +37,7 @@ export class LineDecoder<T = any> {
       constructor(options: ILineDecoderBaseOptions = {}) {
         const lineDecoder = new LineDecoder({
           ...options,
-          parse, 
+          parse,
         });
         this.write = lineDecoder.write;
         this.end = lineDecoder.end;
@@ -84,7 +86,7 @@ export class LineDecoder<T = any> {
           output.push(parse(line) as T);
         } catch (error: any) {
           throw new Error(`Parse error on line ${lineCount}:\n${error.toString()}`, {
-            cause: error, 
+            cause: error,
           });
         }
       }

@@ -1,5 +1,5 @@
 import {
-  subscribe, 
+  subscribe,
 } from '../src/subscribe';
 
 describe('subscribe', () => {

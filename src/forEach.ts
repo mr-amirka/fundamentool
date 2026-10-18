@@ -2,7 +2,7 @@ const NATIVE_FOR_EACH = Array.prototype.forEach;
 
 /**
  * Iterates over an array and calls a function for each item.
- * 
+ *
  * @param src - The array to iterate over.
  * @param fn - The function to call for each item.
  * @param ctx - The `this` context to use for the function.

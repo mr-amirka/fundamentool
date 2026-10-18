@@ -1,8 +1,8 @@
 import {
-  queueProvider, 
+  queueProvider,
 } from '../src/queueProvider';
 import {
-  wait, 
+  wait,
 } from '../src/wait';
 
 describe('queueProvider', () => {
@@ -10,10 +10,10 @@ describe('queueProvider', () => {
     const queue = queueProvider();
     const order: number[] = [];
     const fn1 = jest.fn(async () => {
-      order.push(1); 
+      order.push(1);
     });
     const fn2 = jest.fn(async () => {
-      order.push(2); 
+      order.push(2);
     });
     const q1 = queue(fn1);
     const q2 = queue(fn2);

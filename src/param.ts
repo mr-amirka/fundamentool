@@ -1,19 +1,22 @@
 import {
-  withoutEmpty, 
+  withoutEmpty,
 } from './withoutEmpty';
+import {
+  isObject,
+} from './is/isObject';
 
 const PARAM_WITHOUT_EMPTY_DEFAULT_DEPTH = 10;
 
 /**
  * Constructs a query string from a given object.
- * 
+ *
  * @param v - The object to construct a query string from.
  * @returns The query string.
  * @example
  * param({ a: 1, b: 'x' }); // => 'a=1&b=x'
  */
 export const param = (v: any): string => {
-  if (v === null || typeof v !== 'object') {
+  if (!isObject(v)) {
     return '';
   }
   const s: string[] = [];
@@ -24,7 +27,7 @@ export const param = (v: any): string => {
     v === null
       || s.push(paramEscape(p)
           + '='
-          + paramEscape(v !== null && typeof v === 'object' ? JSON.stringify(v) : '' + v));
+          + paramEscape(isObject(v) ? JSON.stringify(v) : '' + v));
     return s;
   }
   if (Array.isArray(v)) {
@@ -39,7 +42,7 @@ export const param = (v: any): string => {
 
 /**
  * Escapes a string for use in a query string.
- * 
+ *
  * @param v - The string to escape.
  * @returns The escaped string.
  * @example

@@ -1,8 +1,9 @@
 import {
-  RpcClientPool, 
+  RpcClientPool,
 } from '../../RpcClientPool';
 import {
-  NodeRpcClientWorker, TNodeRpcClientWorkerOptions, 
+  NodeRpcClientWorker,
+  TNodeRpcClientWorkerOptions,
 } from './NodeRpcClientWorker';
 
 /** Options for `NodeRpcClientWorkerPool`. */

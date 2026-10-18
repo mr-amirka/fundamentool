@@ -1,5 +1,5 @@
 import {
-  getViewportSizeProvider, 
+  getViewportSizeProvider,
 } from '../getViewportSizeProvider';
 
 declare const window: Window;

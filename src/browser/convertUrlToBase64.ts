@@ -1,8 +1,8 @@
 import {
-  convertUrlToBlob, 
+  convertUrlToBlob,
 } from './convertUrlToBlob';
 import {
-  convertBlobToBase64, 
+  convertBlobToBase64,
 } from './convertBlobToBase64';
 
 /**

@@ -1,12 +1,12 @@
 import {
-  isStandardObject, 
+  isStandardObject,
 } from '../../src/is/isStandardObject';
 
 describe('isStandardObject', () => {
   test('returns true for plain objects and arrays', () => {
     expect(isStandardObject({})).toBe(true);
     expect(isStandardObject({
-      a: 1, 
+      a: 1,
     })).toBe(true);
     expect(isStandardObject([])).toBe(true);
     expect(isStandardObject([1, 2])).toBe(true);

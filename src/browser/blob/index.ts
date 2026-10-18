@@ -1,14 +1,13 @@
 import {
-  provider, 
+  provider,
 } from './provider';
 
 export {
-  provider, 
+  provider,
 } from './provider';
 export {
-  from, 
+  from,
 } from './from';
-
 
 /**
  * Reads a `Blob` as plain text.

@@ -1,8 +1,8 @@
 import {
-  localStorageProvider, 
+  localStorageProvider,
 } from '../src/localStorageProvider';
 import {
-  createObservable, createApi, 
+  createObservable, createApi,
 } from '../src/Observable';
 
 function makeLocalStorageMock() {
@@ -12,19 +12,19 @@ function makeLocalStorageMock() {
     storage: {
       getItem: (k: string) => store[k] ?? null,
       setItem: (k: string, v: string) => {
-        store[k] = v; 
+        store[k] = v;
       },
       removeItem: (k: string) => {
-        delete store[k]; 
+        delete store[k];
       },
       key: (i: number) => Object.keys(store)[i] ?? null,
       get length() {
-        return Object.keys(store).length; 
+        return Object.keys(store).length;
       },
     },
     win: {
       get localStorage() {
-        return this._storage; 
+        return this._storage;
       },
       _storage: null as any,
       addEventListener: (_: string, cb: (e: any) => void) => listeners.push(cb),
@@ -36,7 +36,7 @@ function makeLocalStorageMock() {
 
 function makeLocalStorageWin() {
   const {
-    storage, win, 
+    storage, win,
   } = makeLocalStorageMock();
   win._storage = storage;
   return win as any;
@@ -45,7 +45,7 @@ function makeLocalStorageWin() {
 describe('localStorageProvider', () => {
   test('set and get a value', () => {
     const {
-      storage, win, 
+      storage, win,
     } = makeLocalStorageMock();
     win._storage = storage;
     const ls = localStorageProvider(win as any);
@@ -55,7 +55,7 @@ describe('localStorageProvider', () => {
 
   test('remove a value', () => {
     const {
-      storage, win, 
+      storage, win,
     } = makeLocalStorageMock();
     win._storage = storage;
     const ls = localStorageProvider(win as any);
@@ -66,7 +66,7 @@ describe('localStorageProvider', () => {
 
   test('getKeys returns all keys', () => {
     const {
-      storage, win, 
+      storage, win,
     } = makeLocalStorageMock();
     win._storage = storage;
     const ls = localStorageProvider(win as any);
@@ -77,7 +77,7 @@ describe('localStorageProvider', () => {
 
   test('clear removes all keys', () => {
     const {
-      storage, win, 
+      storage, win,
     } = makeLocalStorageMock();
     win._storage = storage;
     const ls = localStorageProvider(win as any);
@@ -92,7 +92,7 @@ describe('localStorageProvider', () => {
     let called = false;
     localStorageProvider(win, {
       createObservable: (initial) => {
-        called = true; return createObservable(initial); 
+        called = true; return createObservable(initial);
       },
       createApi,
     });

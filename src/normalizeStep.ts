@@ -1,6 +1,6 @@
 /**
  * Normalizes a step value.
- * 
+ *
  * @param step - The step value to normalize.
  * @param limit - The limit value to normalize the step value to.
  * @returns The normalized step value.

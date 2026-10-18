@@ -1,10 +1,10 @@
 import {
-  isFunction, 
+  isFunction,
 } from './is/isFunction';
 
 /**
  * Wraps node‑style callback function into Promise‑based one.
- * 
+ *
  * @param fn - The function to wrap.
  * @param PromiseCtor - The Promise constructor to use.
  * @returns The wrapped function.

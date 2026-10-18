@@ -1,18 +1,18 @@
 import {
-  tmpdir, 
+  tmpdir,
 } from 'os';
 import {
-  join, 
+  join,
 } from 'path';
 import {
-  mkdirSync, writeFileSync, rmSync, unlinkSync, 
+  mkdirSync, writeFileSync, rmSync, unlinkSync,
 } from 'fs';
 import * as csv from '../../../src/node/file/csv';
 
 function tmpDir() {
   const dir = join(tmpdir(), `fundamentool-csv-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   mkdirSync(dir, {
-    recursive: true, 
+    recursive: true,
   });
   return dir;
 }
@@ -25,7 +25,7 @@ describe('node/file/csv — write & read', () => {
     const result = await csv.read(path);
     expect(result).toEqual([['a', 'b'], ['1', '2']]);
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -34,11 +34,11 @@ describe('node/file/csv — write & read', () => {
     const path = join(dir, 'report');
     await csv.write(path, [['x']]);
     const {
-      existsSync, 
+      existsSync,
     } = require('fs');
     expect(existsSync(path + '.csv')).toBe(true);
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -50,7 +50,7 @@ describe('node/file/csv — write & read', () => {
     await csv.read(path, out);
     expect(out).toEqual([['a'], ['b']]);
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -62,7 +62,7 @@ describe('node/file/csv — write & read', () => {
     await csv.readEachLine(path, (row) => rows.push(row));
     expect(rows).toEqual([['r1c1', 'r1c2'], ['r2c1', 'r2c2']]);
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -77,12 +77,12 @@ describe('node/file/csv/snapshot — write & read', () => {
     const path = join(dir, 'snap');
     await csv.snapshot.write(path, [['v', '1']]);
     const {
-      existsSync, 
+      existsSync,
     } = require('fs');
     expect(existsSync(path + '.csv')).toBe(true);
     expect(existsSync(path + '.recov.csv')).toBe(true);
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -93,7 +93,7 @@ describe('node/file/csv/snapshot — write & read', () => {
     const result = await csv.snapshot.read(path);
     expect(result).toEqual([['ok']]);
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -105,7 +105,7 @@ describe('node/file/csv/snapshot — write & read', () => {
     const result = await csv.snapshot.read(path);
     expect(result).toEqual([['good']]);
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -114,7 +114,7 @@ describe('node/file/csv/snapshot — write & read', () => {
     const result = await csv.snapshot.read(join(dir, 'missing'), () => []);
     expect(result).toEqual([]);
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -123,7 +123,7 @@ describe('node/file/csv/snapshot — write & read', () => {
     const result = await csv.snapshot.read(join(dir, 'missing'));
     expect(result).toBeNull();
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 });

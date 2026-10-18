@@ -1,12 +1,12 @@
 import {
-  size, 
+  size,
 } from '../src/size';
 
 describe('size', () => {
   test('returns count of enumerable values', () => {
     expect(size({
       a: 1,
-      b: 2, 
+      b: 2,
     })).toBe(2);
     expect(size([])).toBe(0);
   });

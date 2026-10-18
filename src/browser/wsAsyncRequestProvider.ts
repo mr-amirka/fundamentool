@@ -1,20 +1,20 @@
 import {
-  noop, 
+  noop,
 } from '../noop';
 import {
-  once, 
+  once,
 } from '../once';
 import {
-  isEmpty, 
+  isEmpty,
 } from '../is/isEmpty';
 import {
-  stackProvider, 
+  stackProvider,
 } from '../stackProvider';
 import {
-  toText, 
+  toText,
 } from './blob';
 import {
-  wsConnect, 
+  wsConnect,
 } from './wsConnect';
 
 declare const Buffer: any;
@@ -186,7 +186,7 @@ export function wsAsyncRequestProvider<TResponse = any>(wsUrl: string,
       promises.push(promise);
       return promise;
     }
-    
+
     Promise
       .resolve()
       .then(() => _onReconnect(error, onReconnectCallback))

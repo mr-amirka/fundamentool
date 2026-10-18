@@ -1,5 +1,5 @@
 import {
-  scopeSplit, 
+  scopeSplit,
 } from '../src/scopeSplit';
 
 describe('scopeSplit', () => {

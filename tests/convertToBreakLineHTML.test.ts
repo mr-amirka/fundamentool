@@ -1,5 +1,5 @@
 import {
-  convertToBreakLineHTML, 
+  convertToBreakLineHTML,
 } from '../src/convertToBreakLineHTML';
 
 describe('convertToBreakLineHTML', () => {

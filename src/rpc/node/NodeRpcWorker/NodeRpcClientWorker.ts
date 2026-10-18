@@ -8,7 +8,7 @@ import {
   TRpcClientOptionsPostMessage,
 } from '../../types';
 import {
-  noop, 
+  noop,
 } from '../../../noop';
 
 /** Options for `NodeRpcClientWorker`. */

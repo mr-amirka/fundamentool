@@ -1,8 +1,8 @@
 import {
-  createReadStream, 
+  createReadStream,
 } from 'fs';
 import {
-  TransformFrom, 
+  TransformFrom,
 } from './TransformFrom';
 
 /**

@@ -1,5 +1,5 @@
 import {
-  EventEmitter, 
+  EventEmitter,
 } from '../src/EventEmitter';
 
 class TestEmitter extends EventEmitter<number> {

@@ -1,15 +1,15 @@
 import {
-  isFunction, 
+  isFunction,
 } from './is/isFunction';
 import {
-  mapperProvider, 
+  mapperProvider,
 } from './mapperProvider';
 
 export type TRouteMapper = (text: string, dst?: Record<string, any>) => boolean;
 
 /**
  * Creates a regexp mapper provider.
- * 
+ *
  * @param regexp - The regexp to use.
  * @param keys - The keys to use.
  * @returns The regexp mapper provider.

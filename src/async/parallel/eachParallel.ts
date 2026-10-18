@@ -1,20 +1,20 @@
 import {
-  isArray, 
+  isArray,
 } from '../../is/isArray';
 import {
-  forEachParallel, 
+  forEachParallel,
 } from './forEachParallel';
 import {
-  forInParallel, 
+  forInParallel,
 } from './forInParallel';
 import {
-  checkNoop, 
+  checkNoop,
 } from '../checkNoop';
 
 /**
  * Chooses parallel iterator (`forEach` for arrays, `forIn` for objects via `forInParallel`)
  * and runs it. This is a thin facade mirroring the old JS behaviour.
- * 
+ *
  * @param collection - Source array or object.
  * @param iteratee - Iteration function.
  * @param ctx - Optional `this` context.

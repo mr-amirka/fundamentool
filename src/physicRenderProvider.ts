@@ -1,10 +1,10 @@
 import {
-  intervalAsync, 
+  intervalAsync,
 } from './async/intervalAsync';
 
 /**
  * Provides simple "physics" render loop with fixed timestep.
- * 
+ *
  * @param fn - The function to call on each timestep.
  * @param timestep - The timestep to use.
  * @param runner - The runner to use.

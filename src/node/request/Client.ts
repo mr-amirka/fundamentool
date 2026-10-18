@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import http from 'node:http';
 import https from 'node:https';
 import {
-  formatTime, 
+  formatTime,
 } from '../../formatTime';
 import {
   param,
@@ -11,16 +11,16 @@ import {
   urlParse,
 } from '../../urlParse';
 import {
-  wait, 
+  wait,
 } from '../../wait';
 import {
-  createTimeout, 
+  createTimeout,
 } from '../../createTimeout';
 import {
-  noop, 
+  noop,
 } from '../../noop';
 import {
-  Response, 
+  Response,
 } from './Response';
 
 export type TRequestOptions = {

@@ -1,11 +1,13 @@
 import {
-  open, read, close, 
+  open,
+  read,
+  close,
 } from 'fs';
 import {
-  noop, 
+  noop,
 } from '../../../noop';
 import {
-  createTimeout, 
+  createTimeout,
 } from '../../../createTimeout';
 
 const DEFAULT_BUFFER_LENGTH = 1024 * 8;
@@ -79,7 +81,7 @@ export const readSlice = (
 
       // eslint-disable-next-line no-console
       console.error(error, {
-        attempt: attemptIndex, 
+        attempt: attemptIndex,
       });
 
       closeBase();
@@ -140,7 +142,7 @@ export const readSlice = (
           reject(new Error('aborted'));
         },
         {
-          once: true, 
+          once: true,
         },
       );
     }

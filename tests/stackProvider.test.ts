@@ -1,5 +1,5 @@
 import {
-  stackProvider, 
+  stackProvider,
 } from '../src/stackProvider';
 
 describe('stackProvider', () => {

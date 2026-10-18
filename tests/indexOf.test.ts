@@ -1,5 +1,5 @@
 import {
-  indexOf, 
+  indexOf,
 } from '../src/indexOf';
 
 describe('indexOf', () => {
@@ -28,7 +28,7 @@ describe('indexOf', () => {
     const like = {
       0: 'x',
       1: 'y',
-      length: 2, 
+      length: 2,
     };
     expect(indexOf(like, 'y')).toBe(1);
   });

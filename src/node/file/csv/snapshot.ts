@@ -3,7 +3,6 @@ import {
   read as originReadCsv,
 } from './base';
 
-
 /**
  * Writes a CSV snapshot to both `path` and `path.recov` for redundancy.
  *

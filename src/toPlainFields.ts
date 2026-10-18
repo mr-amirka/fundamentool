@@ -1,3 +1,7 @@
+import {
+  isObject,
+} from './is/isObject';
+
 /**
  * Flattens nested structures into plain dotted paths.
  *
@@ -11,7 +15,7 @@ export const toPlainFields = (params: any): Record<string, any> => {
   const output: Record<string, any> = {};
 
   function base(prefix: string, value: any): void {
-    if (!value || typeof value !== 'object') {
+    if (!isObject(value)) {
       output[prefix] = value;
       return;
     }

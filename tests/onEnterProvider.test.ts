@@ -1,5 +1,5 @@
 import {
-  onEnterProvider, 
+  onEnterProvider,
 } from '../src/onEnterProvider';
 
 describe('onEnterProvider', () => {
@@ -8,7 +8,7 @@ describe('onEnterProvider', () => {
     const onEnter = onEnterProvider(handle);
 
     onEnter({
-      key: 'Enter', 
+      key: 'Enter',
     });
 
     expect(handle).toHaveBeenCalledTimes(1);
@@ -19,13 +19,13 @@ describe('onEnterProvider', () => {
     const onEnter = onEnterProvider(handle);
 
     onEnter({
-      key: 'Escape', 
+      key: 'Escape',
     });
     onEnter({
-      key: 'Tab', 
+      key: 'Tab',
     });
     onEnter({
-      key: ' ', 
+      key: ' ',
     });
 
     expect(handle).not.toHaveBeenCalled();
@@ -36,10 +36,10 @@ describe('onEnterProvider', () => {
     const onEnter = onEnterProvider(handle);
 
     onEnter({
-      key: 'Enter', 
+      key: 'Enter',
     });
     onEnter({
-      key: 'Enter', 
+      key: 'Enter',
     });
 
     expect(handle).toHaveBeenCalledTimes(2);

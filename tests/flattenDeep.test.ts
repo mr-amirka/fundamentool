@@ -1,5 +1,5 @@
 import {
-  flattenDeep, 
+  flattenDeep,
 } from '../src/flattenDeep';
 
 describe('flattenDeep', () => {

@@ -177,7 +177,7 @@ export const createSparseCodec = <T extends Record<string, any>>(
 
   // Flattened for encode fast path: pairs of [id, fieldInfo]
   const entries: [number, TFieldInfo][] = config.fields.map(({
-    id, 
+    id,
   }: IFieldDef) => [id, fieldMap[id]]);
   const fieldsLength = entries.length;
 
@@ -268,7 +268,7 @@ export const createSparseCodec = <T extends Record<string, any>>(
               nval & 0xFF,
             );
             break;
-          default: 
+          default:
             break;
         }
       } else if (info[1] === T_STR && val !== infoDef && valType === 'string') {
@@ -360,6 +360,6 @@ export const createSparseCodec = <T extends Record<string, any>>(
 
   return {
     encode,
-    decode, 
+    decode,
   };
 };

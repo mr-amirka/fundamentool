@@ -1,8 +1,8 @@
 import {
-  isArray, 
+  isArray,
 } from './is/isArray';
 import {
-  isObject, 
+  isObject,
 } from './is/isObject';
 
 interface ICloneDepth {
@@ -12,7 +12,7 @@ interface ICloneDepth {
 
 /**
  * Clones an object up to a given depth.
- * 
+ *
  * @param src - The object to clone.
  * @param depth - The depth to clone to.
  * @returns The cloned object.

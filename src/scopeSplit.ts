@@ -10,7 +10,7 @@ export type ScopeNode = string | ScopeNode[];
  *   внутри которого та же структура (строки и массивы).
  *
  * Многосимвольные разделители также поддерживаются.
- * 
+ *
  * @param input - The input string to split.
  * @param openChar - The open character.
  * @param closeChar - The close character.

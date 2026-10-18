@@ -1,17 +1,17 @@
 import {
-  isFunction, 
+  isFunction,
 } from './is/isFunction';
 import {
-  isMatch, 
+  isMatch,
 } from './is/isMatch';
 import {
-  find, 
+  find,
 } from './find';
 
 /**
  * Checks if at least one element in the collection matches the identity.
  * Identity can be a function or an object for isMatch.
- * 
+ *
  * @param collection - The collection to search in.
  * @param identity - The identity to search for.
  * @returns `true` if at least one element matches, `false` otherwise.

@@ -1,6 +1,6 @@
 /**
  * Copies properties from `src` to `dst` only if the key in `dst` is falsy.
- * 
+ *
  * @param dst - The destination object.
  * @param src - The source object.
  * @returns The destination object.

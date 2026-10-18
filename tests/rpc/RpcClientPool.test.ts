@@ -1,11 +1,11 @@
 import {
-  RpcClient, 
+  RpcClient,
 } from '../../src/rpc/RpcClient';
 import {
-  RpcConnect, 
+  RpcConnect,
 } from '../../src/rpc/RpcConnect';
 import {
-  RpcClientPool, 
+  RpcClientPool,
 } from '../../src/rpc/RpcClientPool';
 
 function makeChannel() {
@@ -21,7 +21,7 @@ function makeChannel() {
     onMessage: (cb: Listener) => {
       clientListeners.push(cb);
       return () => {
-        clientListeners.splice(clientListeners.indexOf(cb), 1); 
+        clientListeners.splice(clientListeners.indexOf(cb), 1);
       };
     },
   };
@@ -34,29 +34,29 @@ function makeChannel() {
     onMessage: (cb: Listener) => {
       serverListeners.push(cb);
       return () => {
-        serverListeners.splice(serverListeners.indexOf(cb), 1); 
+        serverListeners.splice(serverListeners.indexOf(cb), 1);
       };
     },
   };
 
   return {
     clientOptions,
-    serverOptions, 
+    serverOptions,
   };
 }
 
 function makeServer(exports: Record<string, any>) {
   const channels = Array.from({
-    length: 4, 
+    length: 4,
   }, () => makeChannel());
   const connects = channels.map(({
-    serverOptions, 
+    serverOptions,
   }) => new RpcConnect({
     ...serverOptions,
-    exports, 
+    exports,
   }));
   const clients = channels.map(({
-    clientOptions, 
+    clientOptions,
   }) => new RpcClient(clientOptions));
 
   const pool = new RpcClientPool({
@@ -80,9 +80,9 @@ function makeServer(exports: Record<string, any>) {
 describe('RpcClientPool', () => {
   test('call routes to a worker and resolves', async () => {
     const {
-      pool, cleanup, 
+      pool, cleanup,
     } = makeServer({
-      add: (a: number, b: number) => a + b, 
+      add: (a: number, b: number) => a + b,
     });
     const result = await pool.call('add', [3, 4]);
     expect(result).toBe(7);
@@ -118,7 +118,7 @@ describe('RpcClientPool', () => {
             on: () => () => {},
             proxy: () => Promise.resolve(),
             taskCount: () => 0,
-            destroy: () => {}, 
+            destroy: () => {},
           } as any;
         };
       })(),
@@ -147,7 +147,7 @@ describe('RpcClientPool', () => {
           on: () => () => {},
           proxy: () => Promise.resolve(),
           taskCount: () => taskCounts[idx],
-          destroy: () => {}, 
+          destroy: () => {},
         } as any;
       },
     });
@@ -169,7 +169,7 @@ describe('RpcClientPool', () => {
           on: () => () => {},
           proxy: () => Promise.resolve(),
           taskCount: () => 0,
-          destroy: () => {}, 
+          destroy: () => {},
         } as any;
       },
     });
@@ -190,7 +190,7 @@ describe('RpcClientPool', () => {
           on: () => () => {},
           proxy: () => Promise.resolve(),
           taskCount: () => 1,
-          destroy: () => destroyed.push(i), 
+          destroy: () => destroyed.push(i),
         } as any;
       },
     });
@@ -205,9 +205,9 @@ describe('RpcClientPool', () => {
 
   test('multiple calls resolve correctly via pool', async () => {
     const {
-      pool, cleanup, 
+      pool, cleanup,
     } = makeServer({
-      double: (x: number) => x * 2, 
+      double: (x: number) => x * 2,
     });
     const results = await Promise.all([
       pool.call('double', [1]),

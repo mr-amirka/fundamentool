@@ -1,30 +1,30 @@
 import {
-  tmpdir, 
+  tmpdir,
 } from 'os';
 import {
-  join, 
+  join,
 } from 'path';
 import {
-  mkdirSync, writeFileSync, rmSync, 
+  mkdirSync, writeFileSync, rmSync,
 } from 'fs';
 import {
-  TransformFrom, 
+  TransformFrom,
 } from '../../../src/node/jsonl/TransformFrom';
 import {
-  TransformTo, 
+  TransformTo,
 } from '../../../src/node/jsonl/TransformTo';
 import {
-  read, 
+  read,
 } from '../../../src/node/jsonl/read';
 import {
-  write, 
+  write,
 } from '../../../src/node/jsonl/write';
 import * as promisify from '../../../src/node/jsonl/promisify';
 
 function tmpDir() {
   const dir = join(tmpdir(), `fundamentool-jsonl-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   mkdirSync(dir, {
-    recursive: true, 
+    recursive: true,
   });
   return dir;
 }
@@ -49,10 +49,10 @@ describe('node/jsonl — TransformTo (serialize)', () => {
       done();
     });
     transform.write({
-      a: 1, 
+      a: 1,
     });
     transform.write({
-      b: 2, 
+      b: 2,
     });
     transform.end();
   });
@@ -65,9 +65,9 @@ describe('node/jsonl — TransformFrom (deserialize)', () => {
     transform.on('data', (obj: any) => items.push(obj));
     transform.on('end', () => {
       expect(items).toEqual([{
-        a: 1, 
+        a: 1,
       }, {
-        b: 2, 
+        b: 2,
       }]);
       done();
     });
@@ -81,7 +81,7 @@ describe('node/jsonl — TransformFrom (deserialize)', () => {
     transform.on('data', (obj: any) => items.push(obj));
     transform.on('end', () => {
       expect(items).toEqual([{
-        x: 42, 
+        x: 42,
       }]);
       done();
     });
@@ -101,13 +101,13 @@ describe('node/jsonl — round-trip via pipe', () => {
     fromStream.on('end', () => {
       expect(items).toEqual([
         {
-          id: 1, 
+          id: 1,
         },
         {
-          id: 2, 
+          id: 2,
         },
         {
-          id: 3, 
+          id: 3,
         },
       ]);
       done();
@@ -115,13 +115,13 @@ describe('node/jsonl — round-trip via pipe', () => {
 
     toStream.pipe(fromStream);
     toStream.write({
-      id: 1, 
+      id: 1,
     });
     toStream.write({
-      id: 2, 
+      id: 2,
     });
     toStream.write({
-      id: 3, 
+      id: 3,
     });
     toStream.end();
   });
@@ -136,17 +136,17 @@ describe('node/jsonl — file read (from pre-written file)', () => {
     const items = await collectStream(read(path));
     expect(items).toEqual([
       {
-        a: 1, 
+        a: 1,
       },
       {
-        b: 2, 
+        b: 2,
       },
       {
-        c: 3, 
+        c: 3,
       },
     ]);
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -158,7 +158,7 @@ describe('node/jsonl — file read (from pre-written file)', () => {
     const items = await collectStream(read(path));
     expect(items).toEqual([]);
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 });
@@ -168,14 +168,14 @@ describe('node/jsonl — file write', () => {
     const dir = tmpDir();
     const path = join(dir, 'out.jsonl');
     const records = [{
-      a: 1, 
+      a: 1,
     }, {
-      b: 'hello', 
+      b: 'hello',
     }];
 
     const out = write(path) as any;
     out.on('error', (e: any) => {
-      throw e; 
+      throw e;
     });
     records.forEach((r) => out.write(r));
     out.end();
@@ -185,7 +185,7 @@ describe('node/jsonl — file write', () => {
     const items = await collectStream(read(path));
     expect(items).toEqual(records);
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -197,20 +197,20 @@ describe('node/jsonl — file write', () => {
 
     const out = write(path) as any;
     out.on('error', (e: any) => {
-      throw e; 
+      throw e;
     });
     out.write({
-      v: 1, 
+      v: 1,
     });
     out.end();
     await new Promise<void>((resolve) => setTimeout(resolve, 50));
 
     const items = await collectStream(read(path));
     expect(items).toEqual([{
-      v: 1, 
+      v: 1,
     }]);
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 });
@@ -224,17 +224,17 @@ describe('node/jsonl/promisify — read', () => {
     const records = await promisify.read(path);
     expect(records).toEqual([
       {
-        n: 10, 
+        n: 10,
       },
       {
-        n: 20, 
+        n: 20,
       },
       {
-        n: 30, 
+        n: 30,
       },
     ]);
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -246,7 +246,7 @@ describe('node/jsonl/promisify — read', () => {
     const records = await promisify.read(path);
     expect(records).toEqual([]);
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 });

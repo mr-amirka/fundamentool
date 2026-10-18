@@ -1,5 +1,5 @@
 import {
-  urlTranslite, 
+  urlTranslite,
 } from '../src/urlTranslite';
 
 describe('urlTranslite', () => {

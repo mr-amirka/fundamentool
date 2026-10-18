@@ -1,5 +1,5 @@
 import {
-  reduceIn, 
+  reduceIn,
 } from '../src/reduceIn';
 
 describe('reduceIn', () => {
@@ -8,7 +8,7 @@ describe('reduceIn', () => {
       {
         a: 1,
         b: 2,
-        c: 3, 
+        c: 3,
       }, (acc, v) => acc + v, 0,
     )).toBe(6);
   });
@@ -17,7 +17,7 @@ describe('reduceIn', () => {
     const keys = reduceIn(
       {
         x: 1,
-        y: 2, 
+        y: 2,
       }, (
         acc, _, k,
       ) => [...acc, k], [],

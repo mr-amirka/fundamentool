@@ -1,5 +1,5 @@
 import {
-  joinProvider, 
+  joinProvider,
 } from './joinProvider';
 
 /**

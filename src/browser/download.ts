@@ -1,11 +1,11 @@
 import {
-  extend, 
+  extend,
 } from '../extend';
 import {
-  getDataLink, 
+  getDataLink,
 } from './getDataLink';
 import {
-  ready, 
+  ready,
 } from './ready';
 
 export interface IDownload {

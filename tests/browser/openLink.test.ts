@@ -1,8 +1,8 @@
 import {
-  openLink, 
+  openLink,
 } from '../../src/browser/openLink';
 import {
-  setupBrowserDomMocks, 
+  setupBrowserDomMocks,
 } from './browserDomMocks';
 
 describe('browser/openLink', () => {
@@ -10,7 +10,7 @@ describe('browser/openLink', () => {
 
   beforeEach(() => {
     ({
-      clickMock, 
+      clickMock,
     } = setupBrowserDomMocks());
   });
 

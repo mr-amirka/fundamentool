@@ -1,10 +1,10 @@
 import {
-  merge, 
+  merge,
 } from './merge';
 
 /**
  * Builds a tree structure from flat array of items with `id` and `parent` fields.
- * 
+ *
  * @param src - The source array of items.
  * @param id - The id of the parent item.
  * @param dst - The destination array.
@@ -34,7 +34,7 @@ const base = (
         ? merge([item, {
           childs: itemId ? base(
             src, itemId, [], depth,
-          ) : [], 
+          ) : [],
         }])
         : item);
     }

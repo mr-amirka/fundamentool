@@ -1,5 +1,5 @@
 import {
-  childClass, 
+  childClass,
 } from '../childClass';
 
 const originalParse = JSON.parse;
@@ -30,7 +30,7 @@ export interface IJsonlTransformFrom extends Transform {
 
 /**
  * Factory that creates a Transform class for parsing JSONL into objects.
- * 
+ *
  * @param env - The environment to use for the Transform class.
  * @returns A Transform class for parsing JSONL into objects.
  * @example
@@ -39,7 +39,7 @@ export interface IJsonlTransformFrom extends Transform {
  */
 export const ProviderOfTransformFrom = (env: IJsonlTransformFromEnv): IJsonlTransformFrom => {
   const {
-    StringDecoder, 
+    StringDecoder,
   } = env;
 
   return childClass(env.Transform,
@@ -115,5 +115,4 @@ export const ProviderOfTransformFrom = (env: IJsonlTransformFromEnv): IJsonlTran
       };
     }) as any;
 };
-
 

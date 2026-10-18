@@ -3,7 +3,7 @@ const DEFAULT_SPACE = ' ';
 
 /**
  * Polyfill-friendly padEnd implementation for strings.
- * 
+ *
  * @param v - The string to pad.
  * @param length - The length to pad the string to.
  * @param space - The string to use for padding.

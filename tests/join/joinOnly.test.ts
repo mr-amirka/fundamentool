@@ -1,5 +1,5 @@
 import {
-  joinOnly, 
+  joinOnly,
 } from '../../src/join/joinOnly';
 
 describe('joinOnly', () => {

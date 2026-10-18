@@ -1,10 +1,10 @@
 import {
-  joinProvider, 
+  joinProvider,
 } from './joinProvider';
 
 /**
  * Joins array items without any delimiter.
- * 
+ *
  * @param items - The items to join.
  * @returns The joined string.
  * @example

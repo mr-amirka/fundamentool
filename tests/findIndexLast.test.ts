@@ -1,5 +1,5 @@
 import {
-  findIndexLast, 
+  findIndexLast,
 } from '../src/findIndexLast';
 
 describe('findIndexLast', () => {
@@ -31,7 +31,7 @@ describe('findIndexLast', () => {
       2,
       3,
     ], (_, i) => {
-      visited.push(i); return false; 
+      visited.push(i); return false;
     });
     expect(visited).toEqual([
       2,

@@ -1,11 +1,11 @@
 import {
-  PortPolyfill, 
+  PortPolyfill,
 } from '../../../PortPolyfill';
 import {
-  GLOBAL_CONTEXT, 
+  GLOBAL_CONTEXT,
 } from '../../../globalContext';
 import {
-  noop, 
+  noop,
 } from '../../../noop';
 
 export type TSyntheticWorkerListener = (parent: SyntheticWorker) => void;

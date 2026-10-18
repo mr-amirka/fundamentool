@@ -1,5 +1,5 @@
 import {
-  onlyBy, onlyByIn, 
+  onlyBy, onlyByIn,
 } from '../src/onlyBy';
 
 describe('onlyBy', () => {
@@ -38,20 +38,20 @@ describe('onlyBy', () => {
   test('works with objects', () => {
     const users = [
       {
-        age: 30, 
+        age: 30,
       },
       {
-        age: 20, 
+        age: 20,
       },
       {
-        age: 25, 
+        age: 25,
       },
     ];
     const youngest = onlyBy(
       users, (u) => u.age, false,
     );
     expect(youngest).toEqual({
-      age: 20, 
+      age: 20,
     });
   });
 
@@ -65,7 +65,7 @@ describe('onlyByIn', () => {
     const result = onlyByIn({
       a: 3,
       b: 1,
-      c: 2, 
+      c: 2,
     }, (v) => v);
     expect(result).toBe(1);
   });
@@ -75,7 +75,7 @@ describe('onlyByIn', () => {
       {
         a: 3,
         b: 1,
-        c: 2, 
+        c: 2,
       }, (v) => v, true,
     );
     expect(result).toBe(3);

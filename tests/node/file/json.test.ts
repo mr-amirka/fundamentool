@@ -1,18 +1,18 @@
 import {
-  tmpdir, 
+  tmpdir,
 } from 'os';
 import {
-  join, 
+  join,
 } from 'path';
 import {
-  mkdirSync, rmSync, 
+  mkdirSync, rmSync,
 } from 'fs';
 import * as json from '../../../src/node/file/json';
 
 function tmpDir() {
   const dir = join(tmpdir(), `fundamentool-json-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   mkdirSync(dir, {
-    recursive: true, 
+    recursive: true,
   });
   return dir;
 }
@@ -23,15 +23,15 @@ describe('node/file/json — write & read', () => {
     const path = join(dir, 'data');
     await json.write(path, {
       name: 'Alice',
-      age: 30, 
+      age: 30,
     });
     const result = await json.read(path);
     expect(result).toEqual({
       name: 'Alice',
-      age: 30, 
+      age: 30,
     });
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -39,14 +39,14 @@ describe('node/file/json — write & read', () => {
     const dir = tmpDir();
     const path = join(dir, 'config');
     await json.write(path, {
-      x: 1, 
+      x: 1,
     });
     const {
-      existsSync, 
+      existsSync,
     } = require('fs');
     expect(existsSync(path + '.json')).toBe(true);
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -55,18 +55,18 @@ describe('node/file/json — write & read', () => {
     const path = join(dir, 'mini');
     await json.write(
       path, {
-        a: 1, 
+        a: 1,
       }, {
-        minify: true, 
+        minify: true,
       },
     );
     const {
-      readFileSync, 
+      readFileSync,
     } = require('fs');
     const raw = readFileSync(path + '.json', 'utf8');
     expect(raw).toBe('{"a":1}');
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -74,15 +74,15 @@ describe('node/file/json — write & read', () => {
     const dir = tmpDir();
     const path = join(dir, 'pretty');
     await json.write(path, {
-      a: 1, 
+      a: 1,
     });
     const {
-      readFileSync, 
+      readFileSync,
     } = require('fs');
     const raw = readFileSync(path + '.json', 'utf8');
     expect(raw).toContain('\n');
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -96,15 +96,15 @@ describe('node/file/json/snapshot — write & read', () => {
     const dir = tmpDir();
     const path = join(dir, 'snap');
     await json.snapshot.write(path, {
-      v: 1, 
+      v: 1,
     });
     const {
-      existsSync, 
+      existsSync,
     } = require('fs');
     expect(existsSync(path + '.json')).toBe(true);
     expect(existsSync(path + '.recov.json')).toBe(true);
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -112,13 +112,13 @@ describe('node/file/json/snapshot — write & read', () => {
     const dir = tmpDir();
     const path = join(dir, 'snap');
     await json.snapshot.write(path, {
-      val: 42, 
+      val: 42,
     });
     expect(await json.snapshot.read(path)).toEqual({
-      val: 42, 
+      val: 42,
     });
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -126,18 +126,18 @@ describe('node/file/json/snapshot — write & read', () => {
     const dir = tmpDir();
     const path = join(dir, 'snap');
     await json.snapshot.write(path, {
-      val: 99, 
+      val: 99,
     });
     const {
-      writeFileSync, 
+      writeFileSync,
     } = require('fs');
     writeFileSync(path + '.json', 'BROKEN');
     const result = await json.snapshot.read(path);
     expect(result).toEqual({
-      val: 99, 
+      val: 99,
     });
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -145,13 +145,13 @@ describe('node/file/json/snapshot — write & read', () => {
     const dir = tmpDir();
     const path = join(dir, 'snap');
     const result = await json.snapshot.read(path, () => ({
-      default: true, 
+      default: true,
     }));
     expect(result).toEqual({
-      default: true, 
+      default: true,
     });
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -161,7 +161,7 @@ describe('node/file/json/snapshot — write & read', () => {
     const result = await json.snapshot.read(path);
     expect(result).toBeNull();
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 });

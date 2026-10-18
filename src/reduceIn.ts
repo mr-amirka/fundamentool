@@ -1,6 +1,6 @@
 /**
  * Reduces an object into a single value.
- * 
+ *
  * @param collection - The object to reduce.
  * @param iteratee - The function to call for each property.
  * @param accumulator - The initial accumulator value.

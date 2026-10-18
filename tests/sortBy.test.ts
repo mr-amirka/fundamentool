@@ -1,18 +1,18 @@
 import {
-  sortBy, 
+  sortBy,
 } from '../src/sortBy';
 
 describe('sortBy', () => {
   test('sorts by computed string key', () => {
     const input = [
       {
-        name: 'Zara', 
+        name: 'Zara',
       },
       {
-        name: 'Alice', 
+        name: 'Alice',
       },
       {
-        name: 'Bob', 
+        name: 'Bob',
       },
     ];
     const result = sortBy(input, u => u.name.toLowerCase());
@@ -26,13 +26,13 @@ describe('sortBy', () => {
   test('sorts by numeric value', () => {
     const input = [
       {
-        v: 3, 
+        v: 3,
       },
       {
-        v: 1, 
+        v: 1,
       },
       {
-        v: 2, 
+        v: 2,
       },
     ];
     expect(sortBy(input, u => u.v).map(u => u.v)).toEqual([
@@ -49,10 +49,10 @@ describe('sortBy', () => {
   test('is stable for equal keys', () => {
     const input = [{
       n: 'a',
-      i: 0, 
+      i: 0,
     }, {
       n: 'a',
-      i: 1, 
+      i: 1,
     }];
     const result = sortBy(input, u => u.n);
     expect(result[0].i).toBe(0);

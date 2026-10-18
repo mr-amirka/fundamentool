@@ -7,7 +7,7 @@ export type TSplitter = (src: string) => string[];
 
 /**
  * Creates a splitter function for the given delimiter.
- * 
+ *
  * @param delimiter - The delimiter to split the string by.
  * @returns The splitter function.
  * @example
@@ -17,5 +17,4 @@ export type TSplitter = (src: string) => string[];
 export const splitProvider = (delimiter: string | RegExp): TSplitter => {
   return (src: string) => NATIVE_SPLIT.call(src, delimiter as any);
 };
-
 

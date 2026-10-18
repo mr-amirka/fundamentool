@@ -1,5 +1,5 @@
 import {
-  camelToKebabCase, 
+  camelToKebabCase,
 } from '../src/camelToKebabCase';
 
 describe('camelToKebabCase', () => {

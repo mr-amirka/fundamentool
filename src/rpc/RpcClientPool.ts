@@ -4,7 +4,7 @@ import type {
   IRpcClient,
 } from './types';
 import {
-  EventEmitter, 
+  EventEmitter,
 } from '../EventEmitter';
 
 /** Options for `RpcClientPool`. */

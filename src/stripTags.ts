@@ -10,7 +10,7 @@ function replaceOnce(
 
 /**
  * Strips HTML tags and normalizes whitespace into single spaces.
- * 
+ *
  * @param v - The string to strip tags from.
  * @returns The stripped string.
  * @example

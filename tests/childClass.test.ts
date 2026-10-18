@@ -1,5 +1,5 @@
 import {
-  childClass, 
+  childClass,
 } from '../src/childClass';
 
 function Parent(this: any, v: number) {

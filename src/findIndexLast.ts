@@ -1,6 +1,6 @@
 /**
  * Finds index of last element in array‑like collection that satisfies predicate.
- * 
+ *
  * @param collection - The array to search in.
  * @param iteratee - The function to call for each item.
  * @param ctx - The `this` context to use for the function.

@@ -1,11 +1,11 @@
 import {
-  create, 
+  create,
 } from '../src/create';
 
 describe('create', () => {
   test('creates object with given prototype', () => {
     const proto = {
-      a: 1, 
+      a: 1,
     };
     const obj = create(proto);
 

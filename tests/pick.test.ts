@@ -1,5 +1,5 @@
 import {
-  pick, 
+  pick,
 } from '../src/pick';
 
 describe('pick', () => {
@@ -7,12 +7,12 @@ describe('pick', () => {
     const input = {
       a: 1,
       b: 2,
-      c: 3, 
+      c: 3,
     };
     const result = pick(input, ['a', 'c']);
     expect(result).toEqual({
       a: 1,
-      c: 3, 
+      c: 3,
     });
   });
 
@@ -23,7 +23,7 @@ describe('pick', () => {
 
   test('writes into provided output', () => {
     const input = {
-      a: 1, 
+      a: 1,
     };
     const output: Record<string, number> = {};
     const result = pick(
@@ -31,7 +31,7 @@ describe('pick', () => {
     );
     expect(result).toBe(output);
     expect(output).toEqual({
-      a: 1, 
+      a: 1,
     });
   });
 
@@ -39,7 +39,7 @@ describe('pick', () => {
     const input = {
       a: 1,
       b: 2,
-      c: 3, 
+      c: 3,
     };
     const outOther: Record<string, number> = {};
     pick(
@@ -47,7 +47,7 @@ describe('pick', () => {
     );
     expect(outOther).toEqual({
       b: 2,
-      c: 3, 
+      c: 3,
     });
   });
 
@@ -55,7 +55,7 @@ describe('pick', () => {
     const input = {
       a: 1,
       b: undefined,
-      c: 3, 
+      c: 3,
     };
     const result = pick(input, [
       'a',
@@ -64,7 +64,7 @@ describe('pick', () => {
     ]);
     expect(result).toEqual({
       a: 1,
-      c: 3, 
+      c: 3,
     });
   });
 });

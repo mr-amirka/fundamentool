@@ -1,5 +1,5 @@
 import {
-  joinArrays, 
+  joinArrays,
 } from '../../src/join/joinArrays';
 
 describe('joinArrays', () => {

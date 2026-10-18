@@ -1,5 +1,5 @@
 import {
-  defer, 
+  defer,
 } from './defer';
 
 /**

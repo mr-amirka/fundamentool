@@ -1,5 +1,5 @@
 import {
-  attachEvent, 
+  attachEvent,
 } from '../../../attachEvent';
 
 /**

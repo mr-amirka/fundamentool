@@ -1,8 +1,8 @@
 import {
-  isPlainObjectBase, 
+  isPlainObjectBase,
 } from './isPlainObject';
 import {
-  isLength, 
+  isLength,
 } from './isLength';
 
 /**

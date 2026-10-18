@@ -1,11 +1,11 @@
 import {
-  checkNoop, 
+  checkNoop,
 } from './checkNoop';
 import {
-  forEachAsync, 
+  forEachAsync,
 } from './forEachAsync';
 import {
-  entries, 
+  entries,
 } from '../entries';
 
 /**

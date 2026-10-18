@@ -1,5 +1,5 @@
 import {
-  splitProvider, 
+  splitProvider,
 } from '../../src/split/splitProvider';
 
 describe('splitProvider', () => {

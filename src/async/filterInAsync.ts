@@ -1,14 +1,14 @@
 import {
-  entries, 
+  entries,
 } from '../entries';
 import {
-  fromPairs, 
+  fromPairs,
 } from '../fromPairs';
 import {
-  checkNoop, 
+  checkNoop,
 } from './checkNoop';
 import {
-  filterAsync, 
+  filterAsync,
 } from './filterAsync';
 
 /**
@@ -16,7 +16,7 @@ import {
  *
  * Unlike the legacy version, this helper expects `iteratee` to be a function;
  * shorthand/normalize logic is removed.
- * 
+ *
  * @param collection - Source object.
  * @param iteratee - Predicate function.
  * @param output - Optional output object.

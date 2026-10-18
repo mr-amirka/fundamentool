@@ -1,5 +1,5 @@
 import {
-  scopeJoin, 
+  scopeJoin,
 } from '../src/scopeJoin';
 
 describe('scopeJoin', () => {

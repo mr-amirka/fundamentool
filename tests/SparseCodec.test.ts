@@ -1,5 +1,5 @@
 import {
-  createSparseCodec, 
+  createSparseCodec,
 } from '../src/SparseCodec';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -16,31 +16,31 @@ const codec = createSparseCodec<{
       id: 0x01,
       path: 'phys.grav',
       type: 'f32',
-      default: 1.0, 
+      default: 1.0,
     },
     {
       id: 0x40,
       path: 'phys.steps',
       type: 'u8',
-      default: 10, 
+      default: 10,
     },
     {
       id: 0x02,
       path: ['phys', 'grav'],
       type: 'f32',
-      default: 1.0, 
+      default: 1.0,
     }, // array path to same field
     {
       id: 0x80,
       path: 'ui.zoom',
       type: 'f64',
-      default: 1.0, 
+      default: 1.0,
     },
     {
       id: 0x90,
       path: 'ui.label',
       type: 'string',
-      default: '', 
+      default: '',
     },
   ],
 });
@@ -50,7 +50,7 @@ const roundtrip = (state: Record<string, unknown>) => {
   const decoded = codec.decode(encoded);
   return {
     encoded,
-    decoded, 
+    decoded,
   };
 };
 
@@ -63,15 +63,15 @@ describe('SparseCodec', () => {
     const state = {
       phys: {
         grav: 2.5,
-        steps: 5, 
+        steps: 5,
       },
       ui: {
         zoom: 2.0,
-        label: 'hello', 
-      }, 
+        label: 'hello',
+      },
     };
     const {
-      decoded, 
+      decoded,
     } = roundtrip(state);
     expect(decoded).toEqual(state);
   });
@@ -79,11 +79,11 @@ describe('SparseCodec', () => {
   test('roundtrip: f32 precision preserved', () => {
     const state = {
       phys: {
-        grav: 1.0000001, 
-      }, 
+        grav: 1.0000001,
+      },
     };
     const {
-      decoded, 
+      decoded,
     } = roundtrip(state);
     // Float32 rounds to ~7 significant digits
     expect((decoded as any).phys.grav).toBeCloseTo(1.0, 5);
@@ -92,11 +92,11 @@ describe('SparseCodec', () => {
   test('roundtrip: f64 precision preserved', () => {
     const state = {
       ui: {
-        zoom: 1.123456789012345, 
-      }, 
+        zoom: 1.123456789012345,
+      },
     };
     const {
-      decoded, 
+      decoded,
     } = roundtrip(state);
     expect((decoded as any).ui.zoom).toBe(1.123456789012345);
   });
@@ -104,11 +104,11 @@ describe('SparseCodec', () => {
   test('roundtrip: string with unicode', () => {
     const state = {
       ui: {
-        label: 'Привет 🌍', 
-      }, 
+        label: 'Привет 🌍',
+      },
     };
     const {
-      decoded, 
+      decoded,
     } = roundtrip(state);
     expect(decoded).toEqual(state);
   });
@@ -119,15 +119,15 @@ describe('SparseCodec', () => {
         id: 0x90,
         path: 's',
         type: 'string',
-        default: 'default', 
+        default: 'default',
       }],
     });
     const enc = codec2.encode({
-      s: '', 
+      s: '',
     });
     const dec = codec2.decode(enc);
     expect(dec).toEqual({
-      s: '', 
+      s: '',
     });
   });
 
@@ -135,7 +135,7 @@ describe('SparseCodec', () => {
 
   test('sparse: defaults produce empty payload', () => {
     const {
-      encoded, decoded, 
+      encoded, decoded,
     } = roundtrip({});
     // Only version byte
     expect(encoded.length).toBeLessThan(5);
@@ -146,18 +146,18 @@ describe('SparseCodec', () => {
     const state = {
       phys: {
         grav: 1.0,
-        steps: 5, 
-      }, 
+        steps: 5,
+      },
     }; // grav=default, steps≠default
     const {
-      encoded, decoded, 
+      encoded, decoded,
     } = roundtrip(state);
     expect(encoded.length).toBeGreaterThan(2);
     expect(encoded.length).toBeLessThan(10);
     expect(decoded).toEqual({
       phys: {
-        steps: 5, 
-      }, 
+        steps: 5,
+      },
     });
   });
 
@@ -166,11 +166,11 @@ describe('SparseCodec', () => {
     const state = {
       phys: {
         grav: 1.0,
-        steps: 10, 
-      }, 
+        steps: 10,
+      },
     }; // both defaults
     const {
-      encoded, 
+      encoded,
     } = roundtrip(state);
     expect(encoded.length).toBeLessThan(5);
   });
@@ -180,8 +180,8 @@ describe('SparseCodec', () => {
   test('string path works same as array path', () => {
     const state = {
       phys: {
-        grav: 3.0, 
-      }, 
+        grav: 3.0,
+      },
     };
     const enc1 = codec.encode(state as any);
     // Both id:0x01 (string path) and id:0x02 (array path) encode the same field
@@ -211,8 +211,8 @@ describe('SparseCodec', () => {
     const dec = codec.decode(encoded);
     expect(dec).toEqual({
       phys: {
-        steps: 5, 
-      }, 
+        steps: 5,
+      },
     });
   });
 
@@ -225,11 +225,11 @@ describe('SparseCodec', () => {
         id: 0x01,
         path: 'x',
         type: 'f32',
-        default: 0, 
+        default: 0,
       }],
     });
     const enc = codecV2.encode({
-      x: 1, 
+      x: 1,
     });
     // Decode with default codec (version 0x01) should reject
     const dec = codec.decode(enc);
@@ -250,16 +250,16 @@ describe('SparseCodec', () => {
   test('corrupted: garbage after valid payload is ignored', () => {
     const enc = codec.encode({
       phys: {
-        grav: 2.0, 
-      }, 
+        grav: 2.0,
+      },
     } as any);
     // Append garbage — decode should still work (stops at first unknown range)
     const withGarbage = enc + 'ZZZZ';
     const dec = codec.decode(withGarbage);
     expect(dec).toEqual({
       phys: {
-        grav: 2.0, 
-      }, 
+        grav: 2.0,
+      },
     });
   });
 
@@ -269,15 +269,15 @@ describe('SparseCodec', () => {
     const state = {
       phys: {
         grav: 1.0,
-        steps: 10, 
+        steps: 10,
       },
       ui: {
         zoom: 1.0,
-        label: '', 
-      }, 
+        label: '',
+      },
     };
     const {
-      decoded, 
+      decoded,
     } = roundtrip(state);
     expect(decoded).toEqual({});
   });
@@ -288,12 +288,12 @@ describe('SparseCodec', () => {
         id: 0x01,
         path: 'v',
         type: 'f32',
-        default: 0, 
+        default: 0,
       }],
     });
     // v is a string, but field expects number — should be skipped (getBase returns it, but typeof check in encode skips)
     const enc = codec3.encode({
-      v: 'not-a-number', 
+      v: 'not-a-number',
     } as any);
     const dec = codec3.decode(enc);
     expect(dec).toEqual({});

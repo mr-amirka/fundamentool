@@ -1,5 +1,5 @@
 import {
-  isArrayBuffer, 
+  isArrayBuffer,
 } from '../../src/is/isArrayBuffer';
 
 describe('isArrayBuffer', () => {

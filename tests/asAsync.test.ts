@@ -1,5 +1,5 @@
 import {
-  asAsync, 
+  asAsync,
 } from '../src/asAsync';
 
 describe('asAsync', () => {

@@ -1,17 +1,17 @@
 import {
-  RpcClient, 
+  RpcClient,
 } from '../../../src/rpc/RpcClient';
 import {
-  RpcConnect, 
+  RpcConnect,
 } from '../../../src/rpc/RpcConnect';
 import {
-  RpcClientWorker, 
+  RpcClientWorker,
 } from '../../../src/rpc/browser/RpcWorker/RpcClientWorker';
 import {
-  RpcClientWorkerPool, 
+  RpcClientWorkerPool,
 } from '../../../src/rpc/browser/RpcWorker/RpcClientWorkerPool';
 import {
-  RpcConnectWorker, 
+  RpcConnectWorker,
 } from '../../../src/rpc/browser/RpcWorker/RpcConnectWorker';
 
 // Variables prefixed with "mock" are accessible inside jest.mock factories despite hoisting.
@@ -52,7 +52,7 @@ class MockWorker {
   _emitMessage(data: any) {
     const handlers = this._handlers.get('message') || [];
     const event = {
-      data, 
+      data,
     } as MessageEvent;
     handlers.forEach((h) => h(event));
   }
@@ -62,12 +62,12 @@ function attachServer(worker: MockWorker, exports: Record<string, any>): RpcConn
   return new RpcConnect({
     exports,
     postMessage: (data) => {
-      worker._emitMessage(data); return noop; 
+      worker._emitMessage(data); return noop;
     },
     onMessage: (cb) => {
       worker._serverHandler = cb;
       return () => {
-        worker._serverHandler = null; 
+        worker._serverHandler = null;
       };
     },
   });
@@ -93,7 +93,7 @@ describe('RpcClientWorker', () => {
   test('call resolves with server result', async () => {
     const client = new RpcClientWorker(WORKER_URL);
     const connect = attachServer(mockWorkerInstances[0], {
-      add: (a: number, b: number) => a + b, 
+      add: (a: number, b: number) => a + b,
     });
 
     expect(await client.call('add', [3, 4])).toBe(7);
@@ -105,7 +105,7 @@ describe('RpcClientWorker', () => {
     const client = new RpcClientWorker(WORKER_URL);
     const connect = attachServer(mockWorkerInstances[0], {
       fail: () => {
-        throw new Error('boom'); 
+        throw new Error('boom');
       },
     });
 
@@ -131,13 +131,13 @@ describe('RpcClientWorker', () => {
 describe('RpcClientWorkerPool', () => {
   test('distributes calls across workers', async () => {
     const pool = new RpcClientWorkerPool(WORKER_URL, {
-      maxWorkers: 2, 
+      maxWorkers: 2,
     });
     pool.getWorkers(2);
 
     const connects = mockWorkerInstances.map((w) =>
       attachServer(w, {
-        double: (x: number) => x * 2, 
+        double: (x: number) => x * 2,
       }));
 
     const results = await Promise.all([
@@ -157,7 +157,7 @@ describe('RpcClientWorkerPool', () => {
 
   test('creates up to maxWorkers workers on demand', () => {
     const pool = new RpcClientWorkerPool(WORKER_URL, {
-      maxWorkers: 3, 
+      maxWorkers: 3,
     });
     pool.getWorkers(3);
     expect(mockWorkerInstances.length).toBe(3);
@@ -185,12 +185,12 @@ describe('RpcConnectWorker', () => {
 
     // Simulate ordinary Worker global scope: postMessage + addEventListener available
     (global as any).postMessage = (data: any) => {
-      clientReceiver?.(data); return noop; 
+      clientReceiver?.(data); return noop;
     };
     (global as any).addEventListener = (event: string, handler: any) => {
       if (event === 'message') {
         connectReceiver = (data: any) => handler({
-          data, 
+          data,
         } as MessageEvent);
       }
     };
@@ -198,17 +198,17 @@ describe('RpcConnectWorker', () => {
 
     try {
       await RpcConnectWorker.run({
-        greet: (name: string) => `hello ${name}`, 
+        greet: (name: string) => `hello ${name}`,
       });
 
       const client = new RpcClient({
         postMessage: (data) => {
-          connectReceiver?.(data); return noop; 
+          connectReceiver?.(data); return noop;
         },
         onMessage: (cb) => {
           clientReceiver = cb;
           return () => {
-            clientReceiver = null; 
+            clientReceiver = null;
           };
         },
       });
@@ -238,7 +238,7 @@ describe('RpcConnectWorker', () => {
 
     try {
       await RpcConnectWorker.run({
-        add: (a: number, b: number) => a + b, 
+        add: (a: number, b: number) => a + b,
       });
 
       let portMessageHandler: ((data: any) => void) | null = null;
@@ -249,7 +249,7 @@ describe('RpcConnectWorker', () => {
         addEventListener: (event: string, handler: any) => {
           if (event === 'message') {
             portMessageHandler = (data: any) => handler({
-              data, 
+              data,
             } as MessageEvent);
           }
         },
@@ -259,17 +259,17 @@ describe('RpcConnectWorker', () => {
 
       // Simulate browser dispatching the 'connect' event for a new SharedWorker connection
       connectEventHandler?.({
-        source: mockPort, 
+        source: mockPort,
       } as any);
 
       const client = new RpcClient({
         postMessage: (data) => {
-          portMessageHandler?.(data); return noop; 
+          portMessageHandler?.(data); return noop;
         },
         onMessage: (cb) => {
           portClientReceiver = cb;
           return () => {
-            portClientReceiver = null; 
+            portClientReceiver = null;
           };
         },
       });

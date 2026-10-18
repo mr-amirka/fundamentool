@@ -13,24 +13,23 @@ import {
   IRpcClient,
 } from './types';
 import {
-  RpcCoder, 
+  RpcCoder,
 } from './RpcCoder';
 import {
-  getUniqId, 
+  getUniqId,
 } from './getUniqId';
 import {
-  attachEvent, 
+  attachEvent,
 } from '../attachEvent';
 import {
-  EventEmitter, 
+  EventEmitter,
 } from '../EventEmitter';
 import {
-  Unsubscriber, 
+  Unsubscriber,
 } from '../Unsubscriber';
 import {
-  createTimeout, 
+  createTimeout,
 } from '../createTimeout';
-
 
 /**
  * RPC client that sends typed method calls over a message channel
@@ -122,7 +121,6 @@ export class RpcClient extends EventEmitter implements IRpcClient {
     });
   }
 
-
   private sendMessage(data: TRpcClientMessage[1]) {
     this.postMessage([TRpcAgent.Client, data] as TRpcClientMessage);
   }
@@ -133,7 +131,7 @@ export class RpcClient extends EventEmitter implements IRpcClient {
     const task = this.taskMap.get(requestId);
     task && this.sendMessage([
       TRpcType.Event,
-      requestId, 
+      requestId,
       event,
       task[1]?.encode(detail) || detail,
     ]);
@@ -199,7 +197,7 @@ export class RpcClient extends EventEmitter implements IRpcClient {
 
       this.sendMessage([
         type,
-        requestId, 
+        requestId,
         method,
         coder?.encode(args) || args,
       ]);
@@ -239,7 +237,7 @@ export class RpcClient extends EventEmitter implements IRpcClient {
 
       this.sendMessage([
         TRpcType.SubResult,
-        requestId, 
+        requestId,
         dataArgs[2],
         1,
         coder?.encode(error) || error,
@@ -285,7 +283,7 @@ export class RpcClient extends EventEmitter implements IRpcClient {
 
         this.sendMessage([
           TRpcType.SubResult,
-          requestId, 
+          requestId,
           dataArgs[2],
           isError,
           coder?.encode(result) || result,

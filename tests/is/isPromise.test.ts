@@ -1,5 +1,5 @@
 import {
-  isPromise, 
+  isPromise,
 } from '../../src/is/isPromise';
 
 describe('isPromise', () => {
@@ -10,7 +10,7 @@ describe('isPromise', () => {
 
   test('returns true for thenables', () => {
     expect(isPromise({
-      then: () => {}, 
+      then: () => {},
     })).toBe(true);
   });
 
@@ -20,7 +20,7 @@ describe('isPromise', () => {
     expect(isPromise(undefined)).toBe(false);
     expect(isPromise(42)).toBe(false);
     expect(isPromise({
-      then: 'not-a-function', 
+      then: 'not-a-function',
     })).toBe(false);
   });
 });

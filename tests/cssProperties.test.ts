@@ -1,5 +1,5 @@
 import {
-  cssPropertiesParseSimple, 
+  cssPropertiesParseSimple,
 } from '../src/cssPropertiesParseSimple';
 import {
   cssPropertiesStringifyProvider,
@@ -31,15 +31,15 @@ describe('cssProperties* helpers', () => {
   test('vendor-префиксы: per-property кастомная карта (объект)', () => {
     const stringify = cssPropertiesStringifyProvider({
       appearance: {
-        '-webkit-': true, 
+        '-webkit-': true,
       },
     }, {
       '-webkit-': true,
-      '-moz-': true, 
+      '-moz-': true,
     });
 
     const s = stringify({
-      appearance: 'none', 
+      appearance: 'none',
     });
     expect(s).toContain('-webkit-appearance:none');
     expect(s).not.toContain('-moz-appearance');
@@ -51,11 +51,11 @@ describe('cssProperties* helpers', () => {
       transform: true,
     }, {
       '-webkit-': true,
-      '-moz-': true, 
+      '-moz-': true,
     });
 
     const s = stringify({
-      transform: 'scale(1)', 
+      transform: 'scale(1)',
     });
     expect(s).toContain('-webkit-transform:scale(1)');
     expect(s).toContain('-moz-transform:scale(1)');
@@ -69,11 +69,11 @@ describe('cssProperties* helpers', () => {
       transform: 1,
     }, {
       '-webkit-': true,
-      '-moz-': true, 
+      '-moz-': true,
     });
 
     const s = stringify({
-      transform: 'scale(1)', 
+      transform: 'scale(1)',
     });
     expect(s).toContain('-webkit-transform:scale(1)');
     expect(s).toContain('-moz-transform:scale(1)');

@@ -1,6 +1,6 @@
 /**
  * Maps array‑like collection to an array.
- * 
+ *
  * @param collection - The collection to map.
  * @param iteratee - The function to call for each item, or a property name to pluck.
  * @param output - The array to map into.

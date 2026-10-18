@@ -1,5 +1,5 @@
 import {
-  intval, floatval, 
+  intval, floatval,
 } from '../src/numval';
 
 describe('intval', () => {

@@ -1,5 +1,5 @@
 import {
-  urlParse, 
+  urlParse,
 } from '../src/urlParse';
 
 describe('urlParse', () => {
@@ -15,7 +15,7 @@ describe('urlParse', () => {
     const u = urlParse('https://a.b/c?x=1&y=2');
     expect(u.query).toEqual({
       x: 1,
-      y: 2, 
+      y: 2,
     });
     expect(u.search).toBe('x=1&y=2');
   });
@@ -26,7 +26,7 @@ describe('urlParse', () => {
     expect(u.child).not.toBeNull();
     if (u.child) {
       expect(u.child.query).toEqual({
-        q: 3, 
+        q: 3,
       });
     }
   });

@@ -1,8 +1,8 @@
 import {
-  isDefined, 
+  isDefined,
 } from './is/isDefined';
 import {
-  isEqual, 
+  isEqual,
 } from './is/isEqual';
 import type {
   ObservableWritable,
@@ -46,7 +46,7 @@ export type TStoreProviderDeps = {
  */
 export const storeProvider = (
   {
-    createStore, createApi, 
+    createStore, createApi,
   }: TStoreProviderDeps,
   storage: TStorage,
   originalPrefix?: string,
@@ -64,11 +64,11 @@ export const storeProvider = (
       ? defaultValueIsFunc
         ? (v) => ({
           ...(defaultValue as B)(v),
-          ...v, 
+          ...v,
         } as A)
         : (v) => ({
           ...defaultValue,
-          ...v, 
+          ...v,
         } as A)
       : defaultValueIsFunc
         ? (defaultValue as B)
@@ -76,7 +76,7 @@ export const storeProvider = (
 
     const $store = createStore<A>(normalize(storage.get(name)));
     const {
-      emit, 
+      emit,
     } = createApi($store, {
       emit: (_: A, v: A) => v,
     });

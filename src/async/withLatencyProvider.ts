@@ -1,11 +1,11 @@
 import {
-  asAsync, 
+  asAsync,
 } from '../asAsync';
 import {
-  noop, 
+  noop,
 } from '../noop';
 import {
-  wait, 
+  wait,
 } from '../wait';
 
 /**

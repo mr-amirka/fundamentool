@@ -1,5 +1,5 @@
 import {
-  isObjectLike, 
+  isObjectLike,
 } from './isObjectLike';
 
 /**
@@ -16,7 +16,6 @@ import {
  */
 export const isPlainObject = (value: any): value is Record<string, any> =>
   isObjectLike(value) && isPlainObjectBase(value);
-
 
 export function isPlainObjectBase(value: any): value is Record<string, any> {
   const proto = Object.getPrototypeOf(value);

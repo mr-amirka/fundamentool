@@ -1,19 +1,19 @@
 import {
-  isObjectLike, 
+  isObjectLike,
 } from './is/isObjectLike';
 import {
-  isIndex, 
+  isIndex,
 } from './is/isIndex';
 import {
-  getKeyPath, 
+  getKeyPath,
 } from './getKeyPath';
 import {
-  isLength, 
+  isLength,
 } from './is/isLength';
 
 /**
  * Устанавливает значение по строковому пути, разделённому точками.
- * 
+ *
  * @param ctx - The context to set the value in.
  * @param path - The path to set the value in.
  * @param value - The value to set.
@@ -36,7 +36,7 @@ export function set(
 
 /**
  * Sets a value in a context by a path array.
- * 
+ *
  * @param ctx - The context to set the value in.
  * @param path - The path to set the value in.
  * @param value - The value to set.

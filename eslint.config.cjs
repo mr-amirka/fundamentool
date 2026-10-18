@@ -84,6 +84,8 @@ module.exports = [
       '@stylistic/array-bracket-newline':   ['error', { minItems: 3 }],
       '@stylistic/array-element-newline':   ['error', { minItems: 3 }],
       '@stylistic/comma-dangle': ['error', 'always-multiline'],
+      // D-029 — the auto-fix of object-curly-newline used to leave a space before the line break
+      '@stylistic/no-trailing-spaces': 'error',
 
       // §6.8 — if/else/for/while всегда с блоком {}
       curly: ['error', 'all'],

@@ -30,7 +30,7 @@ describe('browser/blob/from', () => {
 
   test('creates Blob with correct type; toText reads JSON', async () => {
     const {
-      from, 
+      from,
     } = require('../../../src/browser/blob');
 
     const blob1 = from('hello', 'text/plain');
@@ -38,7 +38,7 @@ describe('browser/blob/from', () => {
     expect(blob1.type).toBe('text/plain');
 
     const blob2 = from({
-      a: 1, 
+      a: 1,
     });
     expect(blob2.type).toBe('application/json');
 

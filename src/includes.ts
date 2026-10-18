@@ -2,7 +2,7 @@ const NATIVE_INCLUDES = Array.prototype.includes;
 
 /**
  * Safe wrapper around `Array.prototype.includes` with a manual fallback.
- * 
+ *
  * @param self - The array to search in.
  * @param item - The item to search for.
  * @returns `true` if the item is present, `false` otherwise.

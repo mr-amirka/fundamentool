@@ -11,7 +11,7 @@ export const convertBlobToBase64 = (blob: Blob): Promise<string> => {
     const reader = new FileReader();
     reader.onload = () => {
       const {
-        result, 
+        result,
       } = reader;
       if (typeof result === 'string') {
         resolve(result);

@@ -2,7 +2,7 @@ const NATIVE_EVERY = [].every;
 
 /**
  * Checks that predicate returns truthy for all items in an array‑like collection.
- * 
+ *
  * @param collection - The collection to check.
  * @param identity - The identity to check.
  * @returns `true` if all elements satisfy the predicate, `false` otherwise.

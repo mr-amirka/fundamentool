@@ -1,8 +1,8 @@
 import {
-  removeByIndex, 
+  removeByIndex,
 } from '../src/removeByIndex';
 import {
-  removeOf, 
+  removeOf,
 } from '../src/removeOf';
 
 describe('removeByIndex', () => {

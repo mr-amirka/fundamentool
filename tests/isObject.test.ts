@@ -1,12 +1,12 @@
 import {
-  isObject, 
+  isObject,
 } from '../src/is/isObject';
 
 describe('isObject', () => {
   test('returns true for objects', () => {
     expect(isObject({})).toBe(true);
     expect(isObject({
-      a: 1, 
+      a: 1,
     })).toBe(true);
   });
 

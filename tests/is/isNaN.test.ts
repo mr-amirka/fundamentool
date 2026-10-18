@@ -1,5 +1,5 @@
 import {
-  isNaN, 
+  isNaN,
 } from '../../src/is/isNaN';
 
 describe('isNaN', () => {

@@ -1,5 +1,5 @@
 import {
-  getUniqId, 
+  getUniqId,
 } from '../../src/rpc/getUniqId';
 
 describe('rpc/getUniqId', () => {
@@ -10,7 +10,7 @@ describe('rpc/getUniqId', () => {
 
   test('returns unique values on each call', () => {
     const ids = new Set(Array.from({
-      length: 100, 
+      length: 100,
     }, () => getUniqId()));
     expect(ids.size).toBe(100);
   });

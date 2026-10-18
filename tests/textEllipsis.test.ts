@@ -1,5 +1,5 @@
 import {
-  textEllipsis, 
+  textEllipsis,
 } from '../src/textEllipsis';
 
 describe('textEllipsis', () => {

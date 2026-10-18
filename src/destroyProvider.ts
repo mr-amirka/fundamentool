@@ -1,11 +1,11 @@
 import {
-  forEach, 
+  forEach,
 } from './forEach';
 import {
-  removeOf, 
+  removeOf,
 } from './removeOf';
 import {
-  eachApply, 
+  eachApply,
 } from './eachApply';
 
 export type TDestroyFn = () => void;
@@ -21,7 +21,7 @@ export interface IDestroyer {
 
 /**
  * Accumulates destroyer callbacks and executes them once when called.
- * 
+ *
  * @param initial - The initial destroyer functions.
  * @returns A destroyer instance. Call it to run all callbacks; returns `true` if not already destroyed.
  * @example

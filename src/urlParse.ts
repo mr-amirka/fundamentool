@@ -3,13 +3,14 @@
  */
 
 import {
-  unparam, 
+  unparam,
 } from './unparam';
 import {
-  isDefined, 
+  isDefined,
 } from './is/isDefined';
 import {
-  half, halfLast, 
+  half,
+  halfLast,
 } from './half';
 
 export type TUrlOptions = {

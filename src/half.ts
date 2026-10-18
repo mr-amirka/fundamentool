@@ -1,6 +1,6 @@
 /**
  * Creates a half provider.
- * 
+ *
  * @param indexOf - The index of the separator.
  * @returns The half provider.
  */

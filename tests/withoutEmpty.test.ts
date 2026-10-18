@@ -1,5 +1,5 @@
 import {
-  withoutEmpty, withoutEmptyBase, 
+  withoutEmpty, withoutEmptyBase,
 } from '../src/withoutEmpty';
 
 describe('withoutEmpty', () => {
@@ -29,12 +29,12 @@ describe('withoutEmpty', () => {
       b: null,
       c: '',
       d: undefined,
-      e: 0, 
+      e: 0,
     };
     const result = withoutEmpty(src, 1);
     expect(result).toEqual({
       a: 1,
-      e: 0, 
+      e: 0,
     });
   });
 
@@ -42,14 +42,14 @@ describe('withoutEmpty', () => {
     const src = {
       outer: {
         inner: null,
-        keep: 1, 
-      }, 
+        keep: 1,
+      },
     };
     const result = withoutEmptyBase(src, 2);
     expect(result).toEqual({
       outer: {
-        keep: 1, 
-      }, 
+        keep: 1,
+      },
     });
   });
 });

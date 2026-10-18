@@ -111,7 +111,7 @@ describe.each([['React', REACT], ['Preact', PREACT]])('router.view with %s', (_n
     router.useBeforeLeave(() => props.path !== '/locked');
     return h(
       'p', {
-        'data-page': props.path, 
+        'data-page': props.path,
       }, props.path,
     );
   }
@@ -123,12 +123,12 @@ describe.each([['React', REACT], ['Preact', PREACT]])('router.view with %s', (_n
       log.push('covered');
       return () => log.push('uncovered');
     }, {
-      windows: true, 
+      windows: true,
     });
     router.useOnForward(() => (props.path === '/w/block' ? false : undefined));
     return library.createElement(
       'p', {
-        'data-page': props.path, 
+        'data-page': props.path,
       }, props.path,
     );
   }
@@ -138,11 +138,11 @@ describe.each([['React', REACT], ['Preact', PREACT]])('router.view with %s', (_n
       'dialog', {
         open: props.open,
         'data-window': props.params,
-        'data-open': String(props.open), 
+        'data-open': String(props.open),
       },
       library.createElement(
         'button', {
-          onClick: () => props.close('ok'), 
+          onClick: () => props.close('ok'),
         }, 'ok',
       ),
     );
@@ -153,16 +153,16 @@ describe.each([['React', REACT], ['Preact', PREACT]])('router.view with %s', (_n
     harness = setup({
       ...library.deps,
       describe: (path) => ({
-        keep: path === '/list', 
+        keep: path === '/list',
       }),
     }, '/list');
     ({
-      nav, router, browser, 
+      nav, router, browser,
     } = harness);
     view = router.view({
       renderPage: (entry, location) => library.createElement(location.path.startsWith('/w/') ? Watcher : Page, {
         entry,
-        path: location.path, 
+        path: location.path,
       }),
       renderWindow: (entry: TWindowEntry, props) => library.createElement(entry.window, props as unknown as Record<string, unknown>),
     }) as TView;
@@ -316,9 +316,9 @@ describe.each([['React', REACT], ['Preact', PREACT]])('router.view with %s', (_n
 describe('a long back on the screen (D-026)', () => {
   it('backToStart is one move: the pages between are never shown or mounted again', async () => {
     const {
-      nav, router, 
+      nav, router,
     } = setup({
-      describe: () => ({}), 
+      describe: () => ({}),
     });
     const mounts: string[] = [];
     function Page(props: { path: string }): React.ReactElement {
@@ -331,7 +331,7 @@ describe('a long back on the screen (D-026)', () => {
     }
     const view = router.view({
       renderPage: (_entry, location) => React.createElement(Page, {
-        path: location.path, 
+        path: location.path,
       }),
       renderWindow: () => null,
     });

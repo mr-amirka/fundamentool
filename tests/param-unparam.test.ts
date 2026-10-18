@@ -1,15 +1,15 @@
 import {
-  param, 
+  param,
 } from '../src/param';
 import {
-  unparam, 
+  unparam,
 } from '../src/unparam';
 
 describe('param / unparam', () => {
   test('serializes simple object to query string', () => {
     const q = param({
       a: 1,
-      b: 'x', 
+      b: 'x',
     });
     expect(q).toBe('a=1&b=x');
   });
@@ -23,7 +23,7 @@ describe('param / unparam', () => {
     const obj = unparam('?a=1&b=x');
     expect(obj).toEqual({
       a: 1,
-      b: 'x', 
+      b: 'x',
     });
   });
 

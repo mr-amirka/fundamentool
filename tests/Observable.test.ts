@@ -1,8 +1,8 @@
 import {
-  createObservable, createApi, 
+  createObservable, createApi,
 } from '../src/Observable';
 import type {
-  TObservableAdapter, 
+  TObservableAdapter,
 } from '../src/Observable';
 
 describe('createObservable', () => {
@@ -97,16 +97,16 @@ describe('createObservable', () => {
 describe('createApi', () => {
   test('dispatches action to store', () => {
     const store = createObservable({
-      count: 0, 
+      count: 0,
     });
     const api = createApi(store, {
       increment: (state, n: number) => ({
         ...state,
-        count: state.count + n, 
+        count: state.count + n,
       }),
       reset: (state) => ({
         ...state,
-        count: 0, 
+        count: 0,
       }),
     });
     api.increment(3);
@@ -118,23 +118,23 @@ describe('createApi', () => {
   test('multiple actions update store independently', () => {
     const store = createObservable({
       a: 0,
-      b: 0, 
+      b: 0,
     });
     const api = createApi(store, {
       setA: (state, v: number) => ({
         ...state,
-        a: v, 
+        a: v,
       }),
       setB: (state, v: number) => ({
         ...state,
-        b: v, 
+        b: v,
       }),
     });
     api.setA(10);
     api.setB(20);
     expect(store.getState()).toEqual({
       a: 10,
-      b: 20, 
+      b: 20,
     });
   });
 });
@@ -156,7 +156,7 @@ describe('TObservableAdapter — DI', () => {
 
     const store = adapter.createObservable(0);
     adapter.createApi(store, {
-      set: (_, v: number) => v, 
+      set: (_, v: number) => v,
     });
 
     expect(calls).toEqual(['createObservable', 'createApi']);

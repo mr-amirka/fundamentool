@@ -1,5 +1,5 @@
 import {
-  defer, 
+  defer,
 } from '../src/defer';
 
 describe('defer', () => {
@@ -34,7 +34,7 @@ describe('defer', () => {
 
   test('passes ctx to function', () => {
     const ctx = {
-      x: 42, 
+      x: 42,
     };
     let capturedThis: any;
     const fn = function (this: any) {

@@ -1,8 +1,8 @@
 import {
-  Decoder, 
+  Decoder,
 } from '../../src/jsonl/Decoder';
 import {
-  LineDecoder, 
+  LineDecoder,
 } from '../../src/LineDecoder';
 
 describe('jsonl/Decoder', () => {
@@ -14,10 +14,10 @@ describe('jsonl/Decoder', () => {
     const r3 = decoder.end();
 
     expect(r1).toEqual([{
-      id: 1, 
+      id: 1,
     }]);
     expect(r2).toEqual([{
-      id: 2, 
+      id: 2,
     }]);
     expect(r3).toEqual([]);
   });
@@ -29,10 +29,10 @@ describe('jsonl/Decoder', () => {
     const r2 = decoder.end('me":"b"}');
 
     expect(r1).toEqual([{
-      name: 'a', 
+      name: 'a',
     }]);
     expect(r2).toEqual([{
-      name: 'b', 
+      name: 'b',
     }]);
   });
 
@@ -43,10 +43,10 @@ describe('jsonl/Decoder', () => {
     const r2 = decoder.end('{"n":2}');
 
     expect(r1).toEqual([{
-      n: 1, 
+      n: 1,
     }]);
     expect(r2).toEqual([{
-      n: 2, 
+      n: 2,
     }]);
   });
 
@@ -55,9 +55,9 @@ describe('jsonl/Decoder', () => {
     const result = decoder.end('{"a":1}\r\n{"a":2}\r\n');
 
     expect(result).toEqual([{
-      a: 1, 
+      a: 1,
     }, {
-      a: 2, 
+      a: 2,
     }]);
   });
 

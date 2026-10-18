@@ -1,8 +1,8 @@
 import {
-  variants, 
+  variants,
 } from '../src/variants';
 import {
-  variantsProvider, 
+  variantsProvider,
 } from '../src/variantsProvider';
 
 const defaultMn = variantsProvider({

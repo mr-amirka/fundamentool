@@ -2,7 +2,7 @@ const NATIVE_JOIN = [].join;
 
 /**
  * Creates join helper for fixed delimiter.
- * 
+ *
  * @param delimiter - The delimiter to join the items with.
  * @returns The join provider.
  * @example

@@ -1,5 +1,5 @@
 import {
-  Unsubscriber, 
+  Unsubscriber,
 } from '../src/Unsubscriber';
 
 describe('Unsubscriber', () => {

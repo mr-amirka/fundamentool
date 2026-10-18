@@ -4,10 +4,16 @@
 // Scheduler принимает ISchedulerStore и сам управляет своими данными.
 
 import type {
-  ScheduledEvent, ScheduleTime, TriggerOffset, WeekDay, 
+  ScheduledEvent,
+  ScheduleTime,
+  TriggerOffset,
+  WeekDay,
 } from './types';
 export type {
-  ScheduledEvent, ScheduleTime, TriggerOffset, WeekDay, 
+  ScheduledEvent,
+  ScheduleTime,
+  TriggerOffset,
+  WeekDay,
 } from './types';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -52,7 +58,7 @@ export function nextScheduleTime(schedule: ScheduleTime, from: Date): Date {
         delta += 24 * 60;
       }
       if (delta < bestDelta) {
-        bestDelta = delta; best = t; tomorrow = m <= todayMin; 
+        bestDelta = delta; best = t; tomorrow = m <= todayMin;
       }
     }
     if (!best) {
@@ -117,7 +123,7 @@ export function applyOffset(baseTime: Date, offset: TriggerOffset): Date {
   const d = new Date(baseTime);
   if ('before' in offset) {
     const {
-      minutes = 0, hours = 0, days = 0, 
+      minutes = 0, hours = 0, days = 0,
     } = offset.before;
     d.setTime(d.getTime() - ((days * 24 + hours) * 60 + minutes) * 60_000);
     return d;
@@ -201,7 +207,7 @@ function expandEvents(events: ScheduledEvent[], scope?: string): SchedulerRecord
       actionPrompt: ev.actionPrompt,
       nextRunAt,
       lastFiredAt: 0,
-      scope, 
+      scope,
     });
 
     if (ev.childs) {
@@ -220,7 +226,7 @@ function expandEvents(events: ScheduledEvent[], scope?: string): SchedulerRecord
           actionPrompt: child.actionPrompt,
           nextRunAt: childTime.getTime(),
           lastFiredAt: 0,
-          scope, 
+          scope,
         });
       }
     }
@@ -328,7 +334,7 @@ export class Scheduler {
             r.catch(err => this.callbacks?.onError?.(rec, err as Error));
           }
         } catch (err) {
-          this.callbacks?.onError?.(rec, err as Error); 
+          this.callbacks?.onError?.(rec, err as Error);
         }
       }
     } catch (err) {
@@ -339,7 +345,7 @@ export class Scheduler {
         offsetJson: null,
         actionPrompt: '',
         nextRunAt: 0,
-        lastFiredAt: 0, 
+        lastFiredAt: 0,
       }, err as Error);
     }
   }

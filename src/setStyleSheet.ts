@@ -7,7 +7,7 @@ export type TSetStyleSheetDocument = {
  *
  * Поддерживает как старый IE‑интерфейс (`styleSheet.cssText`),
  * так и современный способ через `textNode`.
- * 
+ *
  * @param node - The style element to update.
  * @param text - The CSS text to set.
  * @param document - The document used to create text nodes.

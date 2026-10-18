@@ -1,8 +1,8 @@
 import {
-  filter, 
+  filter,
 } from '../src/filter';
 import {
-  filterIn, 
+  filterIn,
 } from '../src/filterIn';
 
 describe('filter', () => {
@@ -24,7 +24,7 @@ describe('filter', () => {
         v,
         i,
         c,
-      ]); return true; 
+      ]); return true;
     });
     expect(calls).toEqual([[
       'a',
@@ -67,18 +67,18 @@ describe('filterIn', () => {
     const result = filterIn({
       a: 1,
       b: 2,
-      c: 3, 
+      c: 3,
     }, (v) => v > 1);
     expect(result).toEqual({
       b: 2,
-      c: 3, 
+      c: 3,
     });
   });
 
   test('passes value, key, collection to iteratee', () => {
     const calls: any[] = [];
     filterIn({
-      x: 10, 
+      x: 10,
     }, (
       v, k, c,
     ) => {
@@ -86,20 +86,20 @@ describe('filterIn', () => {
         v,
         k,
         c,
-      ]); return true; 
+      ]); return true;
     });
     expect(calls).toEqual([[
       10,
       'x',
       {
-        x: 10, 
+        x: 10,
       },
     ]]);
   });
 
   test('returns empty object when nothing passes', () => {
     expect(filterIn({
-      a: 1, 
+      a: 1,
     }, () => false)).toEqual({});
   });
 
@@ -108,11 +108,11 @@ describe('filterIn', () => {
     filterIn(
       {
         a: 1,
-        b: 2, 
+        b: 2,
       }, (v) => v > 1, dst,
     );
     expect(dst).toEqual({
-      b: 2, 
+      b: 2,
     });
   });
 });

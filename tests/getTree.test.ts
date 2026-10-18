@@ -1,24 +1,24 @@
 import {
-  getTree, 
+  getTree,
 } from '../src/getTree';
 
 describe('getTree', () => {
   const items = [
     {
       id: 1,
-      parent: null, 
+      parent: null,
     },
     {
       id: 2,
-      parent: 1, 
+      parent: 1,
     },
     {
       id: 3,
-      parent: 1, 
+      parent: 1,
     },
     {
       id: 4,
-      parent: 2, 
+      parent: 2,
     },
   ];
 

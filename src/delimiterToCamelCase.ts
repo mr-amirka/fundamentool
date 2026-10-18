@@ -1,10 +1,10 @@
 import {
-  toUpper, 
+  toUpper,
 } from './toUpper';
 
 /**
  * Converts a delimited string to camelCase using the given delimiter.
- * 
+ *
  * @param value - The string to convert.
  * @param delimiter - The delimiter to use.
  * @returns The camelCase string.

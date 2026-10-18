@@ -1,5 +1,5 @@
 import {
-  readyProvider, 
+  readyProvider,
 } from '../src/readyProvider';
 
 function makeWindow(readyState: string = 'loading') {
@@ -22,14 +22,14 @@ function makeWindow(readyState: string = 'loading') {
   return {
     win,
     doc,
-    fire, 
+    fire,
   };
 }
 
 describe('readyProvider', () => {
   test('calls fn immediately via defer when DOM is already ready', async () => {
     const {
-      win, 
+      win,
     } = makeWindow('complete');
     const ready = readyProvider(win);
     const calls: number[] = [];
@@ -40,7 +40,7 @@ describe('readyProvider', () => {
 
   test('queues fn and calls it on DOMContentLoaded', () => {
     const {
-      win, fire, 
+      win, fire,
     } = makeWindow('loading');
     const ready = readyProvider(win);
     const calls: number[] = [];
@@ -52,7 +52,7 @@ describe('readyProvider', () => {
 
   test('unsubscribe cancels queued fn', () => {
     const {
-      win, fire, 
+      win, fire,
     } = makeWindow('loading');
     const ready = readyProvider(win);
     const calls: number[] = [];
@@ -64,7 +64,7 @@ describe('readyProvider', () => {
 
   test('calls fn immediately on load event', () => {
     const {
-      win, fire, 
+      win, fire,
     } = makeWindow('loading');
     const ready = readyProvider(win);
     const calls: number[] = [];

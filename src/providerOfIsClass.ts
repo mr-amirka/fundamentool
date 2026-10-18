@@ -1,6 +1,6 @@
 /**
  * Creates predicate that checks instance of a class by getter.
- * 
+ *
  * @param getter - The getter to use.
  * @returns The predicate.
  * @example

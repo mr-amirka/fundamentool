@@ -1,5 +1,5 @@
 import {
-  sort, 
+  sort,
 } from './sort';
 
 /**

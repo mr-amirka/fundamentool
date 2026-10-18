@@ -1,14 +1,14 @@
 import {
-  flags, 
+  flags,
 } from '../src/flags';
 import {
-  flagsByString, 
+  flagsByString,
 } from '../src/flagsByString';
 import {
-  deflags, 
+  deflags,
 } from '../src/deflags';
 import {
-  deflagsByString, 
+  deflagsByString,
 } from '../src/deflagsByString';
 
 describe('flags', () => {
@@ -20,26 +20,26 @@ describe('flags', () => {
     ])).toEqual({
       a: 1,
       b: 1,
-      c: 1, 
+      c: 1,
     });
   });
 
   test('supports dot-notation for nested flags', () => {
     expect(flags(['test.use'])).toEqual({
       test: {
-        use: 1, 
-      }, 
+        use: 1,
+      },
     });
   });
 
   test('merges into provided dst', () => {
     const dst = {
-      x: 1, 
+      x: 1,
     };
     flags(['y'], dst);
     expect(dst).toEqual({
       x: 1,
-      y: 1, 
+      y: 1,
     });
   });
 
@@ -53,7 +53,7 @@ describe('flagsByString', () => {
     expect(flagsByString('a b c')).toEqual({
       a: 1,
       b: 1,
-      c: 1, 
+      c: 1,
     });
   });
 
@@ -64,12 +64,12 @@ describe('flagsByString', () => {
 
   test('merges into provided dst', () => {
     const dst: Record<string, any> = {
-      existing: 1, 
+      existing: 1,
     };
     flagsByString('new', dst);
     expect(dst).toEqual({
       existing: 1,
-      new: 1, 
+      new: 1,
     });
   });
 });
@@ -80,7 +80,7 @@ describe('deflags', () => {
       a: 1,
       b: 0,
       c: true,
-      d: false, 
+      d: false,
     });
     expect(result.sort()).toEqual(['a', 'c']);
   });
@@ -88,14 +88,14 @@ describe('deflags', () => {
   test('returns empty array for all-falsy', () => {
     expect(deflags({
       a: 0,
-      b: false, 
+      b: false,
     })).toEqual([]);
   });
 
   test('returns all keys when all truthy', () => {
     const result = deflags({
       x: 1,
-      y: 2, 
+      y: 2,
     });
     expect(result.sort()).toEqual(['x', 'y']);
   });
@@ -106,21 +106,21 @@ describe('deflagsByString', () => {
     const result = deflagsByString({
       a: true,
       b: false,
-      c: true, 
+      c: true,
     });
     expect(result).toBe('a c');
   });
 
   test('appends suffix when provided', () => {
     const result = deflagsByString({
-      a: true, 
+      a: true,
     }, 'extra');
     expect(result).toBe('a extra');
   });
 
   test('returns only suffix when all flags falsy', () => {
     expect(deflagsByString({
-      a: false, 
+      a: false,
     }, 'only')).toBe(' only');
   });
 });

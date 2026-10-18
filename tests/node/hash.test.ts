@@ -1,5 +1,5 @@
 import {
-  hash, 
+  hash,
 } from '../../src/node/hash';
 
 describe('node/hash', () => {

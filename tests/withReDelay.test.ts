@@ -1,5 +1,5 @@
 import {
-  withReDelay, 
+  withReDelay,
 } from '../src/withReDelay';
 
 describe('withReDelay', () => {

@@ -1,5 +1,5 @@
 import {
-  half, halfLast, 
+  half, halfLast,
 } from '../src/half';
 
 describe('half', () => {

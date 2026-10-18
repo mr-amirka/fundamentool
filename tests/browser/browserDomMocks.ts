@@ -62,6 +62,6 @@ export function setupBrowserDomMocks(): { clickMock: jest.Mock } {
   (global as any).window = win;
 
   return {
-    clickMock, 
+    clickMock,
   };
 }

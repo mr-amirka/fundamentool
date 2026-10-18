@@ -1,17 +1,17 @@
 import {
-  camelToDelimiterCase, 
+  camelToDelimiterCase,
 } from '../src/camelToDelimiterCase';
 import {
-  camelToKebabCase, 
+  camelToKebabCase,
 } from '../src/camelToKebabCase';
 import {
-  camelToSnakeCase, 
+  camelToSnakeCase,
 } from '../src/camelToSnakeCase';
 import {
-  toLower, 
+  toLower,
 } from '../src/toLower';
 import {
-  toUpper, 
+  toUpper,
 } from '../src/toUpper';
 
 describe('toLower / toUpper', () => {

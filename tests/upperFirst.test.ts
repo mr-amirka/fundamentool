@@ -1,5 +1,5 @@
 import {
-  upperFirst, 
+  upperFirst,
 } from '../src/upperFirst';
 
 describe('upperFirst', () => {

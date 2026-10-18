@@ -1,6 +1,6 @@
 /**
  * Wraps a clear function and id into a cancel callback.
- * 
+ *
  * @param clearFn - The function to clear.
  * @param id - The id to clear.
  * @returns A zero-argument function that cancels the timer/operation.

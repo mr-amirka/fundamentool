@@ -1,5 +1,5 @@
 import {
-  promisify, 
+  promisify,
 } from '../src/promisify';
 
 describe('promisify', () => {

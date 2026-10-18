@@ -1,12 +1,12 @@
 import {
-  toLower, 
+  toLower,
 } from './toLower';
 
 const REGEXP = /([A-Z])/g;
 
 /**
  * Converts camelCase string to delimited case using given delimiter.
- * 
+ *
  * @param value - The string to convert.
  * @param delimiter - The delimiter to use.
  * @returns The converted string.

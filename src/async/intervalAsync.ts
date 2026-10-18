@@ -1,11 +1,11 @@
 import {
-  asAsync, 
+  asAsync,
 } from '../asAsync';
 import {
-  createTimeout, 
+  createTimeout,
 } from '../createTimeout';
 import {
-  noop, 
+  noop,
 } from '../noop';
 
 /**
@@ -13,7 +13,7 @@ import {
  *
  * If `fn` returns a promise, the next tick is scheduled after it settles.
  * Returns a cancel function that stops subsequent executions.
- * 
+ *
  * @param fn - Function to execute periodically.
  * @param delayMs - Delay in milliseconds.
  * @param args - Arguments to pass to the function.

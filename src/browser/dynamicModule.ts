@@ -1,6 +1,6 @@
 /**
  * Wraps async module initializer so that it is executed only once.
- * 
+ *
  * @param init - The initializer function.
  * @returns A function that returns a Promise resolved with the initializer result (cached after first call).
  * @example

@@ -1,6 +1,6 @@
 /**
  * Returns enumerable keys of an object as an array of strings.
- * 
+ *
  * @param obj - The object to get the keys of.
  * @returns The keys of the object.
  * @example

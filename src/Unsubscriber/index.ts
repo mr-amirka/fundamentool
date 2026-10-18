@@ -4,7 +4,7 @@ import type {
   TUnsubscriberUnsubscribe,
 } from './types';
 import {
-  subscribe, 
+  subscribe,
 } from '../subscribe';
 
 /**

@@ -1,17 +1,17 @@
 import {
-  isRegExp, 
+  isRegExp,
 } from './is/isRegExp';
 import {
-  escapeRegExp, 
+  escapeRegExp,
 } from './escapeRegExp';
 import {
-  regexpParse, 
+  regexpParse,
 } from './regexpParse';
 
 /**
  * Normalizes a separator to a regexp-safe source string.
  * If input is a RegExp, returns its source; otherwise escapes the string.
- * 
+ *
  * @param v - The string or regexp to normalize.
  * @returns The normalized string.
  * @example

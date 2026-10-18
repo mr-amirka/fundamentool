@@ -4,31 +4,31 @@
 
 import fc from 'fast-check';
 import {
-  scopeSplit, 
+  scopeSplit,
 } from '../src/scopeSplit';
 import {
-  scopeJoin, 
+  scopeJoin,
 } from '../src/scopeJoin';
 import {
-  escapedSplitProvider, 
+  escapedSplitProvider,
 } from '../src/escapedSplitProvider';
 import {
-  unslash, 
+  unslash,
 } from '../src/unslash';
 import {
-  escapeCss, 
+  escapeCss,
 } from '../src/escapeCss';
 import {
-  escapeQuote, 
+  escapeQuote,
 } from '../src/escapeQuote';
 import {
-  escapeRegExp, 
+  escapeRegExp,
 } from '../src/escapeRegExp';
 import {
-  camelToKebabCase, 
+  camelToKebabCase,
 } from '../src/camelToKebabCase';
 import {
-  kebabToCamelCase, 
+  kebabToCamelCase,
 } from '../src/kebabToCamelCase';
 
 function stringFromChars(
@@ -37,7 +37,7 @@ function stringFromChars(
   return fc.array(fc.constantFrom(...chars.split('')),
     {
       minLength: minLen,
-      maxLength: maxLen, 
+      maxLength: maxLen,
     }).map((arr: string[]) => arr.join(''));
 }
 
@@ -124,13 +124,13 @@ describe('camelToKebabCase ↔ kebabToCamelCase — round-trip', () => {
     const upper = fc.constantFrom(...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''));
     const lowerWord = fc.array(lower, {
       minLength: 1,
-      maxLength: 8, 
+      maxLength: 8,
     }).map((arr: string[]) => arr.join(''));
     const camelString: fc.Arbitrary<string> = fc.tuple(lowerWord,
       fc.array(fc.tuple(upper, lowerWord).map(([u, r]: [string, string]) => u + r),
         {
           minLength: 0,
-          maxLength: 4, 
+          maxLength: 4,
         })).map(([first, parts]: [string, string[]]) => first + parts.join(''));
 
     fc.assert(fc.property(camelString, (input: string) => {

@@ -1,6 +1,6 @@
 /**
  * Maps over object properties into an output object.
- * 
+ *
  * @param collection - The object to map.
  * @param iteratee - The function to call for each property.
  * @param output - The object to map into.

@@ -1,8 +1,8 @@
 import {
-  checkNoop, 
+  checkNoop,
 } from './checkNoop';
 import {
-  loopAsync, 
+  loopAsync,
 } from './loopAsync';
 
 /**

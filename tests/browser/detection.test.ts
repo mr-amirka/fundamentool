@@ -1,5 +1,5 @@
 import {
-  extractExportedFn, 
+  extractExportedFn,
 } from './testUtils';
 
 const detection = extractExportedFn(require('../../src/browser/detection'));

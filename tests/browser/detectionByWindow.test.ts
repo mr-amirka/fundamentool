@@ -1,5 +1,5 @@
 import {
-  extractExportedFn, 
+  extractExportedFn,
 } from './testUtils';
 
 const detectionByWindow = extractExportedFn(require('../../src/browser/detectionByWindow'));

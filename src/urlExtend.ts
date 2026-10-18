@@ -1,14 +1,16 @@
 import {
-  urlParse, TUrlProps, TUrlOptions, 
+  urlParse,
+  TUrlProps,
+  TUrlOptions,
 } from './urlParse';
 import {
-  param, 
+  param,
 } from './param';
 import {
-  merge, 
+  merge,
 } from './merge';
 import {
-  isDefined, 
+  isDefined,
 } from './is/isDefined';
 
 function normalize(v: Partial<TUrlProps> | string | null | undefined): Partial<TUrlProps> {
@@ -20,7 +22,7 @@ function normalize(v: Partial<TUrlProps> | string | null | undefined): Partial<T
         return v;
     }
   }
-  
+
   return {};
 }
 

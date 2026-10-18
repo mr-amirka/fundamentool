@@ -1,5 +1,5 @@
 import {
-  loopAsync, 
+  loopAsync,
 } from '../../src/async/loopAsync';
 
 describe('loopAsync', () => {

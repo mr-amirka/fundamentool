@@ -1,5 +1,5 @@
 import {
-  PortPolyfill, 
+  PortPolyfill,
 } from '../src/PortPolyfill';
 
 describe('PortPolyfill', () => {
@@ -11,10 +11,10 @@ describe('PortPolyfill', () => {
     });
     port.postMessage('hello');
     port.postMessage({
-      x: 1, 
+      x: 1,
     });
     expect(received).toEqual(['hello', {
-      x: 1, 
+      x: 1,
     }]);
   });
 

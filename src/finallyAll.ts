@@ -1,12 +1,12 @@
 import {
-  noop, 
+  noop,
 } from './noop';
 
 /**
  * Wraps async workflow so that `callback` is called when internal counter drops to zero.
  *
  * `fn(inc, dec)` should call `inc()` when starting an async task and `dec()` when it finishes.
- * 
+ *
  * @param fn - The function to wrap.
  * @param callback - The callback to call when the counter drops to zero.
  * @returns void

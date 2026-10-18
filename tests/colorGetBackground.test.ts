@@ -1,5 +1,5 @@
 import {
-  colorGetBackground, 
+  colorGetBackground,
 } from '../src/colorGetBackground';
 
 describe('colorGetBackground', () => {

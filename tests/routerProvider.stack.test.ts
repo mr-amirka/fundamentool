@@ -15,29 +15,29 @@ import {
 describe('routerProvider — the stack', () => {
   it('starts with the page in the address; the browser entry is ours', () => {
     const {
-      nav, browser, 
+      nav, browser,
     } = setup();
     const state = nav.getState();
     expect(state.entries).toHaveLength(1);
     expect(state.page).toMatchObject({
       location: {
-        path: '/a', 
+        path: '/a',
       },
       depth: 0,
       info: {
         section: 'a',
-        sectionHome: true, 
-      }, 
+        sectionHome: true,
+      },
     });
     expect(state.section).toBe('a');
     expect(browser.state()).toMatchObject({
-      depth: 0, 
+      depth: 0,
     });
   });
 
   it('go pushes a page and a history entry; back — ours or the browser\'s — removes it', async () => {
     const {
-      nav, browser, paths, 
+      nav, browser, paths,
     } = setup();
     await nav.go('/a/1');
     await nav.go('/a/1/2');
@@ -62,10 +62,10 @@ describe('routerProvider — the stack', () => {
 
   it('open resolves with the result it closed with; back / Android back gives null; the exit plays, then it\'s gone', async () => {
     const {
-      nav, browser, paths, 
+      nav, browser, paths,
     } = setup();
     const first = nav.open<string>('Editor', {
-      text: 'hi', 
+      text: 'hi',
     });
     await settle();
     const win = nav.getState().entries[1];
@@ -73,8 +73,8 @@ describe('routerProvider — the stack', () => {
       kind: 'window',
       window: 'Editor',
       params: {
-        text: 'hi', 
-      }, 
+        text: 'hi',
+      },
     });
     expect(browser.paths()).toEqual(['/a', '/a']); // the address keeps the page
     await nav.close(win.id, 'saved');
@@ -92,7 +92,7 @@ describe('routerProvider — the stack', () => {
 
   it('close: of an entry under others closes those too; an unknown id or the bottom page — nothing', async () => {
     const {
-      nav, paths, 
+      nav, paths,
     } = setup();
     const lower = nav.open('A');
     await settle();
@@ -109,9 +109,9 @@ describe('routerProvider — the stack', () => {
 
   it('kept pages stay mounted while covered (within the limit); others unmount', async () => {
     const {
-      nav, 
+      nav,
     } = setup({
-      keep: 1, 
+      keep: 1,
     });
     await nav.go('/a/list1');
     await nav.go('/a/list2');
@@ -138,7 +138,7 @@ describe('routerProvider — the stack', () => {
 
   it('the tab bar section is the nearest page with one; backToSection returns to its main page', async () => {
     const {
-      nav, paths, 
+      nav, paths,
     } = setup();
     await nav.go('/a/1');
     await nav.go('/a/1/2');
@@ -164,13 +164,13 @@ describe('routerProvider — the stack', () => {
     expect(deep.paths()).toEqual(['/b/7', '/b']);
 
     const none = setup({
-      sections: {}, 
+      sections: {},
     }, '/b/7');
     await none.nav.backToSection();
     expect(none.paths()).toEqual(['/b/7']);
 
     const plain = setup({
-      describe: () => ({}), 
+      describe: () => ({}),
     });
     await plain.nav.backToSection();
     expect(plain.nav.getState().section).toBeNull();
@@ -178,7 +178,7 @@ describe('routerProvider — the stack', () => {
 
   it('startOver drops everything: windows resolve null, the history is back at its first entry', async () => {
     const {
-      nav, browser, paths, 
+      nav, browser, paths,
     } = setup();
     await nav.go('/a/1');
     const win = nav.open('W');
@@ -195,7 +195,7 @@ describe('routerProvider — the stack', () => {
 
   it('whileOpen: runs at once, cleaned up when the entry starts closing, unsubscribing cleans up too', async () => {
     const {
-      nav, 
+      nav,
     } = setup();
     await nav.go('/a/1');
     const id = nav.getState().page.id;
@@ -219,7 +219,7 @@ describe('routerProvider — the stack', () => {
 
   it('onForward: pages only by default; its cleanup runs on return; false cancels; a promise delays', async () => {
     const {
-      nav, paths, 
+      nav, paths,
     } = setup();
     const id = nav.getState().page.id;
     const log: string[] = [];
@@ -241,7 +241,7 @@ describe('routerProvider — the stack', () => {
 
     nav.onForward(
       id, () => false, {
-        windows: true, 
+        windows: true,
       },
     );
     await expect(nav.go('/a/2')).resolves.toBe(false);
@@ -251,14 +251,14 @@ describe('routerProvider — the stack', () => {
 
   it('onForward: a promise holds the step until it settles', async () => {
     const {
-      nav, paths, 
+      nav, paths,
     } = setup();
     let release: () => void = () => undefined;
     nav.onForward(
       nav.getState().page.id, () => new Promise<void>((resolve) => {
         release = resolve;
       }), {
-        windows: true, 
+        windows: true,
       },
     );
     const going = nav.go('/a/1');
@@ -271,7 +271,7 @@ describe('routerProvider — the stack', () => {
 
   it('onBeforeLeave: a refusal keeps the entry (the browser is stepped forward again) and reopens whileOpen', async () => {
     const {
-      nav, browser, paths, 
+      nav, browser, paths,
     } = setup();
     await nav.go('/a/form');
     const id = nav.getState().page.id;
@@ -300,7 +300,7 @@ describe('routerProvider — the stack', () => {
 
   it('a guard may open a window to ask ("discard changes?") — it works while the leave waits', async () => {
     const {
-      nav, paths, 
+      nav, paths,
     } = setup();
     await nav.go('/a/form');
     nav.onBeforeLeave(nav.getState().page.id, async () => (await nav.open<boolean>('Confirm')) === true);
@@ -316,7 +316,7 @@ describe('routerProvider — the stack', () => {
 
   it('a leave confirmed after the stack changed meanwhile does nothing more', async () => {
     const {
-      nav, paths, 
+      nav, paths,
     } = setup();
     await nav.go('/a/form');
     let answer: ((value: boolean) => void) | null = null;
@@ -333,7 +333,7 @@ describe('routerProvider — the stack', () => {
 
   it('the browser\'s Forward brings back the page left by back — the same entry; a new step forgets it (D-024)', async () => {
     const {
-      nav, browser, paths, 
+      nav, browser, paths,
     } = setup();
     await nav.go('/a/1');
     const left = nav.getState().page;
@@ -355,7 +355,7 @@ describe('routerProvider — the stack', () => {
 
   it('Forward over several steps; replace and start over forget what is ahead', async () => {
     const {
-      nav, browser, paths, 
+      nav, browser, paths,
     } = setup();
     await nav.go('/a/1');
     await nav.go('/a/2');
@@ -378,10 +378,10 @@ describe('routerProvider — the stack', () => {
 
   it('Forward reopens a closed window with its params — nobody awaits it; { reopen: false } windows stay closed (D-024)', async () => {
     const {
-      nav, browser, paths, 
+      nav, browser, paths,
     } = setup();
     const answer = nav.open('Menu', {
-      scene: 1, 
+      scene: 1,
     });
     await waitFor(() => expect(paths()).toEqual(['/a', 'window']));
     await nav.back();
@@ -391,8 +391,8 @@ describe('routerProvider — the stack', () => {
     expect(nav.getState().entries[1]).toMatchObject({
       window: 'Menu',
       params: {
-        scene: 1, 
-      }, 
+        scene: 1,
+      },
     });
     // Reopened while it was still playing its exit: it is no longer "leaving".
     expect(nav.getState().leaving).toEqual([]);
@@ -401,7 +401,7 @@ describe('routerProvider — the stack', () => {
     // Menu → a confirmation that isn't reopened: back twice, Forward reopens the menu and stops there.
     void nav.open(
       'Confirm', undefined, {
-        reopen: false, 
+        reopen: false,
       },
     );
     await waitFor(() => expect(paths()).toEqual([
@@ -426,7 +426,7 @@ describe('routerProvider — the stack', () => {
 
   it('Forward asks the forward handlers of the page first: false keeps the player where they are', async () => {
     const {
-      nav, browser, paths, 
+      nav, browser, paths,
     } = setup();
     await nav.go('/a/1');
     await nav.back();
@@ -450,7 +450,7 @@ describe('routerProvider — the stack', () => {
 
   it('a window\'s Forward asks only handlers registered with { windows: true }', async () => {
     const {
-      nav, browser, paths, 
+      nav, browser, paths,
     } = setup();
     void nav.open('W');
     await waitFor(() => expect(paths()).toEqual(['/a', 'window']));
@@ -466,7 +466,7 @@ describe('routerProvider — the stack', () => {
 
   it('an entry from another session (before a reload) starts over at its path', async () => {
     const {
-      browser, paths, 
+      browser, paths,
     } = setup();
     browser.foreign('/b/old');
     await waitFor(() => expect(paths()).toEqual(['/b/old']));
@@ -474,7 +474,7 @@ describe('routerProvider — the stack', () => {
 
   it('a failed step (e.g. the history refuses) rejects it but doesn\'t block the next ones', async () => {
     const {
-      nav, browser, paths, 
+      nav, browser, paths,
     } = setup();
     const restore = browser.refusePush();
     await expect(nav.go('/a/1')).rejects.toThrow('quota');
@@ -485,7 +485,7 @@ describe('routerProvider — the stack', () => {
 
   it('replace swaps the top page in place: no new history entry, its whileOpen cleaned up', async () => {
     const {
-      nav, browser, paths, 
+      nav, browser, paths,
     } = setup();
     await nav.go('/a/1');
     const log: string[] = [];
@@ -500,7 +500,7 @@ describe('routerProvider — the stack', () => {
 
   it('replace closes windows over the page first; a window that refuses to close keeps everything', async () => {
     const {
-      nav, paths, 
+      nav, paths,
     } = setup();
     await nav.go('/a/1');
     const win = nav.open('W');
@@ -522,7 +522,7 @@ describe('routerProvider — the stack', () => {
 
   it('back tells whether the entry was left; isClosing is true while its guards are asked', async () => {
     const {
-      nav, 
+      nav,
     } = setup();
     await expect(nav.back()).resolves.toBe(false); // nothing to go back to
     await nav.go('/a/form');
@@ -545,7 +545,7 @@ describe('routerProvider — the stack', () => {
 
   it('back after the stack changed while a guard was asked: nothing more to leave', async () => {
     const {
-      nav, 
+      nav,
     } = setup();
     await nav.go('/a/form');
     let answer: (value: boolean) => void = () => undefined;
@@ -561,7 +561,7 @@ describe('routerProvider — the stack', () => {
 
   it('a back queued after a window\'s close counts from the stack as it is then: the window, then the page', async () => {
     const {
-      nav, router, paths, 
+      nav, router, paths,
     } = setup();
     await nav.go('/a/level');
     void nav.open('Menu');
@@ -578,7 +578,7 @@ describe('routerProvider — the stack', () => {
 
   it('{ force: true }: back without asking — refusing guards are skipped, windows left resolve null (D-026)', async () => {
     const {
-      nav, router, paths, 
+      nav, router, paths,
     } = setup();
     await nav.go('/a/form');
     const asked: string[] = [];
@@ -593,9 +593,9 @@ describe('routerProvider — the stack', () => {
       'window',
     ]));
     await expect(router.backToStart({
-      force: true, 
+      force: true,
     })).resolves.toEqual({
-      locked: false, 
+      locked: false,
     });
     await expect(win).resolves.toBeNull();
     expect(paths()).toEqual(['/a']);
@@ -604,16 +604,16 @@ describe('routerProvider — the stack', () => {
     await nav.go('/a/form');
     nav.onBeforeLeave(nav.getState().page.id, () => false);
     await expect(router.backLocation({
-      force: true, 
+      force: true,
     })).resolves.toEqual({
-      locked: false, 
+      locked: false,
     });
     expect(paths()).toEqual(['/a']);
   });
 
   it('subscribe / unsubscribe', async () => {
     const {
-      nav, 
+      nav,
     } = setup();
     const listener = jest.fn();
     const stop = nav.subscribe(listener);
@@ -626,9 +626,9 @@ describe('routerProvider — the stack', () => {
 
   it('defaults: a closed window plays its exit for 300 ms', async () => {
     const {
-      nav, browser, 
+      nav, browser,
     } = setup({
-      exitMs: undefined, 
+      exitMs: undefined,
     });
     const result = nav.open('W');
     await settle(100);

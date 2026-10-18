@@ -1,5 +1,5 @@
 import {
-  readUnopened as simpleReadUnopened, 
+  readUnopened as simpleReadUnopened,
 } from '../readUnopened';
 
 /**

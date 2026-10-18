@@ -1,10 +1,10 @@
 import {
-  getKeyPath, 
+  getKeyPath,
 } from './getKeyPath';
 
 /**
  * Gets a value from an object by a dot path string.
- * 
+ *
  * @param scope - The object to get the value from.
  * @param path - The dot path string to get the value from.
  * @returns The value, or `null` if the path is not found.
@@ -39,7 +39,7 @@ export const getWithContext = (scope: any, path: ArrayLike<string | number>): nu
 
 /**
  * Gets a value from an object by a dot path string.
- * 
+ *
  * @param scope - The object to get the value from.
  * @param path - The dot path string to get the value from.
  * @returns The value, or `null` if the path is not found.
@@ -54,7 +54,7 @@ export const getBase = (scope: any, path: ArrayLike<string | number>): any => ge
 
 /**
  * Gets a value from an object by a dot path string.
- * 
+ *
  * @param scope - The object to get the value from.
  * @param path - The dot path string to get the value from.
  * @returns The value, or `null` if the path is not found.

@@ -1,12 +1,12 @@
 import {
-  isPlainObject, isPlainObjectBase, 
+  isPlainObject, isPlainObjectBase,
 } from '../src/is/isPlainObject';
 
 describe('isPlainObject', () => {
   test('returns true for plain objects', () => {
     expect(isPlainObject({})).toBe(true);
     expect(isPlainObject({
-      a: 1, 
+      a: 1,
     })).toBe(true);
   });
 

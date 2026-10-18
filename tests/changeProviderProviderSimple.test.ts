@@ -1,5 +1,5 @@
 import {
-  changeProviderProviderSimple, 
+  changeProviderProviderSimple,
 } from '../src/changeProviderProviderSimple';
 
 interface IState {
@@ -18,7 +18,7 @@ describe('changeProviderProviderSimple', () => {
     setName('Alice');
 
     expect(patches).toEqual([{
-      name: 'Alice', 
+      name: 'Alice',
     }]);
   });
 
@@ -30,26 +30,26 @@ describe('changeProviderProviderSimple', () => {
     change('active')(true);
 
     expect(patches).toEqual([{
-      age: 30, 
+      age: 30,
     }, {
-      active: true, 
+      active: true,
     }]);
   });
 
   test('each call to setter invokes set with correct partial', () => {
     let lastPatch: Partial<IState> | undefined;
     const change = changeProviderProviderSimple<IState>((patch) => {
-      lastPatch = patch; 
+      lastPatch = patch;
     });
     const setCount = change('count');
 
     setCount(1);
     expect(lastPatch).toEqual({
-      count: 1, 
+      count: 1,
     });
     setCount(2);
     expect(lastPatch).toEqual({
-      count: 2, 
+      count: 2,
     });
   });
 });

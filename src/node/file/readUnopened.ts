@@ -1,14 +1,14 @@
 import {
-  Readable, 
+  Readable,
 } from 'stream';
 import {
-  readSlice, 
+  readSlice,
 } from './readSlice';
 import {
-  childClass, 
+  childClass,
 } from '../../childClass';
 import {
-  extend, 
+  extend,
 } from '../../extend';
 
 const DEFAULT_BUFFER_LENGTH = 1024 * 8;

@@ -1,5 +1,5 @@
 import type {
-  ILineBasedFormatOptions, 
+  ILineBasedFormatOptions,
 } from './types';
 
 export * from './types';
@@ -23,7 +23,7 @@ export class LineBasedFormat {
 
   constructor(options: ILineBasedFormatOptions) {
     const {
-      parse, stringify, 
+      parse, stringify,
     } = options;
     this.parse = (input: string): any[] => input.split(REGEXP_LINE_BREAK).map(parse);
     this.stringify = (input: any[]): string => input.map(stringify).join('\n');

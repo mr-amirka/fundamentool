@@ -1,6 +1,6 @@
 /**
  * Extends an object with the properties of another object.
- * 
+ *
  * @param dst - The destination object.
  * @param src - The source object.
  * @returns The destination object.

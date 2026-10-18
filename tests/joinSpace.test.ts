@@ -1,5 +1,5 @@
 import {
-  joinSpace, 
+  joinSpace,
 } from '../src/join/joinSpace';
 
 describe('joinSpace', () => {

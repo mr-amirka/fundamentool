@@ -1,5 +1,5 @@
 import {
-  withLock, 
+  withLock,
 } from '../src/withLock';
 
 describe('withLock', () => {

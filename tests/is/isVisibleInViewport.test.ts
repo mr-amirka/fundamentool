@@ -1,5 +1,5 @@
 import {
-  isVisibleInViewportProvider, 
+  isVisibleInViewportProvider,
 } from '../../src/is/isVisibleInViewportProvider';
 
 function makeCtx(innerWidth: number, innerHeight: number) {
@@ -10,8 +10,8 @@ function makeCtx(innerWidth: number, innerHeight: number) {
       document: {
         documentElement: {
           clientWidth: innerWidth,
-          clientHeight: innerHeight, 
-        }, 
+          clientHeight: innerHeight,
+        },
       },
     },
   };
@@ -50,7 +50,7 @@ describe('isVisibleInViewportProvider', () => {
       top: 10,
       left: 10,
       bottom: 200,
-      right: 200, 
+      right: 200,
     });
     expect(isVisible(el)).toBe(true);
   });
@@ -60,7 +60,7 @@ describe('isVisibleInViewportProvider', () => {
       top: 10,
       left: 10,
       bottom: 900,
-      right: 200, 
+      right: 200,
     });
     expect(isVisible(el)).toBe(false);
   });
@@ -70,7 +70,7 @@ describe('isVisibleInViewportProvider', () => {
       top: 10,
       left: 10,
       bottom: 200,
-      right: 1200, 
+      right: 1200,
     });
     expect(isVisible(el)).toBe(false);
   });
@@ -83,8 +83,8 @@ describe('isVisibleInViewportProvider', () => {
         document: {
           documentElement: {
             clientWidth: 1024,
-            clientHeight: 768, 
-          }, 
+            clientHeight: 768,
+          },
         },
       },
     };
@@ -93,7 +93,7 @@ describe('isVisibleInViewportProvider', () => {
       top: 10,
       left: 10,
       bottom: 200,
-      right: 200, 
+      right: 200,
     });
     expect(isVisibleFallback(el)).toBe(true);
   });

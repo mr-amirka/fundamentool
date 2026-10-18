@@ -1,16 +1,21 @@
 import {
-  createObservable as _createObservable, createApi as _createApi, ObservableWritable,
+  createObservable as _createObservable,
+  createApi as _createApi,
+  ObservableWritable,
 } from './Observable';
 import type {
   TObservableAdapter,
 } from './Observable';
 
 import {
-  tryJsonParse, 
+  tryJsonParse,
 } from './tryJsonParse';
 import {
-  attachEvent, 
+  attachEvent,
 } from './attachEvent';
+import {
+  isDefined,
+} from './is/isDefined';
 
 export type TLocalStorageWindowContext = {
   localStorage: {
@@ -27,7 +32,7 @@ export type TLocalStorageWindowContext = {
 export type TLocalStorage = ObservableWritable<any> & {
   /**
    * Sets a value in the local storage.
-   * 
+   *
    * @param key - The key to set the value in.
    * @param value - The value to set.
    * @returns The local storage instance.
@@ -35,27 +40,27 @@ export type TLocalStorage = ObservableWritable<any> & {
   set: (key: string, value: any) => TLocalStorage;
   /**
    * Gets a value from the local storage.
-   * 
+   *
    * @param key - The key to get the value from.
    * @returns The value.
    */
   get: (key: string) => any;
   /**
    * Removes a value from the local storage.
-   * 
+   *
    * @param key - The key to remove the value from.
    * @returns The local storage instance.
    */
   remove: (key: string) => TLocalStorage;
   /**
    * Gets the keys from the local storage.
-   * 
+   *
    * @returns The keys.
    */
   getKeys: () => string[];
   /**
    * Clears the local storage.
-   * 
+   *
    * @returns The local storage instance.
    */
   clear: () => TLocalStorage;
@@ -73,7 +78,7 @@ export type TLocalStorageEvent = {
 
 /**
  * Creates a local storage provider.
- * 
+ *
  * @param win - The Window whose `localStorage` is managed.
  * @returns A reactive store with `get`, `set`, `remove`, `getKeys`, and `clear`.
  * @example
@@ -89,10 +94,10 @@ export const localStorageProvider = (win: TLocalStorageWindowContext,
   } = deps;
   let locked = false;
   const $instance = createObservable<TLocalStorageEvent>({
-    key: '', 
+    key: '',
   });
   const {
-    emit, 
+    emit,
   } = createApi($instance, {
     emit: (_: TLocalStorageEvent, payload: TLocalStorageEvent) => payload,
   });
@@ -100,7 +105,7 @@ export const localStorageProvider = (win: TLocalStorageWindowContext,
   function __set(key: string, value: any) {
     emit({
       key,
-      value, 
+      value,
     });
     return $instance;
   }
@@ -124,12 +129,12 @@ export const localStorageProvider = (win: TLocalStorageWindowContext,
     },
   );
   $instance.watch(({
-    key, value, 
+    key, value,
   }: TLocalStorageEvent) => {
     if (locked) {
       return;
     }
-    value === null || value === undefined
+    !isDefined(value)
       ? originLocalStorage.removeItem(key)
       : originLocalStorage.setItem(key, JSON.stringify(value));
   });
@@ -141,7 +146,7 @@ export const localStorageProvider = (win: TLocalStorageWindowContext,
     getKeys().forEach((key) => {
       emit({
         key,
-        value: null, 
+        value: null,
       });
     });
     return $instance;

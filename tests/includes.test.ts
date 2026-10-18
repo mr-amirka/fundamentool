@@ -1,5 +1,5 @@
 import {
-  includes, 
+  includes,
 } from '../src/includes';
 
 describe('includes', () => {

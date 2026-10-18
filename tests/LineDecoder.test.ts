@@ -1,5 +1,5 @@
 import {
-  LineDecoder, 
+  LineDecoder,
 } from '../src/LineDecoder';
 
 describe('LineDecoder', () => {
@@ -28,7 +28,7 @@ describe('LineDecoder', () => {
 
   test('can keep empty lines when skipEmptyLines=false', () => {
     const decoder = new LineDecoder({
-      skipEmptyLines: false, 
+      skipEmptyLines: false,
     });
     const lines = decoder.end('\n\nx\n');
 

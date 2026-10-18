@@ -82,7 +82,7 @@ export function createLimitedTimeProcess(
       processItem(currentIndex, dt);
       lastUpdates[currentIndex] = t;
       t = now();
-  
+
       counter++;
       currentIndex++;
 

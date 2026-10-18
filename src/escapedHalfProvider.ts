@@ -1,11 +1,11 @@
 import {
-  regexpNormalizeText, 
+  regexpNormalizeText,
 } from './regexpNormalizeText';
 import {
-  unslash, 
+  unslash,
 } from './unslash';
 import {
-  map, 
+  map,
 } from './map';
 
 interface IEscapedHalf {
@@ -13,7 +13,7 @@ interface IEscapedHalf {
    * Splits the input string into `[prefix, suffix, value]`
    * where `suffix` starts with the separator and `value` is the tail.
    * Escaped fragments are preserved and unescaped via `unslash`.
-   * 
+   *
    * @param input - The input string to split.
    * @returns The array of `[prefix, suffix, value]`.
    */
@@ -22,7 +22,7 @@ interface IEscapedHalf {
   /**
    * Splits the input string into `[prefix, suffix, value]` without escaped fragments.
    * where `suffix` starts with the separator and `value` is the tail.
-   * 
+   *
    * @param input - The input string to split.
    * @returns The array of `[prefix, suffix, value]` without escaped fragments.
    */
@@ -33,7 +33,7 @@ interface IEscapedHalf {
  * Creates a helper that splits string into `[prefix, suffix, value]`
  * where `suffix` starts with the separator and `value` is the tail.
  * Escaped fragments are preserved and unescaped via `unslash`.
- * 
+ *
  * @param separator - The separator to use.
  * @param escaped - The escaped string.
  * @returns The function to split the string.
@@ -56,7 +56,7 @@ export const escapedHalfProvider = (separator: string,
    * Splits the input string into `[prefix, suffix, value]`
    * where `suffix` starts with the separator and `value` is the tail.
    * Escaped fragments are preserved and unescaped via `unslash`.
-   * 
+   *
    * @param input - The input string to split.
    * @returns The split string.
    */

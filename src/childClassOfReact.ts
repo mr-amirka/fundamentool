@@ -1,13 +1,13 @@
 import {
-  pushArray, 
+  pushArray,
 } from './pushArray';
 import {
-  extend, 
+  extend,
 } from './extend';
 
 /**
  * Creates a "child" class that wraps a Parent constructor.
- * 
+ *
  * @param Parent - The parent class to wrap.
  * @param constructor - The constructor to wrap.
  * @param proto - The prototype to extend.

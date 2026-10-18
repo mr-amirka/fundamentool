@@ -1,5 +1,5 @@
 import {
-  addOf, 
+  addOf,
 } from '../src/addOf';
 
 describe('addOf', () => {

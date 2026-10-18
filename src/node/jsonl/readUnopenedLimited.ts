@@ -1,11 +1,11 @@
 import {
-  extend, 
+  extend,
 } from '../../extend';
 import {
-  limitStream, 
+  limitStream,
 } from '../../limitStream';
 import {
-  readUnopened, 
+  readUnopened,
 } from './readUnopened';
 
 /**

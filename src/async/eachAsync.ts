@@ -1,16 +1,16 @@
 import {
-  isArray, 
+  isArray,
 } from '../is/isArray';
 import {
-  checkNoop, 
+  checkNoop,
 } from './checkNoop';
 import {
-  forEachAsync, 
+  forEachAsync,
 } from './forEachAsync';
 import {
-  forInAsync, 
+  forInAsync,
 } from './forInAsync';
-  
+
 /**
  * Chooses async iterator (`forEach` for arrays, `forIn` for objects) and runs it.
  *

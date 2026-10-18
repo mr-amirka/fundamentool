@@ -1,11 +1,11 @@
 import {
-  filter, 
+  filter,
 } from '../../filter';
 import {
-  loopParallel, 
+  loopParallel,
 } from './loopParallel';
 import {
-  checkNoop, 
+  checkNoop,
 } from '../checkNoop';
 
 /**

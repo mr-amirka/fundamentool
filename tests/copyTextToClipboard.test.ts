@@ -1,5 +1,5 @@
 import {
-  copyTextToClipboard, 
+  copyTextToClipboard,
 } from '../src/copyTextToClipboard';
 
 describe('copyTextToClipboard', () => {
@@ -8,8 +8,8 @@ describe('copyTextToClipboard', () => {
     const win = {
       navigator: {
         clipboard: {
-          writeText, 
-        }, 
+          writeText,
+        },
       },
       document: {},
     };
@@ -53,7 +53,7 @@ describe('copyTextToClipboard', () => {
 
   test('does nothing when document is missing', () => {
     const win = {
-      navigator: {}, 
+      navigator: {},
     };
     expect(() => copyTextToClipboard('text', win as any)).not.toThrow();
   });

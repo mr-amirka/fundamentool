@@ -1,5 +1,5 @@
 import {
-  isLength, 
+  isLength,
 } from './isLength';
 
 /**

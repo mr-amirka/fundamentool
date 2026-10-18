@@ -14,6 +14,9 @@ import {
 import {
   RpcSymbolCoder,
 } from './RpcSymbolCoder';
+import {
+  isObject,
+} from '../../is/isObject';
 
 export * from './RpcFnCoder';
 export * from './RpcSymbolCoder';
@@ -41,7 +44,6 @@ function storeProvider<A = any>(): [
     return index;
   }];
 }
-
 
 /**
  * Converts arbitrary values (including functions, symbols, cyclic references,
@@ -268,7 +270,7 @@ export class RpcCoder {
    * coder.decode(coder.encode({ x: 1 })); // => { x: 1 }
    */
   decode(encodedData: TRpcEncodedData | undefined | null, withExternalFns = true): any {
-    if (!encodedData || typeof encodedData !== 'object') {
+    if (!isObject(encodedData)) {
       return encodedData;
     }
 
@@ -304,7 +306,7 @@ export class RpcCoder {
     }
 
     function base(encodedValue: TRpcEncodedValue): any {
-      if (!encodedValue || typeof encodedValue !== 'object') {
+      if (!isObject(encodedValue)) {
         return encodedValue;
       }
 

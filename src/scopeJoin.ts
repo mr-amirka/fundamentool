@@ -1,5 +1,5 @@
 import {
-  joinOnly, 
+  joinOnly,
 } from './join/joinOnly';
 
 type ScopeNode = string | ScopeNode[];
@@ -16,7 +16,7 @@ type ScopeNode = string | ScopeNode[];
  *
  * Совместим по форме с `scopeSplit`, но не навязывает конкретный формат узлов
  * (любой `ScopeNode[]`, где строки и вложенные массивы чередуются).
- * 
+ *
  * @param scope - The scope to join.
  * @param openChar - The open character.
  * @param closeChar - The close character.

@@ -1,5 +1,5 @@
 import {
-  extendDepth, 
+  extendDepth,
 } from './extendDepth';
 
 /**

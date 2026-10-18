@@ -1,5 +1,5 @@
 import {
-  variants, 
+  variants,
 } from '../src/variants';
 
 describe('variants', () => {

@@ -21,7 +21,7 @@ export const copyTextToClipboard = (text: string,
   }
 
   const {
-    navigator, document, 
+    navigator, document,
   } = ctx;
 
   if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
@@ -38,7 +38,7 @@ export const copyTextToClipboard = (text: string,
 
   const textArea = document.createElement('textarea');
   const {
-    style, 
+    style,
   } = textArea;
   textArea.value = text;
   style.position = 'fixed';

@@ -1,15 +1,14 @@
 /**
  * Normalizes a time part.
- * 
+ *
  * @param n - The time part to normalize.
  * @returns The normalized time part.
  */
 export const normalizeTimePart = (n: number): string => n < 10 ? `0${n}` : `${n}`;
 
-
 /**
  * Converts a date to a UTC string.
- * 
+ *
  * @param time - The date to convert.
  * @returns The UTC string.
  * @example

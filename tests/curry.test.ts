@@ -1,5 +1,5 @@
 import {
-  curry, 
+  curry,
 } from '../src/curry';
 
 describe('curry', () => {

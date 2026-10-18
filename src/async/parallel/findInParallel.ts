@@ -1,18 +1,18 @@
 import {
-  entries, 
+  entries,
 } from '../../entries';
 import {
-  findParallel, 
+  findParallel,
 } from './findParallel';
 import {
-  checkNoop, 
+  checkNoop,
 } from '../checkNoop';
 
 /**
  * Parallel asynchronous find over object.
  *
  * Expects `iteratee` to be a function; shorthand/normalize logic is removed.
- * 
+ *
  * @param collection - Source object.
  * @param iteratee - Predicate function.
  * @param ctx - Optional `this` context.

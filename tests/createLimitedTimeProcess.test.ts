@@ -1,5 +1,5 @@
 import {
-  createLimitedTimeProcess, 
+  createLimitedTimeProcess,
 } from '../src/createLimitedTimeProcess';
 
 /** Builds a clock that advances by 1ms on each call. */

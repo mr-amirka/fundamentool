@@ -1,8 +1,9 @@
 import {
-  subscribe, 
+  subscribe,
 } from '../subscribe';
 import type {
-  IEventEmitter, IEventEmitterListener, 
+  IEventEmitter,
+  IEventEmitterListener,
 } from './types';
 
 type TListener<T> = (event: T) => void;

@@ -1,5 +1,5 @@
 import {
-  getViewportSizeProvider, 
+  getViewportSizeProvider,
 } from '../src/getViewportSizeProvider';
 
 describe('getViewportSizeProvider', () => {
@@ -10,8 +10,8 @@ describe('getViewportSizeProvider', () => {
       document: {
         documentElement: {
           clientWidth: 800,
-          clientHeight: 600, 
-        }, 
+          clientHeight: 600,
+        },
       },
     };
     expect(getViewportSizeProvider(win)()).toEqual([1280, 720]);
@@ -22,8 +22,8 @@ describe('getViewportSizeProvider', () => {
       document: {
         documentElement: {
           clientWidth: 800,
-          clientHeight: 600, 
-        }, 
+          clientHeight: 600,
+        },
       },
     };
     expect(getViewportSizeProvider(win)()).toEqual([800, 600]);
@@ -36,8 +36,8 @@ describe('getViewportSizeProvider', () => {
       document: {
         documentElement: {
           clientWidth: 0,
-          clientHeight: 0, 
-        }, 
+          clientHeight: 0,
+        },
       },
     };
     const getSize = getViewportSizeProvider(win);

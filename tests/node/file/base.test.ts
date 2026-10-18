@@ -1,20 +1,20 @@
 import {
-  tmpdir, 
+  tmpdir,
 } from 'os';
 import {
-  join, 
+  join,
 } from 'path';
 import {
-  rmSync, mkdirSync, 
+  rmSync, mkdirSync,
 } from 'fs';
 import {
-  access, makeDir, write, read, readDir, 
+  access, makeDir, write, read, readDir,
 } from '../../../src/node/file/base';
 
 function tmpDir() {
   const dir = join(tmpdir(), `fundamentool-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   mkdirSync(dir, {
-    recursive: true, 
+    recursive: true,
   });
   return dir;
 }
@@ -26,7 +26,7 @@ describe('node/file/base — access', () => {
     await write(path, 'hello');
     expect(await access(path)).toBe(true);
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -44,7 +44,7 @@ describe('node/file/base — makeDir', () => {
     expect(await access(dir)).toBe(true);
     rmSync(join(tmpdir(), `fundamentool-mkdir-${Date.now().toString().slice(0, -3)}000`), {
       recursive: true,
-      force: true, 
+      force: true,
     });
   });
 
@@ -52,7 +52,7 @@ describe('node/file/base — makeDir', () => {
     const dir = tmpDir();
     await expect(makeDir(dir)).resolves.toBeUndefined();
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 });
@@ -64,7 +64,7 @@ describe('node/file/base — write & read', () => {
     await write(path, 'hello world');
     expect(await read(path)).toBe('hello world');
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -76,7 +76,7 @@ describe('node/file/base — write & read', () => {
     await write(path, 'nested');
     expect(await read(path)).toBe('nested');
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -87,7 +87,7 @@ describe('node/file/base — write & read', () => {
     await write(path, 'second');
     expect(await read(path)).toBe('second');
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 });
@@ -100,7 +100,7 @@ describe('node/file/base — readDir', () => {
     const files = await readDir(dir) as string[];
     expect(files.sort()).toEqual(['a.txt', 'b.txt']);
     rmSync(dir, {
-      recursive: true, 
+      recursive: true,
     });
   });
 

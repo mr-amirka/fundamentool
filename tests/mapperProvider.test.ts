@@ -1,5 +1,5 @@
 import {
-  mapperProvider, 
+  mapperProvider,
 } from '../src/mapperProvider';
 
 describe('mapperProvider', () => {
@@ -7,7 +7,7 @@ describe('mapperProvider', () => {
     const mapper = mapperProvider(['name', 'age']);
     expect(mapper(['Vasya', 30])).toEqual({
       name: 'Vasya',
-      age: 30, 
+      age: 30,
     });
   });
   test('without values returns dst or new object', () => {
@@ -28,7 +28,7 @@ describe('mapperProvider', () => {
       3,
     ])).toEqual({
       a: 1,
-      c: 3, 
+      c: 3,
     });
   });
 });

@@ -1,11 +1,11 @@
 import {
-  escapeHTML, 
+  escapeHTML,
 } from '../src/escapeHTML';
 import {
-  escapeCss, 
+  escapeCss,
 } from '../src/escapeCss';
 import {
-  escapeQuote, 
+  escapeQuote,
 } from '../src/escapeQuote';
 
 describe('escapeHTML', () => {

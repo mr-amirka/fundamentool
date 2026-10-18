@@ -25,7 +25,7 @@ function setup(start = '/a', overrides: THarnessOptions = {}) {
 describe('routerProvider — a separate history per section', () => {
   it('every tab keeps its own stack; the browser history holds the shown one over the first tab\'s main page', async () => {
     const {
-      nav, browser, paths, 
+      nav, browser, paths,
     } = setup();
     await nav.go('/a/1');
     await nav.switchSection('b');
@@ -46,7 +46,7 @@ describe('routerProvider — a separate history per section', () => {
 
   it('tapping the current tab rolls its history back to the start', async () => {
     const {
-      nav, paths, 
+      nav, paths,
     } = setup();
     await nav.switchSection('b');
     await nav.go('/b/1');
@@ -59,7 +59,7 @@ describe('routerProvider — a separate history per section', () => {
 
   it('back from a tab\'s main page shows the first tab as it was; the tab left keeps its main page', async () => {
     const {
-      nav, browser, paths, 
+      nav, browser, paths,
     } = setup();
     await nav.go('/a/1');
     await nav.switchSection('b');
@@ -72,7 +72,7 @@ describe('routerProvider — a separate history per section', () => {
 
   it('a long back past a guarded page asks first; agreed — it stops at the tab\'s main page', async () => {
     const {
-      nav, browser, paths, 
+      nav, browser, paths,
     } = setup();
     await nav.switchSection('b');
     await nav.go('/b/form');
@@ -95,7 +95,7 @@ describe('routerProvider — a separate history per section', () => {
 
   it('a long back without guards drops the inner pages and shows the first tab', async () => {
     const {
-      nav, browser, paths, 
+      nav, browser, paths,
     } = setup();
     await nav.switchSection('b');
     await nav.go('/b/1');
@@ -108,7 +108,7 @@ describe('routerProvider — a separate history per section', () => {
 
   it('kept pages of hidden tabs stay mounted; windows of the shown tab close on a switch', async () => {
     const {
-      nav, 
+      nav,
     } = setup();
     await nav.go('/a/list');
     const kept = nav.getState().page.id;
@@ -125,7 +125,7 @@ describe('routerProvider — a separate history per section', () => {
 
   it('a deep link into another tab starts with the first tab\'s main page under it', () => {
     const {
-      paths, nav, 
+      paths, nav,
     } = setup('/b/7');
     expect(paths()).toEqual(['/a', '/b/7']);
     expect(nav.getState().section).toBe('b');
@@ -133,7 +133,7 @@ describe('routerProvider — a separate history per section', () => {
 
   it('a page of no known section opens in the first tab; tapping that tab then goes to its main page', async () => {
     const {
-      nav, paths, 
+      nav, paths,
     } = setup('/elsewhere');
     expect(paths()).toEqual(['/elsewhere']);
     expect(nav.getState().section).toBe('a');
@@ -143,7 +143,7 @@ describe('routerProvider — a separate history per section', () => {
 
   it('startOver drops every tab\'s stack', async () => {
     const {
-      nav, paths, 
+      nav, paths,
     } = setup();
     await nav.go('/a/list');
     await nav.switchSection('b');
@@ -156,7 +156,7 @@ describe('routerProvider — a separate history per section', () => {
 
   it('needs sections', () => {
     expect(() => setup('/a', {
-      sections: {}, 
+      sections: {},
     })).toThrow(/`sections` beside "separate"/);
   });
 });

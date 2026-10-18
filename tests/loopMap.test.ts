@@ -1,5 +1,5 @@
 import {
-  loopMap, 
+  loopMap,
 } from '../src/loopMap';
 
 describe('loopMap', () => {

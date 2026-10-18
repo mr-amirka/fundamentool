@@ -1,23 +1,23 @@
 import {
-  color, 
+  color,
 } from './color';
 import {
-  push, 
+  push,
 } from './push';
 import {
-  pushArray, 
+  pushArray,
 } from './pushArray';
 import {
-  splitProvider, 
+  splitProvider,
 } from './split/splitProvider';
 import {
-  camelToKebabCase, 
+  camelToKebabCase,
 } from './camelToKebabCase';
 import {
-  joinSpace, 
+  joinSpace,
 } from './join/joinSpace';
 import {
-  joinComma, 
+  joinComma,
 } from './join/joinComma';
 
 const regexpBg = /^(---?[^;]+;?|[A-Fa-f0-9]+(\.[0-9]+)?)(p([0-9]+)([a-z%]*))?$/i;

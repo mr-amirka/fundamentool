@@ -1,8 +1,8 @@
 import {
-  jsonpRequest, 
+  jsonpRequest,
 } from '../../src/browser/jsonpRequest';
 import {
-  setupBrowserDomMocks, 
+  setupBrowserDomMocks,
 } from './browserDomMocks';
 
 describe('browser/jsonpRequest', () => {
@@ -12,7 +12,7 @@ describe('browser/jsonpRequest', () => {
 
   test('injects script and resolves with callback data', async () => {
     const promise = jsonpRequest('https://example.com/test', {
-      q: 1, 
+      q: 1,
     }) as Promise<any>;
 
     const callbackName = Object.keys(globalThis).find((k) =>
@@ -21,7 +21,7 @@ describe('browser/jsonpRequest', () => {
     expect(callbackName).toBeTruthy();
 
     const response = {
-      ok: true, 
+      ok: true,
     };
     (globalThis as any)[callbackName as string](response);
 

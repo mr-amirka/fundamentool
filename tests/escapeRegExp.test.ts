@@ -1,5 +1,5 @@
 import {
-  escapeRegExp, 
+  escapeRegExp,
 } from '../src/escapeRegExp';
 
 describe('escapeRegExp', () => {

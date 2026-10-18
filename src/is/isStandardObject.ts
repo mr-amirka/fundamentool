@@ -1,8 +1,8 @@
 import {
-  isArray, 
+  isArray,
 } from './isArray';
 import {
-  isPlainObject, 
+  isPlainObject,
 } from './isPlainObject';
 
 /**

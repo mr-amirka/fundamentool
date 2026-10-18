@@ -1,11 +1,11 @@
 import {
-  splitDot, 
+  splitDot,
 } from './split/splitDot';
 import {
-  NATIVE_PUSH, 
+  NATIVE_PUSH,
 } from './pushArray';
 import {
-  trimQuote, 
+  trimQuote,
 } from './trimQuote';
 
 const REGEXP_BRACKETS = /\[(.*?)\]/g;
@@ -13,7 +13,7 @@ const KEY_NEW_ITEM_TOKEN = '[]';
 
 /**
  * Gets a key path from a key.
- * 
+ *
  * @param key - The key to get the path from.
  * @returns The key path.
  * Only bracket contents and the leading dot-path are parsed.

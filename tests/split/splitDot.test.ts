@@ -1,5 +1,5 @@
 import {
-  splitDot, 
+  splitDot,
 } from '../../src/split/splitDot';
 
 describe('splitDot', () => {

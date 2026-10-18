@@ -1,5 +1,5 @@
 import {
-  regexpNormalizeText, 
+  regexpNormalizeText,
 } from '../src/regexpNormalizeText';
 
 describe('regexpNormalizeText', () => {

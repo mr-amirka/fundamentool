@@ -1,11 +1,11 @@
 import {
-  tryJsonParse, 
+  tryJsonParse,
 } from '../src/tryJsonParse';
 
 describe('tryJsonParse', () => {
   test('parses valid JSON string', () => {
     expect(tryJsonParse('{"a":1}')).toEqual({
-      a: 1, 
+      a: 1,
     });
     expect(tryJsonParse('[1,2,3]')).toEqual([
       1,

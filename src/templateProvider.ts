@@ -1,14 +1,14 @@
 import {
-  getBase, 
+  getBase,
 } from './get';
 import {
-  push, 
+  push,
 } from './push';
 import {
-  wrapper, 
+  wrapper,
 } from './wrapper';
 import {
-  templatePartsJoin, 
+  templatePartsJoin,
 } from './templatePartsJoin';
 
 const REGEXP =
@@ -21,7 +21,7 @@ function defaultParse(expression: string) {
 
 /**
  * Creates a template function from a string with `{{expr}}` placeholders.
- * 
+ *
  * @param template - The template to build.
  * @param parse - The function to parse the expressions.
  * @param regexp - The regular expression to use.

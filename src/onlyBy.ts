@@ -1,8 +1,8 @@
 import {
-  isFunction, 
+  isFunction,
 } from './is/isFunction';
 import {
-  noopHandle, 
+  noopHandle,
 } from './noopHandle';
 
 type CompareFn = (v: any, w: any) => boolean;
@@ -15,13 +15,13 @@ const normalizeCompare = (compare?: CompareFn | boolean | null): CompareFn =>
 
 /**
  * Returns only one item from collection by applying comparator to iteratee result.
- * 
+ *
  * @param collection - The collection to search in.
  * @param iteratee - The iteratee to apply to each item.
  * @param compare - The comparator to use.
  * @returns The only item from the collection.
  * @example
- * onlyBy([1, 2, 3], (item) => item, (v, w) => v > w); // => 3 
+ * onlyBy([1, 2, 3], (item) => item, (v, w) => v > w); // => 3
  */
 export const onlyBy = (
   collection: ArrayLike<any>,
@@ -35,7 +35,7 @@ export const onlyBy = (
   let tmpItem: any;
   let tmpValue: any;
   let i = 0;
-  
+
   for (; i < length; i++) {
     tmpItem = collection[i];
     tmpValue = iteratee(
@@ -52,13 +52,13 @@ export const onlyBy = (
 
 /**
  * Returns only one item from collection by applying comparator to iteratee result.
- * 
+ *
  * @param collection - The collection to search in.
  * @param iteratee - The iteratee to apply to each item.
  * @param compare - The comparator to use.
  * @returns The only item from the collection.
  * @example
- * onlyByIn({ a: 1, b: 2, c: 3 }, (item) => item, (v, w) => v > w); // => 3 
+ * onlyByIn({ a: 1, b: 2, c: 3 }, (item) => item, (v, w) => v > w); // => 3
  */
 export const onlyByIn = (
   collection: Record<string, any>,

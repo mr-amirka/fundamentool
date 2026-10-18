@@ -1,15 +1,15 @@
 import {
-  isObject, 
+  isObject,
 } from './is/isObject';
 import {
-  getKeyPath, 
+  getKeyPath,
 } from './getKeyPath';
 
 export interface IRemove {
   /**
    * Removes a property at a dot-separated path from the context object.
    * Mutates and returns the context.
-   * 
+   *
    * @param ctx - The context object.
    * @param path - The dot-separated path to the property to remove.
    * @returns The context object.
@@ -21,7 +21,7 @@ export interface IRemove {
   /**
    * Removes a property at a dot-separated path from the context object.
    * Mutates and returns the context.
-   * 
+   *
    * @param ctx - The context object.
    * @param path - The dot-separated path to the property to remove.
    * @returns The context object.

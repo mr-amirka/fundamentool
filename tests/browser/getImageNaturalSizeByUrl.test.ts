@@ -1,8 +1,8 @@
 import {
-  extractExportedFn, 
+  extractExportedFn,
 } from './testUtils';
 import {
-  setupImageHelpersDom, 
+  setupImageHelpersDom,
 } from './imageDomMocks';
 
 describe('browser/getImageNaturalSizeByUrl', () => {

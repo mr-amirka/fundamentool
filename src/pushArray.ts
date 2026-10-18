@@ -2,7 +2,7 @@ export const NATIVE_PUSH = Array.prototype.push;
 
 /**
  * Pushes an array into another array.
- * 
+ *
  * @param dst - The destination array.
  * @param src - The source array.
  * @returns The destination array.

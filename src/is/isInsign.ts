@@ -1,11 +1,11 @@
 import {
-  isObject, 
+  isObject,
 } from './isObject';
 import {
-  isArray, 
+  isArray,
 } from './isArray';
 import {
-  isEmpty, 
+  isEmpty,
 } from './isEmpty';
 
 /**

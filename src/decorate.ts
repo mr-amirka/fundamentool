@@ -1,8 +1,8 @@
 import {
-  isFunction, 
+  isFunction,
 } from './is/isFunction';
 import {
-  forEach, 
+  forEach,
 } from './forEach';
 
 export type Decorator<T extends (...args: any[]) => any> = (emit: T) => T;
@@ -14,7 +14,7 @@ export interface IDecorate<T extends (...args: any[]) => any> {
 
 /**
  * Decorates a function.
- * 
+ *
  * @param emit - The function to decorate.
  * @param decorators - The decorators to apply.
  * @returns The decorated function with the `use` method.

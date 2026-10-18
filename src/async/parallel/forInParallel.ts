@@ -1,11 +1,11 @@
 import {
-  entries, 
+  entries,
 } from '../../entries';
 import {
-  checkNoop, 
+  checkNoop,
 } from '../checkNoop';
 import {
-  forEachParallel, 
+  forEachParallel,
 } from './forEachParallel';
 
 /**
@@ -40,5 +40,4 @@ export function forInParallel<T>(
       .then(() => collection)
     : Promise.resolve(collection);
 }
-
 

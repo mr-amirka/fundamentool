@@ -1,5 +1,5 @@
 import {
-  forIn, 
+  forIn,
 } from '../src/forIn';
 
 describe('forIn', () => {
@@ -8,7 +8,7 @@ describe('forIn', () => {
     forIn({
       a: 1,
       b: 2,
-      c: 3, 
+      c: 3,
     }, (v, k) => result.push([k, v]));
     expect(result).toContainEqual(['a', 1]);
     expect(result).toContainEqual(['b', 2]);
@@ -17,13 +17,13 @@ describe('forIn', () => {
 
   test('passes the object as the third argument', () => {
     const obj = {
-      x: 1, 
+      x: 1,
     };
     let captured: any;
     forIn(obj, (
       v, k, o,
     ) => {
-      captured = o; 
+      captured = o;
     });
     expect(captured).toBe(obj);
   });

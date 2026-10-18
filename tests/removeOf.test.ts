@@ -1,5 +1,5 @@
 import {
-  removeOf, 
+  removeOf,
 } from '../src/removeOf';
 
 describe('removeOf', () => {

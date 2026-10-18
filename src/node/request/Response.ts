@@ -1,4 +1,4 @@
-import { 
+import {
   deflate,
   gunzip,
 } from 'node:zlib';
@@ -36,7 +36,6 @@ export class Response {
 
   status: string;
   headers: Record<string, string>;
-  
 
   constructor(origin?: any) {
     this._origin = origin;

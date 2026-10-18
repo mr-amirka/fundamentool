@@ -1,20 +1,20 @@
 import {
-  tmpdir, 
+  tmpdir,
 } from 'os';
 import {
-  join, 
+  join,
 } from 'path';
 import {
-  mkdirSync, writeFileSync, rmSync, 
+  mkdirSync, writeFileSync, rmSync,
 } from 'fs';
 import {
-  scanPath, 
+  scanPath,
 } from '../../src/node/scanPath';
 
 function makeTree() {
   const root = join(tmpdir(), `fundamentool-scan-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   mkdirSync(join(root, 'sub'), {
-    recursive: true, 
+    recursive: true,
   });
   writeFileSync(join(root, 'a.ts'), '');
   writeFileSync(join(root, 'b.ts'), '');
@@ -30,12 +30,12 @@ describe('node/scanPath', () => {
     const events: [string, string][] = [];
     await scanPath({
       path: root,
-      each: (event, p) => events.push([event, p]), 
+      each: (event, p) => events.push([event, p]),
     });
     expect(events.length).toBe(3);
     expect(events.every(([ev]) => ev === 'found')).toBe(true);
     rmSync(root, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
@@ -49,17 +49,17 @@ describe('node/scanPath', () => {
     });
     expect(found.length).toBe(2);
     rmSync(root, {
-      recursive: true, 
+      recursive: true,
     });
   });
 
   test('works without each or exclude', async () => {
     const root = makeTree();
     await expect(scanPath({
-      path: root, 
+      path: root,
     })).resolves.toBeUndefined();
     rmSync(root, {
-      recursive: true, 
+      recursive: true,
     });
   });
 });

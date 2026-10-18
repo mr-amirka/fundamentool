@@ -1,20 +1,19 @@
 import {
-  isPlainObject, 
+  isPlainObject,
 } from './is/isPlainObject';
 import {
-  extend, 
+  extend,
 } from './extend';
 import {
-  isObjectLike, 
+  isObjectLike,
 } from './is/isObjectLike';
 import {
-  isDefined, 
+  isDefined,
 } from './is/isDefined';
-
 
 /**
  * Merges an array of values into a single value.
- * 
+ *
  * @param mergingSrc - The values to merge.
  * @param dst - The destination object.
  * @param asArray - Whether to treat the mergingSrc as an array.

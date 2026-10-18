@@ -1,11 +1,11 @@
 import {
-  isDefined, 
+  isDefined,
 } from './is/isDefined';
 import {
-  templateProvider, 
+  templateProvider,
 } from './templateProvider';
 import {
-  padStart, 
+  padStart,
 } from './padStart';
 
 const REGEXP_TEMPLATE = /\{((?:(?:"[^"]*")|(?:'[^']*')|(?:`[^`]*`)|(?:\{.*?\})|(?:[^}]*?))*?)\}/g; // eslint-disable-line
@@ -62,10 +62,9 @@ interface IFormatTime {
   getRFC3339: (time: string | number | Date, utc?: boolean) => string;
 }
 
-
 /**
  * Templates the RFC3339 format.
- * 
+ *
  * @returns The template function.
  */
 const templateRFC3339 = templateProvider(
@@ -80,7 +79,7 @@ function pad(v: number, len?: number) {
 
 /**
  * Formats a date to a string.
- * 
+ *
  * @param date - The date to format.
  * @param mask - The mask to use.
  * @param utc - Whether to use UTC time.
@@ -105,7 +104,7 @@ export const formatTime: IFormatTime = (
 
 /**
  * Normalizes a date.
- * 
+ *
  * @param date - The date to normalize.
  * @returns The normalized date.
  */
@@ -129,7 +128,7 @@ export const normalizeDate = formatTime.normalizeDate = (date: number | string |
 
 /**
  * Gets the data for a date.
- * 
+ *
  * @param date - The date to get the data for.
  * @param utc - Whether to use UTC time.
  * @param i18n - The i18n object to use.
@@ -198,7 +197,7 @@ export const getData = formatTime.getData = (
 
 /**
  * Gets the RFC3339 format for a date.
- * 
+ *
  * @param time - The date to get the RFC3339 format for.
  * @param utc - Whether to use UTC time.
  * @returns The RFC3339 format.

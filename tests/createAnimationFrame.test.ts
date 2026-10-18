@@ -1,5 +1,5 @@
 import {
-  createAnimationFrame, 
+  createAnimationFrame,
 } from '../src/createAnimationFrame';
 
 describe('createAnimationFrame', () => {

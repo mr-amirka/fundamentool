@@ -1,6 +1,6 @@
 /**
  * Creates an interval.
- * 
+ *
  * @param callback - The callback to call when the interval is ready.
  * @param delay - The delay to call the callback.
  * @param args - The arguments to pass to the callback.

@@ -1,17 +1,17 @@
 import {
-  noop, 
+  noop,
 } from '../noop';
 import {
-  once, 
+  once,
 } from '../once';
 import {
-  stackProvider, 
+  stackProvider,
 } from '../stackProvider';
 import {
-  toText, 
+  toText,
 } from './blob';
 import {
-  wsConnect, 
+  wsConnect,
 } from './wsConnect';
 
 declare const Buffer: any;

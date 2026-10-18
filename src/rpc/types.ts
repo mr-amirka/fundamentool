@@ -1,5 +1,5 @@
 import {
-  IEventEmitter, 
+  IEventEmitter,
 } from '../EventEmitter';
 
 // ── Agents ─────────────────────────────────────────────────────────────────

@@ -1,5 +1,5 @@
 import {
-  regexpParse, 
+  regexpParse,
 } from '../src/regexpParse';
 
 describe('regexpParse', () => {

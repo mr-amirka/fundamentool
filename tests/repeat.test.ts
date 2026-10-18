@@ -1,5 +1,5 @@
 import {
-  repeat, 
+  repeat,
 } from '../src/repeat';
 
 describe('repeat', () => {

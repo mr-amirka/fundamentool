@@ -1,16 +1,16 @@
 import {
-  setStyleSheet, 
+  setStyleSheet,
 } from '../src/setStyleSheet';
 
 function makeNode(childTexts: string[] = []): any {
   const children: any[] = childTexts.map((text) => ({
     type: 'text',
-    text, 
+    text,
   }));
   return {
     childNodes: children,
     get length() {
-      return children.length; 
+      return children.length;
     },
     removeChild: jest.fn((child) => {
       const idx = children.indexOf(child);
@@ -26,7 +26,7 @@ function makeDocument() {
   return {
     createTextNode: jest.fn((text: string) => ({
       type: 'text',
-      text, 
+      text,
     })),
   };
 }
@@ -59,7 +59,7 @@ describe('setStyleSheet', () => {
   test('sets cssText directly when styleSheet property exists', () => {
     const node: any = makeNode();
     node.styleSheet = {
-      cssText: '', 
+      cssText: '',
     };
     const doc = makeDocument();
 

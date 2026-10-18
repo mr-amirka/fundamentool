@@ -8,7 +8,7 @@ export interface IColorRange {
 
 /**
  * Converts an array of colors to an array of strings.
- * 
+ *
  * @param colors - The array of RGBA colors `[r, g, b, a]` (each 0–1).
  * @param precision - Number of interpolation steps between each pair of colors.
  * @returns Array of `rgba(...)` strings.
@@ -28,7 +28,7 @@ export const colorRange: IColorRange = (colors: Array<[number, number, number, n
 
 /**
  * Converts a color to a string.
- * 
+ *
  * @param rgbaColor - The color to convert.
  * @returns The converted string.
  */
@@ -48,7 +48,7 @@ const rgba = colorRange.rgba = (rgbaColor: [number, number, number, number]): st
 
 /**
  * Converts an array of colors to an array of strings.
- * 
+ *
  * @param input - The array of colors to convert.
  * @param precision - The precision of the colors.
  * @returns An array of strings.
@@ -72,7 +72,7 @@ const base = colorRange.base = (input: Array<[number, number, number, number]>,
 
 /**
  * Converts a color to a string.
- * 
+ *
  * @param c0 - The color to convert.
  * @param c1 - The color to convert.
  * @param precision - The precision of the colors.

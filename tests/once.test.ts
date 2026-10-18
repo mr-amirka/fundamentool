@@ -1,12 +1,12 @@
 import {
-  once, 
+  once,
 } from '../src/once';
 
 describe('once', () => {
   test('calls function only on first invocation', () => {
     let count = 0;
     const fn = once(() => {
-      count++; return count; 
+      count++; return count;
     });
     fn();
     fn();

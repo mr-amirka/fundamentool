@@ -1,14 +1,14 @@
 import {
-  isPlainObject, 
+  isPlainObject,
 } from './is/isPlainObject';
 import {
-  isObject, 
+  isObject,
 } from './is/isObject';
 
 interface IExtendDepth {
   /**
    * Deeply extends `dst` with `src` up to `depth` levels.
-   * 
+   *
    * @param dst - The destination object.
    * @param src - The source object.
    * @param depth - The depth to extend to.
@@ -17,7 +17,7 @@ interface IExtendDepth {
   <T>(dst: T, src: T, depth: number): T;
   /**
    * Deeply extends `dst` with `src` up to `depth` levels.
-   * 
+   *
    * @param dst - The destination object.
    * @param src - The source object.
    * @param depth - The depth to extend to.

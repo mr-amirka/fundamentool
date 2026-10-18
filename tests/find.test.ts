@@ -1,17 +1,17 @@
 import {
-  find, 
+  find,
 } from '../src/find';
 import {
-  findIn, 
+  findIn,
 } from '../src/findIn';
 import {
-  findIndex, 
+  findIndex,
 } from '../src/findIndex';
 import {
-  findIndexLast, 
+  findIndexLast,
 } from '../src/findIndexLast';
 import {
-  findKey, 
+  findKey,
 } from '../src/findKey';
 
 describe('find', () => {
@@ -36,7 +36,7 @@ describe('find', () => {
     find(['a', 'b'], (
       v, i, c,
     ) => {
-      calls.push([v, i]); return false; 
+      calls.push([v, i]); return false;
     });
     expect(calls).toEqual([['a', 0], ['b', 1]]);
   });
@@ -47,13 +47,13 @@ describe('findIn', () => {
     expect(findIn({
       a: 1,
       b: 2,
-      c: 3, 
+      c: 3,
     }, (v) => v === 2)).toBe(2);
   });
 
   test('returns undefined when not found', () => {
     expect(findIn({
-      a: 1, 
+      a: 1,
     }, (v) => v === 99)).toBeUndefined();
   });
 });
@@ -104,14 +104,14 @@ describe('findKey', () => {
     const result = findKey({
       a: 1,
       b: 2,
-      c: 3, 
+      c: 3,
     }, (v) => v === 2);
     expect(result).toBe('b');
   });
 
   test('returns undefined when not found', () => {
     expect(findKey({
-      a: 1, 
+      a: 1,
     }, (v) => v === 99)).toBeUndefined();
   });
 });

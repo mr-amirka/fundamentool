@@ -1,16 +1,16 @@
 import {
-  forEach, 
+  forEach,
 } from './forEach';
 import {
-  forIn, 
+  forIn,
 } from './forIn';
 import {
-  isArray, 
+  isArray,
 } from './is/isArray';
 
 /**
  * Iterates over a collection (array or object) and invokes iteratee for each item.
- * 
+ *
  * @param collection - The collection to iterate over.
  * @param iteratee - The function to invoke for each item.
  * @param ctx - The context to use for the iteratee.

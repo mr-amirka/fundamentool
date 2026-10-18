@@ -1,5 +1,5 @@
 import {
-  stylesRenderProvider, 
+  stylesRenderProvider,
 } from '../src/stylesRenderProvider';
 
 function makeDoc() {
@@ -21,7 +21,7 @@ function makeDoc() {
       }
     }),
     get children() {
-      return headChildren; 
+      return headChildren;
     },
   };
 
@@ -34,21 +34,21 @@ function makeDoc() {
         id: '',
         childNodes: [],
         get length() {
-          return this.childNodes.length; 
+          return this.childNodes.length;
         },
         setAttribute: jest.fn(function (attr: string, val: string) {
-          this[attr] = val; 
+          this[attr] = val;
         }),
         removeChild: jest.fn(),
         appendChild: jest.fn(),
         get parentNode() {
-          return headChildren.includes(this) ? head : null; 
+          return headChildren.includes(this) ? head : null;
         },
       };
       return node;
     }),
     createTextNode: jest.fn((text: string) => ({
-      text, 
+      text,
     })),
   };
 
@@ -56,21 +56,21 @@ function makeDoc() {
     doc,
     head,
     elements,
-    headChildren, 
+    headChildren,
   };
 }
 
 describe('stylesRenderProvider', () => {
   test('creates and appends a style element on first render', () => {
     const {
-      doc, headChildren, 
+      doc, headChildren,
     } = makeDoc();
     const render = stylesRenderProvider(doc, 'app-');
 
     render([{
       name: 'theme',
       revision: 1,
-      content: 'body{}', 
+      content: 'body{}',
     }]);
 
     expect(doc.createElement).toHaveBeenCalledWith('style');
@@ -79,21 +79,21 @@ describe('stylesRenderProvider', () => {
 
   test('does not recreate element on re-render with same revision', () => {
     const {
-      doc, 
+      doc,
     } = makeDoc();
     const render = stylesRenderProvider(doc, 'app-');
 
     render([{
       name: 'theme',
       revision: 1,
-      content: 'body{}', 
+      content: 'body{}',
     }]);
     const callCount = (doc.createElement as jest.Mock).mock.calls.length;
 
     render([{
       name: 'theme',
       revision: 1,
-      content: 'body{}', 
+      content: 'body{}',
     }]);
 
     expect(doc.createElement).toHaveBeenCalledTimes(callCount);
@@ -101,19 +101,19 @@ describe('stylesRenderProvider', () => {
 
   test('updates style content when revision changes', () => {
     const {
-      doc, headChildren, 
+      doc, headChildren,
     } = makeDoc();
     const render = stylesRenderProvider(doc, 'app-');
 
     render([{
       name: 'theme',
       revision: 1,
-      content: 'old {}', 
+      content: 'old {}',
     }]);
     render([{
       name: 'theme',
       revision: 2,
-      content: 'new {}', 
+      content: 'new {}',
     }]);
 
     const node = headChildren[0];
@@ -122,14 +122,14 @@ describe('stylesRenderProvider', () => {
 
   test('removes style element when it disappears from list', () => {
     const {
-      doc, head, 
+      doc, head,
     } = makeDoc();
     const render = stylesRenderProvider(doc, 'app-');
 
     render([{
       name: 'theme',
       revision: 1,
-      content: 'body{}', 
+      content: 'body{}',
     }]);
     render([]);
 
@@ -138,18 +138,18 @@ describe('stylesRenderProvider', () => {
 
   test('manages multiple styles independently', () => {
     const {
-      doc, headChildren, 
+      doc, headChildren,
     } = makeDoc();
     const render = stylesRenderProvider(doc, 'x-');
 
     render([{
       name: 'a',
       revision: 1,
-      content: '.a{}', 
+      content: '.a{}',
     }, {
       name: 'b',
       revision: 1,
-      content: '.b{}', 
+      content: '.b{}',
     }]);
 
     expect(headChildren).toHaveLength(2);
@@ -157,7 +157,7 @@ describe('stylesRenderProvider', () => {
 
   test('does nothing when head is not available', () => {
     const {
-      doc, 
+      doc,
     } = makeDoc();
     (doc as any).head = null;
     const render = stylesRenderProvider(doc, 'app-');
@@ -165,7 +165,7 @@ describe('stylesRenderProvider', () => {
     expect(() => render([{
       name: 'theme',
       revision: 1,
-      content: 'body{}', 
+      content: 'body{}',
     }])).not.toThrow();
   });
 });

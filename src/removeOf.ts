@@ -1,7 +1,7 @@
 /**
  * Removes all occurrences of value from the collection (in place).
  * Returns the number of elements removed.
- * 
+ *
  * @param collection - The collection to remove elements from.
  * @param v - The value to remove from the collection.
  * @returns The number of elements removed.

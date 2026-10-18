@@ -2,7 +2,7 @@ const NATIVE_PAD_START = ''.padStart;
 
 /**
  * Polyfill-friendly padStart implementation for strings.
- * 
+ *
  * @param value - The string to pad.
  * @param length - The length to pad the string to.
  * @param space - The string to use for padding.

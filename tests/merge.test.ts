@@ -1,15 +1,15 @@
 import {
-  merge, 
+  merge,
 } from '../src/merge';
 
 describe('merge', () => {
   test('merges plain objects in array', () => {
     const obj1 = {
-      name: 'Vasya', 
+      name: 'Vasya',
     };
     const obj2 = {
       age: 10,
-      height: 170, 
+      height: 170,
     };
 
     const dst = merge([obj1, obj2]);
@@ -23,13 +23,13 @@ describe('merge', () => {
 
   test('uses dst as base when provided', () => {
     const obj1 = {
-      name: 'Vasya', 
+      name: 'Vasya',
     };
     const obj2 = {
-      age: 10, 
+      age: 10,
     };
     const base: any = {
-      country: 'RU', 
+      country: 'RU',
     };
 
     const dst = merge([obj1, obj2], base);

@@ -1,5 +1,6 @@
 import {
-  setStyleSheet, TSetStyleSheetDocument, 
+  setStyleSheet,
+  TSetStyleSheetDocument,
 } from './setStyleSheet';
 
 export type TStylesRenderDocument = TSetStyleSheetDocument & {
@@ -11,7 +12,7 @@ export type TStylesRenderDocument = TSetStyleSheetDocument & {
 
 /**
  * A style item.
- * 
+ *
  * @param name - The name of the style.
  * @param revision - The revision of the style.
  * @param content - The content of the style.
@@ -36,7 +37,7 @@ export type TStyleItem = {
 /**
  * Создаёт функцию, которая по массиву описаний стилей
  * монтирует/обновляет `<style>`‑элементы в документе.
- * 
+ *
  * @param doc - The document in which `<style>` elements are managed.
  * @param prefix - Prefix prepended to each style element's `id` attribute.
  * @returns A function that accepts an array of style items and syncs them to the DOM.
@@ -51,7 +52,7 @@ export function stylesRenderProvider(doc: TStylesRenderDocument, prefix: string)
 
   /**
    * Gets a node by id.
-   * 
+   *
    * @param id - The id of the node.
    * @returns The node.
    */
@@ -68,7 +69,7 @@ export function stylesRenderProvider(doc: TStylesRenderDocument, prefix: string)
 
   /**
    * Renders the styles.
-   * 
+   *
    * @param styles - The styles to render.
    */
   return (styles: TStyleItem[]) => {

@@ -1,5 +1,5 @@
 import {
-  readLimited, 
+  readLimited,
 } from '../readLimited';
 
 const _read = readLimited(__dirname + '/input.jsonl', {

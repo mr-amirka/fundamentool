@@ -1,5 +1,5 @@
 import {
-  startsWith, 
+  startsWith,
 } from '../src/startsWith';
 
 describe('startsWith', () => {

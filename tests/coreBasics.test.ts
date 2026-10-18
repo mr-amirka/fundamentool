@@ -1,20 +1,20 @@
 import {
-  wait, 
+  wait,
 } from '../src/wait';
 import {
-  noop, 
+  noop,
 } from '../src/noop';
 import {
-  getUniqId, 
+  getUniqId,
 } from '../src/getUniqId';
 import {
-  attachEvent, 
+  attachEvent,
 } from '../src/attachEvent';
 
 describe('core basics', () => {
   test('wait resolves with provided value', async () => {
     const value = {
-      a: 1, 
+      a: 1,
     };
     const result = await wait(0, value);
     expect(result).toBe(value);
@@ -45,7 +45,7 @@ describe('core basics', () => {
         calls.push({
           type,
           listener,
-          options, 
+          options,
         });
       },
       removeEventListener(
@@ -54,7 +54,7 @@ describe('core basics', () => {
         calls.push({
           type: `remove:${type}`,
           listener,
-          options, 
+          options,
         });
       },
     } as any;
@@ -62,7 +62,7 @@ describe('core basics', () => {
     const listener = () => undefined;
     const unsubscribe = attachEvent(
       target, 'click', listener, {
-        passive: true, 
+        passive: true,
       },
     );
 
@@ -70,8 +70,8 @@ describe('core basics', () => {
       type: 'click',
       listener,
       options: {
-        passive: true, 
-      }, 
+        passive: true,
+      },
     }]);
 
     unsubscribe();
@@ -80,14 +80,14 @@ describe('core basics', () => {
       type: 'click',
       listener,
       options: {
-        passive: true, 
-      }, 
+        passive: true,
+      },
     }, {
       type: 'remove:click',
       listener,
       options: {
-        passive: true, 
-      }, 
+        passive: true,
+      },
     }]);
   });
 });

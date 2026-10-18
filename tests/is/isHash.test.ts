@@ -1,5 +1,5 @@
 import {
-  isHash, 
+  isHash,
 } from '../../src/is/isHash';
 
 describe('isHash', () => {

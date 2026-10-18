@@ -1,5 +1,5 @@
 import {
-  splitAmp, 
+  splitAmp,
 } from '../../src/split/splitAmp';
 
 describe('splitAmp', () => {

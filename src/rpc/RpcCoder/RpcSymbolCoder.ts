@@ -2,7 +2,6 @@ import {
   TRpcEncodedValueSymbol,
 } from '../types';
 
-
 /**
  * Tracks and encodes/decodes `symbol` values across an RPC boundary.
  * Internal symbols are indexed by position; external symbols are recreated from their string name.

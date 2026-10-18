@@ -1,6 +1,6 @@
 /**
  * Tries to parse a string as JSON.
- * 
+ *
  * @param s - The string to parse.
  * @returns Parsed value on success, or the original string on failure.
  * @example

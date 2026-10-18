@@ -1,5 +1,5 @@
 import {
-  joinComma, 
+  joinComma,
 } from '../src/join/joinComma';
 
 describe('joinComma', () => {

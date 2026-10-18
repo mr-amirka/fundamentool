@@ -1,5 +1,5 @@
 import {
-  isArrayLike, 
+  isArrayLike,
 } from '../../src/is/isArrayLike';
 
 describe('isArrayLike', () => {
@@ -14,10 +14,10 @@ describe('isArrayLike', () => {
 
   test('returns true for objects with valid numeric length', () => {
     expect(isArrayLike({
-      length: 0, 
+      length: 0,
     })).toBe(true);
     expect(isArrayLike({
-      length: 3, 
+      length: 3,
     })).toBe(true);
   });
 
@@ -33,10 +33,10 @@ describe('isArrayLike', () => {
 
   test('returns false for objects with invalid length', () => {
     expect(isArrayLike({
-      length: -1, 
+      length: -1,
     })).toBe(false);
     expect(isArrayLike({
-      length: 1.5, 
+      length: 1.5,
     })).toBe(false);
   });
 });

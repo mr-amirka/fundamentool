@@ -1,6 +1,6 @@
 /**
  * Returns the last element of an array‑like value.
- * 
+ *
  * @param input - The array‑like value to get the last element of.
  * @returns The last element of the array‑like value.
  * @example

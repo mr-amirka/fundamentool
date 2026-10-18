@@ -1,5 +1,5 @@
 import {
-  isBoolean, 
+  isBoolean,
 } from '../src/is/isBoolean';
 
 describe('isBoolean', () => {

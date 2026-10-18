@@ -1,8 +1,8 @@
 import {
-  wsConnect, 
+  wsConnect,
 } from '../../src/browser/wsConnect';
 import {
-  FakeWebSocket, 
+  FakeWebSocket,
 } from './wsFakeWebSocket';
 
 describe('browser/wsConnect', () => {

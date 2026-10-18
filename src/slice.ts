@@ -2,7 +2,7 @@ export const NATIVE_SLICE = [].slice;
 
 /**
  * Slices an array-like collection.
- * 
+ *
  * @param self - The array-like collection to slice.
  * @param start - The start index.
  * @param end - The end index.

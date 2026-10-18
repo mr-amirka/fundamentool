@@ -36,7 +36,7 @@ describe('async collection helpers', () => {
   test('forInAsync iterates over object properties', async () => {
     const obj = {
       a: 1,
-      b: 2, 
+      b: 2,
     };
     const pairs: Array<[string, number]> = [];
 
@@ -54,7 +54,7 @@ describe('async collection helpers', () => {
     const arr = [1, 2];
     const obj = {
       a: 1,
-      b: 2, 
+      b: 2,
     };
 
     const arrVisited: number[] = [];
@@ -90,13 +90,13 @@ describe('async collection helpers', () => {
   test('mapInAsync maps object to new object', async () => {
     const obj = {
       a: 1,
-      b: 2, 
+      b: 2,
     };
     const result = await mapInAsync(obj, async (v, key) => v * 2 + (key === 'a' ? 1 : 0));
 
     expect(result).toEqual({
       a: 3,
-      b: 4, 
+      b: 4,
     });
   });
 
@@ -117,13 +117,13 @@ describe('async collection helpers', () => {
     const obj = {
       a: 1,
       b: 2,
-      c: 3, 
+      c: 3,
     };
     const result = await filterInAsync(obj, async (v) => v > 1);
 
     expect(result).toEqual({
       b: 2,
-      c: 3, 
+      c: 3,
     });
   });
 
@@ -145,7 +145,7 @@ describe('async collection helpers', () => {
     const obj = {
       a: 1,
       b: 3,
-      c: 4, 
+      c: 4,
     };
     const found = await findInAsync(obj, async (v) => v % 2 === 0);
     const notFound = await findInAsync(obj, async (v) => v > 10);
@@ -174,7 +174,7 @@ describe('async collection helpers', () => {
     const obj = {
       a: 1,
       b: 2,
-      c: 3, 
+      c: 3,
     };
     const sum = await reduceInAsync(
       obj,

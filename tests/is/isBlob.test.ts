@@ -1,5 +1,5 @@
 import {
-  isBlob, 
+  isBlob,
 } from '../../src/is/isBlob';
 
 describe('isBlob', () => {

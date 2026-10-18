@@ -1,5 +1,5 @@
 import {
-  set, setBase, 
+  set, setBase,
 } from '../src/set';
 
 describe('set', () => {
@@ -33,7 +33,7 @@ describe('set', () => {
 
   test('returns ctx when path is empty/falsy', () => {
     const obj = {
-      a: 1, 
+      a: 1,
     };
     expect(set(
       obj, '', 2,

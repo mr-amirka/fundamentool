@@ -1,7 +1,7 @@
 /**
  * Returns a new object containing only the fields of `src`
  * for which `map` has a truthy value.
- * 
+ *
  * @param src - The source object.
  * @param map - The map object.
  * @param dst - The destination object to write into.

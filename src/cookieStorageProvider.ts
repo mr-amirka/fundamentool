@@ -1,12 +1,17 @@
 import {
-  createObservable as _createObservable, createApi as _createApi, ObservableWritable,
+  createObservable as _createObservable,
+  createApi as _createApi,
+  ObservableWritable,
 } from './Observable';
 import type {
   TObservableAdapter,
 } from './Observable';
 import {
-  tryJsonParse, 
+  tryJsonParse,
 } from './tryJsonParse';
+import {
+  isDefined,
+} from './is/isDefined';
 
 export type TCookieWindowContext = {
   document: {
@@ -26,7 +31,7 @@ const expires = 400 * 86400000;
 
 /**
  * Initializes the storage.
- * 
+ *
  * @param cookie - The cookie to initialize the storage with.
  * @returns The initialized storage.
  */
@@ -46,7 +51,7 @@ export const storageInit = (cookie: string): any => {
 
 /**
  * Creates a cookie storage provider.
- * 
+ *
  * @param ctx - The Window whose `document.cookie` is managed.
  * @returns A reactive cookie storage with `get`, `set`, `remove`, `getKeys`, and `clear`.
  * @example
@@ -62,7 +67,7 @@ export const cookieStorageProvider = (ctx: TCookieWindowContext,
   } = deps;
   const $instance = createObservable<any>({} as any);
   const {
-    emit, 
+    emit,
   } = createApi($instance, {
     emit: (_: any, payload: any) => payload,
   });
@@ -78,18 +83,18 @@ export const cookieStorageProvider = (ctx: TCookieWindowContext,
   function set(key: string, value: any) {
     emit({
       key,
-      value, 
+      value,
     } as any);
     return $instance;
   }
   $instance.watch(({
-    key, value, 
+    key, value,
   }: { key: string;
     value: any }) => {
     if (value === cache[key]) {
       return;
     }
-    if (value === null || value === undefined) {
+    if (!isDefined(value)) {
       delete cache[key];
       __set(key, '');
     } else {

@@ -1,8 +1,8 @@
 import {
-  stripTags, 
+  stripTags,
 } from '../src/stripTags';
 import {
-  toHTML, 
+  toHTML,
 } from '../src/toHTML';
 
 describe('stripTags', () => {

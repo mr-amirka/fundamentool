@@ -2,7 +2,7 @@ export type CurryFn<F extends (...args: any[]) => any> = (...args: any[]) => Ret
 
 /**
  * Curries a function.
- * 
+ *
  * @param fn - The function to curry.
  * @param ctx - The context to curry the function with.
  * @returns The curried function.

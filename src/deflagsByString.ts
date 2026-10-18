@@ -1,8 +1,8 @@
 import {
-  deflags, 
+  deflags,
 } from './deflags';
 import {
-  joinSpace, 
+  joinSpace,
 } from './join/joinSpace';
 
 /**

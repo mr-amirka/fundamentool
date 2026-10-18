@@ -1,5 +1,5 @@
 import {
-  isDefined, 
+  isDefined,
 } from './is/isDefined';
 
 const REXGEXP_SIGN = /^(-)(.+)$/;
@@ -11,7 +11,7 @@ const REXGEXP_DOTS = /\./g;
 interface INumParse {
   /**
    * Parses a number string.
-   * 
+   *
    * @param num - The number string to parse.
    * @returns The parsed number.
    * @example
@@ -22,7 +22,7 @@ interface INumParse {
 
   /**
    * Parses a number string and returns the base parts.
-   * 
+   *
    * @param num - The number string to parse.
    * @returns The base parts of the number string.
    * @example
@@ -34,7 +34,7 @@ interface INumParse {
 
 /**
  * Parses a number string.
- * 
+ *
  * @param num - The number string to parse.
  * @returns The parsed number.
  * @example

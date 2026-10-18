@@ -1,6 +1,6 @@
 /**
  * Finds first value in object that satisfies predicate.
- * 
+ *
  * @param collection - The object to search in.
  * @param iteratee - The function to call for each property.
  * @param ctx - The `this` context to use for the function.

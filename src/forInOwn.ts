@@ -1,11 +1,11 @@
 import {
-  hasOwn, 
+  hasOwn,
 } from './hasOwn';
 
 /**
  * Iterates over own enumerable properties of `obj`
  * and calls `iteratee(value, key, obj)` for each.
- * 
+ *
  * @param obj - The object to iterate over.
  * @param iteratee - The function to call for each property.
  * @param ctx - The `this` context to use for the function.

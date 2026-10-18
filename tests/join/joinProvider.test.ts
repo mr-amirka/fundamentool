@@ -1,5 +1,5 @@
 import {
-  joinProvider, 
+  joinProvider,
 } from '../../src/join/joinProvider';
 
 describe('joinProvider', () => {

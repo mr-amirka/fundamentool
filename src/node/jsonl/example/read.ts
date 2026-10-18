@@ -1,5 +1,5 @@
 import {
-  read, 
+  read,
 } from '../promisify/read';
 
 (async () => {

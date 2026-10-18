@@ -15,16 +15,16 @@ import {
   TRpcConnectOptionsInit,
 } from './types';
 import {
-  Unsubscriber, 
+  Unsubscriber,
 } from '../Unsubscriber';
 import {
-  wait, 
+  wait,
 } from '../wait';
 import {
-  RpcCoder, 
+  RpcCoder,
 } from './RpcCoder';
 import {
-  getWithContext, 
+  getWithContext,
 } from '../get';
 
 /**
@@ -142,7 +142,7 @@ export class RpcConnect {
         const exports = this.exports;
         const methodCtx = getWithContext(exports, methodPath);
         const method = methodCtx?.[1];
-            
+
         try {
           if (method) {
             const callback = (args: any) => method.apply(methodCtx?.[0], args);

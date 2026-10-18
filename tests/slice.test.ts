@@ -1,5 +1,5 @@
 import {
-  slice, 
+  slice,
 } from '../src/slice';
 
 describe('slice', () => {
@@ -43,7 +43,7 @@ describe('slice', () => {
       0: 'a',
       1: 'b',
       2: 'c',
-      length: 3, 
+      length: 3,
     };
     expect(slice(like, 1)).toEqual(['b', 'c']);
   });

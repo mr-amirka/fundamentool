@@ -1,10 +1,10 @@
 import {
-  toLower, 
+  toLower,
 } from './toLower';
 
 /**
  * Lowercases the first character of the string.
- * 
+ *
  * @param v - The string to lowercase the first character of.
  * @returns The string with the first character lowercased.
  * @example

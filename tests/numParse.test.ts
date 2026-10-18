@@ -1,5 +1,5 @@
 import {
-  numParse, 
+  numParse,
 } from '../src/numParse';
 
 describe('numParse', () => {

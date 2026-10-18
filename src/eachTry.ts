@@ -1,11 +1,11 @@
 import {
-  isArrayLike, 
+  isArrayLike,
 } from './is/isArrayLike';
 import {
-  executeTry, 
+  executeTry,
 } from './executeTry';
 import {
-  each, 
+  each,
 } from './each';
 
 /**

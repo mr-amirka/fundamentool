@@ -1,5 +1,5 @@
 import {
-  joinDot, 
+  joinDot,
 } from '../../src/join/joinDot';
 
 describe('joinDot', () => {

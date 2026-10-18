@@ -1,6 +1,6 @@
 /**
  * Creates key handler that calls `handle` on Enter key.
- * 
+ *
  * @param handle - The function to call when the Enter key is pressed.
  * @returns The function to call when the Enter key is pressed.
  * @example

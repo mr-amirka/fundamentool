@@ -1,5 +1,5 @@
 import {
-  withDelay, 
+  withDelay,
 } from '../src/withDelay';
 
 jest.useFakeTimers();

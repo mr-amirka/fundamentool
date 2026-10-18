@@ -1,8 +1,8 @@
 import {
-  mapAsync, 
+  mapAsync,
 } from '../src/async/mapAsync';
 import {
-  filterAsync, 
+  filterAsync,
 } from '../src/async/filterAsync';
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

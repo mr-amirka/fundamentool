@@ -1,5 +1,5 @@
 import {
-  eachApply, 
+  eachApply,
 } from './eachApply';
 
 type AnyFn = (...args: any[]) => any;
@@ -7,7 +7,7 @@ type Aggregator = (funcs: AnyFn[], args: any[], context: any) => any;
 
 /**
  * Aggregates an array of functions into a single function.
- * 
+ *
  * @param funcs - The functions to aggregate.
  * @param aggregator - The aggregator function to use (defaults to `eachApply`).
  * @returns A single function that fans the call out to all `funcs`.

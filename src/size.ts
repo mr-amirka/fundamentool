@@ -1,10 +1,10 @@
 import {
-  values, 
+  values,
 } from './values';
 
 /**
  * Returns the number of enumerable values in a collection.
- * 
+ *
  * @param v - The collection to get the size of.
  * @returns The size of the collection.
  * @example

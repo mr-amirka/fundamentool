@@ -1,5 +1,5 @@
 import {
-  getKeyPath, 
+  getKeyPath,
 } from '../src/getKeyPath';
 
 describe('getKeyPath', () => {

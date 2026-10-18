@@ -1,8 +1,8 @@
 import {
-  readUnopened as readUnopenedSimple, 
+  readUnopened as readUnopenedSimple,
 } from '../file/readUnopened';
 import {
-  TransformFrom, 
+  TransformFrom,
 } from './TransformFrom';
 
 /**

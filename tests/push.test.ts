@@ -1,5 +1,5 @@
 import {
-  push, 
+  push,
 } from '../src/push';
 
 describe('push', () => {

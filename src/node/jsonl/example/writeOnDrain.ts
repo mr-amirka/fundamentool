@@ -1,5 +1,5 @@
 import {
-  write, 
+  write,
 } from '../write';
 
 const writer = write(__dirname + '/output.jsonl');

@@ -1,5 +1,5 @@
 import {
-  toSerializableJson, 
+  toSerializableJson,
 } from '../src/toSerializableJson';
 
 describe('toSerializableJson', () => {
@@ -29,7 +29,7 @@ describe('toSerializableJson', () => {
     const src = {
       a: 1,
       b: [2, {
-        c: 3, 
+        c: 3,
       }],
     };
     const safe = toSerializableJson(src);
@@ -37,7 +37,7 @@ describe('toSerializableJson', () => {
     expect(safe).toEqual({
       a: 1,
       b: [2, {
-        c: 3, 
+        c: 3,
       }],
     });
     expect(safe).not.toBe(src);

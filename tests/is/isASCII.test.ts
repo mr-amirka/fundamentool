@@ -1,5 +1,5 @@
 import {
-  isASCII, 
+  isASCII,
 } from '../../src/is/isASCII';
 
 describe('isASCII', () => {

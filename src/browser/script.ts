@@ -1,15 +1,15 @@
 
 import {
-  GLOBAL_CONTEXT, 
+  GLOBAL_CONTEXT,
 } from '../globalContext';
 import {
-  once, 
+  once,
 } from '../once';
 import {
-  defer, 
+  defer,
 } from '../defer';
 import {
-  urlExtend, 
+  urlExtend,
 } from '../urlExtend';
 
 interface IScript {
@@ -67,5 +67,4 @@ const base = script.base = (url: string): Promise<void> => {
     head.appendChild(instance);
   });
 };
-
 

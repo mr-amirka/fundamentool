@@ -1,5 +1,5 @@
 import {
-  readyProvider, 
+  readyProvider,
 } from '../readyProvider';
 
 declare const window: Window;

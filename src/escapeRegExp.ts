@@ -2,7 +2,7 @@ const REGEXP_CHAR = /[\\^$.*+?()[\]{}|]/gim;
 
 /**
  * Escapes characters with special meaning in regular expressions.
- * 
+ *
  * @param v - The string to escape.
  * @returns The escaped string.
  * @example

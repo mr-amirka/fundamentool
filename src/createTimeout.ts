@@ -1,6 +1,6 @@
 /**
  * Creates a timeout.
- * 
+ *
  * @param callback - The callback to call when the timeout is ready.
  * @param timeout - The timeout to call the callback.
  * @param args - The arguments to pass to the callback.

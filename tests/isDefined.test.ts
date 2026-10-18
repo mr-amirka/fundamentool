@@ -1,5 +1,5 @@
 import {
-  isDefined, 
+  isDefined,
 } from '../src/is/isDefined';
 
 describe('isDefined', () => {

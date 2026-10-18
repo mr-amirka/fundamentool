@@ -1,10 +1,10 @@
 import {
-  joinProvider, 
+  joinProvider,
 } from './joinProvider';
 
 /**
  * Joins array items with comma.
- * 
+ *
  * @param items - The items to join.
  * @returns The joined string.
  * @example

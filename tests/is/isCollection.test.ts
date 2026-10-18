@@ -1,5 +1,5 @@
 import {
-  isCollection, 
+  isCollection,
 } from '../../src/is/isCollection';
 
 describe('isCollection', () => {
@@ -14,14 +14,14 @@ describe('isCollection', () => {
 
   test('returns true for plain objects', () => {
     expect(isCollection({
-      a: 1, 
+      a: 1,
     })).toBe(true);
     expect(isCollection({})).toBe(true);
   });
 
   test('returns true for array-like objects', () => {
     expect(isCollection({
-      length: 3, 
+      length: 3,
     })).toBe(true);
   });
 

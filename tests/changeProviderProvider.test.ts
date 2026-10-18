@@ -1,5 +1,5 @@
 import {
-  changeProviderProvider, 
+  changeProviderProvider,
 } from '../src/changeProviderProvider';
 
 interface IState {
@@ -15,12 +15,12 @@ describe('changeProviderProvider', () => {
 
     onChange({
       target: {
-        value: 'Alice', 
-      }, 
+        value: 'Alice',
+      },
     });
 
     expect(set).toHaveBeenCalledWith({
-      name: 'Alice', 
+      name: 'Alice',
     });
   });
 
@@ -30,12 +30,12 @@ describe('changeProviderProvider', () => {
 
     onChange({
       target: {
-        checked: true, 
-      }, 
+        checked: true,
+      },
     });
 
     expect(set).toHaveBeenCalledWith({
-      checked: true, 
+      checked: true,
     });
   });
 
@@ -47,12 +47,12 @@ describe('changeProviderProvider', () => {
 
     onChange({
       target: {
-        value: '  Bob  ', 
-      }, 
+        value: '  Bob  ',
+      },
     });
 
     expect(set).toHaveBeenCalledWith({
-      name: 'Bob', 
+      name: 'Bob',
     });
   });
 
@@ -63,7 +63,7 @@ describe('changeProviderProvider', () => {
     onChange(null);
 
     expect(set).toHaveBeenCalledWith({
-      name: undefined, 
+      name: undefined,
     });
   });
 
@@ -75,20 +75,20 @@ describe('changeProviderProvider', () => {
 
     onName({
       target: {
-        value: 'Carol', 
-      }, 
+        value: 'Carol',
+      },
     });
     onAge({
       target: {
-        value: 30, 
-      }, 
+        value: 30,
+      },
     });
 
     expect(set).toHaveBeenNthCalledWith(1, {
-      name: 'Carol', 
+      name: 'Carol',
     });
     expect(set).toHaveBeenNthCalledWith(2, {
-      age: 30, 
+      age: 30,
     });
   });
 });

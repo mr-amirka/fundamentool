@@ -13,7 +13,7 @@
 export function getDataLink(content: BlobPart | BlobPart[] | ArrayBuffer, type?: string): string {
   const blob = new Blob(Array.isArray(content) ? content : [content],
     type ? {
-      type, 
+      type,
     } : undefined);
   return URL.createObjectURL(blob);
 }

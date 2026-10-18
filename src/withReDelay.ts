@@ -1,8 +1,8 @@
 import {
-  createTimeout, 
+  createTimeout,
 } from './createTimeout';
 import {
-  single, 
+  single,
 } from './single';
 
 /**

@@ -1,10 +1,10 @@
 import {
-  indexOf, 
+  indexOf,
 } from './indexOf';
 
 /**
  * Adds an item to a collection if it is not already present.
- * 
+ *
  * @param collection - The array to add the item to.
  * @param item - The item to add to the collection.
  * @returns The collection with the item added.

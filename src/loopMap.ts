@@ -1,15 +1,15 @@
 import {
-  isFunction, 
+  isFunction,
 } from './is/isFunction';
 import {
-  wrapper, 
+  wrapper,
 } from './wrapper';
 
 /**
  * Maps indices [i, length) to values using provided function.
  *
  * If `fn` is not a function, wraps it with `wrapper(fn)`.
- * 
+ *
  * @param length - The length of the loop.
  * @param fn - The function to call for each index.
  * @param output - The output array to write the values to.

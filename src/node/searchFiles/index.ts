@@ -1,8 +1,8 @@
 import {
-  extend, 
+  extend,
 } from '../../extend';
 import {
-  each, 
+  each,
 } from './each';
 
 export * from './each';
@@ -22,5 +22,4 @@ export function searchFilesIndex(folderPath: string, options?: Record<string, an
     iteratee: output.push.bind(output),
   })).then(() => output);
 }
-
 

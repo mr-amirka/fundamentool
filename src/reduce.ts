@@ -2,7 +2,7 @@ const originalReduce = [].reduce;
 
 /**
  * Reduces an array-like collection into a single value.
- * 
+ *
  * @param collection - The collection to reduce.
  * @param iteratee - The function to call for each item.
  * @param accumulator - The initial accumulator value.
