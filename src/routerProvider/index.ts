@@ -16,8 +16,26 @@ import {
   isEqual,
 } from '../is/isEqual';
 import {
+  isArray,
+} from '../is/isArray';
+import {
+  isBoolean,
+} from '../is/isBoolean';
+import {
+  isDefined,
+} from '../is/isDefined';
+import {
   isFunction,
 } from '../is/isFunction';
+import {
+  isNumber,
+} from '../is/isNumber';
+import {
+  isObject,
+} from '../is/isObject';
+import {
+  isString,
+} from '../is/isString';
 import {
   isMatch,
 } from '../is/isMatch';
@@ -368,7 +386,7 @@ function invalid(
 
 /** Checks the dependencies once, at creation (lab convention `api-input-validation.md`). */
 function assertRouterDeps(deps: unknown): asserts deps is TRouterProviderDeps {
-  if (typeof deps !== 'object' || deps === null || Array.isArray(deps)) {
+  if (!isObject(deps) || isArray(deps)) {
     throw new TypeError(`${ROUTER_WHERE}: expects a dependencies object, got ${describeValue(deps)}`);
   }
   assertKnownOptions(
@@ -376,7 +394,7 @@ function assertRouterDeps(deps: unknown): asserts deps is TRouterProviderDeps {
   );
   const raw = deps as Record<string, unknown>;
   const win = raw.window as Window | null;
-  if (typeof win !== 'object' || win === null || typeof win.history?.pushState !== 'function') {
+  if (!isObject(win) || !isFunction(win.history?.pushState)) {
     throw invalid(
       'window', 'a browser window', win,
     );
@@ -388,33 +406,32 @@ function assertRouterDeps(deps: unknown): asserts deps is TRouterProviderDeps {
     'createObservable',
     'createApi',
   ] as const) {
-    if (typeof raw[key] !== 'function') {
+    if (!isFunction(raw[key])) {
       throw invalid(
         key, 'a function', raw[key],
       );
     }
   }
-  if (raw.describe !== undefined && typeof raw.describe !== 'function') {
+  if (isDefined(raw.describe) && !isFunction(raw.describe)) {
     throw invalid(
       'describe', 'a function (location) => page info', raw.describe,
     );
   }
   const sections = raw.sections;
-  if (sections !== undefined && (typeof sections !== 'object' || sections === null || Array.isArray(sections)
-    || !Object.values(sections).every((path) => typeof path === 'string'))) {
+  if (isDefined(sections) && (!isObject(sections) || isArray(sections) || !Object.values(sections).every(isString))) {
     throw invalid(
       'sections', 'an object section → main page path', sections,
     );
   }
   for (const key of ['keep', 'exitMs']) {
     const value = raw[key];
-    if (value !== undefined && !(typeof value === 'number' && value >= 0 && Number.isFinite(value))) {
+    if (isDefined(value) && !(isNumber(value) && value >= 0 && Number.isFinite(value))) {
       throw invalid(
         key, 'a number ≥ 0', value,
       );
     }
   }
-  if (raw.sectionHistory !== undefined && raw.sectionHistory !== 'shared' && raw.sectionHistory !== 'separate') {
+  if (isDefined(raw.sectionHistory) && raw.sectionHistory !== 'shared' && raw.sectionHistory !== 'separate') {
     throw invalid(
       'sectionHistory', '"shared" or "separate"', raw.sectionHistory,
     );
@@ -428,17 +445,17 @@ function assertRouterDeps(deps: unknown): asserts deps is TRouterProviderDeps {
 
 /** Checks `open`'s options (cold path: once per window). */
 function assertOpenOptions(options: unknown): asserts options is TOpenOptions | undefined {
-  if (options === undefined) {
+  if (!isDefined(options)) {
     return;
   }
-  if (typeof options !== 'object' || options === null || Array.isArray(options)) {
+  if (!isObject(options) || isArray(options)) {
     throw new TypeError(`${ROUTER_WHERE} open: expects an options object, got ${describeValue(options)}`);
   }
   assertKnownOptions(
     `${ROUTER_WHERE} open`, options, OPEN_OPTION_KEYS,
   );
   const reopen = (options as TOpenOptions).reopen;
-  if (reopen !== undefined && typeof reopen !== 'boolean') {
+  if (isDefined(reopen) && !isBoolean(reopen)) {
     throw invalid(
       'reopen', 'a boolean', reopen,
     );
@@ -850,7 +867,7 @@ function createRouterView(deps: TRouterProviderDeps, core: TRouterCore) {
     if (missing.length) {
       throw new TypeError(`${ROUTER_WHERE} view: the dependencies lack ${missing.join(', ')} (from React, or preact + preact/hooks)`);
     }
-    if (typeof options !== 'object' || options === null) {
+    if (!isObject(options)) {
       throw new TypeError(`${ROUTER_WHERE} view: expects an options object, got ${describeValue(options)}`);
     }
     assertKnownOptions(
@@ -1012,7 +1029,12 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
   /** Entries being left while their guards are asked. */
   const closing = new Set<number>();
 
-  function page(location: TUrlProps, depth: number): TPageEntry {
+  /**
+   * A page entry. Its location is read from its address — after a push exactly what a reload gives (`'3'` → `3`,
+   * D-028), whatever object the caller built.
+   */
+  function page(target: TUrlProps, depth: number): TPageEntry {
+    const location = urlParse(target.href);
     return {
       kind: 'page',
       id: nextId++,
@@ -1139,7 +1161,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
   /** The section a location belongs to (unknown → the first section). */
   function sectionOf(location: TUrlProps): string {
     const section = describeLocation(location).section;
-    return section !== undefined && section in sections ? section : homeSection;
+    return isDefined(section) && section in sections ? section : homeSection;
   }
 
   /** What the browser history holds for a section — the first section's main page under it, then its stack. */
@@ -1206,8 +1228,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
   }
 
   function isOurs(value: unknown): value is TOurState {
-    return typeof value === 'object' && value !== null && (value as TOurState).nav === session
-      && typeof (value as TOurState).depth === 'number';
+    return isObject(value) && (value as TOurState).nav === session && isNumber((value as TOurState).depth);
   }
 
   /** A travel we started: the next history event is its answer, not the player's. */
@@ -1563,7 +1584,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
       if (!entry || entry.depth === 0) {
         return;
       }
-      if (result !== undefined) {
+      if (isDefined(result)) {
         results.set(entryId, result);
       }
       await settle(await travel(entry.depth - 1 - (entries.length - 1)));
@@ -1591,7 +1612,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
   function backToSection(): Promise<void> {
     return enqueue(async () => {
       const section = state.section;
-      if (section === null) {
+      if (!isDefined(section)) {
         return;
       }
       for (let i = entries.length - 1; i >= 0; i--) {
@@ -1671,12 +1692,6 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
 
   const $historyDepth = $state.map((value) => value.depth);
 
-  const $stateHash = $state.map((value) => ({
-    ...value,
-    current: value.location?.child || {},
-    prev: value.prev?.child || {},
-  }));
-
   const $transitionStateHash = $transitionState.map((value) => ({
     ...value,
     location: value.location?.child || {},
@@ -1716,7 +1731,10 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
   const $immediateHashQuery = $immediateHashLocation.map(getQuery);
   const $immediateHashPath = $immediateHashLocation.map(getPath);
 
-  /** A push or a replace of a whole location; `options.onBeforeUnload` — a watcher on the new entry. */
+  /**
+   * A push or a replace of a whole location; `options.onBeforeUnload` — a watcher on the new entry. Resolves with the
+   * location now shown (read from the address).
+   */
   async function changeLocation(
     location: TUrlProps, _options?: TLocationOptions, isReplace?: boolean | number,
   ): Promise<TUrlProps> {
@@ -1744,7 +1762,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
         onBeforeUnload(callback, watcherOptions);
       }
     }
-    return location;
+    return state.location;
   }
 
   /**
@@ -1862,13 +1880,13 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
   /** Is the entry at `depth` being left right now (its watchers are being asked)? */
   function isTryClosingLocation(depth: number) {
     const entry = entries[depth];
-    return !!entry && closing.has(entry.id);
+    return isDefined(entry) && closing.has(entry.id);
   }
 
   /** Does the entry at `depth` have lock watchers? */
   function isWaitingUnloadLocation(depth: number) {
     const entry = entries[depth];
-    return !!entry && (guards.has(entry.id) || forward.has(entry.id));
+    return isDefined(entry) && (guards.has(entry.id) || forward.has(entry.id));
   }
 
   function isTryClosingCurrentLocation() {
@@ -1924,7 +1942,6 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     $transitionState,
     $transitionStateHash,
     $state,
-    $stateHash,
     $location,
     $query,
     $path,

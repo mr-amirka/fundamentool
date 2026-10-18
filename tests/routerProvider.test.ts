@@ -185,8 +185,9 @@ describe('routerProvider — the address', () => {
     await router.replaceParam({
       page: '3', 
     });
+    // Read from the address, as after a reload: '3' comes back as 3 (D-028).
     expect(router.$query.getState()).toEqual({
-      page: '3', 
+      page: 3, 
     });
     expect(router.$historyDepth.getState()).toBe(1);
   });
@@ -852,7 +853,7 @@ describe('routerProvider — on the navigation core (D-022)', () => {
       p: '2', 
     });
     expect(router.$query.getState()).toEqual({
-      p: '2', 
+      p: 2, 
     });
     await router.backLocationThrottled();
     expect(router.getNextLocation()).toMatchObject({
