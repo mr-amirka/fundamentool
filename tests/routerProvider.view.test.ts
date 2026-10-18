@@ -223,12 +223,12 @@ describe.each([['React', REACT], ['Preact', PREACT]])('router.view with %s', (_n
     let result: Promise<string | null> = Promise.resolve(null);
     await library.act(async () => {
       result = nav.open<string>(Window, 'edit');
-      await settle();
+      await waitFor(() => expect(nav.getState().entries.at(-1)?.kind).toBe('window'));
     });
     expect(container.querySelector('[data-window="edit"]')?.getAttribute('data-open')).toBe('true');
     await library.act(async () => {
       (container.querySelector('[data-window] button') as HTMLButtonElement).click();
-      await settle();
+      await result;
     });
     await expect(result).resolves.toBe('ok');
     await library.act(() => waitFor(() => expect(container.querySelector('[data-window="edit"]')?.getAttribute('data-open')).toBe('false')));

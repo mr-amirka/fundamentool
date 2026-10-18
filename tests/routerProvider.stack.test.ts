@@ -418,10 +418,10 @@ describe('routerProvider — the stack', () => {
     expect(paths()).toEqual(['/a']);
     browser.userForward();
     await waitFor(() => expect(paths()).toEqual(['/a', 'window']));
-    browser.userForward();
+    browser.userForward(); // the confirmation isn't kept ahead: undone
     await settle(100);
+    await waitFor(() => expect(browser.index()).toBe(1));
     expect(paths()).toEqual(['/a', 'window']);
-    expect(browser.index()).toBe(1);
   });
 
   it('Forward asks the forward handlers of the page first: false keeps the player where they are', async () => {
