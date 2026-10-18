@@ -742,9 +742,6 @@ function routerProviderBase({
     return urlParse(location.href);
   }
   function pushLocation(extendsLocation: Partial<TUrlProps>, options?: TLocationOptions) {
-    console.log(
-      'pushLocation', extendsLocation, options,
-    );
     return changeLocation(mergeLocation(_currentLocation, extendsLocation), options);
   }
   function storagePushLocation(extendsLocation: Partial<TUrlProps>, options?: TLocationOptions) {
@@ -891,7 +888,8 @@ function routerProviderBase({
         const path = state.path || '/';
         const matchs = urlExtend(props.href, props.options);
         const targetPath = matchs.path;
-        const hasActive = path === targetPath && isMatch(state.query, matchs.query);
+        // A page without a query has `query` undefined — it still matches a link without one.
+        const hasActive = path === targetPath && isMatch(state.query || {}, matchs.query);
 
         if (forwardedRef) {
           delete props.forwardedRef;
