@@ -24,6 +24,7 @@ import {
 } from '../src/Observable';
 import {
   hashRouterProvider,
+  ROUTER_DEPS_KEYS,
   routerProvider,
 } from '../src/routerProvider';
 
@@ -413,9 +414,8 @@ describe('routerProvider — routes, params, links, focus', () => {
     host.remove();
   });
 
-  // Known bug (2026-10-18): written for effector, whose `watch` fires at once; fundamentool's Observable doesn't, so the
-  // effect never runs. Fixed by the rebuild on the navigation core (D-022) — then this becomes a plain `it`.
-  it.failing('useRouteIsFocus: runs when its page opens, cleaned up when that page starts closing', async () => {
+  // Was broken before the rebuild on the navigation core (D-022): written for effector, whose `watch` fires at once.
+  it('useRouteIsFocus: runs when its page opens, cleaned up when that page starts closing', async () => {
     const {
       router, 
     } = setup('http://localhost/');
@@ -455,5 +455,375 @@ describe('routerProvider — routes, params, links, focus', () => {
     expect(router.getCurrentLocation()).toMatchObject({
       path: '/level/2', 
     });
+  });
+});
+
+describe('routerProvider — on the navigation core (D-022)', () => {
+  it('open: a window is a history entry over the page — back closes it, the page stays; the result resolves', async () => {
+    const {
+      router, win, 
+    } = setup('http://localhost/');
+    await router.pushLocation({
+      path: '/a', 
+    });
+    const result = router.open<string>('Confirm', {
+      text: 'sure?', 
+    });
+    await waitFor(() => expect(router.$historyDepth.getState()).toBe(2));
+    // The window's entry keeps the page's address; the location is still the page.
+    expect(win.location.pathname).toBe('/a');
+    expect(router.$path.getState()).toBe('/a');
+    expect(router.getPrevLocation()).toMatchObject({
+      path: '/a', 
+    });
+    await expect(router.backLocation()).resolves.toEqual({
+      locked: false, 
+    });
+    await expect(result).resolves.toBeNull();
+    expect(router.$path.getState()).toBe('/a');
+    expect(router.$historyDepth.getState()).toBe(1);
+
+    const answer = router.open<string>('Confirm');
+    await waitFor(() => expect(router.$historyDepth.getState()).toBe(2));
+    const top = router.navigation.getState().entries[2];
+    await router.close(top.id, 'yes');
+    await expect(answer).resolves.toBe('yes');
+  });
+
+  it('getNextLocation: the entry just left; a push forgets it', async () => {
+    const {
+      router, 
+    } = setup('http://localhost/');
+    await router.pushLocation({
+      path: '/a', 
+    });
+    await router.backLocation();
+    expect(router.getNextLocation()).toMatchObject({
+      path: '/a', 
+    });
+    await router.pushLocation({
+      path: '/b', 
+    });
+    expect(router.getNextLocation()).toBeUndefined();
+  });
+
+  it('isTryClosingLocation: true while the entry\'s watchers are asked', async () => {
+    const {
+      router, 
+    } = setup('http://localhost/');
+    await router.pushLocation({
+      path: '/form', 
+    });
+    let answer: (value: boolean) => void = () => undefined;
+    router.onBeforeUnload(() => new Promise<boolean>((resolve) => {
+      answer = resolve;
+    }));
+    expect(router.isTryClosingCurrentLocation()).toBe(false);
+    const back = router.backLocation();
+    await waitFor(() => expect(router.isTryClosingLocation(1)).toBe(true));
+    answer(false);
+    await expect(back).resolves.toEqual({
+      locked: true, 
+    });
+    expect(router.isTryClosingLocation(1)).toBe(false);
+    expect(router.isTryClosingLocation(9)).toBe(false);
+    expect(router.isWaitingUnloadLocation(9)).toBe(false);
+  });
+
+  it('a forwards watcher is asked before a page or a window opens over its page; false keeps it', async () => {
+    const {
+      router, 
+    } = setup('http://localhost/');
+    let allow = false;
+    const asked: string[] = [];
+    router.onBeforeUnload((loc) => {
+      asked.push(loc.path);
+      return allow;
+    }, {
+      forwards: true,
+      backwards: false, 
+    });
+    await expect(router.pushLocation({
+      path: '/a', 
+    })).resolves.toMatchObject({
+      path: '/', 
+    });
+    expect(router.$path.getState()).toBe('/');
+    await expect(router.open('W')).resolves.toBeNull();
+    expect(asked).toEqual(['/', '/']);
+    allow = true;
+    await router.pushLocation({
+      path: '/a', 
+    });
+    expect(router.$path.getState()).toBe('/a');
+  });
+
+  it('a push watcher may be an object with options; the unsubscribe runs once', async () => {
+    const {
+      router, 
+    } = setup('http://localhost/');
+    await router.pushLocation({
+      path: '/edit', 
+    }, {
+      onBeforeUnload: {
+        callback: () => false,
+        backwards: true, 
+      }, 
+    });
+    expect(router.isWaitingUnloadCurrentLocation()).toBe(true);
+    await expect(router.backLocation()).resolves.toEqual({
+      locked: true, 
+    });
+    const stop = router.onBeforeUnload(() => true);
+    stop();
+    stop();
+    expect(router.isWaitingUnloadCurrentLocation()).toBe(true);
+  });
+
+  it('a quiet back moves the state, not the transition state; backToDepth quiet — neither at the end', async () => {
+    const {
+      router, 
+    } = setup('http://localhost/');
+    await router.pushLocation({
+      path: '/a', 
+    });
+    await router.pushLocation({
+      path: '/b', 
+    });
+    await router.backLocation({
+      quiet: true, 
+    });
+    expect(router.$immeidatePath.getState()).toBe('/a');
+    expect(router.$path.getState()).toBe('/b');
+    await router.backToDepth(0, {
+      quiet: true, 
+    });
+    expect(router.$immeidatePath.getState()).toBe('/');
+    expect(router.$path.getState()).toBe('/b');
+    await expect(router.backToDepth(0)).resolves.toEqual({
+      locked: true, 
+    });
+  });
+
+  it('startOverLocation: the history starts again from the address', async () => {
+    const {
+      router, win, 
+    } = setup('http://localhost/');
+    await router.pushLocation({
+      path: '/a', 
+    });
+    await router.pushLocation({
+      path: '/b', 
+    });
+    await router.startOverLocation({
+      path: '/home', 
+    });
+    expect(win.location.pathname).toBe('/home');
+    expect(router.$historyDepth.getState()).toBe(0);
+    expect(router.getHistory().map((loc) => loc.path)).toEqual(['/home']);
+  });
+
+  it('hashRouterProvider: describe gets the hash part; sections are hash paths; start over and open work on it', async () => {
+    const dom = new JSDOM('<!doctype html><html><body></body></html>', {
+      url: 'http://localhost/app#/', 
+    });
+    const seen: string[] = [];
+    const router = hashRouterProvider({
+      window: dom.window as unknown as Window,
+      Component: React.Component,
+      useEffect: React.useEffect,
+      createElement: React.createElement,
+      forwardRef: React.forwardRef,
+      createObservable,
+      createApi,
+      describe: (loc) => {
+        seen.push(loc.path);
+        return {
+          keep: loc.path === '/', 
+        };
+      },
+      sections: {
+        home: '/',
+        top: '/top', 
+      },
+    } as never);
+    expect(seen).toContain('/');
+    await router.pushLocation({
+      path: '/level/1', 
+    });
+    expect(seen).toContain('/level/1');
+    expect(router.navigation.getState().layers.map((entry) => entry.depth)).toEqual([0, 1]);
+    await router.switchSection('top');
+    expect(dom.window.location.hash).toBe('#/top');
+    expect(dom.window.location.pathname).toBe('/app');
+    expect(router.$path.getState()).toBe('/top');
+    await router.backToSection();
+    await router.startOverLocation({
+      path: '/', 
+    });
+    expect(router.$path.getState()).toBe('/');
+    expect(dom.window.location.hash).toBe('#/');
+  });
+
+  it('view: the host renders the pages with their locations and the windows', async () => {
+    const {
+      router, 
+    } = setup('http://localhost/#/');
+    const view = router.view(React as never, {
+      renderPage: (entry, location) => React.createElement(
+        'p', {
+          'data-depth': entry.depth, 
+        }, `page ${location.path}`,
+      ),
+      renderWindow: (entry, props) => React.createElement(
+        'dialog', {
+          open: props.open, 
+        }, String(entry.window),
+      ),
+    });
+    const host = document.createElement('div');
+    const root = createRoot(host);
+    act(() => root.render(React.createElement(view.NavigationHost as () => null)));
+    expect(host.textContent).toContain('page /');
+    await act(async () => {
+      await router.pushLocation({
+        path: '/a', 
+      });
+      void router.open('Hello');
+      await settle();
+    });
+    expect(host.textContent).toContain('page /a');
+    expect(host.querySelector('dialog')?.textContent).toBe('Hello');
+    act(() => root.unmount());
+  });
+
+  it('checks its dependencies: an unknown key — "did you mean"; a wrong value — expected / got', () => {
+    const dom = new JSDOM('', {
+      url: 'http://localhost/', 
+    });
+    const deps = {
+      window: dom.window,
+      Component: React.Component,
+      useEffect: React.useEffect,
+      createElement: React.createElement,
+      forwardRef: React.forwardRef,
+      createObservable,
+      createApi,
+    };
+    expect(() => routerProvider({
+      ...deps,
+      describ: () => ({}), 
+    } as never)).toThrow(/unknown option "describ". Did you mean "describe"/);
+    expect(() => routerProvider(null as never)).toThrow(/expects a dependencies object, got null/);
+    expect(() => routerProvider({
+      ...deps,
+      window: {}, 
+    } as never)).toThrow(/"window" expects a browser window/);
+    expect(() => routerProvider({
+      ...deps,
+      createApi: 1, 
+    } as never)).toThrow(/"createApi" expects a function, got number 1/);
+    expect(() => routerProvider({
+      ...deps,
+      describe: 'x', 
+    } as never)).toThrow(/"describe" expects a function/);
+  });
+
+  it('a window finishing its exit does not touch the state; many addresses do not grow the cache without bound', async () => {
+    const dom = new JSDOM('', {
+      url: 'http://localhost/', 
+    });
+    const router = routerProvider({
+      window: dom.window,
+      Component: React.Component,
+      useEffect: React.useEffect,
+      createElement: React.createElement,
+      forwardRef: React.forwardRef,
+      createObservable,
+      createApi,
+      exitMs: 0,
+      keep: 2,
+      sectionHistory: 'shared',
+    } as never);
+    void router.open('W');
+    await waitFor(() => expect(router.$historyDepth.getState()).toBe(1));
+    let changes = 0;
+    router.$state.watch(() => {
+      changes++;
+    });
+    await router.backLocation();
+    await settle(20);
+    expect(changes).toBe(1);
+    for (let i = 0; i < 300; i++) {
+      await router.replaceParam({
+        i, 
+      });
+    }
+    expect(router.$query.getState()).toEqual({
+      i: 299, 
+    });
+  });
+
+  it('the hash router\'s getters and the throttled helpers', async () => {
+    const {
+      router, 
+    } = setup('http://localhost/app#/a', 'hash');
+    const first = router.pushLocationThrottled({
+      path: '/b', 
+    });
+    // Within 300 ms of the first: ignored.
+    await router.pushLocationThrottled({
+      path: '/ignored', 
+    });
+    await first;
+    expect(router.getPrevLocation()).toMatchObject({
+      path: '/a', 
+    });
+    expect(router.getFromLocation()).toMatchObject({
+      path: '/a', 
+    });
+    await router.replaceLocationThrottled({
+      path: '/c', 
+    });
+    await router.pushParam({
+      p: '1', 
+    });
+    await router.replaceParam({
+      p: '2', 
+    });
+    expect(router.$query.getState()).toEqual({
+      p: '2', 
+    });
+    await router.backLocationThrottled();
+    expect(router.getNextLocation()).toMatchObject({
+      path: '/c', 
+    });
+    expect(router.$path.getState()).toBe('/c');
+    router.paramStorage.set('k', 'v');
+    router.paramReplaceStorage.set('k', 'w');
+    await settle();
+    expect(router.$query.getState()).toEqual({
+      k: 'w', 
+    });
+  });
+
+  it('ROUTER_DEPS_KEYS lists every key of the dependencies type', () => {
+    type TKeys = keyof import('../src/routerProvider').TRouterProviderDeps;
+    const keys: readonly TKeys[] = ROUTER_DEPS_KEYS;
+    const all: Record<TKeys, true> = {
+      window: true,
+      Component: true,
+      useEffect: true,
+      createElement: true,
+      forwardRef: true,
+      createObservable: true,
+      createApi: true,
+      describe: true,
+      sections: true,
+      sectionHistory: true,
+      keep: true,
+      exitMs: true,
+    };
+    expect([...keys].sort()).toEqual(Object.keys(all).sort());
   });
 });

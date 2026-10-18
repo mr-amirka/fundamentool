@@ -1,39 +1,46 @@
-# navigation
+# Router: pages and windows
 
 [Русская версия](./README.ru.md)
 
-A stack of pages and windows in step with the browser history, a page cache, and a view built from an injected view
-library. `import { createNavigation, createNavigationView, createBrowserHistory } from 'fundamentool/navigation'`.
+`routerProvider` / `hashRouterProvider` (`import { hashRouterProvider } from 'fundamentool'`) — the URL model and the
+observables the router always had (`$location`, `$path`, `$query`, `Link`, `NavLink`, `paramStorage`,
+`routerByLocationProvider`, `onBeforeUnload`, …), built on the engine in this folder (fundamentool D-022). The engine
+is internal: use the router.
 
 - **Every page and every window is a history entry** — back (browser, Android, Escape) closes the top one.
-  `await nav.open(Window, params)` resolves with what the window closed with (`null` — closed by back).
+  `await router.open(Window, params)` resolves with what the window closed with (`null` — closed by back). A window
+  keeps the page's address; the address never shows the window stack.
 - **Covered pages stay mounted**, hidden with `display: none`; each page layer is its own scroll container, so a page
-  comes back with its scroll and its data (checked in Chromium, WebKit, Firefox). Which pages: route flag `keep` and a
-  count limit (`keep` option).
-- **Tabs**: `sectionHistory: 'separate'` — every section keeps its own stack; tapping the current tab rolls it back to
-  its main page; back from a tab's main page goes to the first tab.
-- **Hooks**: `useWhileOpen` (open → starts closing), `useOnForward` (something opens over the page — `false` cancels, a
-  promise holds the step, a returned function runs on return; windows only with `{ windows: true }`), `useBeforeLeave`
-  (asked before leaving by back — "discard changes?"), `useEntry`, `useNavigation`, `useNavigationState`.
-- **Nothing is imported directly**: the history is a port (`createBrowserHistory(window, 'hash' | 'path')`), the view
-  library is a kit (`React`, or `preact` + `preact/hooks`).
+  comes back with its scroll and its data (checked in Chromium, WebKit, Firefox). Which pages: `describe` returns
+  `keep: true`, at most `keep` (option, default 10) of them.
+- **`replaceLocation`** swaps the top page in place (windows over it close first); **`startOverLocation`** clears the
+  history (sign out, reset).
+- **Tabs**: `sections` + `sectionHistory: 'separate'` — every section keeps its own history; `switchSection(name)` on
+  the shown section rolls it back to its main page; back from a section's main page goes to the first section.
+- **Watchers**: `onBeforeUnload(cb)` — asked before the current entry is left by back (`false` keeps it; may be async);
+  with `{ forwards: true }` — before a page or a window opens over it. `useRouteIsFocus(effect)` — runs while the
+  entry is open, cleaned up when it starts being left, again if leaving is refused.
+- **View**: `router.view(kit, { renderPage, renderWindow })` — the host and the hooks `useWhileOpen`, `useOnForward`,
+  `useBeforeLeave`, `useEntry`, `useNavigationState`, `useNavigation` (the engine — navigate with the router's methods).
+  The kit is `React`, or `preact` + `preact/hooks`; the window and the view library are injected, never imported.
 
 ```ts
-const nav = createNavigation({
-  history: createBrowserHistory(window),            // hash by default
-  describe: (path) => ({ section: path.split('/')[1], keep: path.endsWith('/list') }),
+const router = hashRouterProvider({
+  window, Component, useEffect, createElement, forwardRef, createObservable, createApi,
+  describe: (location) => ({ section: location.path.split('/')[1], keep: location.path.endsWith('/list') }),
   sections: { catalog: '/catalog', notes: '/notes' },
   sectionHistory: 'separate',
 });
-const view = createNavigationView(React, nav, {
-  renderPage: (entry) => <Page path={entry.path} />,
+const view = router.view(React, {
+  renderPage: (entry, location) => <Page path={location.path} />,
   renderWindow: (entry, props) => <entry.window {...props} />,
 });
 root.render(<view.NavigationHost />);
 
-const text = await nav.open(EditWindow, { text: 'Hi' }); // a window; null if closed by back
-nav.replace('/level/2');                                  // swap the top page in place (no new history entry)
-nav.startOver('/welcome');                                // sign out: every page before is gone
+await router.pushLocation({ path: '/notes/3' });
+const text = await router.open(EditWindow, { text: 'Hi' }); // a window; null if closed by back
+await router.replaceLocation({ path: '/level/2' });         // no new history entry
+await router.startOverLocation({ path: '/welcome' });       // every page before is gone
 ```
 
 A five-tab test app using all of it: web-games `frontend/labs/navigation`.

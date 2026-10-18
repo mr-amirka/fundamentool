@@ -30,12 +30,6 @@ import {
   TRouteMapper, 
 } from './regexpMapperProvider';
 import {
-  queueProvider, 
-} from './queueProvider';
-import {
-  isPromise, 
-} from './is/isPromise';
-import {
   isMatch, 
 } from './is/isMatch';
 import {
@@ -56,10 +50,38 @@ import {
 import {
   once, 
 } from './once';
+import {
+  assertKnownOptions, 
+} from './assertKnownOptions';
+import {
+  describeValue, 
+} from './describeValue';
+import {
+  createNavigation, 
+} from './navigation/createNavigation';
+import type {
+  TEntry, TNavigationState, TPageEntry, TPageInfo, 
+} from './navigation/createNavigation';
+import {
+  createNavigationView, 
+} from './navigation/createNavigationView';
+import type {
+  TNavigationView, TNavigationViewOptions, TViewKit, 
+} from './navigation/createNavigationView';
+import {
+  createBrowserHistory, 
+} from './navigation/history';
 
 export type {
   TUrlProps, TParams, TRouteMapper, 
 };
+// What the router's windows, pages and view are typed with (the engine itself is internal — D-022).
+export type {
+  TEntry, TNavigation, TNavigationState, TPageEntry, TPageInfo, TWindowEntry, 
+} from './navigation/createNavigation';
+export type {
+  TNavigationView, TViewKit, TWindowProps, 
+} from './navigation/createNavigationView';
 
 export type TRouteProps = {
   route: TRoute;
@@ -114,7 +136,6 @@ export type TBackLocationResponse = {
   locked: boolean;
 };
 
-type TBackStackItem = [() => void, (response: TBackLocationResponse) => void];
 const NOOP_OBJECT: TParams = {};
 
 /**
@@ -147,17 +168,6 @@ export function mergeLocation(prev: Partial<TUrlProps>, exten: Partial<TUrlProps
       query: child.query || null,
     }),
   });
-}
-
-/**
- * Waits for a transition.
- * 
- * @returns A promise that resolves after 50 milliseconds.
- * @example
- * waitTransition(); // => Promise<void>
- */
-function waitTransition() {
-  return wait(50);
 }
 
 /**
@@ -265,20 +275,30 @@ export function routerByLocationProviderProvider<A extends TRouterState>($state:
 }
 
 /**
- * The router provider options.
- * 
- * @param window - The window.
- * @param Component - The component.
- * @param useEffect - The useEffect.
- * @param createElement - The createElement.
- * @param forwardRef - The forwardRef.
- * @param createObservable - The createObservable.
- * @param createApi - The createApi.
- * @returns A router.
- * @example
- * routerProviderBase({ window: window, Component: Component, useEffect: useEffect, createElement: createElement, forwardRef: forwardRef, createObservable: createObservable, createApi: createApi }); // => <Router />
+ * The router's options besides the view library: how pages behave in the stack (the navigation core's options, with
+ * a location instead of a path).
  */
-export type TRouterProviderDeps = TObservableAdapter & {
+export type TRouterOptions = {
+  /**
+   * What a page is: kept mounted when covered (`keep`), its section, a section's main page, a page that starts the
+   * history over. Gets the page's location (for `hashRouterProvider` — the hash part). Default: nothing special.
+   */
+  describe?: (location: TUrlProps) => TPageInfo;
+  /** Sections → their main page's address (`{ home: '/', notes: '/notes' }`); the first is the start section. */
+  sections?: Readonly<Record<string, string>>;
+  /** `separate` — each section keeps its own history; tapping the shown section returns to its main page. */
+  sectionHistory?: 'shared' | 'separate';
+  /** How many covered pages stay mounted at most (default 10). */
+  keep?: number;
+  /** How long a closed window plays its exit, ms (default 300). */
+  exitMs?: number;
+};
+
+/**
+ * The router's dependencies: the window, the view library (React, Preact, …) and the observable adapter — injected,
+ * so the router works with any of them — plus {@link TRouterOptions}.
+ */
+export type TRouterProviderDeps = TObservableAdapter & TRouterOptions & {
   window: Window;
   Component: TElementType;
   useEffect: (...args: any[]) => void;
@@ -286,66 +306,165 @@ export type TRouterProviderDeps = TObservableAdapter & {
   forwardRef: (...args: any[]) => any;
 };
 
-/**
- * The router provider base.
- * 
- * @param options - The router provider options.
- * @returns A router.
- * @example
- * routerProviderBase({ window: window, Component: Component, useEffect: useEffect, createElement: createElement, forwardRef: forwardRef, createObservable: createObservable, createApi: createApi }); // => <Router />
- */
-function routerProviderBase({
-  Component,
-  window,
-  createElement,
-  forwardRef,
-  useEffect,
-  createObservable,
-  createApi,
-}: TRouterProviderDeps) {
-  const {
-    location, history, 
-  } = window;
-  let _skipPop = 0;
-  let _quiet = false;
-  let _hasDurationLink = false;
-  let _fromLocation: TUrlProps | null = null;
-  let _currentLocation = parseLocation();
-  let _locked = 0;
-  let _currentDepth = history.state?.depth || 0;
-  let _historyStack = getHistory();
-  let _historyStackBeforeUnload: TLockWatcher[][] = _historyStack.map(() => []);
-  let _skipFocus: boolean[] = _historyStack.map(() => false);
-  let _closing: boolean[] = _historyStack.map(() => false);
-  let _finishCallbacks: (() => Promise<void>)[] = [];
-  const _backStack: TBackStackItem[] = [];
+/** What the router's page renderer gets: the core's page entry and the page's location. */
+export type TRouterViewOptions = {
+  /** The page for an entry; `location` is its parsed address (for `hashRouterProvider` — the hash part). */
+  renderPage: (entry: TPageEntry, location: TUrlProps) => unknown;
+  /** A window entry → its element (`entry.window` is what was passed to `open`, usually a component). */
+  renderWindow: TNavigationViewOptions['renderWindow'];
+};
 
-  const $state = createObservable<TRouterState>({
-    depth: _currentDepth,
-    prev: getPrevLocation(),
-    location: _currentLocation,
-    history: [],
-  });
+/** The single list of accepted keys of the router's dependencies — checked against the type in tests. */
+export const ROUTER_DEPS_KEYS = [
+  'window',
+  'Component',
+  'useEffect',
+  'createElement',
+  'forwardRef',
+  'createObservable',
+  'createApi',
+  'describe',
+  'sections',
+  'sectionHistory',
+  'keep',
+  'exitMs',
+] as const;
+
+const ROUTER_WHERE = '[fundamentool] routerProvider';
+
+/** Checks the dependencies once, at creation (lab convention `api-input-validation.md`). */
+function assertRouterDeps(deps: unknown): asserts deps is TRouterProviderDeps {
+  if (typeof deps !== 'object' || deps === null || Array.isArray(deps)) {
+    throw new TypeError(`${ROUTER_WHERE}: expects a dependencies object, got ${describeValue(deps)}`);
+  }
+  assertKnownOptions(
+    ROUTER_WHERE, deps, ROUTER_DEPS_KEYS,
+  );
+  const raw = deps as Record<string, unknown>;
+  const win = raw.window as Window | null;
+  if (typeof win !== 'object' || win === null || typeof win.history?.pushState !== 'function') {
+    throw new TypeError(`${ROUTER_WHERE}: "window" expects a browser window, got ${describeValue(win)}`);
+  }
+  for (const key of [
+    'useEffect',
+    'createElement',
+    'forwardRef',
+    'createObservable',
+    'createApi',
+  ] as const) {
+    if (typeof raw[key] !== 'function') {
+      throw new TypeError(`${ROUTER_WHERE}: "${key}" expects a function, got ${describeValue(raw[key])}`);
+    }
+  }
+  if (raw.describe !== undefined && typeof raw.describe !== 'function') {
+    throw new TypeError(`${ROUTER_WHERE}: "describe" expects a function (location) => page info, got ${describeValue(raw.describe)}`);
+  }
+}
+
+/**
+ * The router base, built on the navigation core (fundamentool D-022): every page and every window is a history entry
+ * of one stack; the router keeps its URL model (path, query, the hash part as a child location) and its observables
+ * on top. `hash` — the hash part is the location (`hashRouterProvider`).
+ */
+function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
+  assertRouterDeps(deps);
   const {
-    emitState, 
+    Component,
+    window,
+    createElement,
+    forwardRef,
+    useEffect,
+    createObservable,
+    createApi,
+  } = deps;
+  const describePage = deps.describe;
+  const start = urlParse(window.location.href);
+  /** A section's address: for the hash router the section path goes after `#`, the rest of the address stays. */
+  const sectionHref = (path: string) => (hash ? mergeLocation(start, {
+    child: urlParse(path),
+  }).href : path);
+  const sections = deps.sections && Object.fromEntries(Object.entries(deps.sections).map(([name, path]) => [name, sectionHref(path)]));
+
+  /** Locations of entries by address (an entry's `path` is its whole address): pushed ones as given, others parsed. */
+  const parsed = new Map<string, TUrlProps>();
+  function remember(href: string, location: TUrlProps): TUrlProps {
+    if (parsed.size > 256) {
+      parsed.clear();
+    }
+    parsed.set(href, location);
+    return location;
+  }
+  function parse(href: string): TUrlProps {
+    return parsed.get(href) || remember(href, urlParse(href));
+  }
+  /** The location a page describes itself by: the hash part for the hash router. */
+  const ownLocation = (href: string): TUrlProps => (hash ? getChild(parse(href)) : parse(href));
+
+  const core = createNavigation({
+    history: createBrowserHistory(window, 'url'),
+    describe: (href) => (describePage ? describePage(ownLocation(href)) ?? {} : {}),
+    ...(sections ? {
+      sections,
+    } : {}),
+    ...(deps.sectionHistory ? {
+      sectionHistory: deps.sectionHistory,
+    } : {}),
+    ...(deps.keep !== undefined ? {
+      keep: deps.keep,
+    } : {}),
+    ...(deps.exitMs !== undefined ? {
+      exitMs: deps.exitMs,
+    } : {}),
+  });
+
+  /** The page an entry belongs to: itself, or the page under a window. */
+  function pageAt(entries: readonly TEntry[], index: number): TPageEntry {
+    for (let i = index; i >= 0; i--) {
+      if (entries[i].kind === 'page') {
+        return entries[i] as TPageEntry;
+      }
+    }
+    /* istanbul ignore next -- the bottom entry is always a page */
+    throw new Error('routerProvider: no page in the stack');
+  }
+
+  function snapshot(state: TNavigationState): TRouterState {
+    const {
+      entries,
+    } = state;
+    const depth = entries.length - 1;
+    return {
+      depth,
+      prev: depth > 0 ? parse(pageAt(entries, depth - 1).path) : null,
+      location: parse(state.page.path),
+      history: entries.map((_, index) => parse(pageAt(entries, index).path)),
+    };
+  }
+
+  let _hasDurationLink = false;
+  let _locked = 0;
+  /** A quiet push: the address changes, the observables don't. */
+  let _quiet = false;
+  /** Going back several steps: the transition state follows only at the end. */
+  let _quietTransition = false;
+  let _routerState = snapshot(core.getState());
+  let _currentLocation = _routerState.location;
+  let _fromLocation: TUrlProps | null = null;
+  let _nextLocation: TUrlProps | undefined;
+  let _shownPage = core.getState().page.id;
+  /** Lock watchers per entry id — for `isWaitingUnloadLocation`. */
+  const _watchers = new Map<number, number>();
+
+  const $state = createObservable<TRouterState>(_routerState);
+  const {
+    emitState,
   } = createApi($state, {
     emitState: (_, payload: TRouterState) => payload,
   });
 
-  const queue = queueProvider({
-    onStart: () => {
-      const finishCallbacks = _finishCallbacks;
-      _finishCallbacks = [];
-
-      return Promise.all(finishCallbacks.map((callback) => {
-        return callback();
-      }));
-    },
-  });
-
   const $trasitionState = createObservable<TRouterState>($state.getState());
   const {
-    emitTransition, 
+    emitTransition,
   } = createApi($trasitionState, {
     emitTransition: (state, payload: Partial<TRouterState>) => ({
       ...state,
@@ -353,11 +472,37 @@ function routerProviderBase({
     }),
   });
 
-  const $historyDepth = createObservable<number>(_currentDepth);
+  const $historyDepth = createObservable<number>(_routerState.depth);
   const {
-    emitHistoryDepth, 
+    emitHistoryDepth,
   } = createApi($historyDepth, {
     emitHistoryDepth: (_, payload: number) => payload,
+  });
+
+  core.subscribe((state) => {
+    const next = snapshot(state);
+    const prev = _routerState;
+    const pageId = state.page.id;
+    if (pageId === _shownPage && next.depth === prev.depth) {
+      return; // a window finished its exit, a hidden section changed — nothing the router shows
+    }
+    _shownPage = pageId;
+    _routerState = next;
+    _nextLocation = next.depth < prev.depth ? prev.history[next.depth + 1] ?? undefined : undefined;
+    if (next.location !== _currentLocation) {
+      _fromLocation = _currentLocation;
+      _currentLocation = next.location;
+    }
+    const alive = new Set(state.entries.map((entry) => entry.id));
+    _watchers.forEach((_, id) => {
+      alive.has(id) || _watchers.delete(id);
+    });
+    if (_quiet) {
+      return;
+    }
+    emitState(next);
+    emitHistoryDepth(next.depth);
+    _quietTransition || immediateTransition();
   });
 
   const $stateHash = $state.map((state) => ({
@@ -402,317 +547,111 @@ function routerProviderBase({
   const $immeidateHashQuery = $immeidateHashLocation.map(getQuery);
   const $immeidateHashPath = $immeidateHashLocation.map(getPath);
 
-  const changeLocation = queue((
-    location: TUrlProps, _options?: TLocationOptions, replace?: boolean | number,
-  ) => {
-    const options = _options || {};
+  function topEntry(): TEntry {
     const {
-      onBeforeUnload, 
+      entries,
+    } = core.getState();
+    return entries[entries.length - 1];
+  }
+
+  function currentDepth(): number {
+    return core.getState().entries.length - 1;
+  }
+
+  /** Address changes one at a time, in call order (a push asks forward watchers first — a replace must not overtake it). */
+  let _changes: Promise<unknown> = Promise.resolve();
+  function changeLocation(
+    location: TUrlProps, options?: TLocationOptions, replace?: boolean | number,
+  ): Promise<TUrlProps> {
+    const result = _changes.then(() => changeLocationNow(
+      location, options, replace,
+    ));
+    _changes = result.catch(noop);
+    return result;
+  }
+
+  async function changeLocationNow(
+    location: TUrlProps, _options?: TLocationOptions, replace?: boolean | number,
+  ): Promise<TUrlProps> {
+    const options = _options || {};
+    // The location as the caller built it (query values as passed — '3' stays a string), not re-parsed from the address.
+    remember(location.href, location);
+    _quiet = !!options.quiet;
+    try {
+      if (replace) {
+        await core.replace(location.href);
+      } else if (!(await core.go(location.href))) {
+        return _currentLocation; // a forward watcher of the page kept it
+      }
+    } finally {
+      _quiet = false;
+    }
+    const {
+      onBeforeUnload: watcher,
     } = options;
-    const url = location.href;
-
-    const beforeUnloadWatcher: TLockWatcher | null = onBeforeUnload
-      ? ({
-        ...DEFAULT_LOCK_WATCHER_OPTIONS,
-        ...(isFunction(onBeforeUnload)
-          ? {
-            callback: onBeforeUnload,
-          }
-          : onBeforeUnload),
-      } as TLockWatcher)
-      : null;
-
-    if (!replace) {
-      _currentDepth++;
-      _historyStack = _historyStack.slice(0, _currentDepth);
-      _skipFocus = _skipFocus.slice(0, _currentDepth);
-      _closing = _closing.slice(0, _currentDepth);
-      _historyStackBeforeUnload = _historyStackBeforeUnload.slice(0, _currentDepth);
+    if (watcher) {
+      if (isFunction(watcher)) {
+        onBeforeUnload(watcher);
+      } else {
+        const {
+          callback, ...watcherOptions
+        } = watcher;
+        onBeforeUnload(callback, watcherOptions);
+      }
     }
-
-    _historyStack[_currentDepth] = location;
-    _historyStackBeforeUnload[_currentDepth] = beforeUnloadWatcher ? [beforeUnloadWatcher] : [];
-    _skipFocus[_currentDepth] = false;
-    _closing[_currentDepth] = false;
-
-    if (replace) {
-      history.replaceState(
-        {
-          currentLocation: location,
-          prevLocation: history.state?.prevLocation,
-          depth: _currentDepth,
-          history: _historyStack,
-        },
-        '',
-        url,
-      );
-    } else {
-      history.pushState(
-        {
-          currentLocation: location,
-          prevLocation: _currentLocation,
-          depth: _currentDepth,
-          history: _historyStack,
-        },
-        '',
-        url,
-      );
-    }
-
-    _fromLocation = _currentLocation;
-    _currentLocation = location;
-
-    if (options.quiet) {
-      return location;
-    }
-
-    emitState({
-      depth: _currentDepth,
-      prev: getPrevLocation(),
-      location,
-      history: _historyStack,
-    });
-
-    emitHistoryDepth(_currentDepth);
-
-    immediateTransition();
-
     return location;
-  },
-  50);
+  }
 
-  const backLocation = queue((options?: TLocationNavigationOptions | any) => {
-    if (_currentDepth < 1) {
-      return;
+  async function backLocation(options?: TLocationNavigationOptions | any): Promise<TBackLocationResponse | undefined> {
+    if (currentDepth() < 1) {
+      return undefined;
     }
+    _quietTransition = !!options?.quiet;
+    try {
+      return {
+        locked: !(await core.back()),
+      };
+    } finally {
+      _quietTransition = false;
+    }
+  }
 
-    _quiet = !!options?.quiet;
-
-    return backLocationBase();
-  });
-
-  const backToDepth = queue(async (targetDepth: number, options?: TLocationNavigationOptions) => {
+  async function backToDepth(targetDepth: number, options?: TLocationNavigationOptions): Promise<TBackLocationResponse> {
     targetDepth = Math.max(0, targetDepth);
-
-    const quiet = !!options?.quiet;
-    const lastQuietDepth = targetDepth + 1;
-
-    let quietNext = false;
     let response: TBackLocationResponse = {
       locked: true,
     };
-
-    while (_currentDepth > targetDepth) {
-      quietNext = _currentDepth > lastQuietDepth;
-      _quiet = quiet || quietNext;
-      response = await backLocationBase();
-      if (response.locked) {
-        if (!quiet && quietNext) {
-          immediateTransition();
-        }
-        break;
-      }
-    }
-
-    return response;
-  });
-
-  const backRepeat = (count: number, options?: TLocationNavigationOptions) =>
-    backToDepth(_currentDepth - count, options);
-
-  const backToStart = (options?: TLocationNavigationOptions) => backToDepth(0, options);
-
-  window.addEventListener('popstate', async (e: PopStateEvent) => {
-    if (_skipPop > 0) {
-      _skipPop--;
-      return;
-    }
-    const [start, finish]: TBackStackItem = _backStack.shift() || [noop, noop];
-    start();
-
-    const state = e.state || {};
-
-    const originCurrentDepth = state.depth || 0;
-    const originCurrentLocation = parseLocation();
-
-    let currentDepth = originCurrentDepth;
-    let currentLocation = originCurrentLocation;
-
-    const prevDepth = _currentDepth;
-    const prevLocation = _currentLocation;
-
-    const differenceDepth = prevDepth - currentDepth;
-    const isBack = differenceDepth > 0;
-
-    /*
-      Костыль, который исправляет баг браузера с проскакиванием страниц истории при
-      переходе назад
-      Если перешагнули страницы, то идём вперёд до страницы с целевым индексом
-    */
-    const historyCurrentDepth = prevDepth - 1;
-    const historyCurrentLocation = _historyStack[historyCurrentDepth];
-    if (differenceDepth > 1 && historyCurrentLocation) {
-      const stateCurrentDepth = currentDepth;
-      currentDepth = historyCurrentDepth;
-      currentLocation = historyCurrentLocation;
-
-      for (let depth = stateCurrentDepth; depth < currentDepth; depth++) {
-        const _currentLocation = _historyStack[depth];
-        history.pushState(
-          {
-            prevLocation: _historyStack[depth - 1],
-            currentLocation: _currentLocation,
-            depth,
-            history: _historyStack,
-          },
-          '',
-          _currentLocation.href,
-        );
-        await waitTransition();
-      }
-    }
-
-    const onBeforeUnload = _historyStackBeforeUnload[prevDepth].filter(isBack ? (v) => v.backwards : (v) => v.forwards);
-
-    _closing[prevDepth] = true;
-    if (onBeforeUnload.length) {
-      _skipFocus[prevDepth] = true;
-
-      if (isBack) {
-        history.pushState(
-          {
-            prevLocation: state.prevLocation,
-            currentLocation: prevLocation,
-            depth: prevDepth,
-            history: _historyStack,
-          },
-          '',
-          prevLocation.href,
-        );
-      } else {
-        _skipPop++;
-        history.back();
-      }
-
-      const lockedFinish = once(() => {
-        finish({
-          locked: true,
-        });
-
-        return waitTransition() as Promise<void>;
-      });
-
-      let result = true;
-
-      _finishCallbacks.push(lockedFinish);
-
-      for (const onBeforeUnloadItem of onBeforeUnload) {
-        let iterationResult = onBeforeUnloadItem.callback(prevLocation);
-
-        if (isPromise(iterationResult)) {
-          iterationResult = await iterationResult;
-        }
-
-        if (iterationResult === false) {
-          result = false;
+    _quietTransition = true;
+    try {
+      let depth = currentDepth();
+      while (depth > targetDepth) {
+        response = {
+          locked: !(await core.back()),
+        };
+        const reached = currentDepth();
+        if (response.locked || reached >= depth) {
           break;
         }
+        depth = reached;
       }
-
-      _closing[prevDepth] = false;
-
-      if (result === false) {
-        lockedFinish();
-        _skipFocus[prevDepth] = false;
-        emitHistoryDepth(prevDepth);
-        return;
-      }
-
-      await waitTransition();
-      _historyStackBeforeUnload[prevDepth] = [];
-
-      if (isBack) {
-        await backLocationBase();
-      } else {
-        await pushLocation(originCurrentLocation);
-      }
-
-      finish({
-        locked: false,
-      });
-      return;
+    } finally {
+      _quietTransition = false;
     }
-
-    _currentDepth = currentDepth;
-    _fromLocation = prevLocation;
-    _currentLocation = currentLocation;
-
-    emitState({
-      depth: currentDepth,
-      prev: state.prevLocation,
-      location: currentLocation,
-      history: _historyStack,
-    });
-
-    _skipFocus[_currentDepth] || emitHistoryDepth(_currentDepth);
-
-    _closing[prevDepth] = false;
-
-    _quiet || immediateTransition();
-
-    _quiet = false;
-
-    finish({
-      locked: false,
-    });
-  });
-
-  function backLocationBase() {
-    return new Promise<TBackLocationResponse>((resolve) => {
-      let started = false;
-
-      _backStack.push([() => {
-        started = true;
-      }, resolve]);
-
-      base();
-
-      function base() {
-        history.back();
-
-        /*
-          Костыль.
-          Таймаут для повтороной попытки перехода назад, если предыдущая не прошла
-        */
-        setTimeout(() => {
-          started || base();
-        }, 500);
-      }
-    });
+    options?.quiet || immediateTransition();
+    return response;
   }
+
+  const backRepeat = (count: number, options?: TLocationNavigationOptions) =>
+    backToDepth(currentDepth() - count, options);
+
+  const backToStart = (options?: TLocationNavigationOptions) => backToDepth(0, options);
 
   function immediateTransition() {
     emitTransition($state.getState());
   }
 
   function getHistory(): TUrlProps[] {
-    const state = history.state || {};
-    const orignHistory = state.history || [];
-    const depth: number = state.depth || 0;
-    const historyLength = depth + 1;
-    const historyItems = new Array(historyLength);
-
-    const currentLocation = parseLocation();
-
-    let loc = currentLocation;
-    for (let i = 0; i < historyLength; i++) {
-      loc = orignHistory[i] || loc;
-      historyItems[i] = loc;
-    }
-
-    historyItems[depth] = currentLocation;
-
-    return historyItems;
+    return _routerState.history as TUrlProps[];
   }
   function getCurrentLocation() {
     return _currentLocation;
@@ -721,10 +660,10 @@ function routerProviderBase({
     return getCurrentLocation().child;
   }
   function getPrevLocation() {
-    return history.state?.prevLocation;
+    return _routerState.prev;
   }
   function getNextLocation() {
-    return _historyStack[_currentDepth + 1];
+    return _nextLocation;
   }
   function getFromLocation() {
     return _fromLocation;
@@ -737,9 +676,6 @@ function routerProviderBase({
   }
   function getFromHashLocation() {
     return getFromLocation()?.child;
-  }
-  function parseLocation() {
-    return urlParse(location.href);
   }
   function pushLocation(extendsLocation: Partial<TUrlProps>, options?: TLocationOptions) {
     return changeLocation(mergeLocation(_currentLocation, extendsLocation), options);
@@ -782,37 +718,83 @@ function routerProviderBase({
     options);
   }
 
+  /** Is the entry at `depth` being left right now (its watchers are being asked)? */
   function isTryClosingLocation(depth: number) {
-    return !!_closing[depth];
+    const entry = core.getState().entries[depth];
+    return !!entry && core.isClosing(entry.id);
   }
 
+  /** Does the entry at `depth` have lock watchers? */
   function isWaitingUnloadLocation(depth: number) {
-    return _historyStackBeforeUnload[depth].length > 0;
+    const entry = core.getState().entries[depth];
+    return !!entry && (_watchers.get(entry.id) || 0) > 0;
   }
 
   function isTryClosingCurrentLocation() {
-    return isTryClosingLocation(_currentDepth);
+    return isTryClosingLocation(currentDepth());
   }
 
   function isWaitingUnloadCurrentLocation() {
-    return isWaitingUnloadLocation(_currentDepth);
+    return isWaitingUnloadLocation(currentDepth());
   }
 
+  /**
+   * A lock watcher on the current entry: `backwards` — asked before it is left by going back; `forwards` — before a
+   * page or a window opens over it. `false` (or a promise of it) keeps it. Returns the unsubscribe.
+   */
   function onBeforeUnload(callback: TLockWatcherFn, options?: TLockWatcherOptions) {
-    let watcher: TLockWatcher | null = {
+    const watcher = {
       ...DEFAULT_LOCK_WATCHER_OPTIONS,
       ...options,
-      callback,
     };
-    const depth = _currentDepth;
-    _historyStackBeforeUnload[depth].push(watcher);
-    return () => {
-      const items = _historyStackBeforeUnload[depth];
-      if (watcher && items?.length) {
-        _historyStackBeforeUnload[depth] = items.filter((fn) => fn !== watcher);
-        watcher = null;
-      }
-    };
+    const entryId = topEntry().id;
+    const location = _currentLocation;
+    const stops: (() => void)[] = [];
+    if (watcher.backwards) {
+      stops.push(core.onBeforeLeave(entryId, async () => (await callback(location)) !== false));
+    }
+    if (watcher.forwards) {
+      stops.push(core.onForward(
+        entryId, async (): Promise<false | void> => ((await callback(location)) === false ? false : undefined), {
+          windows: true,
+        },
+      ));
+    }
+    _watchers.set(entryId, (_watchers.get(entryId) || 0) + 1);
+    return once(() => {
+      stops.forEach((stop) => stop());
+      const count = (_watchers.get(entryId) || 1) - 1;
+      count > 0 ? _watchers.set(entryId, count) : _watchers.delete(entryId); // eslint-disable-line
+    });
+  }
+
+  /** Opens a window over the current entry (a history entry: back closes it); resolves its result, `null` if dismissed. */
+  function open<R = unknown>(win: unknown, params?: unknown): Promise<R | null> {
+    return core.open<R>(win, params);
+  }
+
+  /** Clears the history and starts from this address (e.g. the game's home after a reset). */
+  function startOverLocation(extendsLocation: Partial<TUrlProps>): Promise<void> {
+    return core.startOver(mergeLocation(_currentLocation, extendsLocation).href);
+  }
+
+  function startOverHashLocation(child: Partial<TUrlProps>): Promise<void> {
+    return startOverLocation({
+      child,
+    });
+  }
+
+  /**
+   * The view over the router's stack: the host (page layers — covered `keep` pages stay mounted and hidden, each with
+   * its own scroll — and the windows) and the hooks, built from an injected view library.
+   */
+  function view(kit: TViewKit, options: TRouterViewOptions): TNavigationView {
+    return createNavigationView(
+      kit, core, {
+        renderPage: (entry) => options.renderPage(entry, ownLocation(entry.path)),
+        renderWindow: options.renderWindow,
+      },
+    );
   }
 
   function LinkProvider({
@@ -976,29 +958,13 @@ function routerProviderBase({
     return instance;
   }
 
+  /**
+   * `effect` while the entry this component was rendered in is open: cleaned up when it starts being left (before its
+   * watchers are asked), run again if leaving is refused.
+   */
   const useRouteIsFocus = (effect: TEffectCallback, deps?: TDependencyList) => {
-    const freezeDepth = $historyDepth.getState();
-    (useEffect as any)(() => {
-      let _cancel: any = noop;
-      let _isClosing = true;
-
-      return $historyDepth.watch((depth) => {
-        const isClosing = isTryClosingLocation(freezeDepth);
-        if (_isClosing === isClosing) {
-          return;
-        }
-        _isClosing = isClosing;
-        if (_isClosing) {
-          _cancel();
-          _cancel = noop;
-        } else {
-          if (freezeDepth === depth) {
-            const fn = effect();
-            isFunction(fn) && (_cancel = fn);
-          }
-        }
-      });
-    }, deps || []);
+    const entryId = topEntry().id;
+    (useEffect as any)(() => core.whileOpen(entryId, effect as () => void | (() => void)), deps || []);
   };
 
   return {
@@ -1069,10 +1035,20 @@ function routerProviderBase({
     onBeforeUnload,
 
     useRouteIsFocus,
+
+    /** The navigation core under the router: its state (entries, layers, the section) and the low-level methods. */
+    navigation: core,
+    open,
+    close: core.close,
+    startOverLocation,
+    startOverHashLocation,
+    backToSection: core.backToSection,
+    switchSection: core.switchSection,
+    view,
   };
 }
 
-function debounceLocation<A extends any[]>(callback: (...args: A) => Promise<void> | void) {
+function debounceLocation<A extends any[]>(callback: (...args: A) => unknown) {
   let _debounced = false;
   return async (...args: Parameters<typeof callback>) => {
     if (_debounced) {
@@ -1085,7 +1061,7 @@ function debounceLocation<A extends any[]>(callback: (...args: A) => Promise<voi
 }
 
 export function routerProvider(deps: TRouterProviderDeps) {
-  const instance = routerProviderBase(deps);
+  const instance = routerProviderBase(deps, false);
   const {
     pushLocation,
     replaceLocation,
@@ -1107,7 +1083,7 @@ export function routerProvider(deps: TRouterProviderDeps) {
 }
 
 export function hashRouterProvider(deps: TRouterProviderDeps) {
-  const instance = routerProviderBase(deps);
+  const instance = routerProviderBase(deps, true);
   const {
     pushHashLocation: pushLocation,
     replaceHashLocation: replaceLocation,
@@ -1131,6 +1107,7 @@ export function hashRouterProvider(deps: TRouterProviderDeps) {
     getPrevLocation: instance.getPrevHashLocation,
     getNextLocation: instance.getNextHashLocation,
     getFromLocation: instance.getFromHashLocation,
+    startOverLocation: instance.startOverHashLocation,
     pushParam: (query: Record<string, any>) => pushLocation({
       query,
     }),

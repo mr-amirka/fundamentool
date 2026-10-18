@@ -58,11 +58,6 @@
       "import": "./dist/esm/jsonl/index.js",
       "default": "./dist/jsonl/index.js"
     },
-    "./navigation": {
-      "types": "./dist/navigation/index.d.ts",
-      "import": "./dist/esm/navigation/index.js",
-      "default": "./dist/navigation/index.js"
-    },
     "./scheduler": {
       "types": "./dist/scheduler/index.d.ts",
       "import": "./dist/esm/scheduler/index.js",

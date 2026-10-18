@@ -40,7 +40,6 @@ npm run docs:api
 |-------------|----------|
 | `fundamentool` | Universal utilities: string, object, array, events, timers, type predicates |
 | `fundamentool/async` | Async iteration, parallel execution, sequencing |
-| `fundamentool/navigation` | Pages and windows in step with the browser history, page cache, tabs, view from an injected React / Preact |
 | `fundamentool/is` | Type predicates: `isString`, `isEqual`, `isMatch`, and 34 more |
 | `fundamentool/join` | String join helpers |
 | `fundamentool/split` | String split helpers |
@@ -81,9 +80,9 @@ const effectorAdapter: TStoreAdapter = { createStore: effector.createStore, crea
 const storage2 = localStorageProvider(window, effectorAdapter);
 ```
 
-### Navigation (`fundamentool/navigation`)
+### Router (`routerProvider`, `hashRouterProvider`)
 
-`createNavigation`, `createNavigationView`, `createBrowserHistory` — every page and window is a history entry (back closes it), covered pages stay mounted with their scroll, separate history per tab, hooks `useWhileOpen` / `useOnForward` / `useBeforeLeave` — see [src/navigation/README.md](src/navigation/README.md).
+Every page and window is a history entry (back closes it; `router.open(Window)` resolves the window's result), covered pages stay mounted with their scroll, separate history per tab, `router.view(React, …)` with hooks `useWhileOpen` / `useOnForward` / `useBeforeLeave` — see [src/navigation/README.md](src/navigation/README.md).
 
 ### Async (`fundamentool/async`)
 
