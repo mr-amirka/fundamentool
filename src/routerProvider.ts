@@ -77,7 +77,10 @@ export type TLockWatcher = TLockWatcherOptions & {
 };
 export type TAfterReturningCallback = () => void | Promise<void>;
 export type TLocationNavigationOptions = {
+  /** The transition state (`$location`, `$path`, …) doesn't follow this step. */
   quiet?: boolean;
+  /** Going back: don't ask the leave confirmations of the entries left (sign out, a forced return to the start). */
+  force?: boolean;
 };
 export type TLocationOptions = TLocationNavigationOptions & {
   onBeforeUnload?: TLockWatcherFn | TLockWatcher | null;
@@ -880,9 +883,10 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
 
   /**
    * The browser is now at `value` — make the stack match. Going back past entries with leave guards: step forward
-   * again, ask the guards (they may open windows, so outside the queue), and leave as far as they agree.
+   * again, ask the guards (they may open windows, so outside the queue), and leave as far as they agree. `force` —
+   * the guards aren't asked.
    */
-  async function settle(value: unknown): Promise<TOutcome> {
+  async function settle(value: unknown, force = false): Promise<TOutcome> {
     const current = entries.length - 1;
     if (!isOurs(value)) {
       reset(urlParse(window.location.href));
@@ -900,7 +904,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
       // Back past a section's main page: that section keeps its main page, the first section is shown.
       const removed = entries.slice(2);
       runOpened(removed, 'close');
-      if (removed.some((entry) => guards.has(entry.id))) {
+      if (!force && removed.some((entry) => guards.has(entry.id))) {
         await travel(current);
         return {
           left: confirmLeave(1, removed),
@@ -912,7 +916,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     }
     const removed = entries.slice(target + 1);
     runOpened(removed, 'close');
-    if (!removed.some((entry) => guards.has(entry.id))) {
+    if (force || !removed.some((entry) => guards.has(entry.id))) {
       removeAbove(target);
       return LEFT;
     }
@@ -1162,13 +1166,14 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
   /**
    * Back in one move to the depth `target` gives for the stack as it is when the step's turn comes (steps queued
    * before it — a window closing — have run by then); the guards of the entries left are asked, top first — a refusal
-   * stops there (`locked`). Already at or below that depth — `locked` too, nothing moved.
+   * stops there (`locked`); `force` — they aren't asked. Already at or below that depth — `locked` too, nothing moved.
+   * One browser move: the pages between are never shown.
    */
-  async function backTo(target: (current: number) => number): Promise<TBackLocationResponse> {
+  async function backTo(target: (current: number) => number, force: boolean): Promise<TBackLocationResponse> {
     const outcome = await enqueue(async () => {
       const current = entries.length - 1;
       const depth = Math.max(0, target(current));
-      return depth < current ? settle(await travel(depth - current)) : STAYED;
+      return depth < current ? settle(await travel(depth - current), force) : STAYED;
     });
     return {
       locked: !(await outcome.left),
@@ -1332,37 +1337,36 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     return location;
   }
 
-  async function backLocation(options?: TLocationNavigationOptions | any): Promise<TBackLocationResponse | undefined> {
-    if (entries.length < 2) {
-      return undefined;
-    }
-    _quietTransition = !!options?.quiet;
+  /**
+   * The back steps: one step (`backLocation`) or several (`backToDepth`, `backRepeat`, `backToStart` — the transition
+   * state catches up once, at the end, unless `quiet`). `force` — leave confirmations aren't asked.
+   */
+  async function backBy(
+    target: (current: number) => number, options: TLocationNavigationOptions | undefined, several: boolean,
+  ): Promise<TBackLocationResponse> {
+    _quietTransition = several || !!options?.quiet;
     try {
-      return await backTo((current) => current - 1);
+      return await backTo(target, !!options?.force);
     } finally {
       _quietTransition = false;
+      several && !options?.quiet && immediateTransition();
     }
   }
 
-  async function backToDepth(targetDepth: number, options?: TLocationNavigationOptions): Promise<TBackLocationResponse> {
-    _quietTransition = true;
-    try {
-      return await backTo(() => targetDepth);
-    } finally {
-      _quietTransition = false;
-      options?.quiet || immediateTransition();
-    }
+  function backLocation(options?: TLocationNavigationOptions): Promise<TBackLocationResponse | undefined> {
+    return entries.length < 2 ? Promise.resolve(undefined) : backBy(
+      (current) => current - 1, options, false,
+    );
   }
 
-  async function backRepeat(count: number, options?: TLocationNavigationOptions): Promise<TBackLocationResponse> {
-    _quietTransition = true;
-    try {
-      return await backTo((current) => current - count);
-    } finally {
-      _quietTransition = false;
-      options?.quiet || immediateTransition();
-    }
-  }
+  const backToDepth = (depth: number, options?: TLocationNavigationOptions) => backBy(
+    () => depth, options, true,
+  );
+
+  const backRepeat = (count: number, options?: TLocationNavigationOptions) =>
+    backBy(
+      (current) => current - count, options, true,
+    );
 
   const backToStart = (options?: TLocationNavigationOptions) => backToDepth(0, options);
 

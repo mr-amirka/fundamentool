@@ -576,6 +576,41 @@ describe('routerProvider — the stack', () => {
     await waitFor(() => expect(paths()).toEqual(['/a']));
   });
 
+  it('{ force: true }: back without asking — refusing guards are skipped, windows left resolve null (D-026)', async () => {
+    const {
+      nav, router, paths, 
+    } = setup();
+    await nav.go('/a/form');
+    const asked: string[] = [];
+    nav.onBeforeLeave(nav.getState().page.id, () => {
+      asked.push('form');
+      return false;
+    });
+    const win = nav.open('Edit');
+    await waitFor(() => expect(paths()).toEqual([
+      '/a',
+      '/a/form',
+      'window',
+    ]));
+    await expect(router.backToStart({
+      force: true, 
+    })).resolves.toEqual({
+      locked: false, 
+    });
+    await expect(win).resolves.toBeNull();
+    expect(paths()).toEqual(['/a']);
+    expect(asked).toEqual([]);
+
+    await nav.go('/a/form');
+    nav.onBeforeLeave(nav.getState().page.id, () => false);
+    await expect(router.backLocation({
+      force: true, 
+    })).resolves.toEqual({
+      locked: false, 
+    });
+    expect(paths()).toEqual(['/a']);
+  });
+
   it('subscribe / unsubscribe', async () => {
     const {
       nav, 

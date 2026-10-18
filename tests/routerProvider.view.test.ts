@@ -312,3 +312,44 @@ describe.each([['React', REACT], ['Preact', PREACT]])('router.view with %s', (_n
     stop();
   });
 });
+
+describe('a long back on the screen (D-026)', () => {
+  it('backToStart is one move: the pages between are never shown or mounted again', async () => {
+    const {
+      nav, router, 
+    } = setup({
+      describe: () => ({}), 
+    });
+    const mounts: string[] = [];
+    function Page(props: { path: string }): React.ReactElement {
+      React.useEffect(() => {
+        mounts.push(props.path);
+      }, []);
+      return React.createElement(
+        'p', null, props.path,
+      );
+    }
+    const view = router.view({
+      renderPage: (_entry, location) => React.createElement(Page, {
+        path: location.path, 
+      }),
+      renderWindow: () => null,
+    });
+    const container = document.createElement('div');
+    const unmount = REACT.mount(view as TView, container);
+    for (const path of [
+      '/a/1',
+      '/a/2',
+      '/a/3',
+    ]) {
+      await REACT.act(() => nav.go(path).then(() => undefined));
+    }
+    mounts.length = 0;
+    await REACT.act(async () => {
+      await router.backToStart();
+    });
+    expect(mounts).toEqual(['/a']);
+    expect(container.textContent).toBe('/a');
+    unmount();
+  });
+});

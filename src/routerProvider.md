@@ -18,6 +18,9 @@ one router, one state (`$state` holds the address and the stack; fundamentool D-
   `keep: true`, at most `keep` (option, default 10) of them.
 - **`replaceLocation`** swaps the top page in place (windows over it close first); **`startOverLocation`** clears the
   history (sign out, reset).
+- **Going back several steps** (`backToDepth`, `backRepeat`, `backToStart`) is one browser move: the pages between
+  are never shown. Leave confirmations are asked top first, and a refusal stops there; `{ force: true }` skips them
+  (sign out, a forced return to the start); `{ quiet: true }` — `$location` and the rest don't follow (D-026).
 - **Tabs**: `sections` + `sectionHistory: 'separate'` — every section keeps its own history; `switchSection(name)` on
   the shown section rolls it back to its main page; back from a section's main page goes to the first section.
 - **Watchers**: `onBeforeUnload(cb)` — asked before the current entry is left by back (`false` keeps it; may be async);
