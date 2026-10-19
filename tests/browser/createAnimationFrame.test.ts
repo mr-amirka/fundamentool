@@ -1,8 +1,8 @@
 import {
-  runFrame,
-} from '../../src/browser/runFrame';
+  createAnimationFrame,
+} from '../../src/browser/createAnimationFrame';
 
-describe('browser/runFrame', () => {
+describe('browser/createAnimationFrame', () => {
   let next: (() => void) | null;
   let now: number;
 
@@ -28,7 +28,7 @@ describe('browser/runFrame', () => {
 
   test('every frame by default, with the time since the previous call', () => {
     const callback = jest.fn();
-    runFrame(callback);
+    createAnimationFrame(callback);
     frame(16);
     frame(17);
     expect(callback.mock.calls).toEqual([[16], [17]]);
@@ -36,7 +36,7 @@ describe('browser/runFrame', () => {
 
   test('with an interval: frames accumulate until it is reached, then the callback gets the whole balance', () => {
     const callback = jest.fn();
-    runFrame(callback, 100);
+    createAnimationFrame(callback, 100);
     frame(40);
     frame(40);
     expect(callback).not.toHaveBeenCalled();
@@ -48,7 +48,7 @@ describe('browser/runFrame', () => {
 
   test('stopped — no more calls, no more frames asked for', () => {
     const callback = jest.fn();
-    const stop = runFrame(callback);
+    const stop = createAnimationFrame(callback);
     stop();
     frame(16);
     expect(callback).not.toHaveBeenCalled();

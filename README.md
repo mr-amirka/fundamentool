@@ -102,7 +102,7 @@ File I/O, JSONL streaming, CSV, directory scan — see [src/node/README.md](src/
 
 ### Browser (`fundamentool/browser`)
 
-WebSocket helpers, storage providers, viewport utilities, animation frames (`runFrame` — a loop, `nextFrame` — once) — see [src/browser/README.md](src/browser/README.md).
+WebSocket helpers, storage providers, viewport utilities, animation frames (`createAnimationFrame` — a loop, `nextFrame` — once) — see [src/browser/README.md](src/browser/README.md).
 
 ### JSONL (`fundamentool/jsonl`)
 

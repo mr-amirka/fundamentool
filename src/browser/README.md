@@ -28,7 +28,7 @@ import { wsConnect, cookieStorageProvider } from 'fundamentool/browser';
 | `openLink(url, target?)` | Opens a URL in a new tab |
 | `download(url, filename)` | Triggers a file download |
 | `getDataLink(blob, type?)` | Creates a blob URL for downloading |
-| `runFrame(fn, interval?)` | `requestAnimationFrame` loop with an interval |
+| `createAnimationFrame(fn, interval?)` | `requestAnimationFrame` loop with an interval; returns a stop function |
 | `nextFrame(fn)` | Runs `fn` once on the next animation frame; returns a cancel function |
 
 ---
