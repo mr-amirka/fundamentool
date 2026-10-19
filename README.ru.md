@@ -57,7 +57,7 @@ MIT
 - **URL**: `urlParse`, `urlExtend`, `unparam`, `param` — разбор и расширение URL, query-строки
 - **Время**: `formatTime`, `normalizeDate`, `getData` — форматирование и нормализация дат
 - **События**: `attachEvent`, `EventEmitter`, `subscribe`, `Unsubscriber`, `keyedRegistry`
-- **Асинхронность**: `wait`, `createTimeout`, `createInterval`, `createAnimationFrame`
+- **Асинхронность**: `wait`, `createTimeout`, `createInterval`
 - **Объекты и массивы**: `merge`, `without`, `extend`-подобная логика, `get` по пути
 - **Строки**: `half`, `halfLast` — разбиение по разделителю
 - **Прочее**: `noop`, `getUniqId`, `tryJsonParse`, провайдеры (queue, template, router и др.)
@@ -81,7 +81,6 @@ MIT
 - **wait** (`wait.ts`): `Promise`, который резолвится через указанный timeout, с опциональным значением.
 - **createTimeout** (`createTimeout.ts`): обёртка над `setTimeout`, возвращает функцию отмены.
 - **createInterval** (`createInterval.ts`): реализация интервала на базе `setTimeout` с контролем жизненного цикла и отменой.
-- **createAnimationFrame** (`createAnimationFrame.ts`): loop на `requestAnimationFrame` с учётом накопленного времени.
 - **queueProvider** (`queueProvider.ts`): последовательная очередь выполнения асинхронных задач (одна задача за раз).
 - **withAsyncLock** (`withAsyncLock.ts`): асинхронная функция, вызовы которой игнорируются, пока идёт предыдущий (и `minMs` от его начала) — защита от двойного нажатия.
 - **sendingQueue** (`sendingQueue.ts`): очередь промисов с аккумуляцией ошибок и методом `drain()` для ожидания завершения всех.

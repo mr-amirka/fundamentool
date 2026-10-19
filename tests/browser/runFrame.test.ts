@@ -1,25 +1,57 @@
 import {
-  extractExportedFn,
-} from './testUtils';
+  runFrame,
+} from '../../src/browser/runFrame';
 
 describe('browser/runFrame', () => {
-  test('calls callback and can be stopped', () => {
-    const runFrameImport = require('../../src/browser/runFrame');
-    const runFrame = extractExportedFn(runFrameImport);
+  let next: (() => void) | null;
+  let now: number;
 
-    let captured: undefined | ((time: number) => void);
-    (global as any).requestAnimationFrame = (cb: (time: number) => void) => {
-      captured = cb;
+  beforeEach(() => {
+    next = null;
+    now = 1000;
+    (global as any).requestAnimationFrame = (callback: () => void) => {
+      next = callback;
       return 1;
     };
+    jest.spyOn(Date, 'now').mockImplementation(() => now);
+  });
 
-    const spy = jest.fn();
-    const stop = runFrame(spy, 0);
+  afterEach(() => jest.restoreAllMocks());
 
-    expect(captured).toBeDefined();
-    captured?.(16);
-    expect(spy).toHaveBeenCalled();
+  /** One frame, `ms` after the previous one. */
+  function frame(ms: number): void {
+    now += ms;
+    const callback = next as () => void;
+    next = null;
+    callback();
+  }
 
+  test('every frame by default, with the time since the previous call', () => {
+    const callback = jest.fn();
+    runFrame(callback);
+    frame(16);
+    frame(17);
+    expect(callback.mock.calls).toEqual([[16], [17]]);
+  });
+
+  test('with an interval: frames accumulate until it is reached, then the callback gets the whole balance', () => {
+    const callback = jest.fn();
+    runFrame(callback, 100);
+    frame(40);
+    frame(40);
+    expect(callback).not.toHaveBeenCalled();
+    frame(40);
+    expect(callback).toHaveBeenCalledWith(120);
+    frame(50);
+    expect(callback).toHaveBeenCalledTimes(1);
+  });
+
+  test('stopped — no more calls, no more frames asked for', () => {
+    const callback = jest.fn();
+    const stop = runFrame(callback);
     stop();
+    frame(16);
+    expect(callback).not.toHaveBeenCalled();
+    expect(next).toBeNull();
   });
 });

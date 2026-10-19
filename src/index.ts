@@ -28,7 +28,6 @@ export * from './convertToBreakLineHTML';
 export * from './cookieStorageProvider';
 export * from './copyTextToClipboard';
 export * from './create';
-export * from './createAnimationFrame';
 export * from './createInterval';
 export * from './createLimitedTimeProcess';
 export * from './createTimeout';

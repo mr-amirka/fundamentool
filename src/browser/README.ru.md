@@ -29,6 +29,7 @@ import { wsConnect, cookieStorageProvider } from 'fundamentool/browser';
 | `download(url, filename)` | Скачивает файл по ссылке |
 | `getDataLink(blob, type?)` | Создаёт blob-ссылку для скачивания |
 | `runFrame(fn, interval?)` | Цикл на `requestAnimationFrame` с интервалом |
+| `nextFrame(fn)` | Вызывает `fn` один раз на следующем кадре анимации; возвращает функцию отмены |
 
 ---
 
@@ -101,7 +102,6 @@ cookies.get('token'); // 'abc123'
 | `setStyleSheet(node, text, doc)` | Устанавливает CSS-текст для `<style>`-элемента |
 | `stylesRenderProvider(doc, prefix)` | Управляет набором `<style>`-элементов в документе |
 | `getViewportSizeProvider(win)` | Возвращает функцию, отдающую размер вьюпорта `[w, h]` |
-| `createAnimationFrame(fn, interval?)` | Цикл на `requestAnimationFrame` с балансировкой интервала |
 
 ---
 
