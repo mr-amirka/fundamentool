@@ -59,7 +59,7 @@ export class RpcClientWorker extends RpcClient {
 
         port.start();
         return;
-      } catch(e) {
+      } catch {
         console.warn('RpcClientWorker: SharedWorker is unavailable');
       }
     }
@@ -72,7 +72,7 @@ export class RpcClientWorker extends RpcClient {
           onMessage: onRpcMessageProvider(worker) as TRpcClientOptionsOnMessage,
         });
         return;
-      } catch(e) {
+      } catch {
         console.warn('RpcClientWorker: Worker is unavailable. SyntheticWorker is used');
       }
     }

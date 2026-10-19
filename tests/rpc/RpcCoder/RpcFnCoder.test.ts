@@ -5,7 +5,7 @@ import {
 describe('RpcFnCoder', () => {
   function makeProvider() {
     const calls: number[] = [];
-    const provider = (index: number) => async (...args: any[]) => {
+    const provider = (index: number) => async (..._args: any[]) => {
       calls.push(index);
       return `external:${index}`;
     };

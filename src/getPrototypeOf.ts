@@ -9,5 +9,5 @@
  * getPrototypeOf([]);  // => Array.prototype
  * getPrototypeOf({});  // => Object.prototype
  */
-export const getPrototypeOf = Object.getPrototypeOf || ((v: any) => null);
+export const getPrototypeOf = Object.getPrototypeOf || ((_v: any) => null);
 

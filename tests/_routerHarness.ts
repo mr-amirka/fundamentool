@@ -103,9 +103,15 @@ export function setup(overrides: THarnessOptions = {}, start = '/a') {
   const history = win.history;
   const pushState = history.pushState.bind(history);
   const replaceState = history.replaceState.bind(history);
+  // `refusePush` turns it on: the browser refuses new entries. A flag, not a swapped method — the router binds the
+  // history's methods once, when it's created (fundamentool D-035).
+  let refusing = false;
   history.pushState = (
     data: unknown, unused: string, url?: string | URL | null,
   ) => {
+    if (refusing) {
+      throw new Error('quota');
+    }
     pushState(
       data, unused, url,
     );
@@ -206,12 +212,9 @@ export function setup(overrides: THarnessOptions = {}, start = '/a') {
     },
     /** The browser refuses new entries (e.g. a quota) until `restore`. */
     refusePush: () => {
-      const push = history.pushState;
-      history.pushState = () => {
-        throw new Error('quota');
-      };
+      refusing = true;
       return () => {
-        history.pushState = push;
+        refusing = false;
       };
     },
   };

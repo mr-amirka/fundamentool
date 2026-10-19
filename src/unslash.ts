@@ -1,6 +1,6 @@
 const re = /(\\\\)|(\\)/g;
 
-function replacer(all: string, v: string): string {
+function replacer(_all: string, v: string): string {
   return v ? '\\' : '';
 }
 

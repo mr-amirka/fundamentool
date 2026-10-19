@@ -7,9 +7,9 @@
  * isEmpty({});        // => true
  * isEmpty({ a: 1 });  // => false
  */
-export const isEmpty = (src: Record<string, any>, k?: string): boolean => {
+export const isEmpty = (src: Record<string, any>): boolean => {
   // eslint-disable-next-line guard-for-in
-  for (k in src) {
+  for (const _key in src) {
     return false;
   }
   return true;

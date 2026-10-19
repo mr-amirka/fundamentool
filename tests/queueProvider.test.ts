@@ -1,9 +1,6 @@
 import {
   queueProvider,
 } from '../src/queueProvider';
-import {
-  wait,
-} from '../src/wait';
 
 describe('queueProvider', () => {
   test('queues callbacks and runs them in order', async () => {

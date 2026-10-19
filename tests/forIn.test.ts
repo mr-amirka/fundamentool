@@ -21,7 +21,7 @@ describe('forIn', () => {
     };
     let captured: any;
     forIn(obj, (
-      v, k, o,
+      _v, _k, o,
     ) => {
       captured = o;
     });

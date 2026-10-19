@@ -18,8 +18,8 @@ const NATIVE_STARTS_WITH = ''.startsWith;
  */
 export function startsWith(
   self: string,
-  searchString: string,
-  position?: number,
+  _searchString: string,
+  _position?: number,
 ): boolean {
   return NATIVE_STARTS_WITH.apply(self, NATIVE_SLICE.call(arguments, 1));
 }

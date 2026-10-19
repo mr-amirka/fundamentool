@@ -10,7 +10,7 @@
 export const tryJsonParse = (s: string): any => {
   try {
     return JSON.parse(s);
-  } catch (e) {
+  } catch {
     // не JSON — возвращаем исходную строку
   }
   return s;

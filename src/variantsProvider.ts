@@ -46,14 +46,16 @@ export interface IVariantsProviderOptions {
 
 export type VariantsChild = [string, VariantsChild[]];
 
-/** Дискриминант логического токена разбора scope (числа — без строковых тегов). */
-const SCOPE_PREFIX = 0;
+/**
+ * Дискриминант логического токена разбора scope (числа — без строковых тегов): 0 — префикс (разбор пишет его сразу,
+ * константа не нужна), 1 — открытие, 2 — закрытие.
+ */
 const SCOPE_OPEN = 1;
 const SCOPE_CLOSE = 2;
 
 /** Логическая форма токена (разбор встроен в цикл — отдельный поток кортежей не строится). */
 export type TScopeToken =
-  | readonly [typeof SCOPE_PREFIX, string]
+  | readonly [0, string]
   | readonly [typeof SCOPE_OPEN]
   | readonly [typeof SCOPE_CLOSE];
 

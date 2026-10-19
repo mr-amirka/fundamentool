@@ -4,14 +4,14 @@ import {
 
 const originalParse = JSON.parse;
 
-declare class StringDecoder {
-  constructor(encoding?: string);
+/** A string decoder (Node's `string_decoder`) — given by the environment. */
+interface TStringDecoder {
   write(chunk: string): string;
 }
 
 export interface IJsonlTransformFromEnv {
   Transform: TransformConstructor;
-  StringDecoder: typeof StringDecoder;
+  StringDecoder: new (encoding?: string) => TStringDecoder;
 }
 
 interface Transform {

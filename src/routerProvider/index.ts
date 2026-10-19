@@ -1,11 +1,17 @@
 // The router (fundamentool D-022…D-026): an address model and a stack of pages and windows in step with the
 // browser history — see README.md.
 import {
+  attachEvent,
+} from '../attachEvent';
+import {
   assertKnownOptions,
 } from '../assertKnownOptions';
 import {
   childClassOfReact,
 } from '../childClassOfReact';
+import {
+  createTimeout,
+} from '../createTimeout';
 import {
   describeValue,
 } from '../describeValue';
@@ -324,6 +330,18 @@ type TRouterCore = {
   onBeforeLeave: (entryId: number, guard: TLeaveGuard) => () => void;
 };
 
+/** The kinds of the stack's entries (`TEntry['kind']`). */
+const PAGE = 'page';
+const WINDOW = 'window';
+
+/** The section-history modes (`sectionHistory`). */
+const SHARED = 'shared';
+const SEPARATE = 'separate';
+
+/** The phases the opened-entry effects run in (`runOpened`). */
+const CLOSE = 'close';
+const REOPEN = 'reopen';
+
 /** An empty query, shared (never mutated). */
 const NOOP_OBJECT: TParams = {};
 
@@ -462,12 +480,12 @@ function assertRouterDeps(deps: unknown): asserts deps is TRouterProviderDeps {
     }
   }
   const sectionHistory = raw.sectionHistory;
-  if (isDefined(sectionHistory) && sectionHistory !== 'shared' && sectionHistory !== 'separate') {
+  if (isDefined(sectionHistory) && sectionHistory !== SHARED && sectionHistory !== SEPARATE) {
     throw invalid(
       'sectionHistory', '"shared" or "separate"', sectionHistory,
     );
   }
-  if (sectionHistory === 'separate' && !(sections && keys(sections).length)) {
+  if (sectionHistory === SEPARATE && !(sections && keys(sections).length)) {
     throw invalid(
       'sectionHistory', '`sections` beside "separate"', sectionHistory,
     );
@@ -664,15 +682,15 @@ function createLinkProvider({
       addition.ref = ref;
       addition.onClick = async (e: TClickEvent) => {
         e.preventDefault && e.preventDefault();
-        if (!props.active) {
+        if (!active) {
           await click(
-            e, onClick, url, options, pushLocation, props.timeout || 0,
+            e, onClick, url, options, pushLocation, timeout || 0,
           );
         }
         return false;
       };
 
-      return createElement(props.component || 'a',
+      return createElement(component || 'a',
         addition);
     });
   };
@@ -812,24 +830,36 @@ function createParamStorageProvider({
  */
 function createRouterView(deps: TRouterProviderDeps, core: TRouterCore) {
   const {
-    createElement,
-    useEffect,
-  } = deps;
-  // ── the view ──────────────────────────────────────────────────────────────────────────────────────────────────
-
-  /** The entry a component is rendered in (inside `router.view`'s host). */
-  const {
     createContext,
+    createElement,
     useContext,
+    useEffect,
     useRef,
     useState,
   } = deps;
+  // The core's functions, taken once — not looked up on the object at every render (D-035).
+  const {
+    $state,
+    close,
+    entries,
+    onBeforeLeave,
+    onForward,
+    own,
+    whileOpen,
+  } = core;
+  // ── the view ──────────────────────────────────────────────────────────────────────────────────────────────────
+
+  /** The entry a component is rendered in (inside `router.view`'s host). */
   const EntryContext = createContext ? createContext(null) : null;
 
   /** The entry a component belongs to: the one it is rendered in, or (outside the host) the top entry at render. */
   function currentEntry(): TEntry {
     const entry = EntryContext && useContext ? useContext(EntryContext) as TEntry | null : null;
-    return entry || core.entries()[core.entries().length - 1];
+    if (entry) {
+      return entry;
+    }
+    const all = entries();
+    return all[all.length - 1];
   }
 
   /**
@@ -838,7 +868,7 @@ function createRouterView(deps: TRouterProviderDeps, core: TRouterCore) {
    */
   const useRouteIsFocus = (effect: TEffectCallback, deps_?: TDependencyList) => {
     const entryId = currentEntry().id;
-    useEffect(() => core.whileOpen(entryId, effect as () => void | (() => void)), deps_ || []);
+    useEffect(() => whileOpen(entryId, effect as () => void | (() => void)), deps_ || []);
   };
 
   /** Keeps the latest callback in a ref, so a registration made once calls what the component rendered last. */
@@ -850,8 +880,8 @@ function createRouterView(deps: TRouterProviderDeps, core: TRouterCore) {
 
   /** The router's state, re-rendering on change. */
   function useRouterState(): TRouterState {
-    const [value, setValue] = (useState as NonNullable<TRouterProviderDeps['useState']>)(core.$state.getState);
-    useEffect(() => core.$state.watch(setValue), []);
+    const [value, setValue] = (useState as NonNullable<TRouterProviderDeps['useState']>)($state.getState);
+    useEffect(() => $state.watch(setValue), []);
     return value;
   }
 
@@ -883,6 +913,11 @@ function createRouterView(deps: TRouterProviderDeps, core: TRouterCore) {
       }
     }
     const h = createElement;
+    // Called for every layer and window at every render: taken from the options once (D-035).
+    const {
+      renderPage,
+      renderWindow,
+    } = options;
 
     function withEntry(entry: TEntry, child: unknown): unknown {
       return h(
@@ -905,14 +940,14 @@ function createRouterView(deps: TRouterProviderDeps, core: TRouterCore) {
             ...LAYER,
             display: entry === value.page ? 'block' : 'none',
           },
-        }, withEntry(entry, options.renderPage(entry, core.own(entry.location))),
+        }, withEntry(entry, renderPage(entry, own(entry.location))),
       ));
-      const shownWindows = value.entries.filter((entry): entry is TWindowEntry => entry.kind === 'window');
-      const windows = [...shownWindows, ...value.leaving].map((entry) => withEntry(entry, options.renderWindow(entry, {
+      const shownWindows = value.entries.filter((entry): entry is TWindowEntry => entry.kind === WINDOW);
+      const windows = [...shownWindows, ...value.leaving].map((entry) => withEntry(entry, renderWindow(entry, {
         params: entry.params,
         open: shownWindows.includes(entry),
         close: (result?: unknown) => {
-          void core.close(entry.id, result);
+          void close(entry.id, result);
         },
       })));
       return h(
@@ -922,7 +957,9 @@ function createRouterView(deps: TRouterProviderDeps, core: TRouterCore) {
             position: 'absolute',
             inset: 0,
           },
-        }, ...layers, ...windows,
+        },
+        ...layers,
+        ...windows,
       );
     }
 
@@ -955,7 +992,7 @@ function createRouterView(deps: TRouterProviderDeps, core: TRouterCore) {
       const entryId = currentEntry().id;
       const latest = useLatest(handler);
       const windows = Boolean(options?.windows);
-      useEffect(() => core.onForward(
+      useEffect(() => onForward(
         entryId, () => latest.current(), {
           windows,
         },
@@ -965,7 +1002,7 @@ function createRouterView(deps: TRouterProviderDeps, core: TRouterCore) {
     useBeforeLeave: (guard: TLeaveGuard) => {
       const entryId = currentEntry().id;
       const latest = useLatest(guard);
-      useEffect(() => core.onBeforeLeave(entryId, () => latest.current()), []);
+      useEffect(() => onBeforeLeave(entryId, () => latest.current()), []);
     },
   };
 }
@@ -979,19 +1016,19 @@ function createRouterView(deps: TRouterProviderDeps, core: TRouterCore) {
 function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
   assertRouterDeps(deps);
   const {
-    Component,
     window,
-    createElement,
-    forwardRef,
-    useEffect,
     createObservable,
     createApi,
   } = deps;
+  // The history's methods, bound once: native methods need `this === history`, and the router calls them often (D-035).
   const history = window.history;
+  const pushState = history.pushState.bind(history);
+  const replaceState = history.replaceState.bind(history);
+  const historyGo = history.go.bind(history);
   const describePage = deps.describe;
   const keepLimit = deps.keep ?? 10;
   const exitMs = deps.exitMs ?? 300;
-  const separate = deps.sectionHistory === 'separate';
+  const separate = deps.sectionHistory === SEPARATE;
   const session = Math.random().toString(36).slice(2);
 
   /** The location a page describes itself by and renders with: the hash part for the hash router. */
@@ -1040,7 +1077,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
   function page(target: TUrlProps, depth: number): TPageEntry {
     const location = urlParse(target.href);
     return {
-      kind: 'page',
+      kind: PAGE,
       id: nextId++,
       depth,
       location,
@@ -1055,7 +1092,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
   /** The page an entry belongs to: itself, or the page under a window. */
   function pageAt(list: readonly TEntry[], index: number): TPageEntry {
     for (let i = index; i >= 0; i--) {
-      if (list[i].kind === 'page') {
+      if (list[i].kind === PAGE) {
         return list[i] as TPageEntry;
       }
     }
@@ -1086,7 +1123,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     for (const list of lists) {
       for (let i = list.length - 1; i >= 0; i--) {
         const entry = list[i];
-        if (entry.kind !== 'page') {
+        if (entry.kind !== PAGE) {
           continue;
         }
         if (!separate && list === entries) {
@@ -1185,11 +1222,11 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
   /** The browser is at its first entry — write a section's stack into the history and show it. */
   function rebuild(section: string): void {
     const list = layout(section);
-    history.replaceState(
+    replaceState(
       mark(list[0]), '', hrefOf(list[0]),
     );
     for (let i = 1; i < list.length; i++) {
-      history.pushState(
+      pushState(
         mark(list[i]), '', hrefOf(list[i]),
       );
     }
@@ -1201,13 +1238,13 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
 
   /** Windows can't wait in a hidden stack: those of the shown stack close (resolve `null`) before a switch. */
   function dropWindows(): void {
-    const first = entries.findIndex((entry) => entry.kind === 'window');
+    const first = entries.findIndex((entry) => entry.kind === WINDOW);
     if (first < 0) {
       return;
     }
     const windows = entries.slice(first) as TWindowEntry[];
     ahead = [];
-    runOpened(windows, 'close');
+    runOpened(windows, CLOSE);
     entries = entries.slice(0, first);
     for (const entry of windows) {
       forget(entry);
@@ -1228,7 +1265,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
 
   /** An entry's address: a page's own; a window keeps the address of the page under it. */
   function hrefOf(entry: TEntry): string {
-    return (entry.kind === 'page' ? entry.location : topPage(entries).location).href;
+    return (entry.kind === PAGE ? entry.location : topPage(entries).location).href;
   }
 
   function isOurs(value: unknown): value is TOurState {
@@ -1241,7 +1278,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
   function travel(delta: number): Promise<unknown> {
     return new Promise((done) => {
       waiter = done;
-      history.go(delta);
+      historyGo(delta);
     });
   }
 
@@ -1254,7 +1291,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
   function runOpened(list: readonly TEntry[], phase: 'close' | 'reopen'): void {
     for (let i = list.length - 1; i >= 0; i--) {
       for (const item of opened.list(list[i].id)) {
-        if (phase === 'close') {
+        if (phase === CLOSE) {
           const cleanup = item.cleanup;
           item.cleanup = undefined;
           isFunction(cleanup) && cleanup();
@@ -1286,9 +1323,9 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     const removed = entries.slice(depth + 1);
     entries = entries.slice(0, depth + 1);
     // What was left goes ahead (Forward brings it back), up to a window that isn't reopened (D-024).
-    const stop = removed.findIndex((entry) => entry.kind === 'window' && !entry.reopen);
+    const stop = removed.findIndex((entry) => entry.kind === WINDOW && !entry.reopen);
     ahead = stop < 0 ? [...removed, ...ahead] : removed.slice(0, stop);
-    const windows = removed.filter((entry): entry is TWindowEntry => entry.kind === 'window');
+    const windows = removed.filter((entry): entry is TWindowEntry => entry.kind === WINDOW);
     for (const entry of removed) {
       forget(entry);
     }
@@ -1302,7 +1339,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     }
     back.forEach((cleanup) => cleanup());
     if (windows.length) {
-      setTimeout(() => {
+      createTimeout(() => {
         leaving = leaving.filter((entry) => !windows.includes(entry));
         publish();
       }, exitMs);
@@ -1331,7 +1368,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     if (separate && target === 0 && shown !== homeSection) {
       // Back past a section's main page: that section keeps its main page, the first section is shown.
       const removed = entries.slice(2);
-      runOpened(removed, 'close');
+      runOpened(removed, CLOSE);
       if (!force && removed.some((entry) => guards.has(entry.id))) {
         await travel(current);
         return {
@@ -1343,7 +1380,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
       return LEFT;
     }
     const removed = entries.slice(target + 1);
-    runOpened(removed, 'close');
+    runOpened(removed, CLOSE);
     if (force || !removed.some((entry) => guards.has(entry.id))) {
       removeAbove(target);
       return LEFT;
@@ -1375,7 +1412,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     for (const entry of removed) {
       closing.delete(entry.id);
     }
-    runOpened(removed.filter((entry) => entry.depth <= stop), 'reopen');
+    runOpened(removed.filter((entry) => entry.depth <= stop), REOPEN);
     return enqueue(async () => {
       const current = entries.length - 1;
       if (current <= stop) {
@@ -1425,37 +1462,37 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
 
   function reset(location: TUrlProps): void {
     const all = [...entries, ...[...stacks].filter(([name]) => name !== shown).flatMap(([, list]) => list)];
-    runOpened(entries, 'close');
+    runOpened(entries, CLOSE);
     stacks.clear();
     if (separate) {
       shown = sectionOf(location);
       stacks.set(shown, [page(location, 0)]);
       entries = layout(shown);
-      history.replaceState(
+      replaceState(
         mark(entries[0]), '', hrefOf(entries[0]),
       );
       if (entries.length > 1) {
-        history.pushState(
+        pushState(
           mark(entries[1]), '', location.href,
         );
       }
     } else {
       entries = [page(location, 0)];
-      history.replaceState(
+      replaceState(
         mark(entries[0]), '', location.href,
       );
     }
     ahead = [];
     for (const entry of all) {
       forget(entry);
-      entry.kind === 'window' && resolve(entry, null);
+      entry.kind === WINDOW && resolve(entry, null);
     }
     publish();
   }
 
   /** Does the top entry have forward handlers for this kind of step? */
   function hasForward(kind: 'page' | 'window'): boolean {
-    return forward.list(entries[entries.length - 1].id).some((item) => kind === 'page' || item.windows);
+    return forward.list(entries[entries.length - 1].id).some((item) => kind === PAGE || item.windows);
   }
 
   /** Asks the forward handlers of the top entry; `false` — cancelled. Runs outside the queue (handlers may open windows). */
@@ -1463,7 +1500,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     const top = entries[entries.length - 1];
     for (const {
       handler,
-    } of forward.list(top.id).filter((item) => kind === 'page' || item.windows)) {
+    } of forward.list(top.id).filter((item) => kind === PAGE || item.windows)) {
       const answer = await handler();
       if (answer === false) {
         return false;
@@ -1475,7 +1512,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
 
   /** History first: if the browser refuses the entry, the stack stays as it was. */
   function push(entry: TEntry): void {
-    history.pushState(
+    pushState(
       mark(entry), '', hrefOf(entry),
     );
     entries = [...entries, entry];
@@ -1487,15 +1524,17 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
 
   // A reload or a deep link starts from the page in the address; windows are never reopened (D-011).
   reset(start);
-  window.addEventListener('popstate', (event: PopStateEvent) => {
-    if (waiter) {
-      const done = waiter;
-      waiter = null;
-      done(event.state);
-      return;
-    }
-    void enqueue(() => settle(event.state));
-  });
+  attachEvent(
+    window, 'popstate', (event: PopStateEvent) => {
+      if (waiter) {
+        const done = waiter;
+        waiter = null;
+        done(event.state);
+        return;
+      }
+      void enqueue(() => settle(event.state));
+    },
+  );
 
   // ── steps ─────────────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -1508,7 +1547,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
       await startOver(location);
       return true;
     }
-    if (hasForward('page') && !(await askForward('page'))) {
+    if (hasForward(PAGE) && !(await askForward(PAGE))) {
       return false;
     }
     await enqueue(() => push(page(location, entries.length)));
@@ -1527,10 +1566,10 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
         }
       }
       const old = entries[index];
-      runOpened([old], 'close');
+      runOpened([old], CLOSE);
       forget(old);
       const fresh = page(location, index);
-      history.replaceState(
+      replaceState(
         mark(fresh), '', location.href,
       );
       entries = [...entries.slice(0, index), fresh];
@@ -1555,16 +1594,18 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
    * The browser's Forward reopens it after it was closed, unless `{ reopen: false }` (confirmations — D-024).
    */
   async function open<R = unknown>(
-    win: unknown, params?: unknown, options?: TOpenOptions,
+    win: unknown,
+    params?: unknown,
+    options?: TOpenOptions,
   ): Promise<R | null> {
     assertOpenOptions(options);
-    if (hasForward('window') && !(await askForward('window'))) {
+    if (hasForward(WINDOW) && !(await askForward(WINDOW))) {
       return null;
     }
     return new Promise<R | null>((done) => {
       void enqueue(() => {
         const entry: TWindowEntry = {
-          kind: 'window',
+          kind: WINDOW,
           id: nextId++,
           depth: entries.length,
           window: win,
@@ -1617,7 +1658,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
       }
       for (let i = entries.length - 1; i >= 0; i--) {
         const entry = entries[i];
-        if (entry.kind === 'page' && entry.info.section === section && entry.info.sectionHome) {
+        if (entry.kind === PAGE && entry.info.section === section && entry.info.sectionHome) {
           if (i < entries.length - 1) {
             await settle(await travel(i - (entries.length - 1)));
           }
@@ -1757,7 +1798,8 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
         onBeforeUnload(watcher);
       } else {
         const {
-          callback, ...watcherOptions
+          callback,
+          ...watcherOptions
         } = watcher;
         onBeforeUnload(callback, watcherOptions);
       }
@@ -1814,7 +1856,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
   /** The first entry ahead (what Forward brings back): a page's address, or the address a window opens over. */
   function getNextLocation(): TUrlProps | undefined {
     const first = ahead[0];
-    return first && (first.kind === 'page' ? first.location : state.location);
+    return first && (first.kind === PAGE ? first.location : state.location);
   }
   function getFromLocation() {
     return _fromLocation;

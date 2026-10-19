@@ -88,7 +88,7 @@ describe('forInOwn', () => {
     const obj = Object.create(proto);
     obj.own = 2;
     const keys: string[] = [];
-    forInOwn(obj, (v, k) => keys.push(k));
+    forInOwn(obj, (_v, k) => keys.push(k));
     expect(keys).toEqual(['own']);
   });
 });
@@ -113,7 +113,7 @@ describe('each', () => {
     each({
       a: 1,
       b: 2,
-    }, (v, k) => result.push(String(k)));
+    }, (_v, k) => result.push(String(k)));
     expect(result.sort()).toEqual(['a', 'b']);
   });
 });

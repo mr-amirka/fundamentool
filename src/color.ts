@@ -82,7 +82,7 @@ const double = color.double = (v: string, start: number): number => parseInt(v.s
  * @returns An array of color values.
  */
 const normalize = color.normalize = (
-  v: string, alpha?: string | null, w?: number, l?: number,
+  v: string, alpha?: string | null, _w?: number, l?: number,
 ): [number, number, number, number] => {
   const a = alpha ? parseFloat('0' + alpha) : 1;
   if (!v) {

@@ -7,7 +7,6 @@ import type {
   ScheduledEvent,
   ScheduleTime,
   TriggerOffset,
-  WeekDay,
 } from './types';
 export type {
   ScheduledEvent,
@@ -183,55 +182,6 @@ export interface ISchedulerStore {
   removeEvent(id: string): Promise<void>;
   /** Looks up a record by id — used to resolve an offset child's parent schedule. */
   getById(id: string): Promise<SchedulerRecord | undefined>;
-}
-
-// ── Expand nested → flat records ─────────────────────────────────────────────
-
-function expandEvents(events: ScheduledEvent[], scope?: string): SchedulerRecord[] {
-  const result: SchedulerRecord[] = [];
-  const now = new Date();
-
-  for (const ev of events) {
-    if (!ev.schedule) {
-      continue;
-    }
-    const id = scope ? `${scope}:${ev.name}` : ev.name;
-    const scheduleJson = JSON.stringify(ev.schedule);
-    const nextRunAt = nextScheduleTime(ev.schedule, now).getTime();
-
-    result.push({
-      id,
-      parentId: null,
-      scheduleJson,
-      offsetJson: null,
-      actionPrompt: ev.actionPrompt,
-      nextRunAt,
-      lastFiredAt: 0,
-      scope,
-    });
-
-    if (ev.childs) {
-      for (const child of ev.childs) {
-        if (!child.offset) {
-          continue;
-        }
-        const childId = `${id}:${child.name}`;
-        const baseTime = nextScheduleTime(ev.schedule, now);
-        const childTime = applyOffset(baseTime, child.offset);
-        result.push({
-          id: childId,
-          parentId: id,
-          scheduleJson: null,
-          offsetJson: JSON.stringify(child.offset),
-          actionPrompt: child.actionPrompt,
-          nextRunAt: childTime.getTime(),
-          lastFiredAt: 0,
-          scope,
-        });
-      }
-    }
-  }
-  return result;
 }
 
 // ── Scheduler ────────────────────────────────────────────────────────────────

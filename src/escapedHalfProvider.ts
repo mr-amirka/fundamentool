@@ -65,7 +65,7 @@ export const escapedHalfProvider = (separator: string,
     let value = '';
     let suffix = '';
     input.replace(regexp, (
-      all, escapedMatch, _suffix, _value, offset,
+      _all, escapedMatch, _suffix, _value, offset,
     ) => {
       if (!escapedMatch) {
         suffix = _suffix;

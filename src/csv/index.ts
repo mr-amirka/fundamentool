@@ -20,7 +20,7 @@ export function parseEachLine(input: string, callback: TParseEachLineCallback) {
         let value = decodeURIComponent(column);
         try {
           value = JSON.parse(value);
-        } catch (e) {
+        } catch {
           // не JSON — оставляем как декодированную строку
         }
         return value;

@@ -8,7 +8,7 @@ describe('forInOwn', () => {
     forInOwn({
       a: 1,
       b: 2,
-    }, (v, k) => result.push(k));
+    }, (_v, k) => result.push(k));
     expect(result).toContain('a');
     expect(result).toContain('b');
   });
@@ -20,7 +20,7 @@ describe('forInOwn', () => {
     const child = Object.create(parent);
     child.own = 2;
     const keys: string[] = [];
-    forInOwn(child, (v, k) => keys.push(k));
+    forInOwn(child, (_v, k) => keys.push(k));
     expect(keys).toContain('own');
     expect(keys).not.toContain('inherited');
   });

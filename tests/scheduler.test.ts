@@ -93,13 +93,8 @@ describe('Scheduler with store', () => {
           r.lastFiredAt = firedAt.getTime(); r.nextRunAt = nextRunAt.getTime();
         }
       },
-      upsertEvents: async (events) => {
-        // expand and add
-        const {
-          expandEvents,
-        } = require('../src/scheduler') as any;
-        // We can't easily call private functions — test via setEvents
-      },
+      // Expanding is tested through `setEvents`.
+      upsertEvents: async () => {},
       removeEvent: async () => {},
       getById: async (id) => store.find(r => r.id === id),
     };

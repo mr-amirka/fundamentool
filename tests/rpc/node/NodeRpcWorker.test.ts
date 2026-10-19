@@ -1,7 +1,4 @@
 import {
-  EventEmitter,
-} from 'events';
-import {
   RpcClient,
 } from '../../../src/rpc/RpcClient';
 import {

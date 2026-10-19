@@ -11,10 +11,8 @@ declare function requestAnimationFrame(callback: (time: number) => void): number
  * const stop = createAnimationFrame((delta) => console.log(delta), 100);
  * stop(); // stops the loop
  */
-export function createAnimationFrame(
-  callback: (delta: number) => void,
-  interval: number = 0
-): () => void {
+export function createAnimationFrame(callback: (delta: number) => void,
+  interval: number = 0): () => void {
   let stop = false;
   let balance = 0;
   let lastTime = Date.now();

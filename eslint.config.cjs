@@ -61,7 +61,8 @@ module.exports = [
       'no-undef': 'off',
 
       'no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      // Unused names fail (fundamentool D-035); `_name` — intentionally unused; props dropped with a rest are fine.
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_', ignoreRestSiblings: true }],
       // не пункт coding.md — низкоуровневая библиотека осознанно использует any на generic hot-path
       '@typescript-eslint/no-explicit-any': 'warn',
 

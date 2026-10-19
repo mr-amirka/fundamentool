@@ -21,7 +21,7 @@ describe('map', () => {
   test('passes index and collection to iteratee', () => {
     const calls: any[] = [];
     map(['a', 'b'], (
-      v, i, c,
+      v, i, _c,
     ) => {
       calls.push([v, i]); return v;
     });
@@ -57,7 +57,7 @@ describe('mapIn', () => {
     mapIn({
       x: 5,
     }, (
-      v, k, c,
+      v, k, _c,
     ) => {
       calls.push([v, k]); return v;
     });

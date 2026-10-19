@@ -34,7 +34,7 @@ describe('find', () => {
   test('passes index and collection to iteratee', () => {
     const calls: any[] = [];
     find(['a', 'b'], (
-      v, i, c,
+      v, i, _c,
     ) => {
       calls.push([v, i]); return false;
     });

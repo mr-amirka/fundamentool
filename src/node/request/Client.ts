@@ -247,7 +247,7 @@ export class Client {
               headers,
               data,
             };
-          }, (error: any) => {
+          }, (_error: any) => {
             throwError({
               code: statusCode,
               text: response._text,
