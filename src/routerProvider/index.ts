@@ -270,7 +270,7 @@ export type TRouterOptions = {
 /**
  * The router's dependencies: the window, the view library (React, Preact, …) and the observable adapter — injected,
  * so the router works with any of them — plus {@link TRouterOptions}. `useState`, `useRef`, `createContext`,
- * `useContext` are needed only by `router.view`.
+ * `useContext` are needed only by `router.NavigationHostProvider`.
  */
 export type TRouterProviderDeps = TObservableAdapter & TRouterOptions & {
   window: Window;
@@ -284,8 +284,8 @@ export type TRouterProviderDeps = TObservableAdapter & TRouterOptions & {
   useContext?: (...args: any[]) => any;
 };
 
-/** What `router.view` renders with. */
-export type TRouterViewOptions = {
+/** What `router.NavigationHostProvider`'s host renders with. */
+export type TNavigationHostOptions = {
   /** The page for an entry; `location` is its address (for `hashRouterProvider` — the hash part). */
   renderPage: (entry: TPageEntry, location: TUrlProps) => unknown;
   /** A window entry → its element (`entry.window` is what was passed to `open`, usually a component). */
@@ -388,11 +388,11 @@ export const OPEN_OPTION_KEYS = ['reopen'] as const;
 /** The single list of accepted keys of {@link TLeavePageOptions}. */
 export const LEAVE_PAGE_OPTION_KEYS = ['fallback'] as const;
 
-/** The single list of accepted keys of {@link TRouterViewOptions}. */
-export const VIEW_OPTION_KEYS = ['renderPage', 'renderWindow'] as const;
+/** The single list of accepted keys of {@link TNavigationHostOptions}. */
+export const NAVIGATION_HOST_OPTION_KEYS = ['renderPage', 'renderWindow'] as const;
 
-/** What `router.view` needs from the view library. */
-const VIEW_DEPS = [
+/** What `router.NavigationHostProvider` needs from the view library. */
+const NAVIGATION_HOST_DEPS = [
   'createElement',
   'useEffect',
   'useState',
@@ -849,7 +849,7 @@ function createRouterView(deps: TRouterProviderDeps, core: TRouterCore) {
   } = core;
   // ── the view ──────────────────────────────────────────────────────────────────────────────────────────────────
 
-  /** The entry a component is rendered in (inside `router.view`'s host). */
+  /** The entry a component is rendered in (inside the router's `NavigationHost`). */
   const EntryContext = createContext ? createContext(null) : null;
 
   /** The entry a component belongs to: the one it is rendered in, or (outside the host) the top entry at render. */
@@ -886,30 +886,31 @@ function createRouterView(deps: TRouterProviderDeps, core: TRouterCore) {
   }
 
   /**
-   * The view over the stack: the host (page layers — the shown page and the kept ones, each its own scroll container,
-   * hidden ones `display: none` — and the windows) and the hooks.
+   * Builds the router's host component, `NavigationHost` (D-036) — the page layers (the shown page and the kept ones,
+   * each its own scroll container, hidden ones `display: none`) and the windows over them, drawn with `renderPage` /
+   * `renderWindow`. Returns the component itself.
    *
    * @example
-   * const view = router.view({
+   * const NavigationHost = router.NavigationHostProvider({
    *   renderPage: (entry, location) => <Page path={location.path} />,
    *   renderWindow: (entry, props) => <entry.window {...props} />,
    * });
-   * root.render(<view.NavigationHost />);
+   * root.render(<NavigationHost />);
    */
-  function view(options: TRouterViewOptions) {
-    const missing = VIEW_DEPS.filter((key) => !isFunction(deps[key]));
+  function NavigationHostProvider(options: TNavigationHostOptions): () => unknown {
+    const missing = NAVIGATION_HOST_DEPS.filter((key) => !isFunction(deps[key]));
     if (missing.length) {
-      throw new TypeError(`${ROUTER_WHERE} view: the dependencies lack ${missing.join(', ')} (from React, or preact + preact/hooks)`);
+      throw new TypeError(`${ROUTER_WHERE} NavigationHostProvider: the dependencies lack ${missing.join(', ')} (from React, or preact + preact/hooks)`);
     }
     if (!isObject(options)) {
-      throw new TypeError(`${ROUTER_WHERE} view: expects an options object, got ${describeValue(options)}`);
+      throw new TypeError(`${ROUTER_WHERE} NavigationHostProvider: expects an options object, got ${describeValue(options)}`);
     }
     assertKnownOptions(
-      `${ROUTER_WHERE} view`, options, VIEW_OPTION_KEYS,
+      `${ROUTER_WHERE} NavigationHostProvider`, options, NAVIGATION_HOST_OPTION_KEYS,
     );
-    for (const key of VIEW_OPTION_KEYS) {
+    for (const key of NAVIGATION_HOST_OPTION_KEYS) {
       if (!isFunction(options[key])) {
-        throw new TypeError(`${ROUTER_WHERE} view: "${key}" expects a function, got ${describeValue(options[key])}`);
+        throw new TypeError(`${ROUTER_WHERE} NavigationHostProvider: "${key}" expects a function, got ${describeValue(options[key])}`);
       }
     }
     const h = createElement;
@@ -963,23 +964,21 @@ function createRouterView(deps: TRouterProviderDeps, core: TRouterCore) {
       );
     }
 
-    return {
-      NavigationHost,
-    };
+    return NavigationHost;
   }
 
-  /** The entry this component is rendered in (inside `view`'s host). */
+  /** The entry this component is rendered in (inside the `NavigationHost`). */
   function useEntry(): TEntry {
     const entry = EntryContext && useContext ? useContext(EntryContext) as TEntry | null : null;
     if (!entry) {
-      throw new Error('routerProvider: useEntry is used outside a page or a window of router.view');
+      throw new Error('routerProvider: useEntry is used outside a page or a window of the NavigationHost');
     }
     return entry;
   }
 
   return {
     useRouteIsFocus,
-    view,
+    NavigationHostProvider,
     useEntry,
     useRouterState,
     /** `effect` while this component's entry is open (the latest `effect` is used; see `useRouteIsFocus`). */
@@ -1996,7 +1995,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
 
   const {
     useRouteIsFocus,
-    view,
+    NavigationHostProvider,
     useEntry,
     useRouterState,
     useWhileOpen,
@@ -2090,7 +2089,7 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     whileOpen,
     onForward,
     onBeforeLeave,
-    view,
+    NavigationHostProvider,
     useEntry,
     useRouterState,
     useWhileOpen,

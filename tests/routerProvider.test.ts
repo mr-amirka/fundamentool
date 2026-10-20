@@ -779,7 +779,7 @@ describe('routerProvider — on the navigation core (D-022)', () => {
     const {
       router,
     } = setup('http://localhost/#/');
-    const view = router.view({
+    const view = router.NavigationHostProvider({
       renderPage: (entry, location) => React.createElement(
         'p', {
           'data-depth': entry.depth,
@@ -793,7 +793,7 @@ describe('routerProvider — on the navigation core (D-022)', () => {
     });
     const host = document.createElement('div');
     const root = createRoot(host);
-    act(() => root.render(React.createElement(view.NavigationHost as () => null)));
+    act(() => root.render(React.createElement(view as () => null)));
     expect(host.textContent).toContain('page /');
     await act(async () => {
       await router.pushLocation({

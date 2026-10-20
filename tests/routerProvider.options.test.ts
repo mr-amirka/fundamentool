@@ -9,13 +9,13 @@
 import {
   OPEN_OPTION_KEYS,
   ROUTER_DEPS_KEYS,
-  VIEW_OPTION_KEYS,
+  NAVIGATION_HOST_OPTION_KEYS,
   routerProvider,
 } from '../src/routerProvider';
 import type {
   TOpenOptions,
   TRouterProviderDeps,
-  TRouterViewOptions,
+  TNavigationHostOptions,
 } from '../src/routerProvider';
 import {
   reactDeps,
@@ -162,16 +162,16 @@ describe('routerProvider dependencies', () => {
       reopen: true,
     };
     expect([...OPEN_OPTION_KEYS]).toEqual(Object.keys(open));
-    const view: Record<keyof TRouterViewOptions, true> = {
+    const view: Record<keyof TNavigationHostOptions, true> = {
       renderPage: true,
       renderWindow: true,
     };
-    expect([...VIEW_OPTION_KEYS]).toEqual(Object.keys(view));
+    expect([...NAVIGATION_HOST_OPTION_KEYS]).toEqual(Object.keys(view));
   });
 });
 
-describe('router.view arguments', () => {
-  const render: TRouterViewOptions = {
+describe('router.NavigationHostProvider arguments', () => {
+  const render: TNavigationHostOptions = {
     renderPage: () => null,
     renderWindow: () => null,
   };
@@ -183,18 +183,18 @@ describe('router.view arguments', () => {
         const {
           useState: _useState, useRef: _useRef, ...rest
         } = valid();
-        return routerProvider(rest as never).view(render);
+        return routerProvider(rest as never).NavigationHostProvider(render);
       },
-      /view: the dependencies lack useState, useRef/,
+      /NavigationHostProvider: the dependencies lack useState, useRef/,
     ],
     [
       'no options',
-      () => setup().router.view(null as never),
-      /view: expects an options object, got null/,
+      () => setup().router.NavigationHostProvider(null as never),
+      /NavigationHostProvider: expects an options object, got null/,
     ],
     [
       'a typo',
-      () => setup().router.view({
+      () => setup().router.NavigationHostProvider({
         ...render,
         renderPages: 1,
       } as never),
@@ -202,10 +202,10 @@ describe('router.view arguments', () => {
     ],
     [
       'renderWindow missing',
-      () => setup().router.view({
+      () => setup().router.NavigationHostProvider({
         renderPage: () => null,
       } as never),
-      /view: "renderWindow" expects a function, got undefined/,
+      /NavigationHostProvider: "renderWindow" expects a function, got undefined/,
     ],
   ])('%s → a clear error', (
     _name, call, message,

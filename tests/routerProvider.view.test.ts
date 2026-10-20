@@ -3,7 +3,7 @@
  * @jest-environment-options {"customExportConditions": ["require", "node", "default"]}
  */
 /**
- * `router.view` and the router's hooks on React and on Preact — the view library is injected (fundamentool D-013).
+ * `router.NavigationHostProvider` and the router's hooks on React and on Preact — the view library is injected (fundamentool D-013).
  */
 
 // React 19 warns on every `act()` unless the environment declares itself an act environment.
@@ -36,7 +36,8 @@ import type {
   THarnessOptions,
 } from './_routerHarness';
 
-type TView = { NavigationHost: () => unknown };
+/** The router's host component (`NavigationHostProvider` returns it). */
+type TView = () => unknown;
 
 /** A view library under test: its functions for the router and how to mount into a container. */
 type TLibrary = {
@@ -51,7 +52,7 @@ const REACT: TLibrary = {
   createElement: React.createElement as (...args: any[]) => unknown,
   mount: (view, container) => {
     const root = createRoot(container);
-    reactAct(() => root.render(React.createElement(view.NavigationHost as () => React.ReactElement)));
+    reactAct(() => root.render(React.createElement(view as () => React.ReactElement)));
     return () => reactAct(() => root.unmount());
   },
   act: async (work) => {
@@ -75,7 +76,7 @@ const PREACT: TLibrary = {
   createElement: preact.h as (...args: any[]) => unknown,
   mount: (view, container) => {
     preactAct(() => {
-      preact.render(preact.h(view.NavigationHost as unknown as preact.FunctionComponent, null), container);
+      preact.render(preact.h(view as unknown as preact.FunctionComponent, null), container);
     });
     return () => preact.render(null, container);
   },
@@ -86,7 +87,7 @@ const PREACT: TLibrary = {
   },
 };
 
-describe.each([['React', REACT], ['Preact', PREACT]])('router.view with %s', (_name, library) => {
+describe.each([['React', REACT], ['Preact', PREACT]])('router.NavigationHostProvider with %s', (_name, library) => {
   let container: HTMLElement;
   let unmount: () => void;
   let harness: ReturnType<typeof setup>;
@@ -159,7 +160,7 @@ describe.each([['React', REACT], ['Preact', PREACT]])('router.view with %s', (_n
     ({
       nav, router, browser,
     } = harness);
-    view = router.view({
+    view = router.NavigationHostProvider({
       renderPage: (entry, location) => library.createElement(location.path.startsWith('/w/') ? Watcher : Page, {
         entry,
         path: location.path,
@@ -329,7 +330,7 @@ describe('a long back on the screen (D-026)', () => {
         'p', null, props.path,
       );
     }
-    const view = router.view({
+    const view = router.NavigationHostProvider({
       renderPage: (_entry, location) => React.createElement(Page, {
         path: location.path,
       }),

@@ -29,7 +29,7 @@ one router, one state (`$state` holds the address and the stack; fundamentool D-
 - **Watchers**: `onBeforeUnload(cb)` — asked before the current entry is left by back (`false` keeps it; may be async);
   with `{ forwards: true }` — before a page or a window opens over it, including by the browser's Forward. `useRouteIsFocus(effect)` — runs while the
   entry is open, cleaned up when it starts being left, again if leaving is refused.
-- **View**: `router.view({ renderPage, renderWindow })` — the host; the hooks are the router's: `useWhileOpen` (the same
+- **The host**: `router.NavigationHostProvider({ renderPage, renderWindow })` returns the `NavigationHost` component (D-036); the hooks are the router's: `useWhileOpen` (the same
   as the old `useRouteIsFocus`), `useOnForward`, `useBeforeLeave`, `useEntry`, `useRouterState`. The view library
   comes with the dependencies (`useState`, `useRef`, `createContext`, `useContext` beside `useEffect`,
   `createElement`, … — from React, or `preact` + `preact/hooks`); the window and the library are injected, never
@@ -43,11 +43,11 @@ const router = hashRouterProvider({
   sections: { catalog: '/catalog', notes: '/notes' },
   sectionHistory: 'separate',
 });
-const view = router.view({
+const NavigationHost = router.NavigationHostProvider({
   renderPage: (entry, location) => <Page path={location.path} />,
   renderWindow: (entry, props) => <entry.window {...props} />,
 });
-root.render(<view.NavigationHost />);
+root.render(<NavigationHost />);
 
 await router.pushLocation({ path: '/notes/3' });
 const text = await router.open(EditWindow, { text: 'Hi' }); // a window; null if closed by back

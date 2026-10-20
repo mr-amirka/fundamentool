@@ -33,7 +33,7 @@
   числе кнопкой браузера «вперёд».
   `useRouteIsFocus(effect)` — работает, пока запись открыта, снимается, когда с неё начали уходить, и запускается снова,
   если уход отменён.
-- **Представление**: `router.view({ renderPage, renderWindow })` — хост; хуки — у самого роутера: `useWhileOpen` (то же,
+- **Хост**: `router.NavigationHostProvider({ renderPage, renderWindow })` возвращает компонент `NavigationHost` (D-036); хуки — у самого роутера: `useWhileOpen` (то же,
   что прежний `useRouteIsFocus`), `useOnForward`, `useBeforeLeave`, `useEntry`, `useRouterState`. Библиотека
   отображения приходит в зависимостях (`useState`, `useRef`, `createContext`, `useContext` рядом с `useEffect`,
   `createElement`, … — из React или `preact` + `preact/hooks`); окно браузера и библиотека внедряются, а не
