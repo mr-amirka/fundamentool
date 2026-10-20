@@ -24,8 +24,19 @@ import {
 } from '../src/Observable';
 import {
   hashRouterProvider,
+  routerForObservableMapProvider,
   routerProvider,
 } from '../src/routerProvider';
+import type {
+  TRouterState,
+} from '../src/routerProvider';
+
+/** The router's state at `path` — what the route matcher reads. */
+const atPath = (path: string) => ({
+  location: {
+    path,
+  },
+}) as TRouterState;
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 // jsdom (a fresh window per test) needs these, Jest's browser environment doesn't provide them.
@@ -425,42 +436,27 @@ describe('routerProvider — inherited bugs, fixed (2026-10-18)', () => {
     warnings.mockRestore();
   });
 
-  it('a route\'s `-` / `_` match each other before its first group, and the group is left as written', async () => {
-    const {
-      router,
-    } = setup('http://localhost/');
-    const $route = router.routerByLocationProvider<{ page: string }>([['/my-items/([a-z]+)', () => ({
+  it('a route\'s `-` / `_` match each other before its first group, and the group is left as written', () => {
+    const match = routerForObservableMapProvider<{ page: string }>([['/my-items/([a-z]+)', () => ({
       page: 'items',
     })]], () => ({
       page: 'none',
     }));
-    await router.pushLocation({
-      path: '/my_items/abc',
-    });
-    expect($route.getState().page).toBe('items');
-    await router.pushLocation({
-      path: '/my-items/a-c',
-    });
-    expect($route.getState().page).toBe('none'); // `-` isn't in [a-z]: the group was not rewritten
+    expect(match(atPath('/my_items/abc')).page).toBe('items');
+    expect(match(atPath('/my-items/a-c')).page).toBe('none'); // `-` isn't in [a-z]: the group was not rewritten
   });
 });
 
 describe('routerProvider — routes, params, links, focus', () => {
-  it('routerByLocationProvider maps the location to a route with params; not found → the fallback', async () => {
-    const {
-      router,
-    } = setup();
-    const $route = router.routerByLocationProvider<{ page: string }>([['/user/:id', (params) => ({
+  it('routerForObservableMapProvider maps an address to its route with params; not found → the fallback', () => {
+    const match = routerForObservableMapProvider<{ page: string }>([['/user/:id', (params) => ({
       page: `user ${params.id}`,
     })]],
     () => ({
       page: 'not found',
     }));
-    expect($route.getState().page).toBe('not found');
-    await router.pushLocation({
-      path: '/user/42',
-    });
-    expect($route.getState()).toMatchObject({
+    expect(match(atPath('/')).page).toBe('not found');
+    expect(match(atPath('/user/42'))).toMatchObject({
       page: 'user 42',
       params: {
         id: '42',
@@ -742,6 +738,10 @@ describe('routerProvider — on the navigation core (D-022)', () => {
       window: dom.window as unknown as Window,
       Component: React.Component,
       useEffect: React.useEffect,
+      useState: React.useState,
+      useRef: React.useRef,
+      createContext: React.createContext,
+      useContext: React.useContext,
       createElement: React.createElement,
       forwardRef: React.forwardRef,
       createObservable,
@@ -815,6 +815,10 @@ describe('routerProvider — on the navigation core (D-022)', () => {
       window: dom.window,
       Component: React.Component,
       useEffect: React.useEffect,
+      useState: React.useState,
+      useRef: React.useRef,
+      createContext: React.createContext,
+      useContext: React.useContext,
       createElement: React.createElement,
       forwardRef: React.forwardRef,
       createObservable,

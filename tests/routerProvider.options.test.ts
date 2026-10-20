@@ -178,14 +178,14 @@ describe('router.NavigationHostProvider arguments', () => {
 
   it.each<[string, () => unknown, RegExp]>([
     [
-      'dependencies without the view hooks',
+      'dependencies without the view hooks — refused when the router is created',
       () => {
         const {
-          useState: _useState, useRef: _useRef, ...rest
+          useState: _useState, ...rest
         } = valid();
-        return routerProvider(rest as never).NavigationHostProvider(render);
+        return routerProvider(rest as never);
       },
-      /NavigationHostProvider: the dependencies lack useState, useRef/,
+      /"useState" expects a function, got undefined/,
     ],
     [
       'no options',

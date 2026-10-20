@@ -269,8 +269,8 @@ export type TRouterOptions = {
 
 /**
  * The router's dependencies: the window, the view library (React, Preact, …) and the observable adapter — injected,
- * so the router works with any of them — plus {@link TRouterOptions}. `useState`, `useRef`, `createContext`,
- * `useContext` are needed only by `router.NavigationHostProvider`.
+ * so the router works with any of them — plus {@link TRouterOptions}. All of them are required: the router builds its
+ * host and hooks on them.
  */
 export type TRouterProviderDeps = TObservableAdapter & TRouterOptions & {
   window: Window;
@@ -278,10 +278,10 @@ export type TRouterProviderDeps = TObservableAdapter & TRouterOptions & {
   useEffect: (...args: any[]) => void;
   createElement: (...args: any[]) => any;
   forwardRef: (...args: any[]) => any;
-  useState?: (...args: any[]) => any;
-  useRef?: (...args: any[]) => any;
-  createContext?: (...args: any[]) => any;
-  useContext?: (...args: any[]) => any;
+  useState: (...args: any[]) => any;
+  useRef: (...args: any[]) => any;
+  createContext: (...args: any[]) => any;
+  useContext: (...args: any[]) => any;
 };
 
 /** What `router.NavigationHostProvider`'s host renders with. */
@@ -362,26 +362,6 @@ export const DEFAULT_LOCK_WATCHER_OPTIONS = {
   backwards: true,
 };
 
-/** The single list of accepted keys of the router's dependencies — checked against the type in tests. */
-export const ROUTER_DEPS_KEYS = [
-  'window',
-  'Component',
-  'useEffect',
-  'createElement',
-  'forwardRef',
-  'useState',
-  'useRef',
-  'createContext',
-  'useContext',
-  'createObservable',
-  'createApi',
-  'describe',
-  'sections',
-  'sectionHistory',
-  'keep',
-  'exitMs',
-] as const;
-
 /** The single list of accepted keys of {@link TOpenOptions}. */
 export const OPEN_OPTION_KEYS = ['reopen'] as const;
 
@@ -399,6 +379,21 @@ const NAVIGATION_HOST_DEPS = [
   'useRef',
   'createContext',
   'useContext',
+] as const;
+
+/** The single list of accepted keys of the router's dependencies — checked against the type in tests. */
+export const ROUTER_DEPS_KEYS = [
+  ...NAVIGATION_HOST_DEPS,
+  'window',
+  'Component',
+  'forwardRef',
+  'createObservable',
+  'createApi',
+  'describe',
+  'sections',
+  'sectionHistory',
+  'keep',
+  'exitMs',
 ] as const;
 
 const ROUTER_WHERE = '[fundamentool] routerProvider';
@@ -446,8 +441,7 @@ function assertRouterDeps(deps: unknown): asserts deps is TRouterProviderDeps {
   let key: string;
   let value: unknown;
   for (key of [
-    'useEffect',
-    'createElement',
+    ...NAVIGATION_HOST_DEPS,
     'forwardRef',
     'createObservable',
     'createApi',
@@ -618,21 +612,6 @@ export function routerForObservableMapProvider<T>(_routes: TRouteArgs<T>[],
       location,
       ...(result || {}),
     };
-  };
-}
-
-/**
- * Creates a router for a location.
- *
- * @param $state - The state.
- * @returns A router.
- * @example
- * routerByLocationProviderProvider($state); // => <Router />
- */
-export function routerByLocationProviderProvider<A extends TRouterState>($state: Observable<A>) {
-  return function routerByLocationProvider<T>(routes: TRouteArgs<T>[],
-    notFoundHandler?: TRouteHandler<T>) {
-    return $state.map(routerForObservableMapProvider(routes, notFoundHandler));
   };
 }
 
@@ -850,11 +829,11 @@ function createRouterView(deps: TRouterProviderDeps, core: TRouterCore) {
   // ── the view ──────────────────────────────────────────────────────────────────────────────────────────────────
 
   /** The entry a component is rendered in (inside the router's `NavigationHost`). */
-  const EntryContext = createContext ? createContext(null) : null;
+  const EntryContext = createContext(null);
 
   /** The entry a component belongs to: the one it is rendered in, or (outside the host) the top entry at render. */
   function currentEntry(): TEntry {
-    const entry = EntryContext && useContext ? useContext(EntryContext) as TEntry | null : null;
+    const entry = useContext(EntryContext) as TEntry | null;
     if (entry) {
       return entry;
     }
@@ -873,14 +852,14 @@ function createRouterView(deps: TRouterProviderDeps, core: TRouterCore) {
 
   /** Keeps the latest callback in a ref, so a registration made once calls what the component rendered last. */
   function useLatest<T>(value: T): { current: T } {
-    const ref = (useRef as NonNullable<TRouterProviderDeps['useRef']>)(value);
+    const ref = useRef(value);
     ref.current = value;
     return ref;
   }
 
   /** The router's state, re-rendering on change. */
   function useRouterState(): TRouterState {
-    const [value, setValue] = (useState as NonNullable<TRouterProviderDeps['useState']>)($state.getState);
+    const [value, setValue] = useState($state.getState);
     useEffect(() => $state.watch(setValue), []);
     return value;
   }
@@ -898,10 +877,6 @@ function createRouterView(deps: TRouterProviderDeps, core: TRouterCore) {
    * root.render(<NavigationHost />);
    */
   function NavigationHostProvider(options: TNavigationHostOptions): () => unknown {
-    const missing = NAVIGATION_HOST_DEPS.filter((key) => !isFunction(deps[key]));
-    if (missing.length) {
-      throw new TypeError(`${ROUTER_WHERE} NavigationHostProvider: the dependencies lack ${missing.join(', ')} (from React, or preact + preact/hooks)`);
-    }
     if (!isObject(options)) {
       throw new TypeError(`${ROUTER_WHERE} NavigationHostProvider: expects an options object, got ${describeValue(options)}`);
     }
@@ -932,19 +907,25 @@ function createRouterView(deps: TRouterProviderDeps, core: TRouterCore) {
     function NavigationHost(): unknown {
       const value = useRouterState();
       // Layers of every section's stack, in a stable order: a layer that moved in the DOM would lose its scroll.
-      const layers = value.layers.map((entry) => h(
-        'div', {
-          key: entry.id,
-          'data-nav-layer': entry.depth,
-          'aria-hidden': entry === value.page ? undefined : 'true',
-          style: {
-            ...LAYER,
-            display: entry === value.page ? 'block' : 'none',
-          },
-        }, withEntry(entry, renderPage(entry, own(entry.location))),
-      ));
+      const layers = value.layers.map((entry) => {
+        const shown = entry === value.page;
+        return h(
+          'div', {
+            key: entry.id,
+            'data-nav-layer': entry.depth,
+            'aria-hidden': shown ? undefined : 'true',
+            style: {
+              ...LAYER,
+              display: shown ? 'block' : 'none',
+            },
+          }, withEntry(entry, renderPage(entry, own(entry.location))),
+        );
+      });
       const shownWindows = value.entries.filter((entry): entry is TWindowEntry => entry.kind === WINDOW);
-      const windows = [...shownWindows, ...value.leaving].map((entry) => withEntry(entry, renderWindow(entry, {
+      const windows = [
+        ...shownWindows,
+        ...value.leaving,
+      ].map((entry) => withEntry(entry, renderWindow(entry, {
         params: entry.params,
         open: shownWindows.includes(entry),
         close: (result?: unknown) => {
@@ -969,7 +950,7 @@ function createRouterView(deps: TRouterProviderDeps, core: TRouterCore) {
 
   /** The entry this component is rendered in (inside the `NavigationHost`). */
   function useEntry(): TEntry {
-    const entry = EntryContext && useContext ? useContext(EntryContext) as TEntry | null : null;
+    const entry = useContext(EntryContext) as TEntry | null;
     if (!entry) {
       throw new Error('routerProvider: useEntry is used outside a page or a window of the NavigationHost');
     }
@@ -1221,10 +1202,11 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
   /** The browser is at its first entry — write a section's stack into the history and show it. */
   function rebuild(section: string): void {
     const list = layout(section);
+    const listLength = list.length;
     replaceState(
       mark(list[0]), '', hrefOf(list[0]),
     );
-    for (let i = 1; i < list.length; i++) {
+    for (let i = 1; i < listLength; i++) {
       pushState(
         mark(list[i]), '', hrefOf(list[i]),
       );
@@ -2040,8 +2022,6 @@ function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     LinkProvider,
     routerForObservableMapProvider,
     paramStorageProvider,
-    routerByLocationProvider: routerByLocationProviderProvider($transitionState),
-    routerByHashLocationProvider: routerByLocationProviderProvider($transitionStateHash as any),
     paramStorage: paramStorageProvider($query, storagePushLocation),
     hashParamStorage: paramStorageProvider($hashQuery, storagePushHashLocation),
     paramReplaceStorage: paramStorageProvider($query, storageReplaceLocation),
@@ -2152,7 +2132,6 @@ export function hashRouterProvider(deps: TRouterProviderDeps) {
     $immediateQuery: instance.$immediateHashQuery,
     paramStorage: instance.hashParamStorage,
     paramReplaceStorage: instance.hashParamReplaceStorage,
-    routerByLocationProvider: instance.routerByHashLocationProvider,
     pushLocation,
     replaceLocation,
     getCurrentLocation: instance.getCurrentHashLocation,

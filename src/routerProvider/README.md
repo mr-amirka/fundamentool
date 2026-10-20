@@ -4,7 +4,7 @@
 
 `routerProvider` / `hashRouterProvider` (`import { hashRouterProvider } from 'fundamentool'`) — the URL model and the
 observables the router always had (`$location`, `$path`, `$query`, `Link`, `NavLink`, `paramStorage`,
-`routerByLocationProvider`, `onBeforeUnload`, …) and a stack of pages and windows in step with the browser history —
+`routerForObservableMapProvider`, `onBeforeUnload`, …) and a stack of pages and windows in step with the browser history —
 one router, one state (`$state` holds the address and the stack; fundamentool D-022, D-025).
 
 - **Every page and every window is a history entry** — back (browser, Android, Escape) closes the top one.

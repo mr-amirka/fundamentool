@@ -4,7 +4,7 @@
 
 `routerProvider` / `hashRouterProvider` (`import { hashRouterProvider } from 'fundamentool'`) — модель URL и
 наблюдаемые значения, которые у роутера были всегда (`$location`, `$path`, `$query`, `Link`, `NavLink`,
-`paramStorage`, `routerByLocationProvider`, `onBeforeUnload`, …) и стек страниц и окон, синхронный с историей
+`paramStorage`, `routerForObservableMapProvider`, `onBeforeUnload`, …) и стек страниц и окон, синхронный с историей
 браузера, — один роутер, одно состояние (`$state` хранит и адрес, и стек; fundamentool D-022, D-025).
 
 - **Каждая страница и каждое окно — запись истории**: «назад» (браузер, Android, Escape) закрывает верхнее.
