@@ -1,5 +1,6 @@
 import {
-  onlyBy, onlyByIn,
+  onlyBy,
+  onlyByIn,
 } from '../src/onlyBy';
 
 describe('onlyBy', () => {

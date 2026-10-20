@@ -29,7 +29,8 @@ describe('findIndex', () => {
       10,
       20,
     ], (_, i) => {
-      indices.push(i); return false;
+      indices.push(i);
+      return false;
     });
     expect(indices).toEqual([
       0,

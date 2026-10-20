@@ -60,7 +60,9 @@ export function nextScheduleTime(schedule: ScheduleTime, from: Date): Date {
         delta += 24 * 60;
       }
       if (delta < bestDelta) {
-        bestDelta = delta; best = t; tomorrow = m <= todayMin;
+        bestDelta = delta;
+        best = t;
+        tomorrow = m <= todayMin;
       }
     }
     if (!best) {

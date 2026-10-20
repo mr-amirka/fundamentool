@@ -1,5 +1,6 @@
 import {
-  isPlainObject, isPlainObjectBase,
+  isPlainObject,
+  isPlainObjectBase,
 } from '../src/is/isPlainObject';
 
 describe('isPlainObject', () => {

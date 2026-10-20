@@ -2,7 +2,8 @@ import {
   localStorageProvider,
 } from '../src/localStorageProvider';
 import {
-  createObservable, createApi,
+  createObservable,
+  createApi,
 } from '../src/Observable';
 
 function makeLocalStorageMock() {
@@ -95,7 +96,8 @@ describe('localStorageProvider', () => {
     let called = false;
     localStorageProvider(win, {
       createObservable: (initial) => {
-        called = true; return createObservable(initial);
+        called = true;
+        return createObservable(initial);
       },
       createApi,
     });

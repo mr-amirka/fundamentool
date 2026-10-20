@@ -75,8 +75,9 @@ describe('escapedSplitProvider — инварианты', () => {
     fc.assert(fc.property(fc.string(), (input: string) => {
       const baseResult = split.base(input);
       const mainResult = split(input);
-      expect(mainResult.length).toBe(baseResult.length);
-      for (let i = 0; i < mainResult.length; i++) {
+      const length = mainResult.length;
+      expect(length).toBe(baseResult.length);
+      for (let i = 0; i < length; i++) {
         expect(unslash(baseResult[i])).toBe(mainResult[i]);
       }
     }));
@@ -127,11 +128,17 @@ describe('camelToKebabCase ↔ kebabToCamelCase — round-trip', () => {
       maxLength: 8,
     }).map((arr: string[]) => arr.join(''));
     const camelString: fc.Arbitrary<string> = fc.tuple(lowerWord,
-      fc.array(fc.tuple(upper, lowerWord).map(([u, r]: [string, string]) => u + r),
-        {
-          minLength: 0,
-          maxLength: 4,
-        })).map(([first, parts]: [string, string[]]) => first + parts.join(''));
+      fc.array(fc.tuple(upper, lowerWord).map(([
+        u,
+        r]: [string, string,
+      ]) => u + r),
+      {
+        minLength: 0,
+        maxLength: 4,
+      })).map(([
+      first,
+      parts]: [string, string[],
+    ]) => first + parts.join(''));
 
     fc.assert(fc.property(camelString, (input: string) => {
       expect(kebabToCamelCase(camelToKebabCase(input))).toBe(input);

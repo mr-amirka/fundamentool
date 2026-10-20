@@ -1,5 +1,6 @@
 import {
-  set, setBase,
+  set,
+  setBase,
 } from '../src/set';
 
 describe('set', () => {

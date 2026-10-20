@@ -18,7 +18,10 @@ import ts from 'typescript';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dist = path.join(root, 'dist');
-const sourceExtensions = ['.ts', '.tsx'];
+const sourceExtensions = [
+  '.ts',
+  '.tsx',
+];
 
 /**
  * Turns an extensionless relative specifier into one Node's ESM loader accepts.

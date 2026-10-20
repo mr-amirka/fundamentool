@@ -84,7 +84,8 @@ export const routeParseProviderBase = (
   // Переназначаем числовые ключи для безымянных скоупов:
   // те, что остались с плейсхолдером '' — получают индексы 0, 1, 2...
   let nextIndex = 0;
-  for (let i = 0; i < keys.length; i++) {
+  const keysLength = keys.length;
+  for (let i = 0; i < keysLength; i++) {
     if (keys[i] === '') {
       keys[i] = `${nextIndex++}`;
     }

@@ -45,13 +45,16 @@ describe('responsibilityChain', () => {
     responsibilityChain(
       [
         (req, next) => {
-          log.push(1); return next(req);
+          log.push(1);
+          return next(req);
         },
         (req, next) => {
-          log.push(2); return next(req);
+          log.push(2);
+          return next(req);
         },
         (req, next) => {
-          log.push(3); return next(req);
+          log.push(3);
+          return next(req);
         },
       ],
       null,
@@ -78,7 +81,8 @@ describe('responsibilityChain', () => {
           throw err;
         },
         (req, next) => {
-          log.push(2); return next(req);
+          log.push(2);
+          return next(req);
         },
       ],
       null,

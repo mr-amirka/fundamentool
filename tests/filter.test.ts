@@ -30,7 +30,8 @@ describe('filter', () => {
         v,
         i,
         c,
-      ]); return true;
+      ]);
+      return true;
     });
     expect(calls).toEqual([
       [
@@ -104,7 +105,8 @@ describe('filterIn', () => {
         v,
         k,
         c,
-      ]); return true;
+      ]);
+      return true;
     });
     expect(calls).toEqual([
       [

@@ -5,10 +5,15 @@ import {
   join,
 } from 'path';
 import {
-  rmSync, mkdirSync,
+  rmSync,
+  mkdirSync,
 } from 'fs';
 import {
-  access, makeDir, write, read, readDir,
+  access,
+  makeDir,
+  write,
+  read,
+  readDir,
 } from '../../../src/node/file/base';
 
 function tmpDir() {

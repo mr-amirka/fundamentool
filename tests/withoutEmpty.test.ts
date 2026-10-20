@@ -1,5 +1,6 @@
 import {
-  withoutEmpty, withoutEmptyBase,
+  withoutEmpty,
+  withoutEmptyBase,
 } from '../src/withoutEmpty';
 
 describe('withoutEmpty', () => {

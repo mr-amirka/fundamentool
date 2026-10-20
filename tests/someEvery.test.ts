@@ -39,7 +39,8 @@ describe('some', () => {
       2,
       3,
     ], (v) => {
-      calls.push(v); return v === 1;
+      calls.push(v);
+      return v === 1;
     });
     expect(calls).toEqual([1]);
   });
@@ -88,7 +89,8 @@ describe('every', () => {
       2,
       3,
     ], (v) => {
-      calls.push(v); return v < 2;
+      calls.push(v);
+      return v < 2;
     });
     expect(calls).toEqual([
       1,

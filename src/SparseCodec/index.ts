@@ -344,11 +344,21 @@ export const createSparseCodec = <T extends Record<string, any>>(
           break;
         }
         switch (info[1]) {
-          case T_F32: val = view.getFloat32(pos, false); break;
-          case T_F64: val = view.getFloat64(pos, false); break;
-          case T_U8:  val = bytes[pos]; break;
-          case T_U16: val = view.getUint16(pos, false); break;
-          default:    val = view.getUint32(pos, false); break;
+          case T_F32:
+            val = view.getFloat32(pos, false);
+            break;
+          case T_F64:
+            val = view.getFloat64(pos, false);
+            break;
+          case T_U8:
+            val = bytes[pos];
+            break;
+          case T_U16:
+            val = view.getUint16(pos, false);
+            break;
+          default:
+            val = view.getUint32(pos, false);
+            break;
         }
         pos += size;
       }

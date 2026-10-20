@@ -1,5 +1,6 @@
 import {
-  createObservable, createApi,
+  createObservable,
+  createApi,
 } from '../src/Observable';
 import type {
   TObservableAdapter,

@@ -1,110 +1,40 @@
-const tseslint = require('@typescript-eslint/eslint-plugin');
-const tsparser = require('@typescript-eslint/parser');
-const stylistic = require('@stylistic/eslint-plugin');
-const js = require('@eslint/js');
+// The lab's rules come from eslint-config-lab (LAB D-013, D-014); only what is fundamentool's own is here.
+const lab = require('eslint-config-lab');
 const globals = require('globals');
 
 module.exports = [
   {
-    ignores: ['dist/**', 'node_modules/**', 'coverage/**', 'coverage-tmp/**', 'docs/**'],
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      'coverage/**',
+      'coverage-tmp/**',
+      'docs/**',
+    ],
   },
-  {
-    // ESLint 9+ включает эту проверку по умолчанию (в ESLint 8/legacy её не было) —
-    // выключено, чтобы не расходиться с поведением, на которое рассчитан код.
-    linterOptions: { reportUnusedDisableDirectives: false },
-  },
-  js.configs.recommended,
-  {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.mjs'],
-    languageOptions: {
-      parser: tsparser,
-      parserOptions: {
-        ecmaVersion: 2018,
-        sourceType: 'module',
-      },
-      globals: {
-        ...globals.node,
-        ...globals.browser,
-        ...globals.commonjs,
-        ...globals.es2017,
-      },
+  ...lab({
+    files: [
+      '**/*.ts',
+      '**/*.tsx',
+      '**/*.js',
+      '**/*.mjs',
+    ],
+    globals: {
+      ...globals.node,
+      ...globals.browser,
+      ...globals.commonjs,
+      ...globals.es2017,
     },
-    plugins: {
-      '@typescript-eslint': tseslint,
-      '@stylistic': stylistic,
-    },
+  }),
+  {
     rules: {
-      ...tseslint.configs.recommended.rules,
-
-      // coding.md §6.2: переменные объявляются с плейсхолдер-значением до цикла/
-      // условного присваивания (стабильная V8 hidden class на горячем пути) — эта
-      // новая в eslint:recommended проверка считает начальное значение «неиспользуемым»,
-      // не понимая, что оно намеренно перезаписывается ниже. Ложные срабатывания
-      // системны по всему коду (переменные-аккумуляторы циклов), не единичный случай.
-      'no-useless-assignment': 'off',
-
-      // coding.md: `x && y()` / `x && (a, b)` (в т.ч. с comma-expression внутри
-      // скобок) как терсовый условный вызов на горячем пути — намеренный идиом
-      // лаборатории по всему коду, не «неиспользуемое выражение». allowShortCircuit
-      // не покрывает вложенный comma-expression, поэтому правило выключено целиком.
-      '@typescript-eslint/no-unused-expressions': 'off',
-
-      // TS-функции с overload-декларациями (`function f(a): X; function f(a): Y;
-      // function f(a) {...}`) — валидный TS, но базовый (не TS-aware) no-redeclare
-      // из eslint:recommended ошибочно считает это переопределением.
-      'no-redeclare': 'off',
-      '@typescript-eslint/no-redeclare': 'error',
-
-      // TypeScript уже проверяет неопределённые идентификаторы на этапе компиляции —
-      // no-undef даёт ложные срабатывания на TS-специфичном синтаксисе (стандартная
-      // рекомендация typescript-eslint: https://typescript-eslint.io/troubleshooting/faqs/eslint/#i-am-using-a-rule-from-eslint-core-and-it-doesnt-work-correctly-with-typescript)
-      'no-undef': 'off',
-
-      'no-unused-vars': 'off',
-      // Unused names fail (fundamentool D-035); `_name` — intentionally unused; props dropped with a rest are fine.
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_', ignoreRestSiblings: true }],
       // Off, not a warning (LAB D-012: warnings are kept at zero): the low-level library uses `any` on purpose on generic
       // hot paths — a warning on each of them (1,456) only hid the warnings that mattered.
       '@typescript-eslint/no-explicit-any': 'off',
-      // subscriptions.md §6 (LAB D-012): listeners and timers through attachEvent / createTimeout / createInterval /
-      // createAnimationFrame / nextFrame — the modules implementing them disable it with the reason.
-      'no-restricted-syntax': ['error',
-        { selector: "CallExpression[callee.property.name='addEventListener']", message: 'Use attachEvent (subscriptions.md §1).' },
-        { selector: "CallExpression[callee.name=/^(setTimeout|setInterval|requestAnimationFrame)$/]", message: 'Use createTimeout / createInterval / createAnimationFrame / nextFrame (subscriptions.md §2).' },
-      ],
-
-      // §6.1 coding.md — arguments вместо rest на горячем пути (без Array-аллокации)
-      'prefer-rest-params': 'off',
-      'prefer-spread': 'off',
-
-      // §6.7 — каждый элемент на своей строке
-      '@stylistic/indent': ['error', 2, { SwitchCase: 1 }],
-      '@stylistic/semi': ['error', 'always'],
-      '@stylistic/quotes': ['error', 'single', { avoidEscape: true }],
-      '@stylistic/object-curly-newline': ['error', {
-        ObjectExpression:  { minProperties: 1 },
-        ObjectPattern:     { minProperties: 1 },
-        ImportDeclaration: { minProperties: 1 },
-        ExportDeclaration: { minProperties: 1 },
-      }],
-      '@stylistic/object-property-newline': ['error', { allowAllPropertiesOnSameLine: false }],
-      '@stylistic/function-paren-newline':  ['error', { minItems: 3 }],
-      // LAB D-013: arrays of two or more elements — each element on its own line; destructuring stays on one line.
-      // Brackets break when the elements do — so destructuring, whose elements stay on one line, keeps its brackets too.
-      '@stylistic/array-bracket-newline':   ['error', { multiline: true }],
-      '@stylistic/array-element-newline':   ['error', { ArrayExpression: { minItems: 2 }, ArrayPattern: 'consistent' }],
-      '@stylistic/comma-dangle': ['error', 'always-multiline'],
-      // D-029 — the auto-fix of object-curly-newline used to leave a space before the line break
-      '@stylistic/no-trailing-spaces': 'error',
-
-      // §6.8 — if/else/for/while всегда с блоком {}
-      curly: ['error', 'all'],
-      '@stylistic/brace-style': ['error', '1tbs', { allowSingleLine: false }],
     },
   },
   {
-    // Jest-паттерн: require() внутри теста даёт свежий экземпляр модуля
-    // (изоляция module-level кешей/состояния между тестами) — не покрыто coding.md
+    // Jest: `require()` inside a test gives a fresh module instance (module-level caches isolated between tests).
     files: ['tests/**/*.ts'],
     languageOptions: {
       globals: {
@@ -114,8 +44,7 @@ module.exports = [
     rules: {
       '@typescript-eslint/no-var-requires': 'off',
       '@typescript-eslint/no-require-imports': 'off',
-      // тесты намеренно захватывают `this` в переменную, чтобы проверить
-      // на что был забинжен контекст (bind/defer/withResult) — не алиас удобства
+      // Tests capture `this` into a variable to check what a function was bound to (bind / defer / withResult).
       '@typescript-eslint/no-this-alias': 'off',
       // Tests sleep with timers and fake the browser's own APIs — subscriptions.md is about the library's code.
       'no-restricted-syntax': 'off',

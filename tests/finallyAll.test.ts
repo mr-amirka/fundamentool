@@ -23,7 +23,8 @@ describe('finallyAll', () => {
   test('works without callback (uses noop)', () => {
     expect(() => {
       finallyAll((inc, dec) => {
-        inc(); dec();
+        inc();
+        dec();
       });
     }).not.toThrow();
   });

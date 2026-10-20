@@ -22,6 +22,7 @@ export function uniqWith<T>(
   const result = output || [];
   const cmp = comparator || isMatch;
   const includes: T[] = [];
+  let includesLength = 0;
   const length = input?.length || 0;
   let value: T;
   let hasUniq: boolean;
@@ -31,14 +32,14 @@ export function uniqWith<T>(
   for (; i < length; i++) {
     value = input[i];
     hasUniq = true;
-    for (ii = 0; ii < includes.length; ii++) {
+    for (ii = 0; ii < includesLength; ii++) {
       if (cmp(includes[ii], value)) {
         hasUniq = false;
         break;
       }
     }
     if (hasUniq) {
-      includes.push(value);
+      includesLength = includes.push(value);
       result.push(value);
     }
   }

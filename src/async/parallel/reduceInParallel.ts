@@ -37,7 +37,10 @@ export function reduceInParallel<T, A>(
     () => index < length && checkFn(),
     async () => {
       const i = index++;
-      const [key, value] = pairs[i];
+      const [
+        key,
+        value,
+      ] = pairs[i];
       accumulator = await iteratee.call(
         ctx, accumulator, value, key, collection as Record<string, T>,
       );

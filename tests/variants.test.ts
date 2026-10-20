@@ -4,7 +4,10 @@ import {
 
 describe('variants', () => {
   test('with "P(eter|awel|atrik)"', () => {
-    const [strings, depth] = variants('P(eter|awel|atrik)');
+    const [
+      strings,
+      depth,
+    ] = variants('P(eter|awel|atrik)');
     expect(strings).toEqual([
       'Peter',
       'Pawel',
@@ -14,7 +17,10 @@ describe('variants', () => {
   });
 
   test('with "re(build|code)"', () => {
-    const [strings, depth] = variants('re(build|code)');
+    const [
+      strings,
+      depth,
+    ] = variants('re(build|code)');
     expect(strings).toEqual([
       'rebuild',
       'recode',
@@ -43,7 +49,10 @@ describe('variants', () => {
   });
 
   test('with "V((olod|as)ya|italiy)"', () => {
-    const [strings, depth] = variants('V((olod|as)ya|italiy)');
+    const [
+      strings,
+      depth,
+    ] = variants('V((olod|as)ya|italiy)');
     expect(strings).toEqual([
       'Volodya',
       'Vasya',

@@ -35,7 +35,10 @@ export function reduceInAsync<T, A>(
 
   return loopAsync(() => index < length && checkFn(),
     async () => {
-      const [key, value] = pairs[index++];
+      const [
+        key,
+        value,
+      ] = pairs[index++];
       accumulator = await iteratee.call(
         ctx, accumulator, value, key, collection,
       );

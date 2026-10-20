@@ -1,5 +1,6 @@
 import {
-  routeParseProvider, routeParseProviderBase,
+  routeParseProvider,
+  routeParseProviderBase,
 } from '../src/routeParseProvider';
 
 describe('routeParseProviderBase', () => {

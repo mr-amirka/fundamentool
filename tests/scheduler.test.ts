@@ -1,8 +1,13 @@
 import {
-  nextScheduleTime, applyOffset, Scheduler,
+  nextScheduleTime,
+  applyOffset,
+  Scheduler,
 } from '../src/scheduler';
 import type {
-  ScheduledEvent, ScheduleTime, ISchedulerStore, SchedulerRecord,
+  ScheduledEvent,
+  ScheduleTime,
+  ISchedulerStore,
+  SchedulerRecord,
 } from '../src/scheduler';
 
 describe('nextScheduleTime', () => {
@@ -81,7 +86,8 @@ describe('applyOffset', () => {
         hour: 7,
         minute: 0,
       },
-    }); expect(r.getUTCHours()).toBe(7);
+    });
+    expect(r.getUTCHours()).toBe(7);
   });
 });
 
@@ -95,7 +101,8 @@ describe('Scheduler with store', () => {
       ) => {
         const r = store.find(e => e.id === id);
         if (r) {
-          r.lastFiredAt = firedAt.getTime(); r.nextRunAt = nextRunAt.getTime();
+          r.lastFiredAt = firedAt.getTime();
+          r.nextRunAt = nextRunAt.getTime();
         }
       },
       // Expanding is tested through `setEvents`.

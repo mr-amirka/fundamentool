@@ -1,8 +1,10 @@
 import {
-  cookieStorageProvider, storageInit,
+  cookieStorageProvider,
+  storageInit,
 } from '../src/cookieStorageProvider';
 import {
-  createObservable, createApi,
+  createObservable,
+  createApi,
 } from '../src/Observable';
 
 describe('storageInit', () => {
@@ -32,12 +34,18 @@ describe('cookieStorageProvider', () => {
     const doc = {
       get cookie() {
         return Object.entries(cookieStore)
-          .map(([k, v]) => `${k}=${v}`)
+          .map(([
+            k,
+            v,
+          ]) => `${k}=${v}`)
           .join('; ');
       },
       set cookie(val: string) {
         const [pair] = val.split(';');
-        const [k, v] = pair.split('=');
+        const [
+          k,
+          v,
+        ] = pair.split('=');
         if (v === '') {
           delete cookieStore[k];
         } else {
@@ -81,7 +89,8 @@ describe('cookieStorageProvider', () => {
     let called = false;
     cookieStorageProvider(win, {
       createObservable: (initial) => {
-        called = true; return createObservable(initial);
+        called = true;
+        return createObservable(initial);
       },
       createApi,
     });

@@ -5,7 +5,9 @@ import {
   join,
 } from 'path';
 import {
-  mkdirSync, rmSync, unlinkSync,
+  mkdirSync,
+  rmSync,
+  unlinkSync,
 } from 'fs';
 import * as csv from '../../../src/node/file/csv';
 

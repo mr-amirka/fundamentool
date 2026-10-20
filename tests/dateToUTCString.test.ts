@@ -1,5 +1,6 @@
 import {
-  dateToUTCString, normalizeTimePart,
+  dateToUTCString,
+  normalizeTimePart,
 } from '../src/dateToUTCString';
 
 describe('normalizeTimePart', () => {

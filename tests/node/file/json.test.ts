@@ -5,7 +5,8 @@ import {
   join,
 } from 'path';
 import {
-  mkdirSync, rmSync,
+  mkdirSync,
+  rmSync,
 } from 'fs';
 import * as json from '../../../src/node/file/json';
 

@@ -59,7 +59,8 @@ function attachServer(worker: any, exports: Record<string, any>): RpcConnect {
   return new RpcConnect({
     exports,
     postMessage: (data) => {
-      worker.emit('message', data); return noop;
+      worker.emit('message', data);
+      return noop;
     },
     onMessage: (cb) => {
       worker._serverHandler = cb;
@@ -178,7 +179,8 @@ describe('NodeRpcConnectWorker', () => {
 
     const client = new RpcClient({
       postMessage: (data) => {
-        mockParentPort.emit('message', data); return noop;
+        mockParentPort.emit('message', data);
+        return noop;
       },
       onMessage: (cb) => {
         mockParentPort.on('_out', cb);

@@ -166,6 +166,7 @@ export const getData = formatTime.getData = (
     days,
     months,
   } = i18n;
+  const am = H < 12;
   return {
     d: `${d}`,
     dd: pad(d),
@@ -187,10 +188,10 @@ export const getData = formatTime.getData = (
     ss: pad(s),
     l: pad(L, 3),
     L: pad(Math.round(L / 10)),
-    t: H < 12 ? 'a' : 'p',
-    tt: H < 12 ? 'am' : 'pm',
-    T: H < 12 ? 'A' : 'P',
-    TT: H < 12 ? 'AM' : 'PM',
+    t: am ? 'a' : 'p',
+    tt: am ? 'am' : 'pm',
+    T: am ? 'A' : 'P',
+    TT: am ? 'AM' : 'PM',
     o: utc ? 'Z' : (o > 0 ? '-' : '+') + pad(oH, 2) + ':' + pad(oM, 2),
   };
 };

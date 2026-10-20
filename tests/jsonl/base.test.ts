@@ -1,5 +1,6 @@
 import {
-  parse, stringify,
+  parse,
+  stringify,
 } from '../../src/jsonl/base';
 
 describe('jsonl/base', () => {

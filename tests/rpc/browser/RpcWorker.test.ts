@@ -62,7 +62,8 @@ function attachServer(worker: MockWorker, exports: Record<string, any>): RpcConn
   return new RpcConnect({
     exports,
     postMessage: (data) => {
-      worker._emitMessage(data); return noop;
+      worker._emitMessage(data);
+      return noop;
     },
     onMessage: (cb) => {
       worker._serverHandler = cb;
@@ -188,7 +189,8 @@ describe('RpcConnectWorker', () => {
 
     // Simulate ordinary Worker global scope: postMessage + addEventListener available
     (global as any).postMessage = (data: any) => {
-      clientReceiver?.(data); return noop;
+      clientReceiver?.(data);
+      return noop;
     };
     (global as any).addEventListener = (event: string, handler: any) => {
       if (event === 'message') {
@@ -206,7 +208,8 @@ describe('RpcConnectWorker', () => {
 
       const client = new RpcClient({
         postMessage: (data) => {
-          connectReceiver?.(data); return noop;
+          connectReceiver?.(data);
+          return noop;
         },
         onMessage: (cb) => {
           clientReceiver = cb;
@@ -267,7 +270,8 @@ describe('RpcConnectWorker', () => {
 
       const client = new RpcClient({
         postMessage: (data) => {
-          portMessageHandler?.(data); return noop;
+          portMessageHandler?.(data);
+          return noop;
         },
         onMessage: (cb) => {
           portClientReceiver = cb;

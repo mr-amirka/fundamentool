@@ -1,5 +1,7 @@
 import {
-  get, getBase, getWithContext,
+  get,
+  getBase,
+  getWithContext,
 } from '../src/get';
 
 describe('get', () => {

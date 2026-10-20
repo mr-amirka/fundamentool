@@ -19,7 +19,8 @@ describe('mapIn', () => {
       x: 1,
       y: 2,
     }, (v, k) => {
-      keys.push(k); return v;
+      keys.push(k);
+      return v;
     });
     expect(keys).toContain('x');
     expect(keys).toContain('y');

@@ -127,7 +127,10 @@ export class RpcConnect {
       new Map(),
     ]);
 
-    const [isError, result] = await middleware(coder?.decode(encodedArgs) || encodedArgs || []);
+    const [
+      isError,
+      result,
+    ] = await middleware(coder?.decode(encodedArgs) || encodedArgs || []);
 
     this.sendMessage([
       TRpcType.Result,

@@ -88,7 +88,10 @@ export function createRouterView(deps: TRouterProviderDeps, core: TRouterCore) {
 
   /** The router's state, re-rendering on change. */
   function useRouterState(): TRouterState {
-    const [value, setValue] = useState($state.getState);
+    const [
+      value,
+      setValue,
+    ] = useState($state.getState);
     useEffect(() => $state.watch(setValue), []);
     return value;
   }

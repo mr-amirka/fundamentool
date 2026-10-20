@@ -1,5 +1,7 @@
 import {
-  parse, stringify, parseEachLine,
+  parse,
+  stringify,
+  parseEachLine,
 } from '../src/csv';
 
 describe('csv.parseEachLine', () => {

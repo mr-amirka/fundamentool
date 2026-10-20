@@ -391,7 +391,10 @@ describe('routerProvider — inherited bugs, fixed (2026-10-18)', () => {
         }, 'next',
       ),
     )));
-    const [cancelled, next] = Array.from(host.querySelectorAll('a'));
+    const [
+      cancelled,
+      next,
+    ] = Array.from(host.querySelectorAll('a'));
     await act(async () => {
       cancelled.dispatchEvent(new MouseEvent('click', {
         bubbles: true,

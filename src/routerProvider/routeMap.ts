@@ -32,7 +32,10 @@ import type {
  */
 export function routerForObservableMapProvider<T>(_routes: TRouteArgs<T>[],
   notFoundHandler?: TRouteHandler<T>) {
-  const routes: [TRouteMapper, TRouteHandler<T>][] = _routes.map(([route, render]) => {
+  const routes: [TRouteMapper, TRouteHandler<T>][] = _routes.map(([
+    route,
+    render,
+  ]) => {
     // `-` and `_` match each other in the plain part of a route, before its first group — never inside the group.
     let scopePos = route.indexOf('(');
     const length = route.length;

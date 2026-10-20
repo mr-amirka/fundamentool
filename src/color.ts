@@ -154,7 +154,7 @@ const normalize = color.normalize = (v: string, alpha?: string | null): [number,
     double(v, 0),
     double(v, 2),
     double(v, 4),
-    l < 8 ? one(v[6]) : double(v, 6),
+    double(v, 6),
   ];
 };
 

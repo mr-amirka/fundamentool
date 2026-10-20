@@ -15,8 +15,14 @@ const defaultMn = variantsProvider({
 describe('variantsProvider', () => {
   test('matches variants() strings and reports maxDepth', () => {
     const exp = 'P(eter|awel|atrik)';
-    const [a, d] = defaultMn(exp);
-    const [b, d2] = variants(exp);
+    const [
+      a,
+      d,
+    ] = defaultMn(exp);
+    const [
+      b,
+      d2,
+    ] = variants(exp);
     expect(a).toEqual(b);
     expect(d).toBe(d2);
     expect(d).toBe(1);
@@ -24,8 +30,14 @@ describe('variantsProvider', () => {
 
   test('nested depth for V((olod|as)ya|italiy)', () => {
     const exp = 'V((olod|as)ya|italiy)';
-    const [a, d] = defaultMn(exp);
-    const [b, d2] = variants(exp);
+    const [
+      a,
+      d,
+    ] = defaultMn(exp);
+    const [
+      b,
+      d2,
+    ] = variants(exp);
     expect(a).toEqual(b);
     expect(d).toBe(d2);
     expect(d).toBe(2);
@@ -85,7 +97,10 @@ describe('variantsProvider', () => {
       scopeEnd: ')',
       maxDepth: Number.POSITIVE_INFINITY,
     });
-    const [out, depth] = slash('P(eter/awel/atrik)');
+    const [
+      out,
+      depth,
+    ] = slash('P(eter/awel/atrik)');
     expect(out).toEqual([
       'Peter',
       'Pawel',

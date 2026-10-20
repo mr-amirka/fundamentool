@@ -29,7 +29,8 @@ describe('map', () => {
       calls.push([
         v,
         i,
-      ]); return v;
+      ]);
+      return v;
     });
     expect(calls).toEqual([
       [
@@ -83,7 +84,8 @@ describe('mapIn', () => {
       calls.push([
         v,
         k,
-      ]); return v;
+      ]);
+      return v;
     });
     expect(calls).toEqual([
       [

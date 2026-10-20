@@ -112,8 +112,9 @@ export const colorGetBackground = (input: string, alt?: boolean): string[] => {
     push(outputRgba, rgba + suffix);
   }
 
+  const several = l > 1;
   if (alt) {
-    if (l > 1) {
+    if (several) {
       push(gradient, joinComma(outputRgb) + ')');
       if (hasAlpha) {
         push(gradient, joinComma(outputRgba) + ')');
@@ -122,7 +123,7 @@ export const colorGetBackground = (input: string, alt?: boolean): string[] => {
     return gradient;
   }
 
-  if (l > 1) {
+  if (several) {
     return [joinComma(hasAlpha ? outputRgba : outputRgb) + ')'];
   }
 

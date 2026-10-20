@@ -145,7 +145,10 @@ export function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
   const start = urlParse(window.location.href);
   /** Sections → their main page's whole address (for the hash router the section path goes after `#`). */
   const sections: Record<string, TUrlProps> = {};
-  for (const [name, path] of Object.entries(deps.sections ?? {})) {
+  for (const [
+    name,
+    path,
+  ] of Object.entries(deps.sections ?? {})) {
     sections[name] = hash ? mergeLocation(start, {
       child: urlParse(path),
     }) : urlParse(path);

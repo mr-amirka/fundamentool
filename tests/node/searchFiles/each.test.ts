@@ -5,7 +5,9 @@ import {
   join,
 } from 'path';
 import {
-  mkdirSync, writeFileSync, rmSync,
+  mkdirSync,
+  writeFileSync,
+  rmSync,
 } from 'fs';
 import {
   each,

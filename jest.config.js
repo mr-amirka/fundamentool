@@ -7,7 +7,10 @@ module.exports = {
     'js',
     'json',
   ],
-  collectCoverageFrom: ['src/**/*.ts', '!src/**/tmp/**'],
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/**/tmp/**',
+  ],
   coverageThreshold: {
     global: {
       branches: 99,

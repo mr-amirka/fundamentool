@@ -42,7 +42,8 @@ describe('find', () => {
       calls.push([
         v,
         i,
-      ]); return false;
+      ]);
+      return false;
     });
     expect(calls).toEqual([
       [

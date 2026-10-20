@@ -128,8 +128,14 @@ export class RpcCoder {
     const encodedObjects: TRpcEncodedDataObject[] = [];
     const encodedArrays: TRpcEncodedDataArray[] = [];
 
-    const [getObjectIndex, addObject] = storeProvider<Record<string, any>>();
-    const [getArrayIndex, addArray] = storeProvider<any[]>();
+    const [
+      getObjectIndex,
+      addObject,
+    ] = storeProvider<Record<string, any>>();
+    const [
+      getArrayIndex,
+      addArray,
+    ] = storeProvider<any[]>();
 
     function getStringIndex(value: string) {
       let index = internalStrings.get(value);
