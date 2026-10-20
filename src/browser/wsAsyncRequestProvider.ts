@@ -1,4 +1,7 @@
 import {
+  wait,
+} from '../wait';
+import {
   noop,
 } from '../noop';
 import {
@@ -26,9 +29,7 @@ function defaultGenerateIdempotencyKey(): number {
 }
 
 function defaultOnReconnect(): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, 10000);
-  });
+  return wait(10000);
 }
 
 function wrapError(error: any): [error: any] {

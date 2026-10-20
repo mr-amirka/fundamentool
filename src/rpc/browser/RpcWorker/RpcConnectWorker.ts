@@ -1,4 +1,7 @@
 import {
+  attachEvent,
+} from '../../../attachEvent';
+import {
   GLOBAL_CONTEXT,
 } from '../../../globalContext';
 import type {
@@ -51,7 +54,8 @@ export class RpcConnectWorker extends RpcConnect {
       const connections: RpcConnect[] = [];
       const getConnections = () => connections;
 
-      GLOBAL_CONTEXT.addEventListener(
+      attachEvent(
+        GLOBAL_CONTEXT,
         'connect', (e: any) => {
           console.log('RpcConnectWorker: connect');
           const source: MessagePort = e.source;

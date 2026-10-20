@@ -16,6 +16,7 @@ export const createTimeout = (
   args?: ArrayLike<any> | null,
   ctx?: any,
 ): () => void => {
+  // eslint-disable-next-line no-restricted-syntax -- this module is the helper subscriptions.md asks for
   let intervalId: any = setTimeout(() => {
     callback && callback.apply(ctx || null, args || []);
   }, timeout || 0);

@@ -19,6 +19,7 @@ export const attachEvent = (
   listener: (event: any) => any,
   options?: TEventListenerOptions,
 ): TUnsubscribe => {
+  // eslint-disable-next-line no-restricted-syntax -- this module is the helper subscriptions.md asks for
   ctx.addEventListener(
     type, listener, options,
   );

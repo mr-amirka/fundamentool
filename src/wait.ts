@@ -1,3 +1,6 @@
+import {
+  createTimeout,
+} from './createTimeout';
 /**
  * Returns a promise that resolves after the specified timeout.
  *
@@ -10,8 +13,8 @@
  */
 export const wait = <A>(millis?: number, params?: A): Promise<A> => {
   return new Promise<A>((resolve) => {
-    setTimeout(
-      resolve, millis || 0, params,
+    createTimeout(
+      resolve, millis, [params],
     );
   });
 };

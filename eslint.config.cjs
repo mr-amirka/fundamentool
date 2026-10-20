@@ -63,8 +63,15 @@ module.exports = [
       'no-unused-vars': 'off',
       // Unused names fail (fundamentool D-035); `_name` — intentionally unused; props dropped with a rest are fine.
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_', ignoreRestSiblings: true }],
-      // не пункт coding.md — низкоуровневая библиотека осознанно использует any на generic hot-path
-      '@typescript-eslint/no-explicit-any': 'warn',
+      // Off, not a warning (LAB D-012: warnings are kept at zero): the low-level library uses `any` on purpose on generic
+      // hot paths — a warning on each of them (1,456) only hid the warnings that mattered.
+      '@typescript-eslint/no-explicit-any': 'off',
+      // subscriptions.md §6 (LAB D-012): listeners and timers through attachEvent / createTimeout / createInterval /
+      // createAnimationFrame / nextFrame — the modules implementing them disable it with the reason.
+      'no-restricted-syntax': ['error',
+        { selector: "CallExpression[callee.property.name='addEventListener']", message: 'Use attachEvent (subscriptions.md §1).' },
+        { selector: "CallExpression[callee.name=/^(setTimeout|setInterval|requestAnimationFrame)$/]", message: 'Use createTimeout / createInterval / createAnimationFrame / nextFrame (subscriptions.md §2).' },
+      ],
 
       // §6.1 coding.md — arguments вместо rest на горячем пути (без Array-аллокации)
       'prefer-rest-params': 'off',
@@ -108,6 +115,8 @@ module.exports = [
       // тесты намеренно захватывают `this` в переменную, чтобы проверить
       // на что был забинжен контекст (bind/defer/withResult) — не алиас удобства
       '@typescript-eslint/no-this-alias': 'off',
+      // Tests sleep with timers and fake the browser's own APIs — subscriptions.md is about the library's code.
+      'no-restricted-syntax': 'off',
     },
   },
 ];

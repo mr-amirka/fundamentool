@@ -11,6 +11,7 @@ declare function cancelAnimationFrame(handle: number): void;
  * useEffect(() => nextFrame(() => setPlace('in')), []); // slide in after the first paint
  */
 export function nextFrame(callback: (time: number) => void): () => void {
+  // eslint-disable-next-line no-restricted-syntax -- this module is the helper subscriptions.md asks for
   let handle = requestAnimationFrame((time) => {
     handle = 0;
     callback(time);

@@ -1,4 +1,7 @@
 import {
+  attachEvent,
+} from '../../../attachEvent';
+import {
   open,
   read,
   close,
@@ -133,7 +136,8 @@ export const readSlice = (
     base();
 
     if (signal) {
-      signal.addEventListener(
+      attachEvent(
+        signal,
         'abort',
         () => {
           stop = 1;

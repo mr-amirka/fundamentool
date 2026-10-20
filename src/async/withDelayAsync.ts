@@ -1,3 +1,9 @@
+import {
+  noop,
+} from '../noop';
+import {
+  createTimeout,
+} from '../createTimeout';
 /**
  * Debounced async wrapper: schedules function execution after `delayMs`.
  * Returns a promise resolved with the last call result.
@@ -18,7 +24,8 @@ export function withDelayAsync<T extends (...args: any[]) => any>(
   let hasDebounce = 0;
   let args: IArguments | null = null;
   let promise: Promise<any> = Promise.resolve();
-  let timeoutId: any;
+  // Cancels the pending call (`createTimeout`); a no-op before the first one.
+  let cancelPending: () => void = noop;
   let resolveFn: ((value: any) => void) | null = null;
 
   function exec(): any {
@@ -33,10 +40,8 @@ export function withDelayAsync<T extends (...args: any[]) => any>(
 
   function initialize(resolve?: (value: any) => void): void {
     resolve && (resolveFn = resolve);
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-    timeoutId = setTimeout(exec, delayMs);
+    cancelPending();
+    cancelPending = createTimeout(exec, delayMs);
   }
 
   return function (): Promise<ReturnType<T>> {

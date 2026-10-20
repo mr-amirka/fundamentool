@@ -20,6 +20,7 @@ export const createInterval = (
   ctx = ctx || null;
   let intervalId: any = 0;
   function base() {
+    // eslint-disable-next-line no-restricted-syntax -- this module is the helper subscriptions.md asks for
     intervalId = setTimeout(() => {
       if (callback) {
         base();

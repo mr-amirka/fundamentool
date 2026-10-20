@@ -28,9 +28,11 @@ export function createAnimationFrame(callback: (delta: number) => void,
       callback(balance);
       balance = 0;
     }
+    // eslint-disable-next-line no-restricted-syntax -- this module is the helper subscriptions.md asks for
     requestAnimationFrame(step);
   }
 
+  // eslint-disable-next-line no-restricted-syntax -- this module is the helper subscriptions.md asks for
   requestAnimationFrame(step);
 
   return () => {

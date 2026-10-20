@@ -1,4 +1,7 @@
 import {
+  wait,
+} from '../wait';
+import {
   noop,
 } from '../noop';
 import {
@@ -17,9 +20,7 @@ import {
 declare const Buffer: any;
 
 function defaultOnReconnect(): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, 10000);
-  });
+  return wait(10000);
 }
 
 export interface IWsSeriesConfigs {

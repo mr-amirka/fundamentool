@@ -1,4 +1,7 @@
 import {
+  attachEvent,
+} from '../attachEvent';
+import {
   TRpcType,
   TRpcClientMessage,
   TRpcConnectMessage,
@@ -106,9 +109,11 @@ export class RpcConnect {
     };
 
     signal.aborted = false;
-    signal.addEventListener('abort', () => {
-      signal.aborted = true;
-    });
+    attachEvent(
+      signal, 'abort', () => {
+        signal.aborted = true;
+      },
+    );
 
     this.slotTaskMap.set(requestId, [
       context,

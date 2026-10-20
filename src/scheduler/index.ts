@@ -1,4 +1,7 @@
 // ── Scheduler — fundamentool ────────────────────────────────────────────────
+import {
+  createInterval,
+} from '../createInterval';
 // На основе lovely-bot.node-app/src/actions-calendar-provider.js
 // Документо-ориентированное хранение: важные поля — колонки, остальное — JSON.
 // Scheduler принимает ISchedulerStore и сам управляет своими данными.
@@ -206,7 +209,8 @@ export interface SchedulerCallbacks {
 export class Scheduler {
   private store: ISchedulerStore;
   private callbacks: SchedulerCallbacks | null = null;
-  private timer: ReturnType<typeof setInterval> | null = null;
+  /** Stops the checking loop (`createInterval`); `null` — not running. */
+  private stopTimer: (() => void) | null = null;
   private checkIntervalMs: number;
   private cooldownMs: number;
 
@@ -226,16 +230,17 @@ export class Scheduler {
   /** Starts polling the store every `checkIntervalMs`, invoking `callbacks.onFire` for due records. Idempotent while already running. */
   start(callbacks: SchedulerCallbacks): void {
     this.callbacks = callbacks;
-    if (this.timer) {
+    if (this.stopTimer) {
       return;
     }
-    this.timer = setInterval(() => this.tick(), this.checkIntervalMs);
+    this.stopTimer = createInterval(() => this.tick(), this.checkIntervalMs);
   }
 
   /** Stops polling. Safe to call when not running. */
   stop(): void {
-    if (this.timer) {
-      clearInterval(this.timer); this.timer = null;
+    if (this.stopTimer) {
+      this.stopTimer();
+      this.stopTimer = null;
     }
   }
 
