@@ -56,3 +56,20 @@ await router.startOverLocation({ path: '/welcome' });       // every page before
 ```
 
 A five-tab test app using all of it: web-games `frontend/labs/navigation`.
+
+## Files
+
+| File | What's in it |
+|------|--------------|
+| `index.ts` | the public face: `routerProvider`, `hashRouterProvider` and what they export |
+| `core.ts` | the engine: the stack of pages and windows, the browser history, steps (push, replace, back, start over), windows, sections, guards — and the router's API built over them |
+| `state.ts` | the router's state from the stack: the mounted pages (`layers` — the shown one and the kept ones), the address, the current section |
+| `addressModel.ts` | the address observables: `$location`, `$path`, `$query`, the hash part, `$immediate…`, `$prev…` |
+| `view.ts` | `NavigationHostProvider` (the host component) and the hooks (`useWhileOpen`, `useOnForward`, …) |
+| `routeMap.ts` | `routerForObservableMapProvider` — a route table matched to an address |
+| `links.ts` | the `Link` / `NavLink` builders |
+| `paramStorage.ts` | query parameters as a store |
+| `location.ts` | address helpers (`mergeLocation`, path / child / query of a value) |
+| `options.ts` | checks of the dependencies and options |
+| `constants.ts` | entry kinds, section modes, option key lists, layer styles |
+| `types.ts` | the public types; `internalTypes.ts` — the ones shared only by these files |

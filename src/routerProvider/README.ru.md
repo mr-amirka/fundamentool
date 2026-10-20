@@ -40,3 +40,20 @@
   импортируются.
 
 Пример — в [routerProvider.md](./README.md). Тестовое приложение с пятью вкладками: web-games `frontend/labs/navigation`.
+
+## Файлы
+
+| Файл | Что в нём |
+|------|-----------|
+| `index.ts` | публичная часть: `routerProvider`, `hashRouterProvider` и то, что они экспортируют |
+| `core.ts` | движок: стек страниц и окон, история браузера, шаги (push, replace, назад, начать заново), окна, разделы, стражи — и API роутера поверх них |
+| `state.ts` | состояние роутера из стека: смонтированные страницы (`layers` — показанная и сохранённые), адрес, текущий раздел |
+| `addressModel.ts` | наблюдаемые адреса: `$location`, `$path`, `$query`, хеш-часть, `$immediate…`, `$prev…` |
+| `view.ts` | `NavigationHostProvider` (компонент-хост) и хуки (`useWhileOpen`, `useOnForward`, …) |
+| `routeMap.ts` | `routerForObservableMapProvider` — таблица маршрутов, сопоставленная адресу |
+| `links.ts` | построители `Link` / `NavLink` |
+| `paramStorage.ts` | параметры запроса как хранилище |
+| `location.ts` | помощники адреса (`mergeLocation`, путь / дочерний / запрос значения) |
+| `options.ts` | проверки зависимостей и опций |
+| `constants.ts` | виды записей, режимы разделов, списки ключей опций, стили слоёв |
+| `types.ts` | публичные типы; `internalTypes.ts` — общие только для этих файлов |
