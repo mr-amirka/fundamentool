@@ -1,11 +1,13 @@
 import {
   createObservable as _createObservable,
   createApi as _createApi,
-  ObservableWritable,
 } from './Observable';
 import type {
   TObservableAdapter,
 } from './Observable';
+import type {
+  TKeyValueStorage,
+} from './keyValueStorage';
 import {
   tryJsonParse,
 } from './tryJsonParse';
@@ -19,13 +21,8 @@ export type TCookieWindowContext = {
   };
 };
 
-export type TCookieStorage = ObservableWritable<any> & {
-  set: (key: string, value: any) => TCookieStorage;
-  get: (key: string) => any;
-  remove: (key: string) => TCookieStorage;
-  getKeys: () => string[];
-  clear: () => TCookieStorage;
-};
+/** The cookies — a key-value storage (`TKeyValueStorage`, fundamentool D-039). */
+export type TCookieStorage = TKeyValueStorage;
 
 const expires = 400 * 86400000;
 

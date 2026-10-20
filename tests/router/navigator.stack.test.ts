@@ -3,16 +3,17 @@
  * @jest-environment-options {"customExportConditions": ["require", "node", "default"]}
  */
 /**
- * The router's stack (fundamentool D-011…D-025): pages and windows as history entries, back and Forward, guards and
- * handlers, kept pages — on a real jsdom window (`_routerHarness`).
+ * The navigator's stack (fundamentool D-011…D-025, D-038, D-039): pages and windows as history entries, back and
+ * Forward, guards and handlers, kept pages — on a real jsdom window (`_harness`).
  */
 import {
+  PLAIN,
   settle,
   setup,
   waitFor,
-} from './_routerHarness';
+} from './_harness';
 
-describe('routerProvider — the stack', () => {
+describe('createNavigator — the stack', () => {
   it('starts with the page in the address; the browser entry is ours', () => {
     const {
       nav, browser,
@@ -24,14 +25,20 @@ describe('routerProvider — the stack', () => {
         path: '/a',
       },
       depth: 0,
-      info: {
+      row: {
         section: 'a',
-        sectionHome: true,
       },
+      section: 'a',
     });
     expect(state.section).toBe('a');
     expect(browser.state()).toMatchObject({
-      depth: 0,
+      fundamentool: 1,
+      index: 0,
+      data: {
+        url: {
+          depth: 0,
+        },
+      },
     });
   });
 
@@ -170,24 +177,25 @@ describe('routerProvider — the stack', () => {
     ]);
   });
 
-  it('backToSection without the main page in the history opens it; without a section — nothing', async () => {
+  it('a deep link lays out over the start tab\'s root; backToSection opens its tab\'s root; without tabs — nothing', async () => {
     const deep = setup({}, '/b/7');
+    expect(deep.paths()).toEqual([
+      '/a',
+      '/b/7',
+    ]);
+    expect(deep.nav.getState().section).toBe('b');
     await deep.nav.backToSection();
     expect(deep.paths()).toEqual([
+      '/a',
       '/b/7',
       '/b',
     ]);
 
-    const none = setup({
-      sections: {},
-    }, '/b/7');
-    await none.nav.backToSection();
-    expect(none.paths()).toEqual(['/b/7']);
-
     const plain = setup({
-      describe: () => ({}),
-    });
+      routes: PLAIN,
+    }, '/b/7');
     await plain.nav.backToSection();
+    expect(plain.paths()).toEqual(['/b/7']);
     expect(plain.nav.getState().section).toBeNull();
   });
 
@@ -200,12 +208,13 @@ describe('routerProvider — the stack', () => {
     await settle();
     await nav.startOver('/b');
     await expect(win).resolves.toBeNull();
-    expect(paths()).toEqual(['/b']);
-    expect(browser.index()).toBe(0);
+    // With tabs a stack starts over the start tab's root.
+    expect(paths()).toEqual([
+      '/a',
+      '/b',
+    ]);
+    expect(browser.index()).toBe(1);
     expect(browser.path()).toBe('/b');
-
-    await nav.go('/welcome'); // a page that always starts over
-    expect(paths()).toEqual(['/welcome']);
   });
 
   it('whileOpen: runs at once, cleaned up when the entry starts closing, unsubscribing cleans up too', async () => {
@@ -518,12 +527,15 @@ describe('routerProvider — the stack', () => {
     expect(asked).toEqual([]);
   });
 
-  it('an entry from another session (before a reload) starts over at its path', async () => {
+  it('an entry another script wrote starts the stack over at its path', async () => {
     const {
       browser, paths,
     } = setup();
     browser.foreign('/b/old');
-    await waitFor(() => expect(paths()).toEqual(['/b/old']));
+    await waitFor(() => expect(paths()).toEqual([
+      '/a',
+      '/b/old',
+    ]));
   });
 
   it('a failed step (e.g. the history refuses) rejects it but doesn\'t block the next ones', async () => {
@@ -658,12 +670,13 @@ describe('routerProvider — the stack', () => {
       '/a/form',
       'window',
     ]));
-    await expect(router.backToStart({
+    await expect(router.backLocation({
       force: true,
-    })).resolves.toEqual({
-      locked: false,
-    });
+    })).resolves.toBe(true);
     await expect(win).resolves.toBeNull();
+    await expect(router.backLocation({
+      force: true,
+    })).resolves.toBe(true);
     expect(paths()).toEqual(['/a']);
     expect(asked).toEqual([]);
 
@@ -671,36 +684,34 @@ describe('routerProvider — the stack', () => {
     nav.onBeforeLeave(nav.getState().page.id, () => false);
     await expect(router.backLocation({
       force: true,
-    })).resolves.toEqual({
-      locked: false,
-    });
+    })).resolves.toBe(true);
     expect(paths()).toEqual(['/a']);
   });
 
   it('leavePage: back to the previous page of the app (windows over the page close too); the first page is replaced', async () => {
     const {
-      router, paths, win,
+      router, navigator, paths, win,
     } = setup();
     await router.pushLocation({
       path: '/a/level',
     });
-    void router.open('Menu');
+    void navigator.open('Menu');
     await waitFor(() => expect(paths()).toEqual([
       '/a',
       '/a/level',
       'window',
     ]));
-    await router.leavePage({
+    await navigator.leavePage({
       fallback: {
         path: '/a',
       },
     });
     expect(paths()).toEqual(['/a']);
 
-    await router.startOverLocation({
+    await navigator.startOver({
       path: '/a/locked',
     });
-    await router.leavePage({
+    await navigator.leavePage({
       fallback: {
         path: '/a',
       },
@@ -711,13 +722,13 @@ describe('routerProvider — the stack', () => {
 
   it('leavePage checks its options', async () => {
     const {
-      router,
+      navigator,
     } = setup();
-    await expect(router.leavePage(null as never)).rejects.toThrow(/leavePage: expects an options object, got null/);
-    await expect(router.leavePage({
+    await expect(navigator.leavePage(null as never)).rejects.toThrow(/leavePage: expects an options object, got null/);
+    await expect(navigator.leavePage({
       fallbak: {},
     } as never)).rejects.toThrow(/Did you mean "fallback"/);
-    await expect(router.leavePage({
+    await expect(navigator.leavePage({
       fallback: '/',
     } as never)).rejects.toThrow(/"fallback" expects a location/);
   });

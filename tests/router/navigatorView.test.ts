@@ -3,7 +3,7 @@
  * @jest-environment-options {"customExportConditions": ["require", "node", "default"]}
  */
 /**
- * `router.NavigationHostProvider` and the router's hooks on React and on Preact — the view library is injected (fundamentool D-013).
+ * `nav.NavigationHostProvider` and the navigator's hooks on React and on Preact — the view library is injected (fundamentool D-013).
  */
 
 // React 19 warns on every `act()` unless the environment declares itself an act environment.
@@ -22,24 +22,23 @@ import {
   act as preactAct,
 } from 'preact/test-utils';
 import type {
+  TNavigatorState,
   TPageEntry,
-  TRouterState,
-  TWindowEntry,
   TWindowProps,
-} from '../src/routerProvider';
+} from '../../src/router';
 import {
   settle,
   setup,
   waitFor,
-} from './_routerHarness';
+} from './_harness';
 import type {
   THarnessOptions,
-} from './_routerHarness';
+} from './_harness';
 
-/** The router's host component (`NavigationHostProvider` returns it). */
+/** The navigator's host component (`NavigationHostProvider` returns it). */
 type TView = () => unknown;
 
-/** A view library under test: its functions for the router and how to mount into a container. */
+/** A view library under test: its functions for the navigator and how to mount into a container. */
 type TLibrary = {
   deps: THarnessOptions;
   createElement: (...args: any[]) => unknown;
@@ -96,12 +95,12 @@ describe.each([
     'Preact',
     PREACT,
   ],
-])('router.NavigationHostProvider with %s', (_name, library) => {
+])('nav.NavigationHostProvider with %s', (_name, library) => {
   let container: HTMLElement;
   let unmount: () => void;
   let harness: ReturnType<typeof setup>;
   let nav: ReturnType<typeof setup>['nav'];
-  let router: ReturnType<typeof setup>['router'];
+  let navigator: ReturnType<typeof setup>['navigator'];
   let browser: ReturnType<typeof setup>['browser'];
   let view: TView;
   const log: string[] = [];
@@ -110,15 +109,15 @@ describe.each([
   function Page(props: { entry: TPageEntry;
     path: string }): unknown {
     const h = library.createElement;
-    const entry = router.useEntry();
-    router.useWhileOpen(() => {
+    const entry = navigator.useEntry();
+    navigator.useWhileOpen(() => {
       log.push(`open ${entry.depth}`);
       return () => log.push(`close ${entry.depth}`);
     });
-    router.useOnForward(() => {
+    navigator.useOnForward(() => {
       log.push(`forward ${entry.depth}`);
     });
-    router.useBeforeLeave(() => props.path !== '/locked');
+    navigator.useBeforeLeave(() => props.path !== '/locked');
     return h(
       'p', {
         'data-page': props.path,
@@ -129,13 +128,13 @@ describe.each([
   /** A page that reacts to windows too, and refuses to be left forward by a page when its path says so. */
   function Watcher(props: { entry: TPageEntry;
     path: string }): unknown {
-    router.useOnForward(() => {
+    navigator.useOnForward(() => {
       log.push('covered');
       return () => log.push('uncovered');
     }, {
       windows: true,
     });
-    router.useOnForward(() => (props.path === '/w/block' ? false : undefined));
+    navigator.useOnForward(() => (props.path === '/w/block' ? false : undefined));
     return library.createElement(
       'p', {
         'data-page': props.path,
@@ -162,19 +161,40 @@ describe.each([
     log.length = 0;
     harness = setup({
       ...library.deps,
-      describe: (path) => ({
-        keep: path === '/list',
-      }),
+      routes: null,
     }, '/list');
     ({
-      nav, router, browser,
+      nav, navigator, browser,
     } = harness);
-    view = router.NavigationHostProvider({
-      renderPage: (entry, location) => library.createElement(location.path.startsWith('/w/') ? Watcher : Page, {
+    view = navigator.NavigationHostProvider({
+      routes: [
+        [
+          '/list',
+          {
+            main: Page,
+            keep: true,
+          },
+        ],
+        [
+          '/w/(.*)',
+          {
+            main: Watcher,
+          },
+        ],
+        [
+          '/(.*)',
+          {
+            main: Page,
+          },
+        ],
+      ],
+      // The test's pages take the entry and the path; windows draw with the default.
+      render: (
+        row, route, entry,
+      ) => library.createElement(row.main, {
         entry,
-        path: location.path,
+        path: route.location.path,
       }),
-      renderWindow: (entry: TWindowEntry, props) => library.createElement(entry.window, props as unknown as Record<string, unknown>),
     }) as TView;
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -293,7 +313,7 @@ describe.each([
 
   it('a navigation hook outside a page or a window is an error', () => {
     const Outside = (): unknown => {
-      router.useEntry();
+      navigator.useEntry();
       return null;
     };
     const host = document.createElement('div');
@@ -309,10 +329,10 @@ describe.each([
     error.mockRestore();
   });
 
-  it('useRouterState gives the router\'s state and follows it', async () => {
-    const seen: TRouterState[] = [];
+  it('useNavigatorState gives the navigator\'s state and follows it', async () => {
+    const seen: TNavigatorState[] = [];
     const Probe = (): unknown => {
-      seen.push(router.useRouterState());
+      seen.push(navigator.useNavigatorState());
       return null;
     };
     const host = document.createElement('div');
@@ -327,50 +347,9 @@ describe.each([
       });
       stop = () => preact.render(null, host);
     }
-    expect(seen.at(-1)).toBe(router.$state.getState());
+    expect(seen.at(-1)).toBe(navigator.$state.getState());
     await library.act(() => nav.go('/next').then(() => undefined));
     expect(seen.at(-1)?.location.path).toBe('/next');
     stop();
-  });
-});
-
-describe('a long back on the screen (D-026)', () => {
-  it('backToStart is one move: the pages between are never shown or mounted again', async () => {
-    const {
-      nav, router,
-    } = setup({
-      describe: () => ({}),
-    });
-    const mounts: string[] = [];
-    function Page(props: { path: string }): React.ReactElement {
-      React.useEffect(() => {
-        mounts.push(props.path);
-      }, []);
-      return React.createElement(
-        'p', null, props.path,
-      );
-    }
-    const view = router.NavigationHostProvider({
-      renderPage: (_entry, location) => React.createElement(Page, {
-        path: location.path,
-      }),
-      renderWindow: () => null,
-    });
-    const container = document.createElement('div');
-    const unmount = REACT.mount(view as TView, container);
-    for (const path of [
-      '/a/1',
-      '/a/2',
-      '/a/3',
-    ]) {
-      await REACT.act(() => nav.go(path).then(() => undefined));
-    }
-    mounts.length = 0;
-    await REACT.act(async () => {
-      await router.backToStart();
-    });
-    expect(mounts).toEqual(['/a']);
-    expect(container.textContent).toBe('/a');
-    unmount();
   });
 });

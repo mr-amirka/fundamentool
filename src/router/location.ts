@@ -1,0 +1,24 @@
+// A location from a change — the one rule every step uses.
+import {
+  urlExtend,
+} from '../urlExtend';
+import {
+  urlParse,
+} from '../urlParse';
+import type {
+  TUrlProps,
+} from '../urlParse';
+
+/**
+ * The location a step goes to: `change.path` (or the current path) with `change.query` (none when not given). Read
+ * back from its address — after a step exactly what a reload gives (`'3'` → `3`, D-028).
+ *
+ * @example
+ * locate({ path: '/level/2' }, current); // => /level/2, no query
+ * locate({ query: { tab: 'map' } }, current); // => the current path with ?tab=map
+ */
+export function locate(change: Partial<TUrlProps>, current: TUrlProps): TUrlProps {
+  return urlParse(urlExtend(change.path || current.path || '/', {
+    query: change.query || null,
+  }).href);
+}

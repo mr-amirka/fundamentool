@@ -1,12 +1,14 @@
 import {
   createObservable as _createObservable,
   createApi as _createApi,
-  ObservableWritable,
 } from './Observable';
 import type {
   TObservableAdapter,
 } from './Observable';
 
+import type {
+  TKeyValueStorage,
+} from './keyValueStorage';
 import {
   tryJsonParse,
 } from './tryJsonParse';
@@ -29,42 +31,8 @@ export type TLocalStorageWindowContext = {
   removeEventListener(type: string, listener: (event: any) => void, options?: any): void;
 };
 
-export type TLocalStorage = ObservableWritable<any> & {
-  /**
-   * Sets a value in the local storage.
-   *
-   * @param key - The key to set the value in.
-   * @param value - The value to set.
-   * @returns The local storage instance.
-   */
-  set: (key: string, value: any) => TLocalStorage;
-  /**
-   * Gets a value from the local storage.
-   *
-   * @param key - The key to get the value from.
-   * @returns The value.
-   */
-  get: (key: string) => any;
-  /**
-   * Removes a value from the local storage.
-   *
-   * @param key - The key to remove the value from.
-   * @returns The local storage instance.
-   */
-  remove: (key: string) => TLocalStorage;
-  /**
-   * Gets the keys from the local storage.
-   *
-   * @returns The keys.
-   */
-  getKeys: () => string[];
-  /**
-   * Clears the local storage.
-   *
-   * @returns The local storage instance.
-   */
-  clear: () => TLocalStorage;
-};
+/** The local storage — a key-value storage (`TKeyValueStorage`, fundamentool D-039). */
+export type TLocalStorage = TKeyValueStorage;
 export type TLocalStorageEvent = {
   /**
    * The key of the event.

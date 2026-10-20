@@ -80,16 +80,20 @@ export const storeProvider = (
     } = createApi($store, {
       emit: (_: A, v: A) => v,
     });
+    // fundamentool's observables emit through `setState`, which is replaced below: they show a value through their own
+    // (an effector store has none — its event shows it).
+    const ownSetState = ($store as any).setState as ((v: A) => void) | undefined;
+    const show: (v: A) => void = ownSetState ? (v) => ownSetState.call($store, v) : emit;
 
     storage.watch((e) => {
       if (e.key === name) {
-        emit(normalize(e.value));
+        show(normalize(e.value));
       }
     });
 
     ($store as any).setState = (v: A) => {
       storage.set(name, isEqual(defaultValue, v) ? null : v);
-      emit(normalize(v));
+      show(normalize(v));
     };
 
     return $store as unknown as ObservableWritable<A>;

@@ -90,9 +90,9 @@ MIT
 - **urlParse** (`urlParse.ts`): низкоуровневый разбор URL в богатую структуру (`TUrlProps`), включая `query`, `hash`, `child`.
 - **urlExtend** (`urlExtend.ts`): комбинирование base URL и частичных структур URL (`TUrlOptions`), для модификации query/path.
 - **unparam** (`unparam.ts`): разбор query‑строки в объект (в т.ч. вложенные структуры и массивы по скобочной нотации).
-- **routeParseProvider** (`routeParseProvider.ts`): генератор regexp+маппера по route‑шаблону (используется в `routerProvider`).
+- **routeParseProvider** (`routeParseProvider.ts`): генератор regexp+маппера по route‑шаблону (используется в таблице маршрутов роутера).
 - **regexpMapperProvider** (`regexpMapperProvider.ts`): привязка regexp `exec` к мапперу значений (в том числе для роутинга).
-- **routerProvider** (`routerProvider.ts`): сложный роутер поверх `history`/`store` и React‑компонентов (`Link`, `Router` и т.п.).
+- **Роутер** (`router/`): примитивы истории, роутер на каждую часть адреса, навигатор страниц и окон — см. [src/router/README.ru.md](src/router/README.ru.md).
 - **rpc** (`rpc/`): семейство модулей для RPC‑взаимодействия (кодирование сообщений, клиент, пул клиентов, browser/node адаптеры).
 
 ### Шаблоны и текст

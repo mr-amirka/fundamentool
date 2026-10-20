@@ -67,7 +67,7 @@ npm run docs:api
 
 #### Store DI
 
-All store-backed providers (`localStorageProvider`, `cookieStorageProvider`, `routerProvider`) accept an optional `deps` parameter so you can substitute the store implementation — e.g. pass effector-compatible factories:
+All store-backed providers (`localStorageProvider`, `cookieStorageProvider`, `createRouter`, `createNavigator`) accept an optional `deps` parameter so you can substitute the store implementation — e.g. pass effector-compatible factories:
 
 ```ts
 import { createStore, createApi, TStoreAdapter } from 'fundamentool';
@@ -80,9 +80,12 @@ const effectorAdapter: TStoreAdapter = { createStore: effector.createStore, crea
 const storage2 = localStorageProvider(window, effectorAdapter);
 ```
 
-### Router (`routerProvider`, `hashRouterProvider`)
+### Router (`browserHistoryPrimitivesProvider`, `createRouter`, `createNavigator`)
 
-Every page and window is a history entry (back closes it; `router.open(Window)` resolves the window's result), covered pages stay mounted with their scroll, separate history per tab, `router.NavigationHostProvider({ renderPage, renderWindow })` (the host component) with hooks `useWhileOpen` / `useOnForward` / `useBeforeLeave` — see [src/routerProvider/README.md](src/routerProvider/README.md).
+History primitives — three nested parts of every history entry (the address ⊃ its hash ⊃ the entry's state); a router
+per part (its location, steps, `params`); a navigator of pages and windows over a router: every page and window is a
+history entry, the route table is the only description of the pages (given to the host), tabs keep their own
+histories, the stack survives a reload — see [src/router/README.md](src/router/README.md).
 
 ### Async (`fundamentool/async`)
 

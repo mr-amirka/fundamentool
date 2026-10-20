@@ -26,6 +26,6 @@ export * from '../copyTextToClipboard';
 export * from '../getViewportSizeProvider';
 export * from '../localStorageProvider';
 export * from '../readyProvider';
-export * from '../routerProvider';
+export * from '../router';
 export * from '../setStyleSheet';
 export * from '../stylesRenderProvider';

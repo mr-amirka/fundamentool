@@ -3,26 +3,23 @@
  * @jest-environment-options {"customExportConditions": ["require", "node", "default"]}
  */
 /**
- * The router with `sectionHistory: 'separate'` — every section (tab) keeps its own history (fundamentool D-017).
+ * Tabs — rows with `section` in the route table — every tab keeps its own history (fundamentool D-017, D-039).
  */
 import {
   setup as harness,
   settle,
   waitFor,
-} from './_routerHarness';
+} from './_harness';
 import type {
-  THarnessOptions,
-} from './_routerHarness';
+  TRouteRow,
+} from '../../src/router';
 
-/** Sections a (first) and b with their own histories; `list` pages are kept. */
-function setup(start = '/a', overrides: THarnessOptions = {}) {
-  return harness({
-    sectionHistory: 'separate',
-    ...overrides,
-  }, start);
+/** Tabs a (first) and b with their own histories; `list` pages are kept. */
+function setup(start = '/a') {
+  return harness({}, start);
 }
 
-describe('routerProvider — a separate history per section', () => {
+describe('createNavigator — a history per tab', () => {
   it('every tab keeps its own stack; the browser history holds the shown one over the first tab\'s main page', async () => {
     const {
       nav, browser, paths,
@@ -117,7 +114,7 @@ describe('routerProvider — a separate history per section', () => {
     expect(nav.getState().section).toBe('b');
   });
 
-  it('a long back without guards drops the inner pages and shows the first tab', async () => {
+  it('a jump back over entries by the player lands one entry back (Chrome skips entries made without a gesture — D-039)', async () => {
     const {
       nav, browser, paths,
     } = setup();
@@ -125,7 +122,13 @@ describe('routerProvider — a separate history per section', () => {
     await nav.go('/b/1');
     browser.userGo(-2);
     await settle(50);
-    await waitFor(() => expect(paths()).toEqual(['/a']));
+    await waitFor(() => expect(paths()).toEqual([
+      '/a',
+      '/b',
+    ]));
+    expect(browser.index()).toBe(1);
+    await nav.back();
+    expect(paths()).toEqual(['/a']);
     await nav.switchSection('b');
     expect(paths()).toEqual([
       '/a',
@@ -193,9 +196,41 @@ describe('routerProvider — a separate history per section', () => {
     ]);
   });
 
-  it('needs sections', () => {
-    expect(() => setup('/a', {
-      sections: {},
-    })).toThrow(/`sections` beside "separate"/);
+  it('a tab whose root is `/`: every page no other tab claims is in it', () => {
+    const routes: readonly TRouteRow[] = [
+      [
+        '/',
+        {
+          main: 'home',
+          section: 'home',
+        },
+      ],
+      [
+        '/b',
+        {
+          main: 'b',
+          section: 'b',
+        },
+      ],
+      [
+        '/(.*)',
+        {
+          main: 'page',
+        },
+      ],
+    ];
+    const inB = harness({
+      routes,
+    }, '/b/1');
+    expect(inB.paths()).toEqual([
+      '/',
+      '/b/1',
+    ]);
+    expect(inB.nav.getState().section).toBe('b');
+    const inHome = harness({
+      routes,
+    }, '/x');
+    expect(inHome.paths()).toEqual(['/x']);
+    expect(inHome.nav.getState().section).toBe('home');
   });
 });
