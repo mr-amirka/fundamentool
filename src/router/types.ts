@@ -230,8 +230,8 @@ export type TOpenOptions = {
 
 /** Options of `nav.leavePage`. */
 export type TLeavePageOptions = {
-  /** Where to go when the stack has no earlier page. */
-  fallback: Partial<TUrlProps>;
+  /** Where to go when the stack has no earlier page (default — the navigator's `fallback`). */
+  fallback?: Partial<TUrlProps>;
 };
 
 /** What a window renders with: its params, whether it is open (false while it plays its exit), how to close it. */
@@ -261,6 +261,11 @@ export type TNavigatorDeps = TObservableAdapter & {
   keep?: number;
   /** How long a closed window plays its exit, ms (default `DEFAULT_EXIT_MS`, 300). */
   exitMs?: number;
+  /**
+   * Where to go when the page on screen has nothing below it (D-044): `nav.leavePage()` and `router.backLocation()` at
+   * the first page replace it with this. Left out — they stay.
+   */
+  fallback?: Partial<TUrlProps>;
 };
 
 /** What `nav.NavigationHostProvider` takes. */

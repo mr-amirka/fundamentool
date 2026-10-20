@@ -48,6 +48,7 @@ describe('createNavigator — options', () => {
       ...freshDeps().deps,
       keep: 1,
       exitMs: 1,
+      fallback: {},
     };
     expect([...NAVIGATOR_DEPS_KEYS].sort()).toEqual(Object.keys(deps).sort());
     const open: Required<TOpenOptions> = {

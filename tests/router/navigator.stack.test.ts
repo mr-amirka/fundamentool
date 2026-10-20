@@ -759,11 +759,51 @@ describe('createNavigator — the stack', () => {
     expect(win.location.pathname).toBe('/a');
   });
 
+  it('a navigator-wide fallback: leavePage() and backLocation() at the first page go there (D-044)', async () => {
+    const {
+      router, navigator, paths,
+    } = setup({
+      routes: PLAIN,
+      fallback: {
+        path: '/home',
+      },
+    }, '/locked');
+    await expect(router.backLocation()).resolves.toBe(true);
+    expect(paths()).toEqual(['/home']);
+    await expect(router.backLocation()).resolves.toBe(false); // there already
+    void navigator.open('Menu');
+    await waitFor(() => expect(paths()).toEqual([
+      '/home',
+      'window',
+    ]));
+    await navigator.leavePage(); // the window over the fallback page closes
+    expect(paths()).toEqual(['/home']);
+    await navigator.startOver({
+      path: '/locked',
+    });
+    await navigator.leavePage({
+      fallback: {
+        path: '/other',
+      },
+    }); // the call's fallback wins
+    expect(paths()).toEqual(['/other']);
+
+    const without = setup({
+      routes: PLAIN,
+    }, '/locked');
+    await without.navigator.leavePage();
+    await expect(without.router.backLocation()).resolves.toBe(false);
+    expect(without.paths()).toEqual(['/locked']);
+  });
+
   it('leavePage checks its options', async () => {
     const {
       navigator,
     } = setup();
     await expect(navigator.leavePage(null as never)).rejects.toThrow(/leavePage: expects an options object, got null/);
+    expect(() => setup({
+      fallback: '/' as never,
+    })).toThrow(/createNavigator: "fallback" expects a location/);
     await expect(navigator.leavePage({
       fallbak: {},
     } as never)).rejects.toThrow(/Did you mean "fallback"/);

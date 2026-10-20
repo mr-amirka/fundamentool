@@ -103,8 +103,9 @@ export const NavigationHost = nav.NavigationHostProvider({
   `nav.backToRoot({ force, quiet })` — назад к началу раздела (без разделов — к первой странице).
 - **Перезагрузка** восстанавливает стек из истории: страницы под верхней — `dormant` (не смонтированы), пока до них не
   дойдут; записи окон проходятся (окно не открывается заново, D-011).
-- **Ещё**: `nav.startOver(location)` (выход из аккаунта — всё прежнее уходит), `nav.leavePage({ fallback })`
-  (страница без доступа: назад или `fallback` на её месте), `nav.backToRoot`; подтверждения
+- **Ещё**: `nav.startOver(location)` (выход из аккаунта — всё прежнее уходит), `nav.leavePage()` (страница без
+  доступа: назад или `fallback` на её месте — `createNavigator({ fallback })` один раз или в вызове;
+  `router.backLocation()` с первой страницы идёт туда же, D-044), `nav.backToRoot`; подтверждения
   ухода и обработчики «вперёд» — `nav.onBeforeLeave`, `nav.onForward`, `nav.whileOpen` и хуки `useBeforeLeave`,
   `useOnForward`, `useWhileOpen`, `useEntry`, `useNavigatorState`; запись `closing`, пока спрашивают её подтверждения
   ухода (страница может выключить кнопки); `nav.Link` / `nav.NavLink` с `href` — строкой, как её читает `<a href>`

@@ -107,6 +107,7 @@ export const NAVIGATOR_DEPS_KEYS = [
   'router',
   ...FUNCTION_DEPS,
   ...NUMBER_DEPS,
+  'fallback',
 ] as const;
 
 /** The single list of `open`'s option keys. */
@@ -181,6 +182,18 @@ function assertNavigatorDeps(deps: TNavigatorDeps): void {
     if (value !== undefined && !(isNumber(value) && value >= 0)) {
       throw new TypeError(`${WHERE}: "${key}" expects a number ≥ 0, got ${describeValue(value)}`);
     }
+  }
+  assertLocation(
+    WHERE, 'fallback', deps.fallback,
+  );
+}
+
+/** A location option (`fallback`): left out, or an object (`{ path, query, … }`). */
+function assertLocation(
+  where: string, key: string, value: unknown,
+): void {
+  if (value !== undefined && (!isObject(value) || isArray(value))) {
+    throw new TypeError(`${where}: "${key}" expects a location ({ path, query, … }), got ${describeValue(value)}`);
   }
 }
 
@@ -1036,30 +1049,49 @@ export function createNavigator(deps: TNavigatorDeps) {
   }
 
   /**
+   * The first page has nothing below it: it is replaced with `fallback` (the call's, else the navigator's — D-044),
+   * windows over it closing first; `false` without one, or when the page is already there. Inside the queue.
+   */
+  async function toFallback(fallback: Partial<TUrlProps> | undefined): Promise<boolean> {
+    if (!fallback || pageIndexAt(entries, entries.length - 1) > 0) {
+      return false; // no fallback — or a page was opened while the step waited: not the first page any more
+    }
+    const location = locate(fallback, topPage(entries).location);
+    if (entries.length === 1 && topPage(entries).location.href === location.href) {
+      return false; // already there, nothing over it
+    }
+    await replaceTop(location);
+    return true;
+  }
+
+  /**
    * Leaves the shown page — e.g. one the player may not open: back to the previous page if the stack has one (windows
-   * over the page close too), otherwise the page is replaced with `fallback`. A leave guard that refuses keeps it.
+   * over the page close too), otherwise the page is replaced with `fallback` — the call's, else the navigator's
+   * (`createNavigator({ fallback })`, D-044); without either it stays. A leave guard that refuses keeps it.
    *
    * @example
    * if (!progress.isUnlocked(levelId)) {
-   *   await nav.leavePage({ fallback: { path: '/' } });
+   *   await nav.leavePage(); // createNavigator({ …, fallback: { path: '/' } })
    * }
    */
-  async function leavePage(options: TLeavePageOptions): Promise<void> {
-    if (!isObject(options) || isArray(options)) {
-      throw new TypeError(`${WHERE} leavePage: expects an options object, got ${describeValue(options)}`);
+  async function leavePage(options?: TLeavePageOptions): Promise<void> {
+    if (options !== undefined) {
+      if (!isObject(options) || isArray(options)) {
+        throw new TypeError(`${WHERE} leavePage: expects an options object, got ${describeValue(options)}`);
+      }
+      assertKnownOptions(
+        `${WHERE} leavePage`, options, LEAVE_PAGE_OPTION_KEYS,
+      );
+      assertLocation(
+        `${WHERE} leavePage`, 'fallback', options.fallback,
+      );
     }
-    assertKnownOptions(
-      `${WHERE} leavePage`, options, LEAVE_PAGE_OPTION_KEYS,
-    );
-    const fallback = options.fallback;
-    if (!isObject(fallback)) {
-      throw new TypeError(`${WHERE} leavePage: "fallback" expects a location ({ path, query, … }), got ${describeValue(fallback)}`);
-    }
+    const fallback = options?.fallback || deps.fallback;
     // The page's place is read when the step's turn comes (a window closing before it may have changed the stack).
     if (pageIndexAt(entries, entries.length - 1) > 0) {
       await backTo((current) => pageIndexAt(entries, current) - 1, false);
     } else {
-      await router.replaceLocation(fallback);
+      await enqueue(() => toFallback(fallback));
     }
   }
 
@@ -1148,7 +1180,8 @@ export function createNavigator(deps: TNavigatorDeps) {
       await go(location, options);
     },
     replace,
-    back: (options?: TBackOptions) => (entries.length < 2 ? Promise.resolve(false) : backTo(
+    // At the first page Back goes to the navigator's fallback, if it has one (D-044).
+    back: (options?: TBackOptions) => (entries.length < 2 ? enqueue(() => quietly(!!options?.quiet, () => toFallback(deps.fallback))) : backTo(
       (current) => current - 1, !!options?.force, !!options?.quiet,
     )),
   });

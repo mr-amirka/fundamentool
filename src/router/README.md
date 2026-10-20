@@ -102,8 +102,9 @@ export const NavigationHost = nav.NavigationHostProvider({
   pattern. `nav.backToRoot({ force, quiet })` — back to the section's start (without sections — the first page).
 - **A reload** restores the stack from the history: the pages below the top are `dormant` (not mounted) until reached;
   the windows' entries are passed (a window isn't reopened, D-011).
-- **More**: `nav.startOver(location)` (sign out — every page before is gone), `nav.leavePage({ fallback })` (a page
-  without access: back, or `fallback` in its place), `nav.backToRoot`; leave guards and forward
+- **More**: `nav.startOver(location)` (sign out — every page before is gone), `nav.leavePage()` (a page without
+  access: back, or `fallback` in its place — `createNavigator({ fallback })` once, or per call; `router.backLocation()`
+  at the first page goes there too, D-044), `nav.backToRoot`; leave guards and forward
   handlers — `nav.onBeforeLeave`, `nav.onForward`, `nav.whileOpen` and the hooks `useBeforeLeave`, `useOnForward`,
   `useWhileOpen`, `useEntry`, `useNavigatorState`; an entry is `closing` while its leave guards are asked (a page can
   disable its buttons); `nav.Link` / `nav.NavLink` with `href` — a string read as `<a href>` reads it (`/x`, `?q=1`,
