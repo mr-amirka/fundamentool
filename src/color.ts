@@ -77,13 +77,9 @@ const double = color.double = (v: string, start: number): number => parseInt(v.s
  *
  * @param v - The color string to normalize.
  * @param alpha - The alpha value to use.
- * @param w - The width of the color value.
- * @param l - The length of the color value.
  * @returns An array of color values.
  */
-const normalize = color.normalize = (
-  v: string, alpha?: string | null, _w?: number, l?: number,
-): [number, number, number, number] => {
+const normalize = color.normalize = (v: string, alpha?: string | null): [number, number, number, number] => {
   const a = alpha ? parseFloat('0' + alpha) : 1;
   if (!v) {
     return [
@@ -93,7 +89,7 @@ const normalize = color.normalize = (
       a,
     ];
   }
-  l = v.length;
+  const l = v.length;
   if (l < 2) {
     const x = one(v);
     return [
