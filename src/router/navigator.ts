@@ -35,10 +35,22 @@ import type {
   TUrlProps,
 } from '../urlParse';
 import {
+  DEFAULT_EXIT_MS,
+  DEFAULT_KEEP,
+  PAGE,
+  WINDOW,
+} from './constants';
+import {
+  routerInternal,
+} from './internal';
+import {
   locate,
+  pathPrefix,
 } from './location';
 import {
   computeState,
+  pageAt,
+  pageIndexAt,
   topPage,
 } from './navigatorState';
 import {
@@ -50,6 +62,9 @@ import {
 import type {
   TRouteMatch,
 } from './routeTable';
+import type {
+  TRouterInternal,
+} from './internal';
 import type {
   TBackOptions,
   TEntry,
@@ -67,21 +82,30 @@ import type {
 
 const WHERE = '[fundamentool] createNavigator';
 
-/** The single list of `createNavigator`'s keys. */
-export const NAVIGATOR_DEPS_KEYS = [
-  'router',
+/** The dependencies that are functions: the observable adapter and the view library. */
+const FUNCTION_DEPS = [
   'createObservable',
   'createApi',
   'createElement',
   'forwardRef',
-  'Component',
   'useEffect',
   'useState',
   'useRef',
   'createContext',
   'useContext',
+] as const;
+
+/** The settings that are numbers ≥ 0. */
+const NUMBER_DEPS = [
   'keep',
   'exitMs',
+] as const;
+
+/** The single list of `createNavigator`'s keys. */
+export const NAVIGATOR_DEPS_KEYS = [
+  'router',
+  ...FUNCTION_DEPS,
+  ...NUMBER_DEPS,
 ] as const;
 
 /** The single list of `open`'s option keys. */
@@ -91,11 +115,14 @@ export const OPEN_OPTION_KEYS = ['reopen'] as const;
 export const LEAVE_PAGE_OPTION_KEYS = ['fallback'] as const;
 
 /** An entry as the history keeps it (to rebuild the stack after a reload): a page's address and tab, a window's place. */
-type TSaved = [kind: 'page', id: number, href: string, section: string | null] | [kind: 'window', id: number];
+type TSaved = [kind: typeof PAGE, id: number, href: string, section: string | null] | [kind: typeof WINDOW, id: number];
+
+/** The shape of what the navigator writes into an entry; a new shape — a new number (older entries start the stack anew). */
+const NAV_FORMAT = 1;
 
 /** What the navigator writes into its part of an entry: the entry and the whole stack it closes. */
 type TNavData = {
-  nav: 1;
+  nav: typeof NAV_FORMAT;
   id: number;
   depth: number;
   /** The shown stack, bottom to this entry. */
@@ -130,7 +157,7 @@ type TForwardItem = {
 };
 
 function isNavData(value: unknown): value is TNavData {
-  return isObject(value) && (value as TNavData).nav === 1 && isNumber((value as TNavData).depth);
+  return isObject(value) && (value as TNavData).nav === NAV_FORMAT && isNumber((value as TNavData).depth);
 }
 
 function assertNavigatorDeps(deps: TNavigatorDeps): void {
@@ -140,18 +167,15 @@ function assertNavigatorDeps(deps: TNavigatorDeps): void {
   assertKnownOptions(
     WHERE, deps, NAVIGATOR_DEPS_KEYS,
   );
-  if (!isObject(deps.router) || !isFunction(deps.router.attach)) {
+  if (!routerInternal(deps.router)) {
     throw new TypeError(`${WHERE}: "router" expects a router (createRouter(…)), got ${describeValue(deps.router)}`);
   }
-  for (const key of NAVIGATOR_DEPS_KEYS) {
-    if (key !== 'router' && key !== 'keep' && key !== 'exitMs' && !isFunction(deps[key]) && !(key === 'Component' && isObject(deps[key]))) {
+  for (const key of FUNCTION_DEPS) {
+    if (!isFunction(deps[key])) {
       throw new TypeError(`${WHERE}: "${key}" expects a function, got ${describeValue(deps[key])}`);
     }
   }
-  for (const key of [
-    'keep',
-    'exitMs',
-  ] as const) {
+  for (const key of NUMBER_DEPS) {
     const value = deps[key];
     if (value !== undefined && !(isNumber(value) && value >= 0)) {
       throw new TypeError(`${WHERE}: "${key}" expects a number ≥ 0, got ${describeValue(value)}`);
@@ -176,15 +200,19 @@ export function createNavigator(deps: TNavigatorDeps) {
     createObservable,
     createApi,
   } = deps;
-  const primitive = router.historyPrimitive;
-  const keepLimit = deps.keep ?? 10;
-  const exitMs = deps.exitMs ?? 300;
+  const internal = routerInternal(router) as TRouterInternal;
+  const primitive = internal.historyPrimitive;
+  // `0` is a limit too (no covered page stays mounted), so only a missing value takes the default.
+  const keepLimit = deps.keep ?? DEFAULT_KEEP;
+  const exitMs = deps.exitMs ?? DEFAULT_EXIT_MS;
 
   // ── the table (given by the host) ──────────────────────────────────────────────────────────────────────────────
 
   let match: (path: string) => TRouteMatch<Record<string, unknown>> | null = () => null;
   /** Tabs → their root's location; the first is the start tab. */
   let sections: Record<string, TUrlProps> = {};
+  /** The tabs' roots as `sectionOf` reads them: the name, the root's path, what the paths under it start with. */
+  let roots: [name: string, path: string, prefix: string][] = [];
   let homeSection: string | null = null;
 
   // ── the stack ─────────────────────────────────────────────────────────────────────────────────────────────────
@@ -209,43 +237,40 @@ export function createNavigator(deps: TNavigatorDeps) {
   const guards = keyedRegistry<number, TLeaveGuard>();
   /** Cleanups returned by forward handlers — run when their entry is on top again. */
   const returns = keyedRegistry<number, () => void>();
-  /** Entries being left while their guards are asked. */
-  const closing = new Set<number>();
+  /** The other tabs' stacks as the history keeps them; they change only when the stacks are laid out anew. */
+  let hiddenTabs: Record<string, TSaved[]> | null = null;
 
   /** A page entry: its row and parameters from the table, its tab — its root's, or the one it's opened in. */
   function page(
-    location: TUrlProps, depth: number, section: string | null = shown, id = nextId++,
+    location: TUrlProps, depth: number, section: string | null = shown, id?: number,
   ): TPageEntry {
     const found = match(location.path);
     return {
-      kind: 'page',
-      id,
+      kind: PAGE,
+      id: id || nextId++,
       depth,
       location,
       row: found ? found.row : null,
       params: found ? found.params : {},
       section: found?.row.section ?? section,
       dormant: false,
+      closing: false,
     };
   }
 
   // ── state ─────────────────────────────────────────────────────────────────────────────────────────────────────
 
-  let state = null as unknown as TNavigatorState;
-  const $state = createObservable<TNavigatorState>(state);
-  const {
-    emitState,
-  } = createApi($state, {
-    emitState: (_, payload: TNavigatorState) => payload,
-  });
-
-  /** The stack as the state; the router shows the top page's location. */
-  function publish(): void {
+  /** The shown stack goes into its tab's place. */
+  function storeShown(): void {
     if (shown !== null) {
       stacks.set(shown, shown === homeSection ? entries : entries.slice(1));
     }
-    // The page on top is shown: restored after a reload, it wakes up now.
-    const topIndex = entries.lastIndexOf(topPage(entries));
+  }
+
+  /** The stack as the state. The page on top is shown: restored after a reload, it wakes up now. */
+  function snapshot(): TNavigatorState {
+    storeShown();
+    const topIndex = pageIndexAt(entries, entries.length - 1);
     const top = entries[topIndex] as TPageEntry;
     if (top.dormant) {
       entries = [
@@ -257,7 +282,7 @@ export function createNavigator(deps: TNavigatorDeps) {
         ...entries.slice(topIndex + 1),
       ];
     }
-    state = computeState({
+    return computeState({
       entries,
       leaving,
       ahead,
@@ -265,8 +290,21 @@ export function createNavigator(deps: TNavigatorDeps) {
       shown,
       keepLimit,
     });
+  }
+
+  /** The stack as the state, emitted; the router shows the top page's location. */
+  function publish(): void {
+    state = snapshot();
     emitState(state);
     showLocation(state.location);
+  }
+
+  /** Marks the entries `ids` names as having their leave guards asked (or not); the state isn't emitted. */
+  function markClosing(ids: ReadonlySet<number>, closing: boolean): void {
+    entries = entries.map((entry) => (ids.has(entry.id) && entry.closing !== closing ? {
+      ...entry,
+      closing,
+    } : entry));
   }
 
   // ── tabs ──────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -279,10 +317,12 @@ export function createNavigator(deps: TNavigatorDeps) {
     const path = location.path;
     let found = homeSection as string;
     let longest = -1;
-    for (const name of Object.keys(sections)) {
-      const root = sections[name].path;
-      const fits = path === root || path.startsWith(root.endsWith('/') ? root : root + '/');
-      if (fits && root.length > longest) {
+    for (const [
+      name,
+      root,
+      prefix,
+    ] of roots) {
+      if ((path === root || path.startsWith(prefix)) && root.length > longest) {
         found = name;
         longest = root.length;
       }
@@ -317,6 +357,7 @@ export function createNavigator(deps: TNavigatorDeps) {
     const list = layout(section);
     const length = list.length;
     shown = section;
+    hiddenTabs = null;
     entries = list.slice(0, 1);
     write(list[0], true);
     for (let i = 1; i < length; i++) {
@@ -329,13 +370,13 @@ export function createNavigator(deps: TNavigatorDeps) {
 
   /** Windows can't wait in a hidden stack: those of the shown stack close (resolve `null`) before a switch. */
   function dropWindows(): void {
-    const first = entries.findIndex((entry) => entry.kind === 'window');
+    const first = entries.findIndex((entry) => entry.kind === WINDOW);
     if (first < 0) {
       return;
     }
     const windows = entries.slice(first) as TWindowEntry[];
     ahead = [];
-    runOpened(windows, 'close');
+    closeOpened(windows);
     entries = entries.slice(0, first);
     for (const entry of windows) {
       forget(entry);
@@ -346,52 +387,60 @@ export function createNavigator(deps: TNavigatorDeps) {
   // ── the history ───────────────────────────────────────────────────────────────────────────────────────────────
 
   function saved(entry: TEntry): TSaved {
-    return entry.kind === 'page' ? [
-      'page',
+    return entry.kind === PAGE ? [
+      PAGE,
       entry.id,
       entry.location.href,
       entry.section,
     ] : [
-      'window',
+      WINDOW,
       entry.id,
     ];
   }
 
-  /** Writes `entry` (the top of `entries`) into the router's part: a new entry or the current one. */
-  function write(entry: TEntry, replace: boolean): void {
-    const tabs: Record<string, TSaved[]> = {};
-    for (const [
-      name,
-      list,
-    ] of stacks) {
-      if (name !== shown) {
-        tabs[name] = list.map(saved);
+  /** The other tabs' stacks as the history keeps them — computed once after they were laid out. */
+  function savedTabs(): Record<string, TSaved[]> {
+    if (!hiddenTabs) {
+      hiddenTabs = {};
+      for (const [
+        name,
+        list,
+      ] of stacks) {
+        if (name !== shown) {
+          hiddenTabs[name] = list.map(saved);
+        }
       }
     }
+    return hiddenTabs;
+  }
+
+  /** Writes `entry` (the top of `entries`) into the router's part: a new entry or the current one. */
+  function write(entry: TEntry, replace: boolean): void {
+    const depth = entry.depth;
     const data: TNavData = {
-      nav: 1,
+      nav: NAV_FORMAT,
       id: entry.id,
-      depth: entry.depth,
-      stack: entries.slice(0, entry.depth + 1).map(saved),
+      depth,
+      stack: entries.slice(0, depth + 1).map(saved),
       shown,
-      tabs,
+      tabs: savedTabs(),
     };
-    const location = topPage(entries.slice(0, entry.depth + 1)).location;
-    (replace ? primitive.replace : primitive.push)(location, data);
+    (replace ? primitive.replace : primitive.push)(pageAt(entries, depth).location, data);
   }
 
   /** Entries rebuilt from what the history kept: pages dormant (not mounted until reached), windows gone. */
   function fromSaved(list: readonly TSaved[]): TEntry[] {
     return list.map((item, depth) => {
       nextId = Math.max(nextId, item[1] + 1);
-      if (item[0] === 'window') {
+      if (item[0] === WINDOW) {
         return {
-          kind: 'window',
+          kind: WINDOW,
           id: item[1],
           depth,
           window: null,
           params: undefined,
           reopen: false,
+          closing: false,
         };
       }
       return {
@@ -403,14 +452,15 @@ export function createNavigator(deps: TNavigatorDeps) {
     });
   }
 
-  /** The stack from an entry the history kept (a reload, or a move to an entry we don't hold). */
+  /** The stack from an entry the history kept (a reload, or a move to an entry we don't hold); not yet published. */
   function restore(data: TNavData): void {
     const dropped = [
       ...entries,
       ...[...stacks.values()].flat(),
     ];
-    runOpened(entries, 'close');
+    closeOpened(entries);
     stacks.clear();
+    hiddenTabs = null;
     shown = data.shown;
     for (const name of Object.keys(data.tabs)) {
       stacks.set(name, fromSaved(data.tabs[name]));
@@ -419,9 +469,8 @@ export function createNavigator(deps: TNavigatorDeps) {
     ahead = [];
     for (const entry of dropped) {
       forget(entry);
-      entry.kind === 'window' && resolve(entry, null);
+      entry.kind === WINDOW && resolve(entry, null);
     }
-    publish();
   }
 
   /** A move made by the code; resolves with the part in the entry arrived at. */
@@ -433,22 +482,27 @@ export function createNavigator(deps: TNavigatorDeps) {
 
   // ── stack changes ─────────────────────────────────────────────────────────────────────────────────────────────
 
-  function runOpened(list: readonly TEntry[], phase: 'close' | 'reopen'): void {
+  /** The `whileOpen` effects of the entries are cleaned up, top entry first: they start being left. */
+  function closeOpened(list: readonly TEntry[]): void {
     for (let i = list.length - 1; i >= 0; i--) {
       for (const item of opened.list(list[i].id)) {
-        if (phase === 'close') {
-          const cleanup = item.cleanup;
-          item.cleanup = undefined;
-          isFunction(cleanup) && cleanup();
-        } else {
-          item.cleanup = item.effect();
-        }
+        const cleanup = item.cleanup;
+        item.cleanup = undefined;
+        isFunction(cleanup) && cleanup();
+      }
+    }
+  }
+
+  /** The `whileOpen` effects of the entries run again, top entry first: leaving them was refused. */
+  function reopenOpened(list: readonly TEntry[]): void {
+    for (let i = list.length - 1; i >= 0; i--) {
+      for (const item of opened.list(list[i].id)) {
+        item.cleanup = item.effect();
       }
     }
   }
 
   function forget(entry: TEntry): void {
-    closing.delete(entry.id);
     opened.forget(entry.id);
     forward.forget(entry.id);
     guards.forget(entry.id);
@@ -465,15 +519,19 @@ export function createNavigator(deps: TNavigatorDeps) {
 
   /** Removes every entry above `depth`: windows resolve and play their exit; the new top's return cleanups run. */
   function removeAbove(depth: number): void {
-    const removed = entries.slice(depth + 1);
+    // What is left isn't being left any more (Forward may bring it back).
+    const removed = entries.slice(depth + 1).map((entry) => (entry.closing ? {
+      ...entry,
+      closing: false,
+    } : entry));
     entries = entries.slice(0, depth + 1);
     // What was left goes ahead (Forward brings it back), up to a window that isn't reopened (D-024).
-    const stop = removed.findIndex((entry) => entry.kind === 'window' && !entry.reopen);
+    const stop = removed.findIndex((entry) => entry.kind === WINDOW && !entry.reopen);
     ahead = stop < 0 ? [
       ...removed,
       ...ahead,
     ] : removed.slice(0, stop);
-    const windows = removed.filter((entry): entry is TWindowEntry => entry.kind === 'window');
+    const windows = removed.filter((entry): entry is TWindowEntry => entry.kind === WINDOW);
     for (const entry of removed) {
       forget(entry);
     }
@@ -500,7 +558,7 @@ export function createNavigator(deps: TNavigatorDeps) {
   /** Windows restored after a reload have nothing to show: Back passes their entries with one more step. */
   async function passGoneWindows(): Promise<void> {
     let top = entries[entries.length - 1];
-    while (top.kind === 'window' && top.window === null) {
+    while (top.kind === WINDOW && top.window === null) {
       await travel(-1);
       removeAbove(entries.length - 2);
       top = entries[entries.length - 1];
@@ -516,6 +574,7 @@ export function createNavigator(deps: TNavigatorDeps) {
     const data = entry.data;
     if (!isNavData(data)) {
       reset(entry.location);
+      publish();
       return LEFT;
     }
     const current = entries.length - 1;
@@ -526,6 +585,7 @@ export function createNavigator(deps: TNavigatorDeps) {
     if (entries[target]?.id !== data.id) {
       // An entry of a stack we don't hold (written before a reload): the stack is what it kept.
       restore(data);
+      publish();
       await passGoneWindows();
       return LEFT;
     }
@@ -536,7 +596,7 @@ export function createNavigator(deps: TNavigatorDeps) {
     if (shown !== null && target === 0 && shown !== homeSection) {
       // Back past a tab's root: that tab keeps its root, the start tab is shown.
       const removed = entries.slice(2);
-      runOpened(removed, 'close');
+      closeOpened(removed);
       if (!force && removed.some((item) => guards.has(item.id))) {
         await travel(current);
         return {
@@ -548,7 +608,7 @@ export function createNavigator(deps: TNavigatorDeps) {
       return LEFT;
     }
     const removed = entries.slice(target + 1);
-    runOpened(removed, 'close');
+    closeOpened(removed);
     if (force || !removed.some((item) => guards.has(item.id))) {
       removeAbove(target);
       await passGoneWindows();
@@ -562,13 +622,13 @@ export function createNavigator(deps: TNavigatorDeps) {
   }
 
   /**
-   * Asks the guards of `removed`, top entry first. All agree — go to `target`. One refuses — stop at its entry: what
-   * was above it is left, it and what is below stay (their `whileOpen` effects run again).
+   * Asks the guards of `removed`, top entry first; meanwhile they are `closing` in the state. All agree — go to
+   * `target`. One refuses — stop at its entry: what was above it is left, it and what is below stay (their `whileOpen`
+   * effects run again).
    */
   async function confirmLeave(target: number, removed: readonly TEntry[]): Promise<boolean> {
-    for (const entry of removed) {
-      closing.add(entry.id);
-    }
+    markClosing(new Set(removed.map((entry) => entry.id)), true);
+    publish();
     let stop = target;
     for (let i = removed.length - 1; i >= 0 && stop === target; i--) {
       for (const guard of guards.list(removed[i].id)) {
@@ -578,10 +638,12 @@ export function createNavigator(deps: TNavigatorDeps) {
         }
       }
     }
-    for (const entry of removed) {
-      closing.delete(entry.id);
+    const staying = removed.filter((entry) => entry.depth <= stop);
+    reopenOpened(staying);
+    if (staying.length) {
+      markClosing(new Set(staying.map((entry) => entry.id)), false);
+      publish();
     }
-    runOpened(removed.filter((entry) => entry.depth <= stop), 'reopen');
     return enqueue(async () => {
       const current = entries.length - 1;
       if (current <= stop) {
@@ -604,13 +666,14 @@ export function createNavigator(deps: TNavigatorDeps) {
     const back = ahead.slice(0, count);
     if (back.length < count || back[count - 1].id !== data.id) {
       const ours = data.stack.slice(0, current + 1).every((item, depth) => item[1] === entries[depth].id);
-      if (ours && data.stack.slice(current + 1).some((item) => item[0] === 'window')) {
+      if (ours && data.stack.slice(current + 1).some((item) => item[0] === WINDOW)) {
         // Our own stack with windows ahead we don't keep (they come back only from `ahead`): the move is undone.
         await travel(current - target);
         return STAYED;
       }
       // Pages we don't hold (after a reload): the stack the history kept.
       restore(data);
+      publish();
       await passGoneWindows();
       return LEFT;
     }
@@ -640,14 +703,15 @@ export function createNavigator(deps: TNavigatorDeps) {
     publish();
   }
 
-  /** Drops the stack and starts it at `location` (with tabs: over the start tab's root). */
+  /** Drops the stack and starts it at `location` (with tabs: over the start tab's root); not yet published. */
   function reset(location: TUrlProps): void {
     const dropped = [
       ...entries,
       ...[...stacks].filter(([name]) => name !== shown).flatMap(([, list]) => list),
     ];
-    runOpened(entries, 'close');
+    closeOpened(entries);
     stacks.clear();
+    hiddenTabs = null;
     if (homeSection !== null) {
       shown = sectionOf(location);
       stacks.set(shown, [
@@ -669,22 +733,21 @@ export function createNavigator(deps: TNavigatorDeps) {
     ahead = [];
     for (const entry of dropped) {
       forget(entry);
-      entry.kind === 'window' && resolve(entry, null);
+      entry.kind === WINDOW && resolve(entry, null);
     }
-    publish();
   }
 
   /** Does the top entry have forward handlers for this kind of step? */
-  function hasForward(kind: 'page' | 'window'): boolean {
-    return forward.list(entries[entries.length - 1].id).some((item) => kind === 'page' || item.windows);
+  function hasForward(kind: TEntry['kind']): boolean {
+    return forward.list(entries[entries.length - 1].id).some((item) => kind === PAGE || item.windows);
   }
 
   /** Asks the forward handlers of the top entry; `false` — cancelled. Runs outside the queue (handlers may open windows). */
-  async function askForward(kind: 'page' | 'window'): Promise<boolean> {
+  async function askForward(kind: TEntry['kind']): Promise<boolean> {
     const top = entries[entries.length - 1];
     for (const {
       handler,
-    } of forward.list(top.id).filter((item) => kind === 'page' || item.windows)) {
+    } of forward.list(top.id).filter((item) => kind === PAGE || item.windows)) {
       const answer = await handler();
       if (answer === false) {
         return false;
@@ -718,7 +781,7 @@ export function createNavigator(deps: TNavigatorDeps) {
    * its place in the queue at once, so steps keep their call order.
    */
   async function go(location: TUrlProps): Promise<boolean> {
-    if (hasForward('page') && !(await askForward('page'))) {
+    if (hasForward(PAGE) && !(await askForward(PAGE))) {
       return false;
     }
     await enqueue(() => push(page(location, entries.length)));
@@ -729,7 +792,7 @@ export function createNavigator(deps: TNavigatorDeps) {
   function replace(location: TUrlProps): Promise<void> {
     return enqueue(async () => {
       const current = entries.length - 1;
-      const index = entries.lastIndexOf(topPage(entries));
+      const index = pageIndexAt(entries, current);
       if (index < current) {
         await settle(await travel(index - current));
         if (entries.length - 1 !== index) {
@@ -737,7 +800,7 @@ export function createNavigator(deps: TNavigatorDeps) {
         }
       }
       const old = entries[index];
-      runOpened([old], 'close');
+      closeOpened([old]);
       forget(old);
       const fresh = page(
         location, index, (old as TPageEntry).section,
@@ -761,6 +824,7 @@ export function createNavigator(deps: TNavigatorDeps) {
         await travel(-current);
       }
       reset(location);
+      publish();
     });
   }
 
@@ -781,18 +845,19 @@ export function createNavigator(deps: TNavigatorDeps) {
         `${WHERE} open`, options, OPEN_OPTION_KEYS,
       );
     }
-    if (hasForward('window') && !(await askForward('window'))) {
+    if (hasForward(WINDOW) && !(await askForward(WINDOW))) {
       return null;
     }
     return new Promise<R | null>((done) => {
       void enqueue(() => {
         const entry: TWindowEntry = {
-          kind: 'window',
+          kind: WINDOW,
           id: nextId++,
           depth: entries.length,
           window: win,
           params,
           reopen: options?.reopen !== false,
+          closing: false,
         };
         resolvers.set(entry.id, done as (result: unknown) => void);
         push(entry);
@@ -837,7 +902,7 @@ export function createNavigator(deps: TNavigatorDeps) {
       }
       for (let i = entries.length - 1; i >= 0; i--) {
         const entry = entries[i];
-        if (entry.kind === 'page' && entry.row?.section === section) {
+        if (entry.kind === PAGE && entry.row?.section === section) {
           if (i < entries.length - 1) {
             await settle(await travel(i - (entries.length - 1)));
           }
@@ -862,7 +927,7 @@ export function createNavigator(deps: TNavigatorDeps) {
     }
     await enqueue(async () => {
       dropWindows();
-      publish();
+      storeShown();
       if (entries.length > 1) {
         await travel(-(entries.length - 1));
       }
@@ -898,8 +963,8 @@ export function createNavigator(deps: TNavigatorDeps) {
       throw new TypeError(`${WHERE} leavePage: "fallback" expects a location ({ path, query, … }), got ${describeValue(fallback)}`);
     }
     // The page's place is read when the step's turn comes (a window closing before it may have changed the stack).
-    if (entries.lastIndexOf(topPage(entries)) > 0) {
-      await backTo(() => entries.lastIndexOf(topPage(entries)) - 1, false);
+    if (pageIndexAt(entries, entries.length - 1) > 0) {
+      await backTo((current) => pageIndexAt(entries, current) - 1, false);
     } else {
       await router.replaceLocation(fallback);
     }
@@ -937,27 +1002,37 @@ export function createNavigator(deps: TNavigatorDeps) {
     return guards.add(entryId, guard);
   }
 
-  /** Is the entry being left right now (its guards are being asked)? */
-  const isClosing = (entryId: number): boolean => closing.has(entryId);
-
-  /** The table, from the host: rows, tabs; every entry gets its row; tabs lay the stack out on first sight. */
+  /**
+   * The table, from the host: rows, tabs; every entry gets its row; tabs lay the stack out on first sight. A new host
+   * gives a new table (a hot reload of the module that makes it); the table is the navigator's, so two hosts mounted at
+   * once draw the same pages.
+   */
   function setRoutes(routes: readonly TRouteRow[]): void {
     match = routeTableMatcher(routes);
     sections = {};
+    roots = [];
     for (const [
       pattern,
       row,
     ] of routes) {
-      if (row.section !== undefined && !(row.section in sections)) {
-        sections[row.section] = urlParse(pattern);
+      const section = row.section;
+      if (section !== undefined && !(section in sections)) {
+        const root = urlParse(pattern);
+        sections[section] = root;
+        roots.push([
+          section,
+          root.path,
+          pathPrefix(root.path),
+        ]);
       }
     }
-    homeSection = Object.keys(sections)[0] ?? null;
-    const describe = (entry: TEntry): TEntry => (entry.kind === 'page' ? {
+    homeSection = roots.length ? roots[0][0] : null;
+    const describe = (entry: TEntry): TEntry => (entry.kind === PAGE ? {
       ...page(
         entry.location, entry.depth, entry.section, entry.id,
       ),
       dormant: entry.dormant,
+      closing: entry.closing,
     } : entry);
     entries = entries.map(describe);
     ahead = ahead.map(describe);
@@ -969,14 +1044,13 @@ export function createNavigator(deps: TNavigatorDeps) {
     }
     if (homeSection !== null && shown === null) {
       reset(topPage(entries).location);
-      return;
     }
     publish();
   }
 
   // ── start ─────────────────────────────────────────────────────────────────────────────────────────────────────
 
-  const showLocation = router.attach({
+  const showLocation = internal.attach({
     push: async (location) => {
       await go(location);
     },
@@ -986,11 +1060,23 @@ export function createNavigator(deps: TNavigatorDeps) {
 
   // A reload restores the stack the history kept; a first visit starts it from the address.
   const start = primitive.current();
+  let restored = false;
   if (isNavData(start.data)) {
     restore(start.data);
-    void enqueue(passGoneWindows);
+    restored = true;
   } else {
     reset(start.location);
+  }
+  let state = snapshot();
+  const $state = createObservable<TNavigatorState>(state);
+  const {
+    emitState,
+  } = createApi($state, {
+    emitState: (_, payload: TNavigatorState) => payload,
+  });
+  showLocation(state.location);
+  if (restored) {
+    void enqueue(passGoneWindows);
   }
   primitive.watch((entry) => {
     void enqueue(() => settle(entry));
@@ -1018,7 +1104,6 @@ export function createNavigator(deps: TNavigatorDeps) {
     whileOpen,
     onForward,
     onBeforeLeave,
-    isClosing,
     ...view,
   };
 }

@@ -12,6 +12,10 @@ import type {
 import type {
   TUrlProps,
 } from '../urlParse';
+import type {
+  PAGE,
+  WINDOW,
+} from './constants';
 
 export type {
   TParams,
@@ -44,7 +48,12 @@ export type THistoryPrimitive = {
   push(location: TUrlProps, data?: unknown): void;
   /** The current entry, changed the same way. */
   replace(location: TUrlProps, data?: unknown): void;
-  /** A move made by the code; resolves with the part in the entry arrived at. */
+  /**
+   * Whether a move by `delta` stays on the timeline: not before its first entry, not past the last one known (entries
+   * ahead made before a reload count once they've been seen).
+   */
+  canGo(delta: number): boolean;
+  /** A move made by the code; resolves with the part in the entry arrived at. A move `canGo` refuses isn't made. */
   go(delta: number): Promise<THistoryEntry>;
   /** A move made by the player (Back / Forward) that changed this part. Returns the unsubscribe. */
   watch(listener: (entry: THistoryEntry) => void): () => void;
@@ -79,13 +88,6 @@ export type TParamsOptions = {
   replace?: boolean;
 };
 
-/** How a router's steps are carried out: by the primitive, or by a navigator over it. */
-export type TRouterDriver = {
-  push(location: TUrlProps): Promise<void>;
-  replace(location: TUrlProps): Promise<void>;
-  back(options?: TBackOptions): Promise<boolean>;
-};
-
 /** The router's dependencies. */
 export type TRouterDeps = TObservableAdapter & {
   /** The part of the history the router works in. */
@@ -103,17 +105,13 @@ export type TRouter = {
   pushLocation(change: Partial<TUrlProps>): Promise<TUrlProps>;
   /** The current entry, changed the same way. */
   replaceLocation(change: Partial<TUrlProps>): Promise<TUrlProps>;
-  /** One step back; `true` when it was taken. */
+  /** One step back; `true` when it was taken (`false` at the history's first entry, or a leave guard refused). */
   backLocation(options?: TBackOptions): Promise<boolean>;
-  /** The location's query as a key-value storage — `storeProvider`'s port too. */
-  params: TKeyValueStorage<TParamsOptions>;
-  /** The part this router works in. */
-  historyPrimitive: THistoryPrimitive;
   /**
-   * Hands the router's steps to `driver` (a navigator); returns how the driver shows a location it moved to. One
-   * driver per router.
+   * The location's query as a key-value storage — `storeProvider`'s port too. With a navigator a change is a step in
+   * its queue: `get` reads the new value once the step is taken.
    */
-  attach(driver: TRouterDriver): (location: TUrlProps) => void;
+  params: TKeyValueStorage<TParamsOptions>;
 };
 
 // ── the navigator ───────────────────────────────────────────────────────────────────────────────────────────────
@@ -137,7 +135,7 @@ export type TPageRoute = {
 
 /** A page in the stack. */
 export type TPageEntry<R = Record<string, unknown>> = {
-  kind: 'page';
+  kind: typeof PAGE;
   id: number;
   depth: number;
   location: TUrlProps;
@@ -149,11 +147,13 @@ export type TPageEntry<R = Record<string, unknown>> = {
   section: string | null;
   /** Restored after a reload and not shown since: in the stack, not mounted. */
   dormant: boolean;
+  /** Its leave guards are being asked: it may be left in a moment (a page can disable its buttons). */
+  closing: boolean;
 };
 
 /** A window in the stack. */
 export type TWindowEntry = {
-  kind: 'window';
+  kind: typeof WINDOW;
   id: number;
   depth: number;
   /** What was opened (usually a component); `null` — its place restored after a reload, the window itself is gone. */
@@ -161,6 +161,8 @@ export type TWindowEntry = {
   params: unknown;
   /** `false`: the browser's Forward doesn't reopen it after it was closed (D-024). */
   reopen: boolean;
+  /** Its leave guards are being asked. */
+  closing: boolean;
 };
 
 export type TEntry<R = Record<string, unknown>> = TPageEntry<R> | TWindowEntry;
@@ -215,26 +217,23 @@ export type TNavigatorDeps = TObservableAdapter & {
   router: TRouter;
   createElement: (...args: any[]) => any;
   forwardRef: (...args: any[]) => any;
-  Component: any;
   useEffect: (...args: any[]) => void;
   useState: (...args: any[]) => any;
   useRef: (...args: any[]) => any;
   createContext: (...args: any[]) => any;
   useContext: (...args: any[]) => any;
-  /** How many covered pages stay mounted at most (default 10). */
+  /** How many covered pages stay mounted at most (default `DEFAULT_KEEP`, 10). */
   keep?: number;
-  /** How long a closed window plays its exit, ms (default 300). */
+  /** How long a closed window plays its exit, ms (default `DEFAULT_EXIT_MS`, 300). */
   exitMs?: number;
 };
 
 /** What `nav.NavigationHostProvider` takes. */
 export type TNavigationHostOptions<R = Record<string, unknown>> = {
-  /** The route table: the only description of the pages. */
+  /** The route table: the only description of the pages ("not found" — a catch-all last row, `/(.*)`). */
   routes: readonly TRouteRow<R>[];
-  /** A page from its row (default: `createElement(row.main, { route })`). */
+  /** A page from its row (default: `createElement(row.main, { route })`); a path no row fits draws nothing. */
   render?: (row: TRouteRowBase & R, route: TPageRoute, entry: TPageEntry<R>) => unknown;
-  /** A page no row matches (default: nothing). */
-  renderMissing?: (route: TPageRoute, entry: TPageEntry<R>) => unknown;
   /** A window (default: `createElement(entry.window, props)`). */
   renderWindow?: (entry: TWindowEntry, props: TWindowProps) => unknown;
 };

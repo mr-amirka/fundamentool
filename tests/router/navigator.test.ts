@@ -108,7 +108,6 @@ describe('createNavigator — options', () => {
     const host: Required<TNavigationHostOptions> = {
       routes: [],
       render: () => null,
-      renderMissing: () => null,
       renderWindow: () => null,
     };
     expect([...NAVIGATION_HOST_OPTION_KEYS]).toEqual(Object.keys(host));
@@ -138,11 +137,7 @@ describe('createNavigator — options', () => {
     expect(() => createNavigator({
       ...fresh(),
       Component: class {},
-    })).not.toThrow();
-    expect(() => createNavigator({
-      ...fresh(),
-      Component: {},
-    } as never)).not.toThrow(); // a component may be an object (`memo`, `forwardRef`)
+    } as never)).toThrow(/unknown option "Component"/); // the view library's `Component` isn't needed
   });
 
   it('open checks its options', async () => {
@@ -189,7 +184,7 @@ describe('createNavigator — options', () => {
 });
 
 describe('createNavigator — the host', () => {
-  it('draws a row\'s main with its route (params decoded); a path no row fits — renderMissing (default nothing)', async () => {
+  it('draws a row\'s main with its route (params decoded); a path no row fits draws nothing', async () => {
     const {
       nav, router,
     } = inMemory('/#/level/L%2F1');
@@ -217,17 +212,40 @@ describe('createNavigator — the host', () => {
     }).then(() => undefined));
     expect(container.textContent).toBe('');
     unmount();
+  });
 
-    const other = inMemory('/#/nowhere');
-    const missing = other.nav.NavigationHostProvider({
-      routes: [],
-      renderMissing: (route) => React.createElement(
-        'p', null, `missing ${route.location.path}`,
-      ),
+  it('a new host gives a new table (a hot reload of the module that makes it)', async () => {
+    const {
+      nav,
+    } = inMemory('/#/x');
+    const Text = (text: string) => () => React.createElement(
+      'p', null, text,
+    );
+    nav.NavigationHostProvider({
+      routes: [
+        [
+          '/x',
+          {
+            main: Text('old'),
+          },
+        ],
+      ],
     });
-    const drawn = mount(missing);
-    expect(drawn.container.textContent).toBe('missing /nowhere');
-    drawn.unmount();
+    const next = nav.NavigationHostProvider({
+      routes: [
+        [
+          '/x',
+          {
+            main: Text('new'),
+          },
+        ],
+      ],
+    });
+    const {
+      container, unmount,
+    } = mount(next);
+    expect(container.textContent).toBe('new');
+    unmount();
   });
 
   it('entries get their rows when the host is made; a page opened before it has none', async () => {
@@ -523,9 +541,12 @@ describe('createNavigator — a reload (D-039)', () => {
       'window',
     ]));
     const state = {
-      fundamentool: 1,
+      fundamentool: 2,
       index: 0,
       state: '/',
+      rev: {
+        url: 'written before a reload',
+      },
       data: {
         url: {
           nav: 1,

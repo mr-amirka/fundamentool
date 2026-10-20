@@ -19,6 +19,12 @@ import type {
   TRouterDeps,
 } from '../../src/router';
 import {
+  routerInternal,
+} from '../../src/router/internal';
+import type {
+  TRouterInternal,
+} from '../../src/router/internal';
+import {
   locate,
 } from '../../src/router/location';
 import {
@@ -91,6 +97,15 @@ describe('createRouter', () => {
     expect(router.$path.getState()).toBe('/a');
     history.navigate(1);
     await waitFor(() => expect(router.$path.getState()).toBe('/b'));
+  });
+
+  it('back at the first entry: not taken — it would leave the app, and no move would ever be reported', async () => {
+    const {
+      router, history,
+    } = setup();
+    await expect(router.backLocation()).resolves.toBe(false);
+    expect(history.index()).toBe(0);
+    expect(router.$path.getState()).toBe('/a');
   });
 
   it('params: the query as a key-value storage — a change is a step (or a replace); every changed key is reported', async () => {
@@ -190,8 +205,12 @@ describe('createRouter', () => {
       replace: async () => undefined,
       back: async () => false,
     };
-    router.attach(driver);
-    expect(() => router.attach(driver)).toThrow(/already has a navigator/);
+    // The plumbing isn't the router's API: it sits under an internal key.
+    expect(Object.keys(router)).not.toContain('attach');
+    const internal = routerInternal(router) as TRouterInternal;
+    internal.attach(driver);
+    expect(() => internal.attach(driver)).toThrow(/already has a navigator/);
+    expect(routerInternal(null)).toBeUndefined();
   });
 });
 

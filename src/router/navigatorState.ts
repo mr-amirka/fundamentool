@@ -1,4 +1,7 @@
 // The navigator's state from its stack: which pages are mounted (the shown one and the kept ones), the tab shown.
+import {
+  PAGE,
+} from './constants';
 import type {
   TEntry,
   TNavigatorState,
@@ -22,15 +25,25 @@ export type TStateInput = {
   keepLimit: number;
 };
 
-/** The page an entry belongs to: itself, or the page under a window. */
-export function pageAt(list: readonly TEntry[], index: number): TPageEntry {
+/**
+ * The place of the page an entry belongs to: its own, or the page's under a window.
+ *
+ * @example
+ * pageIndexAt(entries, entries.length - 1); // the top page's place
+ */
+export function pageIndexAt(list: readonly TEntry[], index: number): number {
   for (let i = index; i >= 0; i--) {
-    if (list[i].kind === 'page') {
-      return list[i] as TPageEntry;
+    if (list[i].kind === PAGE) {
+      return i;
     }
   }
   /* istanbul ignore next -- the bottom entry is always a page */
   throw new Error('[fundamentool] createNavigator: no page in the stack');
+}
+
+/** The page an entry belongs to: itself, or the page under a window. */
+export function pageAt(list: readonly TEntry[], index: number): TPageEntry {
+  return list[pageIndexAt(list, index)] as TPageEntry;
 }
 
 /** The top page of a stack (under the windows, if any). */
@@ -45,7 +58,7 @@ export function topPage(list: readonly TEntry[]): TPageEntry {
  * lose its scroll).
  *
  * @example
- * const state = computeState({ entries, leaving, ahead, stacks, shown: null, keepLimit: 10 });
+ * const state = computeState({ entries, leaving, ahead, stacks, shown: null, keepLimit: DEFAULT_KEEP });
  */
 export function computeState(input: TStateInput): TNavigatorState {
   const {
@@ -66,7 +79,7 @@ export function computeState(input: TStateInput): TNavigatorState {
   for (const list of lists) {
     for (let i = list.length - 1; i >= 0; i--) {
       const entry = list[i];
-      if (entry.kind === 'page' && !mounted.has(entry.id) && entry.row?.keep && !entry.dormant && kept < keepLimit) {
+      if (entry.kind === PAGE && !mounted.has(entry.id) && entry.row?.keep && !entry.dormant && kept < keepLimit) {
         mounted.add(entry.id);
         layers.push(entry);
         kept++;

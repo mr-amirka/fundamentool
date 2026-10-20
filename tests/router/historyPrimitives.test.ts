@@ -61,7 +61,7 @@ describe('browserHistoryPrimitivesProvider', () => {
       data: undefined,
     });
     expect(win.history.state).toMatchObject({
-      fundamentool: 1,
+      fundamentool: 2,
       index: 0,
     });
     // One set of primitives per window.
@@ -177,6 +177,83 @@ describe('browserHistoryPrimitivesProvider', () => {
     expect(seen).toEqual([]);
     win.history.forward();
     await waitFor(() => expect(seen).toEqual([undefined]));
+  });
+});
+
+describe('browserHistoryPrimitivesProvider — the timeline\'s ends and entries made by others', () => {
+  it('canGo knows the ends; a move past them isn\'t made and settles at once', async () => {
+    const win = windowAt('/a');
+    const history = browserHistoryPrimitivesProvider(win);
+    expect(history.url.canGo(-1)).toBe(false); // before the first entry — another site
+    await expect(history.url.go(-1)).resolves.toMatchObject({
+      location: {
+        path: '/a',
+      },
+    });
+    history.url.push(at('/b'));
+    history.url.push(at('/c'));
+    expect(history.url.canGo(-2)).toBe(true);
+    expect(history.url.canGo(1)).toBe(false);
+    await history.url.go(-2);
+    expect(history.url.canGo(2)).toBe(true); // seen: the entries ahead exist
+    await expect(history.url.go(3)).resolves.toMatchObject({
+      location: {
+        path: '/a',
+      },
+    });
+    history.url.push(at('/d')); // a new step forgets what was ahead
+    expect(history.url.canGo(1)).toBe(false);
+    expect(history.url.canGo(-1)).toBe(true);
+  });
+
+  it('a hash typed by the player is the next entry: marked, the address\'s data kept, not taken for Chrome\'s skip', async () => {
+    const win = windowAt('/a');
+    const history = browserHistoryPrimitivesProvider(win);
+    const seen: string[] = [];
+    history.hash.watch((entry) => seen.push(entry.location.path as string));
+    history.url.push(at('/b'), 'url-data');
+    history.hash.push(at('/one'));
+    win.location.hash = '#/typed';
+    await waitFor(() => expect(seen).toEqual(['/typed']));
+    expect(win.location.href).toBe('http://localhost/b#/typed');
+    expect(win.history.state).toMatchObject({
+      index: 3,
+      data: {
+        url: 'url-data',
+      },
+    });
+    expect(history.url.current().data).toBe('url-data');
+    expect(history.url.canGo(1)).toBe(false);
+    win.history.back();
+    await waitFor(() => expect(seen).toEqual([
+      '/typed',
+      '/one',
+    ]));
+  });
+
+  it('a part written again with the same address is a change: its data compares by revision', async () => {
+    const win = windowAt('/a');
+    const history = browserHistoryPrimitivesProvider(win);
+    const seen: unknown[] = [];
+    history.hash.watch((entry) => seen.push(entry.data));
+    history.hash.push(at('/x'), 'first');
+    history.hash.push(at('/x'), 'second');
+    win.history.back();
+    await waitFor(() => expect(seen).toEqual(['first']));
+  });
+
+  it('an entry of an older shape belongs to someone else: read, never overwritten', () => {
+    const win = windowAt('/a');
+    const old = {
+      fundamentool: 1,
+      index: 7,
+    };
+    win.history.replaceState(
+      old, '', '/a',
+    );
+    const history = browserHistoryPrimitivesProvider(win);
+    expect(history.url.current().data).toBeUndefined();
+    expect(win.history.state).toEqual(old);
   });
 });
 

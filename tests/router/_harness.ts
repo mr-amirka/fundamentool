@@ -119,7 +119,6 @@ export async function waitFor(check: () => void, timeout = 3000): Promise<void> 
 export const REACT_DEPS = {
   createElement: React.createElement,
   forwardRef: React.forwardRef,
-  Component: React.Component,
   useEffect: React.useEffect,
   useState: React.useState,
   useRef: React.useRef,
@@ -311,7 +310,8 @@ function wire(
       id, handler, forwardOptions,
     ),
     onBeforeLeave: (id: number, guard: TLeaveGuard) => nav.onBeforeLeave(id, guard),
-    isClosing: (id: number) => nav.isClosing(id),
+    /** Whether the entry is marked as being left (its guards are asked). */
+    isClosing: (id: number) => nav.getState().entries.some((entry) => entry.id === id && entry.closing),
   };
 
   const browser = {

@@ -32,7 +32,7 @@ describe('createNavigator — the stack', () => {
     });
     expect(state.section).toBe('a');
     expect(browser.state()).toMatchObject({
-      fundamentool: 1,
+      fundamentool: 2,
       index: 0,
       data: {
         url: {
@@ -598,7 +598,7 @@ describe('createNavigator — the stack', () => {
     ]));
   });
 
-  it('back tells whether the entry was left; isClosing is true while its guards are asked', async () => {
+  it('back tells whether the entry was left; the entry is `closing` in the state while its guards are asked', async () => {
     const {
       nav,
     } = setup();

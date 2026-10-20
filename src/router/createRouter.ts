@@ -28,6 +28,16 @@ import type {
   TUrlProps,
 } from '../urlParse';
 import {
+  ROOT_PATH,
+} from './constants';
+import {
+  ROUTER_INTERNAL,
+} from './internal';
+import type {
+  TRouterDriver,
+  TRouterWithInternal,
+} from './internal';
+import {
   locate,
 } from './location';
 import type {
@@ -35,7 +45,6 @@ import type {
   TParamsOptions,
   TRouter,
   TRouterDeps,
-  TRouterDriver,
 } from './types';
 
 const WHERE = '[fundamentool] createRouter';
@@ -50,7 +59,7 @@ export const ROUTER_DEPS_KEYS = [
 /** An empty query, shared (never changed). */
 const NO_QUERY: TParams = {};
 
-const getPath = (location: TUrlProps): string => location.path || '/';
+const getPath = (location: TUrlProps): string => location.path || ROOT_PATH;
 const getQuery = (location: TUrlProps): TParams => location.query || NO_QUERY;
 
 /** `createRouter`'s dependencies, checked on creation (api-input-validation.md). */
@@ -113,6 +122,10 @@ export function createRouter(deps: TRouterDeps): TRouter {
       show(location);
     },
     async back() {
+      // At the first entry Back would leave the app (and no move would ever be reported).
+      if (!historyPrimitive.canGo(-1)) {
+        return false;
+      }
       show((await historyPrimitive.go(-1)).location);
       return true;
     },
@@ -130,7 +143,7 @@ export function createRouter(deps: TRouterDeps): TRouter {
     query,
   }, !!options?.replace));
 
-  return {
+  const router: TRouterWithInternal = {
     $location,
     $path,
     $query,
@@ -139,17 +152,20 @@ export function createRouter(deps: TRouterDeps): TRouter {
     replaceLocation: (change) => step(change, true),
     backLocation: (options?: TBackOptions) => driver.back(options),
     params,
-    historyPrimitive,
-    attach(next) {
-      if (!stopWatching) {
-        throw new Error(`${WHERE}: the router already has a navigator — one per router`);
-      }
-      stopWatching();
-      stopWatching = null;
-      driver = next;
-      return show;
+    [ROUTER_INTERNAL]: {
+      historyPrimitive,
+      attach(next) {
+        if (!stopWatching) {
+          throw new Error(`${WHERE}: the router already has a navigator — one per router`);
+        }
+        stopWatching();
+        stopWatching = null;
+        driver = next;
+        return show;
+      },
     },
   };
+  return router;
 
   /** The location's query as a key-value storage: a change of a key is a step (a new entry, or `replace`). */
   function createParams($source: typeof $location, write: (query: TParams, options?: TParamsOptions) => void): TKeyValueStorage<TParamsOptions> {

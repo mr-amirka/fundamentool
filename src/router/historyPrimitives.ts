@@ -13,6 +13,12 @@ import {
 import type {
   TUrlProps,
 } from '../urlParse';
+import {
+  HASH_PART,
+  ROOT_PATH,
+  STATE_PART,
+  URL_PART,
+} from './constants';
 import type {
   THistoryEntry,
   THistoryPart,
@@ -23,121 +29,139 @@ import type {
 
 /** The parts, outer first: a step in one clears the ones after it. */
 const PARTS: readonly THistoryPart[] = [
-  'url',
-  'hash',
-  'state',
+  URL_PART,
+  HASH_PART,
+  STATE_PART,
 ];
+
+/** The shape of the state this module writes into an entry; a new shape — a new number (older entries read as foreign). */
+const ENTRY_FORMAT = 2;
 
 /** What a timeline keeps in an entry besides its address: our mark, the entry's place, each part's data. */
 type TEntryState = {
-  fundamentool: 1;
+  fundamentool: typeof ENTRY_FORMAT;
   index: number;
   /** The `state` part's location. */
   state: string;
   data: Partial<Record<THistoryPart, unknown>>;
+  /** Each part's revision, new whenever the part is written: two entries compare a part's data in one step. */
+  rev: Partial<Record<THistoryPart, string>>;
 };
 
-/** An entry as the timeline holds it: the address's two parts and the state. */
-type TRawEntry = {
+/** An entry as a driver stores it: the address's two parts and whatever state the entry has. */
+type TStoredEntry = {
   url: string;
   hash: string;
+  state: unknown;
+};
+
+/** An entry with our state. */
+type TRawEntry = TStoredEntry & {
   state: TEntryState;
 };
 
 /** How a timeline is stored: the browser's history or an array. */
 type TTimelineDriver = {
-  read(): {
-    url: string;
-    hash: string;
-    state: unknown;
-  };
+  read(): TStoredEntry;
   write(entry: TRawEntry, replace: boolean): void;
   go(delta: number): void;
   /** Calls `listener` after every move (made by `go` or by the player). */
   onMove(listener: () => void): void;
 };
 
+/** How a part reads and writes an entry — picked once per primitive, not by the part's name at every call. */
+type TPartRule = {
+  /** The part's own string in an entry. */
+  read(entry: TRawEntry): string;
+  /** The address of an entry with this part set to `href`: the outer parts kept, the inner ones cleared. */
+  place(current: TRawEntry, href: string): [url: string, hash: string, state: string];
+  /** What the address bar shows for `href` in this part. */
+  show(href: string, current: TRawEntry): string;
+};
+
+/** The address an entry shows: `url#hash`. */
+const addressOf = (entry: TStoredEntry): string => (entry.hash ? entry.url + '#' + entry.hash : entry.url);
+
+const RULES: Record<THistoryPart, TPartRule> = {
+  [URL_PART]: {
+    read: (entry) => entry.url,
+    place: (_, href) => [
+      href,
+      '',
+      ROOT_PATH,
+    ],
+    show: (href) => href,
+  },
+  [HASH_PART]: {
+    read: (entry) => entry.hash,
+    place: (current, href) => [
+      current.url,
+      href,
+      ROOT_PATH,
+    ],
+    show: (href) => '#' + href,
+  },
+  [STATE_PART]: {
+    read: (entry) => entry.state.state,
+    place: (current, href) => [
+      current.url,
+      current.hash,
+      href,
+    ],
+    show: (_, current) => addressOf(current),
+  },
+};
+
 function isOurs(value: unknown): value is TEntryState {
-  return isObject(value) && (value as TEntryState).fundamentool === 1;
-}
-
-/** A part's own string in an entry. */
-function partHref(entry: TRawEntry, part: THistoryPart): string {
-  return part === 'url' ? entry.url : part === 'hash' ? entry.hash : entry.state.state;
-}
-
-/** Whether a part reads the same in two entries — its address and its data. */
-function samePart(
-  a: TRawEntry, b: TRawEntry, part: THistoryPart,
-): boolean {
-  return partHref(a, part) === partHref(b, part)
-    && JSON.stringify(a.state.data[part]) === JSON.stringify(b.state.data[part]);
+  return isObject(value) && (value as TEntryState).fundamentool === ENTRY_FORMAT;
 }
 
 /** The primitives over a timeline: one per part, in step. */
 function createPrimitives(driver: TTimelineDriver): THistoryPrimitives {
-  const listeners: Record<THistoryPart, Set<(entry: THistoryEntry) => void>> = {
-    url: new Set(),
-    hash: new Set(),
-    state: new Set(),
-  };
+  const listeners = {} as Record<THistoryPart, Set<(entry: THistoryEntry) => void>>;
+  for (const part of PARTS) {
+    listeners[part] = new Set();
+  }
   /** Moves made by the code: the next move is theirs, not the player's. */
   const waiters: (() => void)[] = [];
+  /** Revisions unique across reloads: this run's start, then a counter. */
+  const session = Date.now().toString(36);
+  let revisions = 0;
 
-  function read(): TRawEntry {
-    const {
-      url,
-      hash,
-      state,
-    } = driver.read();
-    return {
-      url,
-      hash,
-      state: isOurs(state) ? state : {
-        fundamentool: 1,
-        index: 0,
-        state: '/',
-        data: {},
-      },
-    };
-  }
-
-  let current = read();
-  // A first visit: the entry gets our mark, so a reload (or a return from another site) finds its place.
-  if (!isOurs(driver.read().state)) {
-    driver.write(current, true);
-  }
-
-  function view(entry: TRawEntry, part: THistoryPart): THistoryEntry {
-    return {
-      location: urlParse(partHref(entry, part) || '/'),
-      data: entry.state.data[part],
-    };
-  }
-
-  /** The entry `part` writes: the outer parts kept, the inner ones cleared (nested scopes, D-039). */
-  function next(
-    part: THistoryPart, location: TUrlProps, data: unknown, index: number,
-  ): TRawEntry {
-    const keep = PARTS.indexOf(part);
-    const entryData: Partial<Record<THistoryPart, unknown>> = {};
-    for (let i = 0; i < keep; i++) {
-      entryData[PARTS[i]] = current.state.data[PARTS[i]];
+  /**
+   * The entry as ours. An entry without our mark is a first visit (`from` is `null`) or one the browser made after the
+   * entry we left (an address typed or a plain `#anchor` followed): it takes the next place, keeps the outer parts the
+   * move didn't change, and gets our mark — unless another script keeps its own state there (read, not overwritten).
+   */
+  function adopt(stored: TStoredEntry, from: TRawEntry | null): TRawEntry {
+    const state = stored.state;
+    if (isOurs(state)) {
+      return stored as TRawEntry;
     }
-    entryData[part] = data;
-    const href = location.href || '/';
-    const isUrl = part === 'url';
-    return {
-      url: isUrl ? href : current.url,
-      hash: part === 'hash' ? href : isUrl ? '' : current.hash,
+    const entry: TRawEntry = {
+      url: stored.url,
+      hash: stored.hash,
       state: {
-        fundamentool: 1,
-        index,
-        state: part === 'state' ? href : '/',
-        data: entryData,
+        fundamentool: ENTRY_FORMAT,
+        index: from ? from.state.index + 1 : 0,
+        state: ROOT_PATH,
+        data: {},
+        rev: {},
       },
     };
+    if (from && from.url === entry.url) {
+      entry.state.data[URL_PART] = from.state.data[URL_PART];
+      entry.state.rev[URL_PART] = from.state.rev[URL_PART];
+    }
+    if (state === null || state === undefined) {
+      driver.write(entry, true);
+    }
+    return entry;
   }
+
+  let current = adopt(driver.read(), null);
+  /** The last place known to exist ahead: a move past it (or before the first) isn't made. */
+  let last = current.state.index;
 
   function travel(delta: number): Promise<void> {
     return new Promise((done) => {
@@ -146,10 +170,18 @@ function createPrimitives(driver: TTimelineDriver): THistoryPrimitives {
     });
   }
 
+  function canGo(delta: number): boolean {
+    const to = current.state.index + delta;
+    return to >= 0 && to <= last;
+  }
+
   driver.onMove(() => {
     const waiter = waiters.shift();
     const from = current;
-    current = read();
+    const stored = driver.read();
+    current = adopt(stored, from);
+    // An entry new to us was made by the browser after the one we left: what was ahead is gone.
+    last = isOurs(stored.state) ? Math.max(last, current.state.index) : current.state.index;
     if (waiter) {
       waiter();
       return;
@@ -166,53 +198,95 @@ function createPrimitives(driver: TTimelineDriver): THistoryPrimitives {
   /** Tells each part whose address or data changed with the player's move. */
   function notify(from: TRawEntry): void {
     for (const part of PARTS) {
-      if (!samePart(
-        from, current, part,
-      )) {
+      const rule = RULES[part];
+      if (rule.read(from) !== rule.read(current) || from.state.rev[part] !== current.state.rev[part]) {
         const entry = view(current, part);
         listeners[part].forEach((listener) => listener(entry));
       }
     }
   }
 
+  function view(entry: TRawEntry, part: THistoryPart): THistoryEntry {
+    return {
+      location: urlParse(RULES[part].read(entry) || ROOT_PATH),
+      data: entry.state.data[part],
+    };
+  }
+
   function primitive(part: THistoryPart): THistoryPrimitive {
+    const rule = RULES[part];
+    const outer = PARTS.slice(0, PARTS.indexOf(part));
+    const partListeners = listeners[part];
+
+    /** The entry this part writes at `index`: the outer parts kept, the inner ones cleared (nested scopes, D-039). */
+    function next(
+      location: TUrlProps, data: unknown, index: number,
+    ): TRawEntry {
+      const [
+        url,
+        hash,
+        state,
+      ] = rule.place(current, location.href || ROOT_PATH);
+      const known = current.state;
+      const entryData: TEntryState['data'] = {};
+      const rev: TEntryState['rev'] = {};
+      for (const outerPart of outer) {
+        entryData[outerPart] = known.data[outerPart];
+        rev[outerPart] = known.rev[outerPart];
+      }
+      entryData[part] = data;
+      rev[part] = session + '.' + ++revisions;
+      return {
+        url,
+        hash,
+        state: {
+          fundamentool: ENTRY_FORMAT,
+          index,
+          state,
+          data: entryData,
+          rev,
+        },
+      };
+    }
+
     return {
       current: () => view(current, part),
       push(location, data) {
         const entry = next(
-          part, location, data, current.state.index + 1,
+          location, data, current.state.index + 1,
         );
         driver.write(entry, false);
         current = entry;
+        last = entry.state.index;
       },
       replace(location, data) {
         const entry = next(
-          part, location, data, current.state.index,
+          location, data, current.state.index,
         );
         driver.write(entry, true);
         current = entry;
       },
+      canGo,
       async go(delta) {
-        if (delta) {
+        if (delta && canGo(delta)) {
           await travel(delta);
         }
         return view(current, part);
       },
-      href: (location) => (part === 'url' ? location.href || '/' : part === 'hash' ? '#' + (location.href || '/')
-        : current.url + (current.hash ? '#' + current.hash : '')),
+      href: (location) => rule.show(location.href || ROOT_PATH, current),
       watch(listener) {
-        listeners[part].add(listener);
+        partListeners.add(listener);
         return () => {
-          listeners[part].delete(listener);
+          partListeners.delete(listener);
         };
       },
     };
   }
 
   return {
-    url: primitive('url'),
-    hash: primitive('hash'),
-    state: primitive('state'),
+    [URL_PART]: primitive(URL_PART),
+    [HASH_PART]: primitive(HASH_PART),
+    [STATE_PART]: primitive(STATE_PART),
   };
 }
 
@@ -245,9 +319,8 @@ export function browserHistoryPrimitivesProvider(win: Window): THistoryPrimitive
       state: history.state,
     }),
     write(entry, replace) {
-      const href = entry.url + (entry.hash ? '#' + entry.hash : '');
       (replace ? replaceState : pushState)(
-        entry.state, '', href,
+        entry.state, '', addressOf(entry),
       );
     },
     go: historyGo,
@@ -270,20 +343,21 @@ export function browserHistoryPrimitivesProvider(win: Window): THistoryPrimitive
  * const router = createRouter({ historyPrimitive: history.url, createObservable, createApi });
  * history.navigate(-1); // the player's Back
  */
-export function memoryHistoryPrimitivesProvider(start = '/'): TMemoryHistoryPrimitives {
+export function memoryHistoryPrimitivesProvider(start = ROOT_PATH): TMemoryHistoryPrimitives {
   const [
     url,
     hash = '',
   ] = start.split('#');
-  const entries: TRawEntry[] = [
+  const entries: TStoredEntry[] = [
     {
-      url: url || '/',
+      url: url || ROOT_PATH,
       hash,
-      state: null as unknown as TEntryState,
+      state: null,
     },
   ];
   let index = 0;
-  let onMove: () => void = () => undefined;
+  /** Set by the primitives as they are made, before any move. */
+  let onMove: () => void;
   const move = (delta: number) => {
     index = Math.min(Math.max(index + delta, 0), entries.length - 1);
     // Asynchronous, as the browser's move is; reported even when it changed nothing, so a waiting `go` settles.
@@ -308,7 +382,7 @@ export function memoryHistoryPrimitivesProvider(start = '/'): TMemoryHistoryPrim
   return {
     ...primitives,
     navigate: move,
-    entries: () => entries.map((entry) => entry.url + (entry.hash ? '#' + entry.hash : '')),
+    entries: () => entries.map(addressOf),
     index: () => index,
   };
 }

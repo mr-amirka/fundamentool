@@ -31,7 +31,18 @@ import {
   withAsyncLock,
 } from '../withAsyncLock';
 import {
+  ROOT_PATH,
+  WINDOW,
+} from './constants';
+import {
+  routerInternal,
+} from './internal';
+import type {
+  TRouterInternal,
+} from './internal';
+import {
   locate,
+  pathPrefix,
 } from './location';
 import type {
   TEntry,
@@ -51,7 +62,6 @@ const WHERE = '[fundamentool] createNavigator';
 export const NAVIGATION_HOST_OPTION_KEYS = [
   'routes',
   'render',
-  'renderMissing',
   'renderWindow',
 ] as const;
 
@@ -110,7 +120,6 @@ function assertHostOptions(options: TNavigationHostOptions): void {
   }
   for (const key of [
     'render',
-    'renderMissing',
     'renderWindow',
   ] as const) {
     if (options[key] !== undefined && !isFunction(options[key])) {
@@ -145,7 +154,7 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
     setRoutes,
   } = core;
   const h = createElement;
-  const primitive = router.historyPrimitive;
+  const primitive = (routerInternal(router) as TRouterInternal).historyPrimitive;
 
   /** The entry a component is rendered in (inside the host). */
   const EntryContext = createContext(null);
@@ -197,7 +206,6 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
       render = (row: { main?: unknown }, route: unknown) => h(row.main, {
         route,
       }),
-      renderMissing = () => null,
       renderWindow = (entry: TWindowEntry, props: unknown) => h(entry.window, props),
     } = options as TNavigationHostOptions;
     setRoutes(routes as readonly TRouteRow[]);
@@ -211,14 +219,14 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
       );
     }
 
+    /** A page by its row; a path no row fits draws nothing ("not found" is a catch-all last row). */
     function drawPage(entry: TPageEntry): unknown {
-      const route = {
-        params: entry.params,
-        location: entry.location,
-      };
       return entry.row ? render(
-        entry.row, route, entry,
-      ) : renderMissing(route, entry);
+        entry.row, {
+          params: entry.params,
+          location: entry.location,
+        }, entry,
+      ) : null;
     }
 
     function NavigationHost(): unknown {
@@ -238,7 +246,7 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
           }, withEntry(entry, drawPage(entry)),
         );
       });
-      const shownWindows = value.entries.filter((entry): entry is TWindowEntry => entry.kind === 'window' && entry.window !== null);
+      const shownWindows = value.entries.filter((entry): entry is TWindowEntry => entry.kind === WINDOW && entry.window !== null);
       const windows = [
         ...shownWindows,
         ...value.leaving,
@@ -348,9 +356,8 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
     useEffect(() => router.$location.watch(setLocation), []);
     const target = targetOf(props);
     const path = location.path;
-    const targetPath = target.path || '/';
-    const active = path === targetPath
-      || !!props.activeAsParent && path.startsWith(targetPath.endsWith('/') ? targetPath : targetPath + '/');
+    const targetPath = target.path || ROOT_PATH;
+    const active = path === targetPath || !!props.activeAsParent && path.startsWith(pathPrefix(targetPath));
     return h(Link, {
       ...props,
       className: active ? ('active ' + (props.className || '')).trim() : props.className,

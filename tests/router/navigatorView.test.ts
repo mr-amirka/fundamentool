@@ -63,7 +63,6 @@ const REACT: TLibrary = {
 
 const PREACT: TLibrary = {
   deps: {
-    Component: preact.Component,
     createElement: preact.h,
     forwardRef: preactCompat.forwardRef,
     createContext: preact.createContext,

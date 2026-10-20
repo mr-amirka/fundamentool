@@ -13,13 +13,17 @@ createNavigator({ router, … })                                    страни
 ## Примитивы истории
 
 Примитив — одна часть записи истории: адрес (путь + query) ⊃ его hash ⊃ собственное состояние записи; как браузер
-ходит по истории, спрятано внутри: `current()`, `push(location, data)`, `replace(location, data)`, `go(delta)`,
-`watch(listener)` (переход, сделанный игроком), `href(location)` (что покажет адресная строка).
+ходит по истории, спрятано внутри: `current()`, `push(location, data)`, `replace(location, data)`, `canGo(delta)`,
+`go(delta)`, `watch(listener)` (переход, сделанный игроком), `href(location)` (что покажет адресная строка).
 
 - **Вложенные области**: шаг в части сохраняет внешние части и очищает внутренние в этой записи; Назад / Вперёд
   восстанавливают запись целиком.
 - **Одна история**: каждая запись знает своё место. Назад игрока, перескочивший записи (Chrome пропускает записи,
-  сделанные без жеста пользователя), приводит на одну запись назад.
+  сделанные без жеста пользователя), приводит на одну запись назад. Hash, набранный игроком (или простой `#якорь`), —
+  следующая запись.
+- **Края**: `canGo(delta)` — остаётся ли переход в истории (не раньше первой записи — там чужой сайт; не дальше
+  последней известной — записи впереди, сделанные до перезагрузки, считаются, когда их увидели); переход, который он
+  не разрешает, не делается, `go` завершается сразу.
 - `browserHistoryPrimitivesProvider(window)` — одни и те же примитивы для одного окна.
   `memoryHistoryPrimitivesProvider(start)` — то же поверх массива (виджет, превью, тесты); `navigate(delta)` — переход
   игрока.
@@ -42,6 +46,8 @@ router.params.set('scroll', 120, { replace: true });     // …или текущ
 
 `params` — с интерфейсом `localStorageProvider` / `cookieStorageProvider` (`TKeyValueStorage`), порт для
 `storeProvider`: `storeProvider(deps, router.params)` хранит сторы в адресе. Одна часть — один роутер.
+`backLocation()` на первой записи истории возвращает `false` (шаг назад оттуда ушёл бы из приложения). С навигатором
+изменение `params` — шаг в его очереди: `get` читает новое значение, когда шаг сделан.
 
 ## Навигатор — страницы и окна
 
@@ -49,7 +55,7 @@ router.params.set('scroll', 120, { replace: true });     // …или текущ
 // deps.ts — не импортирует страниц
 export const nav = createNavigator({
   router, createObservable, createApi,
-  createElement, forwardRef, Component, useEffect, useState, useRef, createContext, useContext, // React или Preact
+  createElement, forwardRef, useEffect, useState, useRef, createContext, useContext, // React или Preact
 });
 
 // navigation.tsx — импортирует страницы: таблица маршрутов идёт в хост (без циклического импорта)
@@ -71,8 +77,9 @@ export const NavigationHost = nav.NavigationHostProvider({
 - **Таблица маршрутов — единственное описание страниц**: `keep` строки (смонтирована, пока закрыта другими, не больше
   `keep`, по умолчанию 10) и `section` (строка с ним — корень этой вкладки) — навигатора; остальное — приложения, его
   рисует `render(row, route, entry)` (по умолчанию `<row.main route={route} />`, `route` — `{ params, location }`,
-  params раскодированы). `renderMissing` — путь, которому не подошла ни одна строка; `renderWindow` — окно (по
-  умолчанию `<entry.window {...props} />`).
+  params раскодированы). Путь, которому не подошла ни одна строка, ничего не рисует — «не найдено» — это последняя
+  строка на всё (`/(.*)`); `renderWindow` — окно (по умолчанию `<entry.window {...props} />`). Новый хост даёт новую
+  таблицу (горячая перезагрузка); два хоста, смонтированные одновременно, рисуют одни и те же страницы.
 - **Вкладки**: строки с `section` — у каждой вкладки своя история; `nav.switchSection(name)` по показанной вкладке
   возвращает её к корню; Назад с корня вкладки показывает первую вкладку; страница принадлежит вкладке, в которой
   открыта.
@@ -81,7 +88,8 @@ export const NavigationHost = nav.NavigationHostProvider({
 - **Ещё**: `nav.startOver(location)` (выход из аккаунта — всё прежнее уходит), `nav.leavePage({ fallback })`
   (страница без доступа: назад или `fallback` на её месте), `nav.switchSection`, `nav.backToSection`; подтверждения
   ухода и обработчики «вперёд» — `nav.onBeforeLeave`, `nav.onForward`, `nav.whileOpen` и хуки `useBeforeLeave`,
-  `useOnForward`, `useWhileOpen`, `useEntry`, `useNavigatorState`; `nav.Link`, `nav.NavLink`.
+  `useOnForward`, `useWhileOpen`, `useEntry`, `useNavigatorState`; запись `closing`, пока спрашивают её подтверждения
+  ухода (страница может выключить кнопки); `nav.Link`, `nav.NavLink`.
 
 Тестовое приложение на пять вкладок, где всё это используется: web-games `frontend/labs/navigation`.
 
@@ -91,9 +99,11 @@ export const NavigationHost = nav.NavigationHostProvider({
 |------|-----------|
 | `historyPrimitives.ts` | примитивы поверх истории браузера и поверх массива; вложенные части, единая история |
 | `createRouter.ts` | роутер: адрес части, её шаги, `params` |
+| `internal.ts` | что роутер отдаёт только своему навигатору: свою часть и свои шаги |
+| `constants.ts` | имена частей и записей, значения по умолчанию |
 | `navigator.ts` | движок навигатора: стек, окна, вкладки, подтверждения, восстановление после перезагрузки |
 | `navigatorState.ts` | состояние из стека: смонтированные страницы (`layers`), показанная вкладка |
 | `navigatorView.ts` | хост, хуки, `Link` / `NavLink` |
 | `routeTable.ts` | таблица маршрутов, сопоставленная с путём |
-| `location.ts` | адрес, на который идёт шаг |
+| `location.ts` | адрес, на который идёт шаг; что значит «под путём» |
 | `types.ts` | типы |
