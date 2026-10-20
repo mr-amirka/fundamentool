@@ -5,6 +5,10 @@ import {
 import type {
   TParams,
 } from '../unparam';
+import {
+  ROOT_PATH,
+  SEGMENT_SEPARATOR,
+} from './constants';
 import type {
   TRouteRow,
   TRouteRowBase,
@@ -56,4 +60,31 @@ export function routeTableMatcher<R>(rows: readonly TRouteRow<R>[]): (path: stri
     }
     return null;
   };
+}
+
+/** Where a pattern's fixed part ends: its first parameter, group or pattern sign. */
+const PATTERN_SIGN = /[:(*?+[\]^$\\]/;
+
+/**
+ * The fixed path a pattern starts with — the part before its first parameter, without a trailing `/` (but `/` stays
+ * `/`); a fixed pattern is its own path.
+ *
+ * @example
+ * fixedPathOf('/user/:id/posts'); // => '/user'
+ * fixedPathOf('/feed'); // => '/feed'
+ */
+export function fixedPathOf(pattern: string): string {
+  const sign = pattern.search(PATTERN_SIGN);
+  const fixed = sign < 0 ? pattern : pattern.slice(0, sign);
+  return fixed.length > 1 && fixed.endsWith(SEGMENT_SEPARATOR) ? fixed.slice(0, -1) : fixed || ROOT_PATH;
+}
+
+/**
+ * Whether a pattern has no parameters — it names one path.
+ *
+ * @example
+ * isFixedPattern('/feed'); // => true; '/user/:id' — false
+ */
+export function isFixedPattern(pattern: string): boolean {
+  return !PATTERN_SIGN.test(pattern);
 }

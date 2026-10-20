@@ -5,6 +5,12 @@
  */
 import * as React from 'react';
 import {
+  act,
+} from 'react';
+import {
+  createRoot,
+} from 'react-dom/client';
+import {
   TextDecoder,
   TextEncoder,
 } from 'util';
@@ -16,6 +22,7 @@ import {
   browserHistoryPrimitivesProvider,
   createNavigator,
   createRouter,
+  memoryHistoryPrimitivesProvider,
 } from '../../src/router';
 import type {
   TEntry,
@@ -50,14 +57,14 @@ export const TABS: readonly TRouteRow[] = [
     '/a',
     {
       main: Page,
-      section: 'a',
+      section: true,
     },
   ],
   [
     '/b',
     {
       main: Page,
-      section: 'b',
+      section: true,
     },
   ],
   [
@@ -298,8 +305,11 @@ function wire(
     close: nav.close,
     /** One step back; `true` if the entry was left. */
     back: () => router.backLocation(),
-    backToSection: nav.backToSection,
-    switchSection: nav.switchSection,
+    backToRoot: nav.backToRoot,
+    /** A tab tapped: a link to the section's root `/<name>` (D-043). */
+    switchSection: (name: string) => router.pushLocation({
+      path: '/' + name,
+    }),
     startOver: (path: string) => nav.startOver({
       path,
     }),
@@ -383,5 +393,46 @@ function wire(
     browser,
     paths: () => pathsOf(nav),
     win,
+  };
+}
+
+/** A navigator's dependencies over the in-memory primitives (no window; the hash part): a router no navigator has yet. */
+export function freshDeps(start = '/') {
+  const history = memoryHistoryPrimitivesProvider(start);
+  const router = createRouter({
+    historyPrimitive: history.hash,
+    createObservable,
+    createApi,
+  });
+  const deps: TNavigatorDeps = {
+    router,
+    createObservable,
+    createApi,
+    ...REACT_DEPS,
+  };
+  return {
+    history,
+    router,
+    deps,
+  };
+}
+
+/** A navigator over the in-memory primitives. */
+export function inMemory(start = '/') {
+  const fresh = freshDeps(start);
+  return {
+    ...fresh,
+    nav: createNavigator(fresh.deps),
+  };
+}
+
+/** Renders `view` (React) into a fresh element; returns it and the unmount. */
+export function mount(view: () => unknown) {
+  const container = document.createElement('div');
+  const root = createRoot(container);
+  act(() => root.render(React.createElement(view as () => React.ReactElement)));
+  return {
+    container,
+    unmount: () => act(() => root.unmount()),
   };
 }

@@ -26,11 +26,11 @@ describe('createNavigator — the stack', () => {
       },
       depth: 0,
       row: {
-        section: 'a',
+        section: true,
       },
-      section: 'a',
+      section: '/a',
     });
-    expect(state.section).toBe('a');
+    expect(state.section).toBe('/a');
     expect(browser.state()).toMatchObject({
       fundamentool: 2,
       index: 0,
@@ -126,12 +126,15 @@ describe('createNavigator — the stack', () => {
     } = setup({
       keep: 1,
     });
+    // Pages of other rows between them: two steps of one row next to each other would be one page (D-043).
     await nav.go('/a/list1');
+    await nav.go('/a/x');
     await nav.go('/a/list2');
     await nav.go('/a/detail');
     const [
       home,
       list1,
+      x,
       list2,
       detail,
     ] = nav.getState().entries;
@@ -139,62 +142,94 @@ describe('createNavigator — the stack', () => {
     expect([
       home,
       list1,
+      x,
       list2,
       detail,
     ].map((entry) => mounted.has(entry.id))).toEqual([
       false,
       false,
+      false,
       true,
       true,
     ]);
   });
 
-  it('the tab bar section is the nearest page with one; backToSection returns to its main page', async () => {
+  it('backToRoot goes back to the section\'s start; a link to the shown section\'s root rolls it back (D-043)', async () => {
     const {
-      nav, paths,
+      nav, paths, router,
     } = setup();
     await nav.go('/a/1');
     await nav.go('/a/1/2');
     nav.open('W');
     await settle();
-    await nav.backToSection();
+    await expect(nav.backToRoot()).resolves.toBe(true);
     expect(paths()).toEqual(['/a']);
-    await nav.backToSection(); // already there
+    await expect(nav.backToRoot()).resolves.toBe(true); // already there
     expect(paths()).toEqual(['/a']);
 
     await nav.switchSection('b');
     await nav.go('/b/1');
-    expect(nav.getState().section).toBe('b');
-    await nav.switchSection('b'); // the current tab again → its main page
+    expect(nav.getState().section).toBe('/b');
+    const root = nav.getState().entries[1].id;
+    await nav.switchSection('b'); // the section shown: back to its start
     expect(paths()).toEqual([
       '/a',
       '/b',
     ]);
-    await nav.switchSection('c'); // no main page known
+    // The link's address differs from the start: the start is replaced — the same root page, the new address.
+    await router.pushLocation({
+      path: '/b',
+      query: {
+        filter: 'new',
+      },
+    });
     expect(paths()).toEqual([
       '/a',
       '/b',
     ]);
+    expect(nav.getState().page).toMatchObject({
+      id: root,
+      location: {
+        query: {
+          filter: 'new',
+        },
+      },
+    });
+    await nav.switchSection('c'); // not a root: an ordinary page of the section shown
+    expect(paths()).toEqual([
+      '/a',
+      '/b',
+      '/c',
+    ]);
+    expect(nav.getState().section).toBe('/b');
+    await expect(nav.backToRoot({
+      force: 1,
+    } as never)).rejects.toThrow(/"force" expects true or false, got number 1/);
   });
 
-  it('a deep link lays out over the start tab\'s root; backToSection opens its tab\'s root; without tabs — nothing', async () => {
+  it('a deep link lays out over the start section\'s root; its start is the deep page; without sections — the first page', async () => {
     const deep = setup({}, '/b/7');
     expect(deep.paths()).toEqual([
       '/a',
       '/b/7',
     ]);
-    expect(deep.nav.getState().section).toBe('b');
-    await deep.nav.backToSection();
+    expect(deep.nav.getState().section).toBe('/b');
+    await expect(deep.nav.backToRoot()).resolves.toBe(true);
     expect(deep.paths()).toEqual([
       '/a',
       '/b/7',
+    ]);
+    await deep.nav.switchSection('b'); // the link to the root replaces the deep start
+    expect(deep.paths()).toEqual([
+      '/a',
       '/b',
     ]);
 
     const plain = setup({
       routes: PLAIN,
     }, '/b/7');
-    await plain.nav.backToSection();
+    await plain.nav.go('/x');
+    await plain.nav.backToRoot();
     expect(plain.paths()).toEqual(['/b/7']);
     expect(plain.nav.getState().section).toBeNull();
   });
@@ -552,21 +587,25 @@ describe('createNavigator — the stack', () => {
     ]);
   });
 
-  it('replace swaps the top page in place: no new history entry, its whileOpen cleaned up', async () => {
+  it('replace: no new history entry; another row — a new page (its whileOpen cleaned up); the same row — the same page', async () => {
     const {
       nav, browser, paths,
     } = setup();
     await nav.go('/a/1');
     const log: string[] = [];
-    nav.whileOpen(nav.getState().page.id, () => () => log.push('closed /a/1'));
-    await nav.replace('/a/2');
+    const id = nav.getState().page.id;
+    nav.whileOpen(id, () => () => log.push('closed /a/1'));
+    await nav.replace('/a/2'); // the same row (the catch-all): the same page, a new address
+    expect(nav.getState().page.id).toBe(id);
+    expect(log).toEqual([]);
+    await nav.replace('/a/list');
     expect(paths()).toEqual([
       '/a',
-      '/a/2',
+      '/a/list',
     ]);
     expect(browser.paths()).toEqual([
       '/a',
-      '/a/2',
+      '/a/list',
     ]);
     expect(log).toEqual(['closed /a/1']);
     await nav.back();

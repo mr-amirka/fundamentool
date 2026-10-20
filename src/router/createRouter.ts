@@ -31,20 +31,21 @@ import {
   ROOT_PATH,
 } from './constants';
 import {
-  ROUTER_INTERNAL,
-} from './internal';
-import type {
-  TRouterDriver,
-  TRouterWithInternal,
-} from './internal';
-import {
   locate,
 } from './location';
+import {
+  assertFlags,
+  BACK_OPTION_KEYS,
+  PARAMS_OPTION_KEYS,
+  STEP_OPTION_KEYS,
+} from './options';
 import type {
   TBackOptions,
   TParamsOptions,
   TRouter,
   TRouterDeps,
+  TRouterDriver,
+  TStepOptions,
 } from './types';
 
 const WHERE = '[fundamentool] createRouter';
@@ -111,63 +112,92 @@ export function createRouter(deps: TRouterDeps): TRouter {
   const $path = $location.map(getPath);
   const $query = $location.map(getQuery);
 
-  // Without a navigator: the steps go to the primitive; the player's moves are shown as they come.
+  // Without a navigator: the steps go to the primitive; the player's moves are shown as they come; a quiet step isn't
+  // shown (the next step that isn't quiet shows where the history is).
   let driver: TRouterDriver = {
-    async push(location) {
+    async push(location, options) {
       historyPrimitive.push(location);
-      show(location);
+      options?.quiet || show(location);
     },
-    async replace(location) {
+    async replace(location, options) {
       historyPrimitive.replace(location);
-      show(location);
+      options?.quiet || show(location);
     },
-    async back() {
+    async back(options) {
       // At the first entry Back would leave the app (and no move would ever be reported).
       if (!historyPrimitive.canGo(-1)) {
         return false;
       }
-      show((await historyPrimitive.go(-1)).location);
+      const entry = await historyPrimitive.go(-1);
+      options?.quiet || show(entry.location);
       return true;
     },
   };
   let stopWatching: (() => void) | null = historyPrimitive.watch((entry) => show(entry.location));
 
-  async function step(change: Partial<TUrlProps>, replace: boolean): Promise<TUrlProps> {
-    const location = locate(change, $location.getState());
-    await (replace ? driver.replace(location) : driver.push(location));
+  /** The location a step starts from: the history's (a quiet step leaves `$location` behind it). */
+  const here = (): TUrlProps => historyPrimitive.current().location;
+
+  async function step(
+    change: Partial<TUrlProps>, replace: boolean, options?: TStepOptions,
+  ): Promise<TUrlProps> {
+    const location = locate(change, here());
+    await (replace ? driver.replace(location, options) : driver.push(location, options));
     return $location.getState();
   }
 
-  const params = createParams($location, (query, options) => void step({
-    path: getPath($location.getState()),
-    query,
-  }, !!options?.replace));
+  const params = createParams($location, (query, options) => void step(
+    {
+      path: getPath(here()),
+      query,
+    }, !!options?.replace, options,
+  ));
 
-  const router: TRouterWithInternal = {
+  return {
     $location,
     $path,
     $query,
     getLocation: () => $location.getState(),
-    pushLocation: (change) => step(change, false),
-    replaceLocation: (change) => step(change, true),
-    backLocation: (options?: TBackOptions) => driver.back(options),
+    async pushLocation(change, options) {
+      assertFlags(
+        `${WHERE} pushLocation`, options, STEP_OPTION_KEYS,
+      );
+      return step(
+        change, false, options,
+      );
+    },
+    async replaceLocation(change, options) {
+      assertFlags(
+        `${WHERE} replaceLocation`, options, STEP_OPTION_KEYS,
+      );
+      return step(
+        change, true, options,
+      );
+    },
+    async backLocation(options?: TBackOptions) {
+      assertFlags(
+        `${WHERE} backLocation`, options, BACK_OPTION_KEYS,
+      );
+      return driver.back(options);
+    },
     params,
-    [ROUTER_INTERNAL]: {
-      historyPrimitive,
-      attach(next) {
-        if (!stopWatching) {
-          throw new Error(`${WHERE}: the router already has a navigator — one per router`);
-        }
-        stopWatching();
-        stopWatching = null;
-        driver = next;
-        return show;
-      },
+    historyPrimitive,
+    attach(next) {
+      if (!stopWatching) {
+        throw new Error(`${WHERE}: the router already has a navigator — one per router`);
+      }
+      stopWatching();
+      stopWatching = null;
+      driver = next;
+      return show;
     },
   };
-  return router;
 
-  /** The location's query as a key-value storage: a change of a key is a step (a new entry, or `replace`). */
+  /**
+   * The location's query as a key-value storage: a change of a key is a step (a new entry, or `replace`). It reads the
+   * query as last written — a step still queued by a navigator, or a quiet one, is already there — and reports a
+   * changed key once the location shows it (whoever changed it).
+   */
   function createParams($source: typeof $location, write: (query: TParams, options?: TParamsOptions) => void): TKeyValueStorage<TParamsOptions> {
     const $changes = createObservable<TKeyValueChange>({
       key: '',
@@ -177,25 +207,35 @@ export function createRouter(deps: TRouterDeps): TRouter {
     } = createApi($changes, {
       emit: (_, change: TKeyValueChange) => change,
     });
-    let query = getQuery($source.getState());
-    // Every changed key is reported once the location has it — whoever changed it.
+    /** The query the location shows. */
+    let shown = getQuery($source.getState());
+    /** The query as last written (or shown, after a move by the player). */
+    let query = shown;
     $source.watch((location) => {
-      const previous = query;
-      query = getQuery(location);
+      const previous = shown;
+      shown = getQuery(location);
+      query = shown;
       for (const key of new Set([
         ...Object.keys(previous),
-        ...Object.keys(query),
+        ...Object.keys(shown),
       ])) {
-        isEqual(previous[key], query[key]) || emit({
+        isEqual(previous[key], shown[key]) || emit({
           key,
-          value: query[key],
+          value: shown[key],
         });
       }
     });
     const instance = $changes as unknown as TKeyValueStorage<TParamsOptions>;
+    function writeQuery(next: TParams, options: TParamsOptions | undefined): void {
+      query = next;
+      write(next, options);
+    }
     const set = (
       key: string, value: unknown, options?: TParamsOptions,
     ) => {
+      assertFlags(
+        `${WHERE} params`, options, PARAMS_OPTION_KEYS,
+      );
       if (!isEqual(query[key], value)) {
         const next: TParams = {
           ...query,
@@ -205,7 +245,7 @@ export function createRouter(deps: TRouterDeps): TRouter {
         } else {
           delete next[key];
         }
-        write(next, options);
+        writeQuery(next, options);
       }
       return instance;
     };
@@ -217,7 +257,10 @@ export function createRouter(deps: TRouterDeps): TRouter {
       ),
       getKeys: () => Object.keys(query),
       clear: (options?: TParamsOptions) => {
-        Object.keys(query).length && write({}, options);
+        assertFlags(
+          `${WHERE} params`, options, PARAMS_OPTION_KEYS,
+        );
+        Object.keys(query).length && writeQuery({}, options);
         return instance;
       },
     });

@@ -181,6 +181,12 @@ describe.each([
           },
         ],
         [
+          '/more',
+          {
+            main: Page,
+          },
+        ],
+        [
           '/(.*)',
           {
             main: Page,

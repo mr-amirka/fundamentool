@@ -19,12 +19,6 @@ import type {
   TRouterDeps,
 } from '../../src/router';
 import {
-  routerInternal,
-} from '../../src/router/internal';
-import type {
-  TRouterInternal,
-} from '../../src/router/internal';
-import {
   locate,
 } from '../../src/router/location';
 import {
@@ -205,12 +199,8 @@ describe('createRouter', () => {
       replace: async () => undefined,
       back: async () => false,
     };
-    // The plumbing isn't the router's API: it sits under an internal key.
-    expect(Object.keys(router)).not.toContain('attach');
-    const internal = routerInternal(router) as TRouterInternal;
-    internal.attach(driver);
-    expect(() => internal.attach(driver)).toThrow(/already has a navigator/);
-    expect(routerInternal(null)).toBeUndefined();
+    router.attach(driver);
+    expect(() => router.attach(driver)).toThrow(/already has a navigator/);
   });
 });
 

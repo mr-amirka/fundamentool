@@ -30,7 +30,7 @@ describe('createNavigator — a history per tab', () => {
       '/a',
       '/b',
     ]);
-    expect(nav.getState().section).toBe('b');
+    expect(nav.getState().section).toBe('/b');
     await nav.go('/b/1');
     await nav.switchSection('a');
     expect(paths()).toEqual([
@@ -62,10 +62,11 @@ describe('createNavigator — a history per tab', () => {
       '/a',
       '/b',
     ]);
-    await nav.switchSection('c'); // not a section: nothing
+    await nav.switchSection('c'); // not a root: an ordinary page of the section shown
     expect(paths()).toEqual([
       '/a',
       '/b',
+      '/c',
     ]);
   });
 
@@ -80,7 +81,7 @@ describe('createNavigator — a history per tab', () => {
       '/a',
       '/a/1',
     ]));
-    expect(nav.getState().section).toBe('a');
+    expect(nav.getState().section).toBe('/a');
     await nav.switchSection('b');
     expect(paths()).toEqual([
       '/a',
@@ -111,7 +112,7 @@ describe('createNavigator — a history per tab', () => {
       '/a',
       '/b',
     ]));
-    expect(nav.getState().section).toBe('b');
+    expect(nav.getState().section).toBe('/b');
   });
 
   it('a jump back over entries by the player lands one entry back (Chrome skips entries made without a gesture — D-039)', async () => {
@@ -164,7 +165,7 @@ describe('createNavigator — a history per tab', () => {
       '/a',
       '/b/7',
     ]);
-    expect(nav.getState().section).toBe('b');
+    expect(nav.getState().section).toBe('/b');
   });
 
   it('a page of no known section opens in the first tab; tapping that tab then goes to its main page', async () => {
@@ -172,12 +173,9 @@ describe('createNavigator — a history per tab', () => {
       nav, paths,
     } = setup('/elsewhere');
     expect(paths()).toEqual(['/elsewhere']);
-    expect(nav.getState().section).toBe('a');
-    await nav.switchSection('a');
-    expect(paths()).toEqual([
-      '/elsewhere',
-      '/a',
-    ]);
+    expect(nav.getState().section).toBe('/a');
+    await nav.switchSection('a'); // the start is a page of no root: the root's link replaces it (D-043)
+    expect(paths()).toEqual(['/a']);
   });
 
   it('startOver drops every tab\'s stack', async () => {
@@ -202,14 +200,14 @@ describe('createNavigator — a history per tab', () => {
         '/',
         {
           main: 'home',
-          section: 'home',
+          section: true,
         },
       ],
       [
         '/b',
         {
           main: 'b',
-          section: 'b',
+          section: true,
         },
       ],
       [
@@ -226,11 +224,11 @@ describe('createNavigator — a history per tab', () => {
       '/',
       '/b/1',
     ]);
-    expect(inB.nav.getState().section).toBe('b');
+    expect(inB.nav.getState().section).toBe('/b');
     const inHome = harness({
       routes,
     }, '/x');
     expect(inHome.paths()).toEqual(['/x']);
-    expect(inHome.nav.getState().section).toBe('home');
+    expect(inHome.nav.getState().section).toBe('/');
   });
 });

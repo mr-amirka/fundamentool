@@ -76,16 +76,32 @@ export type TMemoryHistoryPrimitives = THistoryPrimitives & {
 
 // ── the router ──────────────────────────────────────────────────────────────────────────────────────────────────
 
+/** Options of a step forward or in place (`pushLocation`, `replaceLocation`). */
+export type TStepOptions = {
+  /**
+   * The history (and a navigator's stack) changes, the state isn't shown: `$location`, the pages and the hooks see
+   * nothing until the next step that isn't quiet (D-042). Pages opened quietly aren't mounted until shown.
+   */
+  quiet?: boolean;
+};
+
 /** Options of a step back. */
-export type TBackOptions = {
+export type TBackOptions = TStepOptions & {
   /** Don't ask the leave guards (sign out, a forced return). */
   force?: boolean;
 };
 
 /** Options of `params.set` / `remove` / `clear`. */
-export type TParamsOptions = {
+export type TParamsOptions = TStepOptions & {
   /** Change the current entry instead of making a new one. */
   replace?: boolean;
+};
+
+/** How a router's steps are carried out: by the primitive, or by a navigator over it. */
+export type TRouterDriver = {
+  push(location: TUrlProps, options?: TStepOptions): Promise<void>;
+  replace(location: TUrlProps, options?: TStepOptions): Promise<void>;
+  back(options?: TBackOptions): Promise<boolean>;
 };
 
 /** The router's dependencies. */
@@ -102,9 +118,9 @@ export type TRouter = {
   $query: Observable<TParams>;
   getLocation(): TUrlProps;
   /** A new entry: `change.path` (or the current one) with `change.query` (no query when not given). */
-  pushLocation(change: Partial<TUrlProps>): Promise<TUrlProps>;
+  pushLocation(change: Partial<TUrlProps>, options?: TStepOptions): Promise<TUrlProps>;
   /** The current entry, changed the same way. */
-  replaceLocation(change: Partial<TUrlProps>): Promise<TUrlProps>;
+  replaceLocation(change: Partial<TUrlProps>, options?: TStepOptions): Promise<TUrlProps>;
   /** One step back; `true` when it was taken (`false` at the history's first entry, or a leave guard refused). */
   backLocation(options?: TBackOptions): Promise<boolean>;
   /**
@@ -112,6 +128,13 @@ export type TRouter = {
    * its queue: `get` reads the new value once the step is taken.
    */
   params: TKeyValueStorage<TParamsOptions>;
+  /** The part this router works in. */
+  historyPrimitive: THistoryPrimitive;
+  /**
+   * Hands the router's steps to `driver` (a navigator, or another driver of your own); returns how the driver shows a
+   * location it moved to. One driver per router — a second `attach` is an error.
+   */
+  attach(driver: TRouterDriver): (location: TUrlProps) => void;
 };
 
 // ── the navigator ───────────────────────────────────────────────────────────────────────────────────────────────
@@ -120,8 +143,16 @@ export type TRouter = {
 export type TRouteRowBase = {
   /** The page stays mounted (hidden) while others cover it. */
   keep?: boolean;
-  /** The row is this tab's root; the roots' order is the tabs' order. */
-  section?: string;
+  /**
+   * The row is a section's root (a tab): a link to it from another section shows that section as it was left, a link
+   * to it in the same section rolls the section back to its start. The first root is the start section.
+   */
+  section?: boolean;
+  /**
+   * A step that changes only the page's query doesn't re-render it (its `route` stays): its parts follow the query
+   * through `router.params` (`storeProvider(deps, router.params)`).
+   */
+  quietQuery?: boolean;
 };
 
 /** A row of the route table: a path pattern and what the app puts there. */
@@ -136,6 +167,10 @@ export type TPageRoute = {
 /** A page in the stack. */
 export type TPageEntry<R = Record<string, unknown>> = {
   kind: typeof PAGE;
+  /**
+   * The page's identity: the entries of one page (its own steps — the same row, D-043) share it; its layer, hooks and
+   * guards belong to it.
+   */
   id: number;
   depth: number;
   location: TUrlProps;
@@ -143,7 +178,7 @@ export type TPageEntry<R = Record<string, unknown>> = {
   row: (TRouteRowBase & R) | null;
   /** The parameters its row's pattern gave, decoded. */
   params: TParams;
-  /** The tab it belongs to (the tab it was opened in). */
+  /** The section it belongs to — its root's pattern (a root's own; otherwise the section it was opened in). */
   section: string | null;
   /** Restored after a reload and not shown since: in the stack, not mounted. */
   dormant: boolean;
@@ -183,7 +218,7 @@ export type TNavigatorState<R = Record<string, unknown>> = {
   layers: readonly TPageEntry<R>[];
   /** The shown page. */
   page: TPageEntry<R>;
-  /** The tab shown; `null` without tabs. */
+  /** The section shown — its root's pattern (`'/feed'`); `null` without sections. */
   section: string | null;
 };
 

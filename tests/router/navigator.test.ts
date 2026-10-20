@@ -14,17 +14,8 @@ import {
   act,
 } from 'react';
 import {
-  createRoot,
-} from 'react-dom/client';
-import {
-  createApi,
-  createObservable,
-} from '../../src/Observable';
-import {
   createNavigator,
-  createRouter,
   LEAVE_PAGE_OPTION_KEYS,
-  memoryHistoryPrimitivesProvider,
   NAVIGATION_HOST_OPTION_KEYS,
   NAVIGATOR_DEPS_KEYS,
   OPEN_OPTION_KEYS,
@@ -36,41 +27,13 @@ import type {
   TOpenOptions,
 } from '../../src/router';
 import {
-  REACT_DEPS,
+  freshDeps,
+  inMemory,
+  mount,
   settle,
   setup,
   waitFor,
 } from './_harness';
-
-/** A navigator's dependencies over the in-memory primitives (no window): a router no navigator has yet. */
-function freshDeps(start = '/') {
-  const history = memoryHistoryPrimitivesProvider(start);
-  const router = createRouter({
-    historyPrimitive: history.hash,
-    createObservable,
-    createApi,
-  });
-  const deps: TNavigatorDeps = {
-    router,
-    createObservable,
-    createApi,
-    ...REACT_DEPS,
-  };
-  return {
-    history,
-    router,
-    deps,
-  };
-}
-
-/** A navigator over the in-memory primitives. */
-function inMemory(start = '/') {
-  const fresh = freshDeps(start);
-  return {
-    ...fresh,
-    nav: createNavigator(fresh.deps),
-  };
-}
 
 function Home() {
   return React.createElement(
@@ -78,16 +41,6 @@ function Home() {
   );
 }
 
-/** Renders `view` into a fresh element; returns it and the unmount. */
-function mount(view: () => unknown) {
-  const container = document.createElement('div');
-  const root = createRoot(container);
-  act(() => root.render(React.createElement(view as () => React.ReactElement)));
-  return {
-    container,
-    unmount: () => act(() => root.unmount()),
-  };
-}
 
 describe('createNavigator — options', () => {
   it('the key lists match their types', () => {
@@ -288,7 +241,7 @@ describe('createNavigator — the host', () => {
       ),
       React.createElement(
         nav.Link as unknown as string, {
-          to: {
+          href: {
             path: '/c',
           },
           component: 'button',
@@ -334,7 +287,7 @@ describe('createNavigator — the host', () => {
     expect(container.querySelector('[data-nav="a"]')?.className).toBe('active');
     expect(container.querySelector('[data-nav="b"]')?.className).toBe('tab');
     expect(container.querySelector('[data-nav="root"]')?.className).toBe('active'); // every page is under `/`
-    expect(container.querySelector('[data-nav="query"]')?.className).toBe(''); // no path: `/`, not `/a`
+    expect(container.querySelector('[data-nav="query"]')?.className).toBe('active'); // `?x=1` — the current path, as <a href> reads it
     await act(async () => {
       link.click();
       await waitFor(() => expect(router.$path.getState()).toBe('/b'));
@@ -389,7 +342,7 @@ describe('createNavigator — tabs and hooks', () => {
       '/a',
       '/b',
     ]));
-    expect(nav.getState().section).toBe('b');
+    expect(nav.getState().section).toBe('/b');
   });
 
   it('a hook outside the host belongs to the top entry', () => {
@@ -483,7 +436,7 @@ describe('createNavigator — a reload (D-039)', () => {
       '/b',
       '/b/2',
     ]);
-    expect(after.nav.getState().section).toBe('b');
+    expect(after.nav.getState().section).toBe('/b');
     await after.nav.switchSection('a');
     expect(after.paths()).toEqual([
       '/a',

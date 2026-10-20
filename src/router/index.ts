@@ -25,6 +25,11 @@ export type {
   TLinkProps,
 } from './navigatorView';
 export {
+  BACK_OPTION_KEYS,
+  PARAMS_OPTION_KEYS,
+  STEP_OPTION_KEYS,
+} from './options';
+export {
   routeTableMatcher,
 } from './routeTable';
 export type {

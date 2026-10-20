@@ -12,6 +12,9 @@ export const WINDOW = 'window';
 /** The path of a location that has none. */
 export const ROOT_PATH = '/';
 
+/** Between the segments of a path. */
+export const SEGMENT_SEPARATOR = '/';
+
 /** How many covered pages stay mounted at most, unless `createNavigator({ keep })` says otherwise. */
 export const DEFAULT_KEEP = 10;
 

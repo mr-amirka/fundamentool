@@ -41,9 +41,6 @@ import {
   WINDOW,
 } from './constants';
 import {
-  routerInternal,
-} from './internal';
-import {
   locate,
   pathPrefix,
 } from './location';
@@ -57,14 +54,16 @@ import {
   createNavigatorView,
 } from './navigatorView';
 import {
+  assertFlags,
+  BACK_OPTION_KEYS,
+} from './options';
+import {
+  fixedPathOf,
   routeTableMatcher,
 } from './routeTable';
 import type {
   TRouteMatch,
 } from './routeTable';
-import type {
-  TRouterInternal,
-} from './internal';
 import type {
   TBackOptions,
   TEntry,
@@ -77,6 +76,8 @@ import type {
   TOpenOptions,
   TPageEntry,
   TRouteRow,
+  TRouteRowBase,
+  TStepOptions,
   TWindowEntry,
 } from './types';
 
@@ -167,7 +168,7 @@ function assertNavigatorDeps(deps: TNavigatorDeps): void {
   assertKnownOptions(
     WHERE, deps, NAVIGATOR_DEPS_KEYS,
   );
-  if (!routerInternal(deps.router)) {
+  if (!isObject(deps.router) || !isFunction(deps.router.attach)) {
     throw new TypeError(`${WHERE}: "router" expects a router (createRouter(…)), got ${describeValue(deps.router)}`);
   }
   for (const key of FUNCTION_DEPS) {
@@ -200,8 +201,7 @@ export function createNavigator(deps: TNavigatorDeps) {
     createObservable,
     createApi,
   } = deps;
-  const internal = routerInternal(router) as TRouterInternal;
-  const primitive = internal.historyPrimitive;
+  const primitive = router.historyPrimitive;
   // `0` is a limit too (no covered page stays mounted), so only a missing value takes the default.
   const keepLimit = deps.keep ?? DEFAULT_KEEP;
   const exitMs = deps.exitMs ?? DEFAULT_EXIT_MS;
@@ -209,11 +209,13 @@ export function createNavigator(deps: TNavigatorDeps) {
   // ── the table (given by the host) ──────────────────────────────────────────────────────────────────────────────
 
   let match: (path: string) => TRouteMatch<Record<string, unknown>> | null = () => null;
-  /** Tabs → their root's location; the first is the start tab. */
-  let sections: Record<string, TUrlProps> = {};
-  /** The tabs' roots as `sectionOf` reads them: the name, the root's path, what the paths under it start with. */
-  let roots: [name: string, path: string, prefix: string][] = [];
+  /** The sections' root rows → the section's key, the root's pattern (D-043: a row is marked, not named). */
+  let rootKeys = new Map<TRouteRowBase, string>();
+  /** The roots as `sectionOf` reads a deep link: the key, the root's fixed path, what the paths under it start with. */
+  let roots: [key: string, path: string, prefix: string][] = [];
+  /** The start section — the first root; its root (a fixed path) is put under every deep link. */
   let homeSection: string | null = null;
+  let homeRoot: TUrlProps | null = null;
 
   // ── the stack ─────────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -222,9 +224,11 @@ export function createNavigator(deps: TNavigatorDeps) {
   let leaving: TWindowEntry[] = [];
   /** Entries left by going back, nearest first — what the browser's Forward restores (D-024). */
   let ahead: TEntry[] = [];
-  /** Each tab's own stack, and the tab shown (`null` without tabs). */
+  /** Each section's own stack, and the section shown (`null` without sections). */
   const stacks = new Map<string, TEntry[]>();
   let shown: string | null = null;
+  /** The step being made is quiet (D-042): the history and the stack change, the state isn't published. */
+  let quietStep = false;
 
   /** Window results and resolvers, by entry id. */
   const results = new Map<number, unknown>();
@@ -240,7 +244,16 @@ export function createNavigator(deps: TNavigatorDeps) {
   /** The other tabs' stacks as the history keeps them; they change only when the stacks are laid out anew. */
   let hiddenTabs: Record<string, TSaved[]> | null = null;
 
-  /** A page entry: its row and parameters from the table, its tab — its root's, or the one it's opened in. */
+  /** The section whose root a location is (`null` — not a root, or no sections). */
+  function rootOf(location: TUrlProps): string | null {
+    const found = match(location.path);
+    return found ? rootKeys.get(found.row) ?? null : null;
+  }
+
+  /**
+   * A page entry: its row and parameters from the table, its section — its own if it is a root, otherwise the one it's
+   * opened in. `id` — the page it is a step of (D-043); a new page otherwise. Opened by a quiet step — dormant.
+   */
   function page(
     location: TUrlProps, depth: number, section: string | null = shown, id?: number,
   ): TPageEntry {
@@ -252,10 +265,35 @@ export function createNavigator(deps: TNavigatorDeps) {
       location,
       row: found ? found.row : null,
       params: found ? found.params : {},
-      section: found?.row.section ?? section,
-      dormant: false,
+      section: (found && rootKeys.get(found.row)) ?? section,
+      dormant: quietStep,
       closing: false,
     };
+  }
+
+  /** The shown page, when `location` is a step of it — the same row, no window over it (D-043). */
+  function samePage(location: TUrlProps): TPageEntry | null {
+    const top = entries[entries.length - 1];
+    if (top.kind !== PAGE || !top.row) {
+      return null;
+    }
+    const found = match(location.path);
+    return found && found.row === top.row ? top : null;
+  }
+
+  /** Of the entries above the kept top, those of other pages: the kept page's own steps aren't it being left. */
+  function leftBy(removed: readonly TEntry[], kept: TEntry): TEntry[] {
+    return removed.filter((entry) => entry.id !== kept.id);
+  }
+
+  /** Runs a step's work quiet or not (D-042); inside the queue. */
+  async function quietly<T>(quiet: boolean, work: () => Promise<T> | T): Promise<T> {
+    quietStep = quiet;
+    try {
+      return await work();
+    } finally {
+      quietStep = false;
+    }
   }
 
   // ── state ─────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -267,9 +305,8 @@ export function createNavigator(deps: TNavigatorDeps) {
     }
   }
 
-  /** The stack as the state. The page on top is shown: restored after a reload, it wakes up now. */
+  /** The stack as the state. The page on top is shown: restored after a reload (or opened quietly), it wakes up now. */
   function snapshot(): TNavigatorState {
-    storeShown();
     const topIndex = pageIndexAt(entries, entries.length - 1);
     const top = entries[topIndex] as TPageEntry;
     if (top.dormant) {
@@ -292,8 +329,12 @@ export function createNavigator(deps: TNavigatorDeps) {
     });
   }
 
-  /** The stack as the state, emitted; the router shows the top page's location. */
+  /** The stack as the state, emitted; the router shows the top page's location. A quiet step publishes nothing. */
   function publish(): void {
+    storeShown();
+    if (quietStep) {
+      return;
+    }
     state = snapshot();
     emitState(state);
     showLocation(state.location);
@@ -307,13 +348,17 @@ export function createNavigator(deps: TNavigatorDeps) {
     } : entry));
   }
 
-  // ── tabs ──────────────────────────────────────────────────────────────────────────────────────────────────────
+  // ── sections ──────────────────────────────────────────────────────────────────────────────────────────────────
 
   /**
-   * The tab a location belongs to: the tab with the longest root that is its path or starts it (a root `/` takes what
-   * no other tab does); otherwise the start tab.
+   * The section a deep link belongs to: the one it is the root of; otherwise the one with the longest fixed root path
+   * that is its path or starts it (a root `/` takes what no other does); otherwise the start section.
    */
   function sectionOf(location: TUrlProps): string {
+    const own = rootOf(location);
+    if (own !== null) {
+      return own;
+    }
     const path = location.path;
     let found = homeSection as string;
     let longest = -1;
@@ -330,13 +375,13 @@ export function createNavigator(deps: TNavigatorDeps) {
     return found;
   }
 
-  /** What the history holds for a tab — the start tab's root under it, then its stack. */
+  /** What the history holds for a section — the start section's root under it, then its stack. */
   function layout(section: string): TEntry[] {
     const home = homeSection as string;
     if (!stacks.has(home)) {
       stacks.set(home, [
         page(
-          sections[home], 0, home,
+          homeRoot as TUrlProps, 0, home,
         ),
       ]);
     }
@@ -532,7 +577,7 @@ export function createNavigator(deps: TNavigatorDeps) {
       ...ahead,
     ] : removed.slice(0, stop);
     const windows = removed.filter((entry): entry is TWindowEntry => entry.kind === WINDOW);
-    for (const entry of removed) {
+    for (const entry of leftBy(removed, entries[depth])) {
       forget(entry);
     }
     leaving = [
@@ -594,8 +639,8 @@ export function createNavigator(deps: TNavigatorDeps) {
       return STAYED;
     }
     if (shown !== null && target === 0 && shown !== homeSection) {
-      // Back past a tab's root: that tab keeps its root, the start tab is shown.
-      const removed = entries.slice(2);
+      // Back past a section's first entry: that section keeps it, the start section is shown.
+      const removed = leftBy(entries.slice(2), entries[1]);
       closeOpened(removed);
       if (!force && removed.some((item) => guards.has(item.id))) {
         await travel(current);
@@ -607,7 +652,7 @@ export function createNavigator(deps: TNavigatorDeps) {
       rebuild(homeSection as string);
       return LEFT;
     }
-    const removed = entries.slice(target + 1);
+    const removed = leftBy(entries.slice(target + 1), entries[target]);
     closeOpened(removed);
     if (force || !removed.some((item) => guards.has(item.id))) {
       removeAbove(target);
@@ -630,10 +675,17 @@ export function createNavigator(deps: TNavigatorDeps) {
     markClosing(new Set(removed.map((entry) => entry.id)), true);
     publish();
     let stop = target;
+    const asked = new Set<number>();
+    // Top first; a page with several entries is asked once, at its top entry — where it stays if it refuses.
     for (let i = removed.length - 1; i >= 0 && stop === target; i--) {
-      for (const guard of guards.list(removed[i].id)) {
+      const entry = removed[i];
+      if (asked.has(entry.id)) {
+        continue;
+      }
+      asked.add(entry.id);
+      for (const guard of guards.list(entry.id)) {
         if (!(await guard())) {
-          stop = removed[i].depth;
+          stop = entry.depth;
           break;
         }
       }
@@ -678,7 +730,8 @@ export function createNavigator(deps: TNavigatorDeps) {
       return LEFT;
     }
     const kind = back[0].kind;
-    if (!hasForward(kind)) {
+    // A step of the shown page coming back isn't something opening over it.
+    if (back[0].id === entries[current].id || !hasForward(kind)) {
       restoreAhead(back);
       return LEFT;
     }
@@ -777,48 +830,71 @@ export function createNavigator(deps: TNavigatorDeps) {
   // ── steps ─────────────────────────────────────────────────────────────────────────────────────────────────────
 
   /**
-   * A new page. Forward handlers are asked first — outside the queue, they may open windows; with none, the step takes
-   * its place in the queue at once, so steps keep their call order.
+   * A step forward. A section's root — that section (`toSection`). A step of the shown page (the same row) — a new
+   * entry of the same page: it stays mounted and gets the new `route` (D-043). Otherwise a new page; forward handlers
+   * are asked first — outside the queue, they may open windows; with none, the step takes its place in the queue at
+   * once, so steps keep their call order.
    */
-  async function go(location: TUrlProps): Promise<boolean> {
-    if (hasForward(PAGE) && !(await askForward(PAGE))) {
+  async function go(location: TUrlProps, options?: TStepOptions): Promise<boolean> {
+    const quiet = !!options?.quiet;
+    const root = rootOf(location);
+    if (root !== null) {
+      await toSection(
+        root, location, quiet,
+      );
+      return true;
+    }
+    if (!samePage(location) && hasForward(PAGE) && !(await askForward(PAGE))) {
       return false;
     }
-    await enqueue(() => push(page(location, entries.length)));
+    await enqueue(() => quietly(quiet, () => {
+      const same = samePage(location);
+      push(page(
+        location, entries.length, same ? same.section : shown, same?.id,
+      ));
+    }));
     return true;
   }
 
-  /** Swaps the top page in place — no new history entry; windows over it close first (their guards are asked). */
-  function replace(location: TUrlProps): Promise<void> {
-    return enqueue(async () => {
-      const current = entries.length - 1;
-      const index = pageIndexAt(entries, current);
-      if (index < current) {
-        await settle(await travel(index - current));
-        if (entries.length - 1 !== index) {
-          return; // a window's guard kept it open
-        }
+  /**
+   * The shown page's place takes `location` — no new history entry; windows over it close first (their guards are
+   * asked). The same row — the same page with a new `route`; another row — a new page in its place. Inside the queue.
+   */
+  async function replaceTop(location: TUrlProps): Promise<void> {
+    const current = entries.length - 1;
+    const index = pageIndexAt(entries, current);
+    if (index < current) {
+      await settle(await travel(index - current));
+      if (entries.length - 1 !== index) {
+        return; // a window's guard kept it open
       }
-      const old = entries[index];
+    }
+    const old = entries[index] as TPageEntry;
+    const same = samePage(location);
+    if (!same) {
       closeOpened([old]);
       forget(old);
-      const fresh = page(
-        location, index, (old as TPageEntry).section,
-      );
-      entries = [
-        ...entries.slice(0, index),
-        fresh,
-      ];
-      write(fresh, true);
-      ahead = [];
-      publish();
-    });
+    }
+    const fresh = page(
+      location, index, old.section, same?.id,
+    );
+    entries = [
+      ...entries.slice(0, index),
+      fresh,
+    ];
+    write(fresh, true);
+    ahead = [];
+    publish();
+  }
+
+  function replace(location: TUrlProps, options?: TStepOptions): Promise<void> {
+    return enqueue(() => quietly(!!options?.quiet, () => replaceTop(location)));
   }
 
   /** Drops every page and window and opens `change` alone — sign out, switching account. */
   function startOver(change: Partial<TUrlProps>): Promise<void> {
     return enqueue(async () => {
-      const location = locate(change, state.location);
+      const location = locate(change, topPage(entries).location);
       const current = entries.length - 1;
       if (current > 0) {
         await travel(-current);
@@ -882,64 +958,81 @@ export function createNavigator(deps: TNavigatorDeps) {
   /**
    * Back in one move to the depth `target` gives for the stack as it is when the step's turn comes; the guards of the
    * entries left are asked, top first — a refusal stops there; `force` — they aren't asked. Resolves `true` when the
-   * entries were left.
+   * stack is at that depth (left to it, or there already).
    */
-  async function backTo(target: (current: number) => number, force: boolean): Promise<boolean> {
-    const outcome = await enqueue(async () => {
+  async function backTo(
+    target: (current: number) => number, force: boolean, quiet = false,
+  ): Promise<boolean> {
+    const outcome = await enqueue(() => quietly(quiet, async () => {
       const current = entries.length - 1;
-      const depth = Math.max(0, target(current));
-      return depth < current ? settle(await travel(depth - current), force) : STAYED;
-    });
+      const wanted = target(current);
+      const depth = Math.max(0, wanted);
+      if (depth < current) {
+        return settle(await travel(depth - current), force);
+      }
+      return wanted === current ? LEFT : STAYED; // there already — or nothing to go back to
+    }));
     return outcome.left;
   }
 
-  /** Back through the history to the shown tab's root; not in the history (a deep link) — it opens over the page. */
-  function backToSection(): Promise<void> {
-    return enqueue(async () => {
-      const section = shown;
-      if (section === null) {
-        return;
-      }
-      for (let i = entries.length - 1; i >= 0; i--) {
-        const entry = entries[i];
-        if (entry.kind === PAGE && entry.row?.section === section) {
-          if (i < entries.length - 1) {
-            await settle(await travel(i - (entries.length - 1)));
-          }
-          return;
-        }
-      }
-      push(page(
-        sections[section], entries.length, section,
-      ));
-    });
+  /** The place of the shown section's first entry (its root, unless it was opened by a deep link); `0` without sections. */
+  const sectionStart = (): number => (shown === null || shown === homeSection ? 0 : 1);
+
+  /**
+   * Back in one move to the start of the shown section — its first entry; without sections, the first page. `force` —
+   * the leave guards aren't asked (sign out, D-026); `quiet` — nothing is shown until the next step (D-042). Resolves
+   * `true` when it is there.
+   *
+   * @example
+   * await nav.backToRoot({ force: true, quiet: true }); // sign out: back to the start, nothing shown on the way
+   * await nav.open(SignIn);
+   */
+  async function backToRoot(options?: TBackOptions): Promise<boolean> {
+    assertFlags(
+      `${WHERE} backToRoot`, options, BACK_OPTION_KEYS,
+    );
+    return backTo(
+      sectionStart, !!options?.force, !!options?.quiet,
+    );
   }
 
-  /** A tab was tapped: its own stack, as it was left — or back to its root if it is the one shown. */
-  async function switchSection(section: string): Promise<void> {
-    if (shown === section) {
-      await backToSection();
-      return;
-    }
-    const root = sections[section];
-    if (!root) {
-      return;
-    }
-    await enqueue(async () => {
+  /**
+   * A link to a section's root (D-043). Another section — that section as it was left (the link's address isn't
+   * applied: we land where its history is); the first visit — its root at the link's address. The section shown — back
+   * to its start; if the link's address differs from the entry there, the link's address replaces it.
+   */
+  async function toSection(
+    key: string, location: TUrlProps, quiet: boolean,
+  ): Promise<void> {
+    const switched = await enqueue(() => quietly(quiet, async () => {
+      if (key === shown) {
+        return false;
+      }
       dropWindows();
       storeShown();
       if (entries.length > 1) {
         await travel(-(entries.length - 1));
       }
-      if (!stacks.has(section)) {
-        stacks.set(section, [
+      if (!stacks.has(key)) {
+        stacks.set(key, [
           page(
-            root, 0, section,
+            location, 0, key,
           ),
         ]);
       }
-      rebuild(section);
-    });
+      rebuild(key);
+      return true;
+    }));
+    if (switched || !(await backTo(
+      sectionStart, false, quiet,
+    ))) {
+      return;
+    }
+    await enqueue(() => quietly(quiet, async () => {
+      if (topPage(entries).location.href !== location.href) {
+        await replaceTop(location);
+      }
+    }));
   }
 
   /**
@@ -1003,30 +1096,30 @@ export function createNavigator(deps: TNavigatorDeps) {
   }
 
   /**
-   * The table, from the host: rows, tabs; every entry gets its row; tabs lay the stack out on first sight. A new host
+   * The table, from the host: rows, sections; every entry gets its row; sections lay the stack out on first sight. A new host
    * gives a new table (a hot reload of the module that makes it); the table is the navigator's, so two hosts mounted at
    * once draw the same pages.
    */
   function setRoutes(routes: readonly TRouteRow[]): void {
     match = routeTableMatcher(routes);
-    sections = {};
+    rootKeys = new Map();
     roots = [];
     for (const [
       pattern,
       row,
     ] of routes) {
-      const section = row.section;
-      if (section !== undefined && !(section in sections)) {
-        const root = urlParse(pattern);
-        sections[section] = root;
+      if (row.section && !rootKeys.has(row)) {
+        const path = fixedPathOf(pattern);
+        rootKeys.set(row, pattern);
         roots.push([
-          section,
-          root.path,
-          pathPrefix(root.path),
+          pattern,
+          path,
+          pathPrefix(path),
         ]);
       }
     }
     homeSection = roots.length ? roots[0][0] : null;
+    homeRoot = homeSection === null ? null : urlParse(homeSection);
     const describe = (entry: TEntry): TEntry => (entry.kind === PAGE ? {
       ...page(
         entry.location, entry.depth, entry.section, entry.id,
@@ -1050,12 +1143,14 @@ export function createNavigator(deps: TNavigatorDeps) {
 
   // ── start ─────────────────────────────────────────────────────────────────────────────────────────────────────
 
-  const showLocation = internal.attach({
-    push: async (location) => {
-      await go(location);
+  const showLocation = router.attach({
+    push: async (location, options) => {
+      await go(location, options);
     },
     replace,
-    back: (options?: TBackOptions) => (entries.length < 2 ? Promise.resolve(false) : backTo((current) => current - 1, !!options?.force)),
+    back: (options?: TBackOptions) => (entries.length < 2 ? Promise.resolve(false) : backTo(
+      (current) => current - 1, !!options?.force, !!options?.quiet,
+    )),
   });
 
   // A reload restores the stack the history kept; a first visit starts it from the address.
@@ -1067,6 +1162,7 @@ export function createNavigator(deps: TNavigatorDeps) {
   } else {
     reset(start.location);
   }
+  storeShown();
   let state = snapshot();
   const $state = createObservable<TNavigatorState>(state);
   const {
@@ -1090,6 +1186,7 @@ export function createNavigator(deps: TNavigatorDeps) {
     onForward,
     onBeforeLeave,
     setRoutes,
+    rootOf,
   });
 
   return {
@@ -1099,8 +1196,7 @@ export function createNavigator(deps: TNavigatorDeps) {
     close,
     startOver,
     leavePage,
-    backToSection,
-    switchSection,
+    backToRoot,
     whileOpen,
     onForward,
     onBeforeLeave,

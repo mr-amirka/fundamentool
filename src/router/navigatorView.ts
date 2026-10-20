@@ -18,12 +18,6 @@ import {
 import type {
   Observable,
 } from '../Observable/types';
-import {
-  urlExtend,
-} from '../urlExtend';
-import {
-  urlParse,
-} from '../urlParse';
 import type {
   TUrlProps,
 } from '../urlParse';
@@ -31,19 +25,16 @@ import {
   withAsyncLock,
 } from '../withAsyncLock';
 import {
-  ROOT_PATH,
   WINDOW,
 } from './constants';
 import {
-  routerInternal,
-} from './internal';
-import type {
-  TRouterInternal,
-} from './internal';
-import {
   locate,
   pathPrefix,
+  resolveHref,
 } from './location';
+import {
+  isFixedPattern,
+} from './routeTable';
 import type {
   TEntry,
   TForwardHandler,
@@ -65,6 +56,13 @@ export const NAVIGATION_HOST_OPTION_KEYS = [
   'renderWindow',
 ] as const;
 
+/** The navigator's flags of a row. */
+const ROW_FLAGS = [
+  'keep',
+  'section',
+  'quietQuery',
+] as const;
+
 /** A page layer: its own scroll container (keeps its scroll under `display: none` — research web-games 02 §6.1). */
 const LAYER = {
   position: 'absolute',
@@ -83,14 +81,18 @@ export type TNavigatorCore = {
   onForward: (entryId: number, handler: TForwardHandler, options?: { windows?: boolean }) => () => void;
   onBeforeLeave: (entryId: number, guard: TLeaveGuard) => () => void;
   setRoutes: (routes: readonly TRouteRow[]) => void;
+  /** The section whose root a location is (`null` — not a root, or no sections). */
+  rootOf: (location: TUrlProps) => string | null;
 };
 
-/** A link's props: where it goes (`href` and / or `to`), and the anchor's own. */
+/** A link's props: where it goes, and the anchor's own. */
 export type TLinkProps = {
-  /** The address in this router's part, e.g. `/level/2?x=1`. */
-  href?: string;
-  /** Or as a change of the current location (`{ path, query }`). */
-  to?: Partial<TUrlProps>;
+  /**
+   * Where it goes in this router's part (D-043): a string read as `<a href>` reads it (`/level/2`, `?tab=map`, `42`), or
+   * a change of the current location (`{ path, query }` — the values encoded, no `path` — the current one). Left out —
+   * the current location.
+   */
+  href?: string | Partial<TUrlProps>;
   /** `false` (or a promise of it) cancels the step. */
   onClick?: (event: { preventDefault?: () => void }) => unknown;
   /** The element to render instead of `a`. */
@@ -110,12 +112,27 @@ function assertHostOptions(options: TNavigationHostOptions): void {
   if (!isArray(routes)) {
     throw new TypeError(`${WHERE} NavigationHostProvider: "routes" expects the route table ([pattern, row][]), got ${describeValue(routes)}`);
   }
+  let firstRoot = true;
   for (const row of routes) {
     if (!isArray(row) || typeof row[0] !== 'string' || !isObject(row[1])) {
       throw new TypeError(`${WHERE} NavigationHostProvider: a row of "routes" expects [pattern, { … }], got ${describeValue(row)}`);
     }
-    if (!options.render && (row[1] as { main?: unknown }).main === undefined) {
-      throw new TypeError(`${WHERE} NavigationHostProvider: the row "${row[0]}" has no "main" — give it one, or a "render" that draws the row`);
+    const pattern = row[0];
+    const fields = row[1] as TRouteRow[1] & { main?: unknown };
+    if (!options.render && fields.main === undefined) {
+      throw new TypeError(`${WHERE} NavigationHostProvider: the row "${pattern}" has no "main" — give it one, or a "render" that draws the row`);
+    }
+    for (const key of ROW_FLAGS) {
+      const value = fields[key];
+      if (value !== undefined && typeof value !== 'boolean') {
+        throw new TypeError(`${WHERE} NavigationHostProvider: the row "${pattern}": "${key}" expects true or false, got ${describeValue(value)}`);
+      }
+    }
+    if (fields.section && firstRoot) {
+      firstRoot = false;
+      if (!isFixedPattern(pattern)) {
+        throw new TypeError(`${WHERE} NavigationHostProvider: the start section's root "${pattern}" is put under deep links — it needs a path without parameters`);
+      }
     }
   }
   for (const key of [
@@ -152,9 +169,10 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
     onForward,
     whileOpen,
     setRoutes,
+    rootOf,
   } = core;
   const h = createElement;
-  const primitive = (routerInternal(router) as TRouterInternal).historyPrimitive;
+  const primitive = router.historyPrimitive;
 
   /** The entry a component is rendered in (inside the host). */
   const EntryContext = createContext(null);
@@ -219,18 +237,41 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
       );
     }
 
-    /** A page by its row; a path no row fits draws nothing ("not found" is a catch-all last row). */
-    function drawPage(entry: TPageEntry): unknown {
-      return entry.row ? render(
-        entry.row, {
+    /** What each page was last drawn with, by page: its location and the element (reused — the page isn't re-rendered). */
+    let drawn = new Map<number, [location: TUrlProps, element: unknown]>();
+
+    /**
+     * A page by its row; a path no row fits draws nothing ("not found" is a catch-all last row). Drawn again only when
+     * its location changed — and for a `quietQuery` row, only when its path did (D-043): the page keeps its `route`, its
+     * parts follow the query through `router.params`. Its entry's flags (`closing`, …) reach it through `useEntry`.
+     */
+    function drawPage(entry: TPageEntry, next: typeof drawn): unknown {
+      const row = entry.row;
+      if (!row) {
+        return null;
+      }
+      const location = entry.location;
+      const last = drawn.get(entry.id);
+      if (last && (last[0] === location || row.quietQuery && last[0].path === location.path)) {
+        next.set(entry.id, last);
+        return last[1];
+      }
+      const element = render(
+        row, {
           params: entry.params,
-          location: entry.location,
+          location,
         }, entry,
-      ) : null;
+      );
+      next.set(entry.id, [
+        location,
+        element,
+      ]);
+      return element;
     }
 
     function NavigationHost(): unknown {
       const value = useNavigatorState();
+      const next = new Map<number, [location: TUrlProps, element: unknown]>();
       // Layers of every tab's stack, in a stable order: a layer that moved in the DOM would lose its scroll.
       const layers = value.layers.map((entry) => {
         const shown = entry === value.page;
@@ -243,9 +284,10 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
               ...LAYER,
               display: shown ? 'block' : 'none',
             },
-          }, withEntry(entry, drawPage(entry)),
+          }, withEntry(entry, drawPage(entry, next)),
         );
       });
+      drawn = next;
       const shownWindows = value.entries.filter((entry): entry is TWindowEntry => entry.kind === WINDOW && entry.window !== null);
       const windows = [
         ...shownWindows,
@@ -308,10 +350,13 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
     useEffect(() => onBeforeLeave(entryId, () => latest.current()), []);
   }
 
-  /** Where a link goes: `href` as written (or the current address), changed by `to` when given. */
-  function targetOf(props: TLinkProps): TUrlProps {
-    const base = urlParse(urlExtend(props.href || router.getLocation().href).href);
-    return props.to ? locate(props.to, base) : base;
+  /** Where a link goes: its `href` read against the current location (left out — the current location). */
+  function targetOf(href: TLinkProps['href']): TUrlProps {
+    const current = router.getLocation();
+    if (href === undefined) {
+      return current;
+    }
+    return typeof href === 'string' ? resolveHref(href, current) : locate(href, current);
   }
 
   /** One click at a time across the links (a double tap doesn't step twice). */
@@ -326,14 +371,13 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
   /** An anchor in this router's part: its `href` is what the address bar would show; a click steps there. */
   const Link = forwardRef((props: TLinkProps, ref: unknown) => {
     const {
-      href: _href,
-      to: _to,
+      href,
       onClick,
       component,
       activeAsParent: _activeAsParent,
       ...anchor
     } = props;
-    const target = targetOf(props);
+    const target = targetOf(href);
     return h(component || 'a', {
       ...anchor,
       ref,
@@ -347,17 +391,22 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
     });
   });
 
-  /** A `Link` with `className="active"` while its address is the shown one (`activeAsParent` — or a page under it). */
+  /**
+   * A `Link` with `className="active"` while its address is the shown one (`activeAsParent` — or a page under it), or
+   * while it leads to the root of the section shown (a tab).
+   */
   function NavLink(props: TLinkProps): unknown {
-    const [
+    const {
       location,
-      setLocation,
-    ] = useState(router.getLocation);
-    useEffect(() => router.$location.watch(setLocation), []);
-    const target = targetOf(props);
+      section,
+    } = useNavigatorState();
+    const target = targetOf(props.href);
     const path = location.path;
-    const targetPath = target.path || ROOT_PATH;
-    const active = path === targetPath || !!props.activeAsParent && path.startsWith(pathPrefix(targetPath));
+    // A resolved target always has a path (`resolveHref`, `locate`).
+    const targetPath = target.path;
+    const active = path === targetPath
+      || !!props.activeAsParent && path.startsWith(pathPrefix(targetPath))
+      || section !== null && rootOf(target) === section;
     return h(Link, {
       ...props,
       className: active ? ('active ' + (props.className || '')).trim() : props.className,
