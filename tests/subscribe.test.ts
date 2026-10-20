@@ -5,7 +5,10 @@ import {
 describe('subscribe', () => {
   test('pushes listeners to collection and unsubscribe removes them', () => {
     const collection: (() => void)[] = [];
-    const listeners = [jest.fn(), jest.fn()];
+    const listeners = [
+      jest.fn(),
+      jest.fn(),
+    ];
     const unsub = subscribe(collection, listeners);
     expect(collection).toHaveLength(2);
     unsub();

@@ -14,7 +14,10 @@ describe('getViewportSizeProvider', () => {
         },
       },
     };
-    expect(getViewportSizeProvider(win)()).toEqual([1280, 720]);
+    expect(getViewportSizeProvider(win)()).toEqual([
+      1280,
+      720,
+    ]);
   });
 
   test('falls back to documentElement.clientWidth/clientHeight', () => {
@@ -26,7 +29,10 @@ describe('getViewportSizeProvider', () => {
         },
       },
     };
-    expect(getViewportSizeProvider(win)()).toEqual([800, 600]);
+    expect(getViewportSizeProvider(win)()).toEqual([
+      800,
+      600,
+    ]);
   });
 
   test('returns fresh values on each call', () => {
@@ -41,9 +47,15 @@ describe('getViewportSizeProvider', () => {
       },
     };
     const getSize = getViewportSizeProvider(win);
-    expect(getSize()).toEqual([1024, 768]);
+    expect(getSize()).toEqual([
+      1024,
+      768,
+    ]);
     win.innerWidth = 1920;
     win.innerHeight = 1080;
-    expect(getSize()).toEqual([1920, 1080]);
+    expect(getSize()).toEqual([
+      1920,
+      1080,
+    ]);
   });
 });

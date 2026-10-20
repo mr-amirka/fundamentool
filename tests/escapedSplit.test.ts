@@ -17,7 +17,10 @@ describe('escapedSplitProvider', () => {
   });
 
   test('preserves escaped separator', () => {
-    expect(split('a\\,b,c')).toEqual(['a,b', 'c']);
+    expect(split('a\\,b,c')).toEqual([
+      'a,b',
+      'c',
+    ]);
   });
 
   test('handles no separator', () => {
@@ -29,13 +32,19 @@ describe('escapedSplitProvider', () => {
   });
 
   test('base() does not unescape', () => {
-    expect(split.base('a\\,b,c')).toEqual(['a\\,b', 'c']);
+    expect(split.base('a\\,b,c')).toEqual([
+      'a\\,b',
+      'c',
+    ]);
   });
 
   test('collects separators into dstSeparators', () => {
     const seps: string[] = [];
     split.base('a,b,c', seps);
-    expect(seps).toEqual([',', ',']);
+    expect(seps).toEqual([
+      ',',
+      ',',
+    ]);
   });
 });
 

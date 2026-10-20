@@ -100,7 +100,10 @@ export class Client {
         const promise = _promiseBetweenLatency
           .catch(noop)
           .then(() => {
-            return Promise.all([Promise.resolve().then(fn), wait(minLatency)]);
+            return Promise.all([
+              Promise.resolve().then(fn),
+              wait(minLatency),
+            ]);
           })
           .then((v) => v[0]);
 

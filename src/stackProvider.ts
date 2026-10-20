@@ -44,7 +44,10 @@ export interface IStack<T> {
  */
 export const stackProvider = <T = any>(): IStack<T> => {
   // Node: [value, next]
-  let first: [T | 0, any] = [0 as any, 0];
+  let first: [T | 0, any] = [
+    0 as any,
+    0,
+  ];
   let last = first;
 
   return {
@@ -58,7 +61,10 @@ export const stackProvider = <T = any>(): IStack<T> => {
     },
     push(data: T | null | undefined): void {
       if (isDefined(data)) {
-        last = (last[1] = [data as T, 0] as any);
+        last = (last[1] = [
+          data as T,
+          0,
+        ] as any);
       }
     },
     eachPop(iteratee: (item: T) => void): void {

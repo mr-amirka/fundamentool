@@ -88,9 +88,15 @@ describe('control wrappers', () => {
     expect(calls).toEqual([1]);
 
     await jest.advanceTimersByTimeAsync(100);
-    expect(calls).toEqual([1, 2]);
+    expect(calls).toEqual([
+      1,
+      2,
+    ]);
 
-    await Promise.all([p1, p2]);
+    await Promise.all([
+      p1,
+      p2,
+    ]);
   });
 
   test('intervalAsync repeatedly calls function until canceled', async () => {

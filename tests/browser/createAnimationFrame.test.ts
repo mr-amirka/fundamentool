@@ -31,7 +31,10 @@ describe('browser/createAnimationFrame', () => {
     createAnimationFrame(callback);
     frame(16);
     frame(17);
-    expect(callback.mock.calls).toEqual([[16], [17]]);
+    expect(callback.mock.calls).toEqual([
+      [16],
+      [17],
+    ]);
   });
 
   test('with an interval: frames accumulate until it is reached, then the callback gets the whole balance', () => {

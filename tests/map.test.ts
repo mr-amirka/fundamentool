@@ -20,20 +20,41 @@ describe('map', () => {
 
   test('passes index and collection to iteratee', () => {
     const calls: any[] = [];
-    map(['a', 'b'], (
+    map([
+      'a',
+      'b',
+    ], (
       v, i, _c,
     ) => {
-      calls.push([v, i]); return v;
+      calls.push([
+        v,
+        i,
+      ]); return v;
     });
-    expect(calls).toEqual([['a', 0], ['b', 1]]);
+    expect(calls).toEqual([
+      [
+        'a',
+        0,
+      ],
+      [
+        'b',
+        1,
+      ],
+    ]);
   });
 
   test('writes into provided dst array', () => {
     const dst: number[] = [];
     map(
-      [1, 2], (v) => v + 10, dst,
+      [
+        1,
+        2,
+      ], (v) => v + 10, dst,
     );
-    expect(dst).toEqual([11, 12]);
+    expect(dst).toEqual([
+      11,
+      12,
+    ]);
   });
 
   test('returns empty array for empty input', () => {
@@ -59,9 +80,17 @@ describe('mapIn', () => {
     }, (
       v, k, _c,
     ) => {
-      calls.push([v, k]); return v;
+      calls.push([
+        v,
+        k,
+      ]); return v;
     });
-    expect(calls).toEqual([[5, 'x']]);
+    expect(calls).toEqual([
+      [
+        5,
+        'x',
+      ],
+    ]);
   });
 
   test('writes into provided dst object', () => {

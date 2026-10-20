@@ -45,7 +45,10 @@ export const OPEN_OPTION_KEYS = ['reopen'] as const;
 export const LEAVE_PAGE_OPTION_KEYS = ['fallback'] as const;
 
 /** The single list of accepted keys of `TNavigationHostOptions`. */
-export const NAVIGATION_HOST_OPTION_KEYS = ['renderPage', 'renderWindow'] as const;
+export const NAVIGATION_HOST_OPTION_KEYS = [
+  'renderPage',
+  'renderWindow',
+] as const;
 
 /** What `router.NavigationHostProvider` needs from the view library. */
 export const NAVIGATION_HOST_DEPS = [

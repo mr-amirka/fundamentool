@@ -43,8 +43,10 @@ export const color: IColor = (v: string, alt?: boolean): string[] => {
 
   let m = regexpVar.exec(v);
   if (m) {
-    return [(m[1] === '-' ? 'env' : 'var')
-      + '(' + m[2] + (m[4] ? ',' + m[4] : '') + ')'];
+    return [
+      (m[1] === '-' ? 'env' : 'var')
+      + '(' + m[2] + (m[4] ? ',' + m[4] : '') + ')',
+    ];
   }
 
   m = regexpColor.exec(v) as RegExpExecArray | null;
@@ -181,7 +183,10 @@ const base = color.base = (rgbaColor: [number, number, number, number], alt?: bo
       + ','
       + (alpha ? alpha.toFixed(2).replace(regexpTrimZero, '') : '0')
       + ')';
-    return alt ? [rgbStringify(tmp), v] : [v];
+    return alt ? [
+      rgbStringify(tmp),
+      v,
+    ] : [v];
   }
   return [rgbStringify(tmp)];
 };

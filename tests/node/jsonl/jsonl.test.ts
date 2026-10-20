@@ -64,11 +64,14 @@ describe('node/jsonl — TransformFrom (deserialize)', () => {
     const items: any[] = [];
     transform.on('data', (obj: any) => items.push(obj));
     transform.on('end', () => {
-      expect(items).toEqual([{
-        a: 1,
-      }, {
-        b: 2,
-      }]);
+      expect(items).toEqual([
+        {
+          a: 1,
+        },
+        {
+          b: 2,
+        },
+      ]);
       done();
     });
     transform.write(Buffer.from('{"a":1}\n{"b":2}\n'));
@@ -80,9 +83,11 @@ describe('node/jsonl — TransformFrom (deserialize)', () => {
     const items: any[] = [];
     transform.on('data', (obj: any) => items.push(obj));
     transform.on('end', () => {
-      expect(items).toEqual([{
-        x: 42,
-      }]);
+      expect(items).toEqual([
+        {
+          x: 42,
+        },
+      ]);
       done();
     });
     transform.write(Buffer.from('{"x"'));
@@ -167,11 +172,14 @@ describe('node/jsonl — file write', () => {
   test('write() produces valid JSONL content in file', async () => {
     const dir = tmpDir();
     const path = join(dir, 'out.jsonl');
-    const records = [{
-      a: 1,
-    }, {
-      b: 'hello',
-    }];
+    const records = [
+      {
+        a: 1,
+      },
+      {
+        b: 'hello',
+      },
+    ];
 
     const out = write(path) as any;
     out.on('error', (e: any) => {
@@ -206,9 +214,11 @@ describe('node/jsonl — file write', () => {
     await new Promise<void>((resolve) => setTimeout(resolve, 50));
 
     const items = await collectStream(read(path));
-    expect(items).toEqual([{
-      v: 1,
-    }]);
+    expect(items).toEqual([
+      {
+        v: 1,
+      },
+    ]);
     rmSync(dir, {
       recursive: true,
     });

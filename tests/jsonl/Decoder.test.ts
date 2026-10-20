@@ -13,12 +13,16 @@ describe('jsonl/Decoder', () => {
     const r2 = decoder.write('2}\n');
     const r3 = decoder.end();
 
-    expect(r1).toEqual([{
-      id: 1,
-    }]);
-    expect(r2).toEqual([{
-      id: 2,
-    }]);
+    expect(r1).toEqual([
+      {
+        id: 1,
+      },
+    ]);
+    expect(r2).toEqual([
+      {
+        id: 2,
+      },
+    ]);
     expect(r3).toEqual([]);
   });
 
@@ -28,12 +32,16 @@ describe('jsonl/Decoder', () => {
     const r1 = decoder.write('{"name":"a"}\n{"na');
     const r2 = decoder.end('me":"b"}');
 
-    expect(r1).toEqual([{
-      name: 'a',
-    }]);
-    expect(r2).toEqual([{
-      name: 'b',
-    }]);
+    expect(r1).toEqual([
+      {
+        name: 'a',
+      },
+    ]);
+    expect(r2).toEqual([
+      {
+        name: 'b',
+      },
+    ]);
   });
 
   test('decodes JSONL from short UTF-8 string chunks', () => {
@@ -42,23 +50,30 @@ describe('jsonl/Decoder', () => {
     const r1 = decoder.write('{"n":1}\n');
     const r2 = decoder.end('{"n":2}');
 
-    expect(r1).toEqual([{
-      n: 1,
-    }]);
-    expect(r2).toEqual([{
-      n: 2,
-    }]);
+    expect(r1).toEqual([
+      {
+        n: 1,
+      },
+    ]);
+    expect(r2).toEqual([
+      {
+        n: 2,
+      },
+    ]);
   });
 
   test('supports CRLF line endings', () => {
     const decoder = new Decoder();
     const result = decoder.end('{"a":1}\r\n{"a":2}\r\n');
 
-    expect(result).toEqual([{
-      a: 1,
-    }, {
-      a: 2,
-    }]);
+    expect(result).toEqual([
+      {
+        a: 1,
+      },
+      {
+        a: 2,
+      },
+    ]);
   });
 
   test('throws line-aware parse error', () => {
@@ -77,7 +92,10 @@ describe('LineDecoder with custom parser', () => {
     const r1 = decoder.write('10\n20\n');
     const r2 = decoder.end('30');
 
-    expect(r1).toEqual([10, 20]);
+    expect(r1).toEqual([
+      10,
+      20,
+    ]);
     expect(r2).toEqual([30]);
   });
 });

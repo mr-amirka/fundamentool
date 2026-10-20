@@ -5,7 +5,10 @@ import {
 describe('getByType', () => {
   test('maps args to named keys by typeof', () => {
     // typesMap key = typeof string, value = array of output key names
-    const result = getByType(['hello', 42], {
+    const result = getByType([
+      'hello',
+      42,
+    ], {
       string: ['s'],
       number: ['n'],
     });
@@ -17,8 +20,14 @@ describe('getByType', () => {
 
   test('assigns consecutive same-type args to ordered output keys', () => {
     // two numbers → first gets 'first', second gets 'second'
-    const result = getByType([1, 2], {
-      number: ['first', 'second'],
+    const result = getByType([
+      1,
+      2,
+    ], {
+      number: [
+        'first',
+        'second',
+      ],
     });
     expect(result).toEqual({
       first: 1,
@@ -27,7 +36,10 @@ describe('getByType', () => {
   });
 
   test('ignores args whose typeof has no mapping', () => {
-    const result = getByType([true, 'hello'], {
+    const result = getByType([
+      true,
+      'hello',
+    ], {
       string: ['s'],
     });
     expect(result).toEqual({

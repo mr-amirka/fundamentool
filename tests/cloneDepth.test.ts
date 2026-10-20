@@ -47,18 +47,42 @@ describe('cloneDepth', () => {
   });
 
   test('clones arrays at depth 0 (new array, same elements)', () => {
-    const inner = [2, 3];
-    const arr = [1, inner];
+    const inner = [
+      2,
+      3,
+    ];
+    const arr = [
+      1,
+      inner,
+    ];
     const result = cloneDepth(arr, 0);
     expect(result).not.toBe(arr);
     expect(result[1]).toBe(inner);
   });
 
   test('clones nested arrays at depth 1', () => {
-    const arr = [[1, 2], [3, 4]];
+    const arr = [
+      [
+        1,
+        2,
+      ],
+      [
+        3,
+        4,
+      ],
+    ];
     const result = cloneDepth(arr, 1);
     expect(result[0]).not.toBe(arr[0]);
-    expect(result).toEqual([[1, 2], [3, 4]]);
+    expect(result).toEqual([
+      [
+        1,
+        2,
+      ],
+      [
+        3,
+        4,
+      ],
+    ]);
   });
 
   test('returns primitives as-is', () => {

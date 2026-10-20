@@ -126,7 +126,10 @@ export function wsSeriesRequestProvider<TResponse = any>(wsUrl: string,
       const item = [
         resolve,
         reject,
-        [method, data],
+        [
+          method,
+          data,
+        ],
       ];
       if (socket) {
         socketApplyBase(item);

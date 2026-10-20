@@ -23,7 +23,10 @@ describe('createObservable', () => {
     store.watch((v) => calls.push(v));
     store.setState(1);
     store.setState(2);
-    expect(calls).toEqual([1, 2]);
+    expect(calls).toEqual([
+      1,
+      2,
+    ]);
   });
 
   test('watch — unsubscribe stops notifications', () => {
@@ -45,7 +48,10 @@ describe('createObservable', () => {
     store.setState(5);
     unsubB();
     store.setState(6);
-    expect(a).toEqual([5, 6]);
+    expect(a).toEqual([
+      5,
+      6,
+    ]);
     expect(b).toEqual([5]);
   });
 
@@ -159,6 +165,9 @@ describe('TObservableAdapter — DI', () => {
       set: (_, v: number) => v,
     });
 
-    expect(calls).toEqual(['createObservable', 'createApi']);
+    expect(calls).toEqual([
+      'createObservable',
+      'createApi',
+    ]);
   });
 });

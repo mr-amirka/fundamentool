@@ -29,12 +29,21 @@ describe('routerProvider — a separate history per section', () => {
     } = setup();
     await nav.go('/a/1');
     await nav.switchSection('b');
-    expect(paths()).toEqual(['/a', '/b']);
+    expect(paths()).toEqual([
+      '/a',
+      '/b',
+    ]);
     expect(nav.getState().section).toBe('b');
     await nav.go('/b/1');
     await nav.switchSection('a');
-    expect(paths()).toEqual(['/a', '/a/1']);
-    expect(browser.paths()).toEqual(['/a', '/a/1']);
+    expect(paths()).toEqual([
+      '/a',
+      '/a/1',
+    ]);
+    expect(browser.paths()).toEqual([
+      '/a',
+      '/a/1',
+    ]);
     await nav.switchSection('b');
     expect(paths()).toEqual([
       '/a',
@@ -52,9 +61,15 @@ describe('routerProvider — a separate history per section', () => {
     await nav.go('/b/1');
     await nav.go('/b/1/2');
     await nav.switchSection('b');
-    expect(paths()).toEqual(['/a', '/b']);
+    expect(paths()).toEqual([
+      '/a',
+      '/b',
+    ]);
     await nav.switchSection('c'); // not a section: nothing
-    expect(paths()).toEqual(['/a', '/b']);
+    expect(paths()).toEqual([
+      '/a',
+      '/b',
+    ]);
   });
 
   it('back from a tab\'s main page shows the first tab as it was; the tab left keeps its main page', async () => {
@@ -64,10 +79,16 @@ describe('routerProvider — a separate history per section', () => {
     await nav.go('/a/1');
     await nav.switchSection('b');
     browser.userBack();
-    await waitFor(() => expect(paths()).toEqual(['/a', '/a/1']));
+    await waitFor(() => expect(paths()).toEqual([
+      '/a',
+      '/a/1',
+    ]));
     expect(nav.getState().section).toBe('a');
     await nav.switchSection('b');
-    expect(paths()).toEqual(['/a', '/b']);
+    expect(paths()).toEqual([
+      '/a',
+      '/b',
+    ]);
   });
 
   it('a long back past a guarded page asks first; agreed — it stops at the tab\'s main page', async () => {
@@ -89,7 +110,10 @@ describe('routerProvider — a separate history per section', () => {
     allow = true;
     browser.userGo(-2);
     await settle(50);
-    await waitFor(() => expect(paths()).toEqual(['/a', '/b']));
+    await waitFor(() => expect(paths()).toEqual([
+      '/a',
+      '/b',
+    ]));
     expect(nav.getState().section).toBe('b');
   });
 
@@ -103,7 +127,10 @@ describe('routerProvider — a separate history per section', () => {
     await settle(50);
     await waitFor(() => expect(paths()).toEqual(['/a']));
     await nav.switchSection('b');
-    expect(paths()).toEqual(['/a', '/b']);
+    expect(paths()).toEqual([
+      '/a',
+      '/b',
+    ]);
   });
 
   it('kept pages of hidden tabs stay mounted; windows of the shown tab close on a switch', async () => {
@@ -118,7 +145,10 @@ describe('routerProvider — a separate history per section', () => {
     await expect(win).resolves.toBeNull();
     const state = nav.getState();
     expect(state.layers.some((entry) => entry.id === kept)).toBe(true);
-    expect(state.layers.map((entry) => entry.location.path)).toEqual(['/a/list', '/b']);
+    expect(state.layers.map((entry) => entry.location.path)).toEqual([
+      '/a/list',
+      '/b',
+    ]);
     await nav.switchSection('a'); // no windows to close now
     expect(nav.getState().page.id).toBe(kept);
   });
@@ -127,7 +157,10 @@ describe('routerProvider — a separate history per section', () => {
     const {
       paths, nav,
     } = setup('/b/7');
-    expect(paths()).toEqual(['/a', '/b/7']);
+    expect(paths()).toEqual([
+      '/a',
+      '/b/7',
+    ]);
     expect(nav.getState().section).toBe('b');
   });
 
@@ -138,7 +171,10 @@ describe('routerProvider — a separate history per section', () => {
     expect(paths()).toEqual(['/elsewhere']);
     expect(nav.getState().section).toBe('a');
     await nav.switchSection('a');
-    expect(paths()).toEqual(['/elsewhere', '/a']);
+    expect(paths()).toEqual([
+      '/elsewhere',
+      '/a',
+    ]);
   });
 
   it('startOver drops every tab\'s stack', async () => {
@@ -151,7 +187,10 @@ describe('routerProvider — a separate history per section', () => {
     expect(paths()).toEqual(['/a']);
     expect(nav.getState().layers.map((entry) => entry.location.path)).toEqual(['/a']);
     await nav.startOver('/b/x');
-    expect(paths()).toEqual(['/a', '/b/x']);
+    expect(paths()).toEqual([
+      '/a',
+      '/b/x',
+    ]);
   });
 
   it('needs sections', () => {

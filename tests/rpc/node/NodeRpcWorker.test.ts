@@ -83,7 +83,10 @@ describe('NodeRpcClientWorker', () => {
       add: (a: number, b: number) => a + b,
     });
 
-    expect(await client.call('add', [3, 4])).toBe(7);
+    expect(await client.call('add', [
+      3,
+      4,
+    ])).toBe(7);
     client.destroy();
     connect.destroy();
   });

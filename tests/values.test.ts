@@ -7,7 +7,10 @@ describe('values', () => {
     expect(values({
       a: 1,
       b: 2,
-    })).toEqual([1, 2]);
+    })).toEqual([
+      1,
+      2,
+    ]);
   });
 
   test('returns empty for null/undefined', () => {

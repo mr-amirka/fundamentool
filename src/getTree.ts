@@ -31,11 +31,14 @@ const base = (
     if (item && item.parent == id) {
       itemId = item.id;
       dst.push(depth > 0
-        ? merge([item, {
-          childs: itemId ? base(
-            src, itemId, [], depth,
-          ) : [],
-        }])
+        ? merge([
+          item,
+          {
+            childs: itemId ? base(
+              src, itemId, [], depth,
+            ) : [],
+          },
+        ])
         : item);
     }
   }

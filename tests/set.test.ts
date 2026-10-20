@@ -14,7 +14,10 @@ describe('set', () => {
   test('accepts array path', () => {
     const obj: Record<string, any> = {};
     set(
-      obj, ['x', 'y'], 42,
+      obj, [
+        'x',
+        'y',
+      ], 42,
     );
     expect(obj.x.y).toBe(42);
   });
@@ -48,7 +51,10 @@ describe('setBase', () => {
   test('sets value at path array', () => {
     const obj: Record<string, any> = {};
     setBase(
-      obj, ['a', 'b'], 1,
+      obj, [
+        'a',
+        'b',
+      ], 1,
     );
     expect(obj.a.b).toBe(1);
   });

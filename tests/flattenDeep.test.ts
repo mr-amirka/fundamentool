@@ -6,8 +6,17 @@ describe('flattenDeep', () => {
   test('flattens nested arrays', () => {
     expect(flattenDeep([
       1,
-      [2, 3],
-      [4, [5, 6]],
+      [
+        2,
+        3,
+      ],
+      [
+        4,
+        [
+          5,
+          6,
+        ],
+      ],
     ])).toEqual([
       1,
       2,
@@ -39,7 +48,12 @@ describe('flattenDeep', () => {
     expect(flattenDeep([
       [[]],
       [1],
-      [[2, [3]]],
+      [
+        [
+          2,
+          [3],
+        ],
+      ],
     ])).toEqual([
       1,
       2,

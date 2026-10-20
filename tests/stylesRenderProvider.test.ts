@@ -67,11 +67,13 @@ describe('stylesRenderProvider', () => {
     } = makeDoc();
     const render = stylesRenderProvider(doc, 'app-');
 
-    render([{
-      name: 'theme',
-      revision: 1,
-      content: 'body{}',
-    }]);
+    render([
+      {
+        name: 'theme',
+        revision: 1,
+        content: 'body{}',
+      },
+    ]);
 
     expect(doc.createElement).toHaveBeenCalledWith('style');
     expect(headChildren).toHaveLength(1);
@@ -83,18 +85,22 @@ describe('stylesRenderProvider', () => {
     } = makeDoc();
     const render = stylesRenderProvider(doc, 'app-');
 
-    render([{
-      name: 'theme',
-      revision: 1,
-      content: 'body{}',
-    }]);
+    render([
+      {
+        name: 'theme',
+        revision: 1,
+        content: 'body{}',
+      },
+    ]);
     const callCount = (doc.createElement as jest.Mock).mock.calls.length;
 
-    render([{
-      name: 'theme',
-      revision: 1,
-      content: 'body{}',
-    }]);
+    render([
+      {
+        name: 'theme',
+        revision: 1,
+        content: 'body{}',
+      },
+    ]);
 
     expect(doc.createElement).toHaveBeenCalledTimes(callCount);
   });
@@ -105,16 +111,20 @@ describe('stylesRenderProvider', () => {
     } = makeDoc();
     const render = stylesRenderProvider(doc, 'app-');
 
-    render([{
-      name: 'theme',
-      revision: 1,
-      content: 'old {}',
-    }]);
-    render([{
-      name: 'theme',
-      revision: 2,
-      content: 'new {}',
-    }]);
+    render([
+      {
+        name: 'theme',
+        revision: 1,
+        content: 'old {}',
+      },
+    ]);
+    render([
+      {
+        name: 'theme',
+        revision: 2,
+        content: 'new {}',
+      },
+    ]);
 
     const node = headChildren[0];
     expect(node.appendChild).toHaveBeenCalled();
@@ -126,11 +136,13 @@ describe('stylesRenderProvider', () => {
     } = makeDoc();
     const render = stylesRenderProvider(doc, 'app-');
 
-    render([{
-      name: 'theme',
-      revision: 1,
-      content: 'body{}',
-    }]);
+    render([
+      {
+        name: 'theme',
+        revision: 1,
+        content: 'body{}',
+      },
+    ]);
     render([]);
 
     expect(head.removeChild).toHaveBeenCalled();
@@ -142,15 +154,18 @@ describe('stylesRenderProvider', () => {
     } = makeDoc();
     const render = stylesRenderProvider(doc, 'x-');
 
-    render([{
-      name: 'a',
-      revision: 1,
-      content: '.a{}',
-    }, {
-      name: 'b',
-      revision: 1,
-      content: '.b{}',
-    }]);
+    render([
+      {
+        name: 'a',
+        revision: 1,
+        content: '.a{}',
+      },
+      {
+        name: 'b',
+        revision: 1,
+        content: '.b{}',
+      },
+    ]);
 
     expect(headChildren).toHaveLength(2);
   });
@@ -162,10 +177,12 @@ describe('stylesRenderProvider', () => {
     (doc as any).head = null;
     const render = stylesRenderProvider(doc, 'app-');
 
-    expect(() => render([{
-      name: 'theme',
-      revision: 1,
-      content: 'body{}',
-    }])).not.toThrow();
+    expect(() => render([
+      {
+        name: 'theme',
+        revision: 1,
+        content: 'body{}',
+      },
+    ])).not.toThrow();
   });
 });

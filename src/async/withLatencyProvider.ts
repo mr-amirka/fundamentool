@@ -29,10 +29,13 @@ export function withLatencyProvider(requestLatency: number) {
     return (promise = promise.catch(noop).then(() => {
       let errorBox: [error: any] | undefined;
       return Promise
-        .all([asAsync(() => fn.apply(ctx, args))
-          .catch((error) => {
-            errorBox = [error];
-          }), wait(requestLatency)])
+        .all([
+          asAsync(() => fn.apply(ctx, args))
+            .catch((error) => {
+              errorBox = [error];
+            }),
+          wait(requestLatency),
+        ])
         .then((responses) => {
           if (errorBox) {
             throw errorBox[0];

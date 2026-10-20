@@ -17,9 +17,11 @@ describe('changeProviderProviderSimple', () => {
     const setName = change('name');
     setName('Alice');
 
-    expect(patches).toEqual([{
-      name: 'Alice',
-    }]);
+    expect(patches).toEqual([
+      {
+        name: 'Alice',
+      },
+    ]);
   });
 
   test('creates independent setters for different fields', () => {
@@ -29,11 +31,14 @@ describe('changeProviderProviderSimple', () => {
     change('age')(30);
     change('active')(true);
 
-    expect(patches).toEqual([{
-      age: 30,
-    }, {
-      active: true,
-    }]);
+    expect(patches).toEqual([
+      {
+        age: 30,
+      },
+      {
+        active: true,
+      },
+    ]);
   });
 
   test('each call to setter invokes set with correct partial', () => {

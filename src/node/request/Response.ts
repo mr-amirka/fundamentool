@@ -2,7 +2,10 @@ import {
   deflate,
   gunzip,
 } from 'node:zlib';
-const UNZIP_CONTENT = ['deflate', 'gzip'];
+const UNZIP_CONTENT = [
+  'deflate',
+  'gzip',
+];
 
 /*
 TODO:

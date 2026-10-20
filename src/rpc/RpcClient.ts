@@ -86,9 +86,12 @@ export class RpcClient extends EventEmitter implements IRpcClient {
   ): TRpcUnsubscribe {
     let unsubscribe: any;
     this.callBase(
-      TRpcType.Subscribe, event, [new Promise<void>((resolve) => {
-        unsubscribe = resolve;
-      }), args], options,
+      TRpcType.Subscribe, event, [
+        new Promise<void>((resolve) => {
+          unsubscribe = resolve;
+        }),
+        args,
+      ], options,
     );
     return unsubscribe;
   }
@@ -101,28 +104,33 @@ export class RpcClient extends EventEmitter implements IRpcClient {
     let terminate: any;
     return this.proxyInstancePromise = new Promise((resolve, reject) => {
       this.callBase(
-        TRpcType.MetaCall, 'proxy', [(exports: any) => {
-          const originTerminate = exports.terminate;
-          resolve({
-            ...exports,
-            terminate: async (...args: any[]) => {
-              this.proxyInstancePromise = undefined;
-              if (typeof originTerminate === 'function') {
-                await originTerminate.apply(null, args);
-              }
-              terminate(args);
-            },
-          });
-          return new Promise<void>((resolve) => {
-            terminate = resolve;
-          });
-        }],
+        TRpcType.MetaCall, 'proxy', [
+          (exports: any) => {
+            const originTerminate = exports.terminate;
+            resolve({
+              ...exports,
+              terminate: async (...args: any[]) => {
+                this.proxyInstancePromise = undefined;
+                if (typeof originTerminate === 'function') {
+                  await originTerminate.apply(null, args);
+                }
+                terminate(args);
+              },
+            });
+            return new Promise<void>((resolve) => {
+              terminate = resolve;
+            });
+          },
+        ],
       ).catch(reject);
     });
   }
 
   private sendMessage(data: TRpcClientMessage[1]) {
-    this.postMessage([TRpcAgent.Client, data] as TRpcClientMessage);
+    this.postMessage([
+      TRpcAgent.Client,
+      data,
+    ] as TRpcClientMessage);
   }
 
   private sendEvent(
@@ -181,7 +189,10 @@ export class RpcClient extends EventEmitter implements IRpcClient {
           this.sendEvent(requestId, 'abort');
         }, timeout));
 
-        signal && [...RpcClient.DEFAULT_EVENTS, ...(options.events || [])].forEach((eventName) => {
+        signal && [
+          ...RpcClient.DEFAULT_EVENTS,
+          ...(options.events || []),
+        ].forEach((eventName) => {
           unsubscriber.add(attachEvent(
             signal, eventName, (e: Event) => {
               if (eventName === 'abort') {

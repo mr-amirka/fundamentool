@@ -9,7 +9,10 @@ describe('last', () => {
       2,
       3,
     ])).toBe(3);
-    expect(last(['a', 'b'])).toBe('b');
+    expect(last([
+      'a',
+      'b',
+    ])).toBe('b');
   });
 
   test('returns undefined for empty', () => {

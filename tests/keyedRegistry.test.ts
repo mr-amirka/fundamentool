@@ -8,7 +8,10 @@ describe('keyedRegistry', () => {
     const offA = registry.add(1, 'a');
     registry.add(1, 'b');
     registry.add(2, 'c');
-    expect(registry.list(1)).toEqual(['a', 'b']);
+    expect(registry.list(1)).toEqual([
+      'a',
+      'b',
+    ]);
     expect(registry.has(2)).toBe(true);
     offA();
     offA(); // twice is harmless
@@ -26,7 +29,10 @@ describe('keyedRegistry', () => {
     });
     registry.add('k', () => seen.push('second'));
     registry.list('k').forEach((fn) => fn());
-    expect(seen).toEqual(['first', 'second']);
+    expect(seen).toEqual([
+      'first',
+      'second',
+    ]);
     expect(registry.list('k')).toHaveLength(1);
   });
 

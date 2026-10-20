@@ -30,7 +30,10 @@ describe('node/scanPath', () => {
     const events: [string, string][] = [];
     await scanPath({
       path: root,
-      each: (event, p) => events.push([event, p]),
+      each: (event, p) => events.push([
+        event,
+        p,
+      ]),
     });
     expect(events.length).toBe(3);
     expect(events.every(([ev]) => ev === 'found')).toBe(true);

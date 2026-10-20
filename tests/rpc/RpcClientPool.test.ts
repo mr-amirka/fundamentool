@@ -84,7 +84,10 @@ describe('RpcClientPool', () => {
     } = makeServer({
       add: (a: number, b: number) => a + b,
     });
-    const result = await pool.call('add', [3, 4]);
+    const result = await pool.call('add', [
+      3,
+      4,
+    ]);
     expect(result).toBe(7);
     cleanup();
   });

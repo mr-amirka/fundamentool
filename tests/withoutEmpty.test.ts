@@ -20,7 +20,13 @@ describe('withoutEmpty', () => {
   });
 
   test('returns array as-is when non-empty', () => {
-    expect(withoutEmpty([1, 2])).toEqual([1, 2]);
+    expect(withoutEmpty([
+      1,
+      2,
+    ])).toEqual([
+      1,
+      2,
+    ]);
   });
 
   test('strips null/undefined/empty values from object at depth 1', () => {

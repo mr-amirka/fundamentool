@@ -12,12 +12,18 @@ describe('filter', () => {
       2,
       3,
       4,
-    ], (v) => v % 2 === 0)).toEqual([2, 4]);
+    ], (v) => v % 2 === 0)).toEqual([
+      2,
+      4,
+    ]);
   });
 
   test('passes index and collection to iteratee', () => {
     const calls: any[] = [];
-    filter(['a', 'b'], (
+    filter([
+      'a',
+      'b',
+    ], (
       v, i, c,
     ) => {
       calls.push([
@@ -26,15 +32,24 @@ describe('filter', () => {
         c,
       ]); return true;
     });
-    expect(calls).toEqual([[
-      'a',
-      0,
-      ['a', 'b'],
-    ], [
-      'b',
-      1,
-      ['a', 'b'],
-    ]]);
+    expect(calls).toEqual([
+      [
+        'a',
+        0,
+        [
+          'a',
+          'b',
+        ],
+      ],
+      [
+        'b',
+        1,
+        [
+          'a',
+          'b',
+        ],
+      ],
+    ]);
   });
 
   test('returns empty array when nothing passes', () => {
@@ -54,7 +69,10 @@ describe('filter', () => {
         3,
       ], (v) => v > 1, dst,
     );
-    expect(dst).toEqual([2, 3]);
+    expect(dst).toEqual([
+      2,
+      3,
+    ]);
   });
 
   test('handles empty array', () => {
@@ -88,13 +106,15 @@ describe('filterIn', () => {
         c,
       ]); return true;
     });
-    expect(calls).toEqual([[
-      10,
-      'x',
-      {
-        x: 10,
-      },
-    ]]);
+    expect(calls).toEqual([
+      [
+        10,
+        'x',
+        {
+          x: 10,
+        },
+      ],
+    ]);
   });
 
   test('returns empty object when nothing passes', () => {

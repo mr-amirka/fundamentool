@@ -20,7 +20,10 @@ describe('reduceIn', () => {
         y: 2,
       }, (
         acc, _, k,
-      ) => [...acc, k], [],
+      ) => [
+        ...acc,
+        k,
+      ], [],
     );
     expect(keys).toContain('x');
     expect(keys).toContain('y');

@@ -130,24 +130,30 @@ export function variantsProvider(options: IVariantsProviderOptions): TVariants {
     number,
   ][] =
     scopeStartLength >= scopeEndLength
-      ? [[
-        scopeStart,
-        SCOPE_OPEN,
-        scopeStartLength,
-      ], [
-        scopeEnd,
-        SCOPE_CLOSE,
-        scopeEndLength,
-      ]]
-      : [[
-        scopeEnd,
-        SCOPE_CLOSE,
-        scopeEndLength,
-      ], [
-        scopeStart,
-        SCOPE_OPEN,
-        scopeStartLength,
-      ]];
+      ? [
+        [
+          scopeStart,
+          SCOPE_OPEN,
+          scopeStartLength,
+        ],
+        [
+          scopeEnd,
+          SCOPE_CLOSE,
+          scopeEndLength,
+        ],
+      ]
+      : [
+        [
+          scopeEnd,
+          SCOPE_CLOSE,
+          scopeEndLength,
+        ],
+        [
+          scopeStart,
+          SCOPE_OPEN,
+          scopeStartLength,
+        ],
+      ];
 
   /**
    * Сборка дерева вариантов по уже разобранным `childs`.
@@ -191,7 +197,10 @@ export function variantsProvider(options: IVariantsProviderOptions): TVariants {
       }
     }
 
-    const strings = [...output, ...prev];
+    const strings = [
+      ...output,
+      ...prev,
+    ];
 
     if (strings.length > maxOutputCountLimit) {
       throw new RangeError(`variantsProvider: variant count exceeds maxOutputCount (${String(maxOutputCountLimit)})`);
@@ -255,7 +264,10 @@ export function variantsProvider(options: IVariantsProviderOptions): TVariants {
             throw new RangeError(`variantsProvider: nesting exceeds maxDepth (${String(maxDepthLimit)})`);
           }
           levels[depth] = levels[depth] || [];
-          last = [joinOnly(parts), []];
+          last = [
+            joinOnly(parts),
+            [],
+          ];
           levels[depth].push(last);
           depth++;
           if (depth > maxDepthSeen) {
@@ -263,7 +275,10 @@ export function variantsProvider(options: IVariantsProviderOptions): TVariants {
           }
           levels[depth] = last[1];
         } else {
-          levels[depth].push([joinOnly(parts), []]);
+          levels[depth].push([
+            joinOnly(parts),
+            [],
+          ]);
           /* Лишняя закрывающая скобка: не уходим в отрицательную глубину (как в 1.x). */
           if (--depth < 0) {
             depth = 0;
@@ -282,11 +297,17 @@ export function variantsProvider(options: IVariantsProviderOptions): TVariants {
     }
 
     if (parts.length) {
-      levels[depth].push([joinOnly(parts), []]);
+      levels[depth].push([
+        joinOnly(parts),
+        [],
+      ]);
     }
 
     const strings = variantsBuildSplit(childs);
 
-    return [applyUnslash === false ? strings : strings.map(unslash), maxDepthSeen] as const;
+    return [
+      applyUnslash === false ? strings : strings.map(unslash),
+      maxDepthSeen,
+    ] as const;
   };
 }

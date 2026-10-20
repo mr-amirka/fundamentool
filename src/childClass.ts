@@ -30,7 +30,10 @@ export function childClass<
     const superFn = function(this: any, ...innerArgs: any[]) {
       return Parent.apply(self, innerArgs);
     };
-    constructor.apply(self, pushArray([self, superFn], args) as any);
+    constructor.apply(self, pushArray([
+      self,
+      superFn,
+    ], args) as any);
   }
   (Child as any).prototype = extend(Object.create(Parent.prototype), proto);
   return Child as any;

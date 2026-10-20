@@ -43,9 +43,11 @@ describe('ProviderOfTransformFrom', () => {
     stream.write('{"a":1}\n');
     stream.end();
 
-    expect(await resultP).toEqual([{
-      a: 1,
-    }]);
+    expect(await resultP).toEqual([
+      {
+        a: 1,
+      },
+    ]);
   });
 
   test('parses multiple JSONL lines from one chunk', async () => {
@@ -56,11 +58,14 @@ describe('ProviderOfTransformFrom', () => {
     stream.write('{"a":1}\n{"b":2}\n');
     stream.end();
 
-    expect(await resultP).toEqual([{
-      a: 1,
-    }, {
-      b: 2,
-    }]);
+    expect(await resultP).toEqual([
+      {
+        a: 1,
+      },
+      {
+        b: 2,
+      },
+    ]);
   });
 
   test('handles lines split across chunks', async () => {
@@ -72,9 +77,11 @@ describe('ProviderOfTransformFrom', () => {
     stream.write(':1}\n');
     stream.end();
 
-    expect(await resultP).toEqual([{
-      a: 1,
-    }]);
+    expect(await resultP).toEqual([
+      {
+        a: 1,
+      },
+    ]);
   });
 
   test('flushes remaining data without trailing newline', async () => {
@@ -85,9 +92,11 @@ describe('ProviderOfTransformFrom', () => {
     stream.write('{"x":42}');
     stream.end();
 
-    expect(await resultP).toEqual([{
-      x: 42,
-    }]);
+    expect(await resultP).toEqual([
+      {
+        x: 42,
+      },
+    ]);
   });
 
   test('emits error on malformed JSON', async () => {

@@ -32,7 +32,10 @@ describe('createTimeout', () => {
       x: 1,
     };
     createTimeout(
-      fn, 50, ['a', 'b'], ctx,
+      fn, 50, [
+        'a',
+        'b',
+      ], ctx,
     );
     jest.advanceTimersByTime(50);
     expect(fn).toHaveBeenCalledWith('a', 'b');

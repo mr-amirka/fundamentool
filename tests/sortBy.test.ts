@@ -47,13 +47,16 @@ describe('sortBy', () => {
   });
 
   test('is stable for equal keys', () => {
-    const input = [{
-      n: 'a',
-      i: 0,
-    }, {
-      n: 'a',
-      i: 1,
-    }];
+    const input = [
+      {
+        n: 'a',
+        i: 0,
+      },
+      {
+        n: 'a',
+        i: 1,
+      },
+    ];
     const result = sortBy(input, u => u.n);
     expect(result[0].i).toBe(0);
   });

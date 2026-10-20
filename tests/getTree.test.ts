@@ -31,7 +31,10 @@ describe('getTree', () => {
   test('populates childs array for parent node', () => {
     const tree = getTree(items, null);
     expect(tree[0].childs).toHaveLength(2);
-    expect(tree[0].childs.map((c: any) => c.id).sort()).toEqual([2, 3]);
+    expect(tree[0].childs.map((c: any) => c.id).sort()).toEqual([
+      2,
+      3,
+    ]);
   });
 
   test('recursively builds nested childs', () => {

@@ -30,7 +30,10 @@ describe('responsibilityChain', () => {
 
   test('handler can short-circuit the chain', () => {
     const result = responsibilityChain(
-      [(_req, _next) => 'short-circuit', (_req, next) => next(_req)],
+      [
+        (_req, _next) => 'short-circuit',
+        (_req, next) => next(_req),
+      ],
       'req',
       (_r) => 'end',
     );
@@ -70,11 +73,14 @@ describe('responsibilityChain', () => {
     const err = new Error('oops');
 
     responsibilityChain(
-      [(_req, _next) => {
-        throw err;
-      }, (req, next) => {
-        log.push(2); return next(req);
-      }],
+      [
+        (_req, _next) => {
+          throw err;
+        },
+        (req, next) => {
+          log.push(2); return next(req);
+        },
+      ],
       null,
       () => {
         log.push(3);
@@ -83,6 +89,9 @@ describe('responsibilityChain', () => {
     );
 
     expect(errors).toEqual([err]);
-    expect(log).toEqual([2, 3]);
+    expect(log).toEqual([
+      2,
+      3,
+    ]);
   });
 });

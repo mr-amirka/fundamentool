@@ -25,9 +25,15 @@ describe('findIndex', () => {
 
   test('passes index and collection to iteratee', () => {
     const indices: number[] = [];
-    findIndex([10, 20], (_, i) => {
+    findIndex([
+      10,
+      20,
+    ], (_, i) => {
       indices.push(i); return false;
     });
-    expect(indices).toEqual([0, 1]);
+    expect(indices).toEqual([
+      0,
+      1,
+    ]);
   });
 });

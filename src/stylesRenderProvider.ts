@@ -94,7 +94,10 @@ export function stylesRenderProvider(doc: TStylesRenderDocument, prefix: string)
       item = styles[i++];
       name = item.name;
       revision = item.revision;
-      slot = last[name] = trash[name] || [getNode(prefix + name), 0];
+      slot = last[name] = trash[name] || [
+        getNode(prefix + name),
+        0,
+      ];
       delete trash[name];
       node = slot[0];
       if (revision !== slot[1]) {

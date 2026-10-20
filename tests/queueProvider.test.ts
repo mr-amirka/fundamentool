@@ -16,8 +16,14 @@ describe('queueProvider', () => {
     const q2 = queue(fn2);
     const p1 = q1();
     const p2 = q2();
-    await Promise.all([p1, p2]);
-    expect(order).toEqual([1, 2]);
+    await Promise.all([
+      p1,
+      p2,
+    ]);
+    expect(order).toEqual([
+      1,
+      2,
+    ]);
   });
 
   test('with delay waits between invocations', async () => {
@@ -26,7 +32,13 @@ describe('queueProvider', () => {
     const q = queue(fn, 10);
     await q();
     await q();
-    const results = await Promise.all([q(), q()]);
-    expect(results).toEqual([42, 42]);
+    const results = await Promise.all([
+      q(),
+      q(),
+    ]);
+    expect(results).toEqual([
+      42,
+      42,
+    ]);
   });
 });

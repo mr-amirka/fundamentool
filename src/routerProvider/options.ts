@@ -91,7 +91,10 @@ export function assertRouterDeps(deps: unknown): asserts deps is TRouterProvider
       'sections', 'an object section → main page path', sections,
     );
   }
-  for (key of ['keep', 'exitMs']) {
+  for (key of [
+    'keep',
+    'exitMs',
+  ]) {
     value = raw[key];
     if (isDefined(value) && !(isNumber(value) && value >= 0 && Number.isFinite(value))) {
       throw invalid(

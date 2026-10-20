@@ -30,7 +30,10 @@ describe('removeByIndex', () => {
         4,
         5,
       ], 1, 3,
-    )).toEqual([1, 5]);
+    )).toEqual([
+      1,
+      5,
+    ]);
   });
 
   test('does not mutate the original array', () => {
@@ -52,7 +55,10 @@ describe('removeByIndex', () => {
       1,
       2,
       3,
-    ], 2)).toEqual([1, 2]);
+    ], 2)).toEqual([
+      1,
+      2,
+    ]);
   });
 
   test('handles index at start', () => {
@@ -60,7 +66,10 @@ describe('removeByIndex', () => {
       1,
       2,
       3,
-    ], 0)).toEqual([2, 3]);
+    ], 0)).toEqual([
+      2,
+      3,
+    ]);
   });
 
   test('handles length = 0 (removes nothing beyond bounds)', () => {

@@ -17,7 +17,10 @@ export function bind<F extends (...args: any[]) => any>(
 ): (...rest: any[]) => ReturnType<F> {
   const baseArgs = [...(args || [])];
   return function bound(this: any, ...rest: any[]): ReturnType<F> {
-    return fn.apply(ctx, [...baseArgs, ...rest]) as ReturnType<F>;
+    return fn.apply(ctx, [
+      ...baseArgs,
+      ...rest,
+    ]) as ReturnType<F>;
   };
 }
 

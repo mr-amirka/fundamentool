@@ -22,7 +22,10 @@ describe('without', () => {
       b: 2,
       c: 3,
     };
-    const result = without(src, ['a', 'c']);
+    const result = without(src, [
+      'a',
+      'c',
+    ]);
     expect(result).toEqual({
       b: 2,
     });

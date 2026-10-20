@@ -13,9 +13,12 @@ describe('PortPolyfill', () => {
     port.postMessage({
       x: 1,
     });
-    expect(received).toEqual(['hello', {
-      x: 1,
-    }]);
+    expect(received).toEqual([
+      'hello',
+      {
+        x: 1,
+      },
+    ]);
   });
 
   test('multiple listeners receive the same message', () => {
@@ -24,6 +27,9 @@ describe('PortPolyfill', () => {
     port.addEventListener('message', () => log.push('a'));
     port.addEventListener('message', () => log.push('b'));
     port.postMessage('test');
-    expect(log).toEqual(['a', 'b']);
+    expect(log).toEqual([
+      'a',
+      'b',
+    ]);
   });
 });

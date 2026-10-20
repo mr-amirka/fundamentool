@@ -15,7 +15,10 @@ describe('cancelProvider', () => {
     const cancel = cancelProvider((id) => cleared.push(id), 'my-id');
     cancel();
     cancel();
-    expect(cleared).toEqual(['my-id', 'my-id']);
+    expect(cleared).toEqual([
+      'my-id',
+      'my-id',
+    ]);
   });
 
   test('works with clearTimeout mock', () => {

@@ -42,11 +42,17 @@ describe('getBase', () => {
         y: 7,
       },
     };
-    expect(getBase(obj, ['x', 'y'])).toBe(7);
+    expect(getBase(obj, [
+      'x',
+      'y',
+    ])).toBe(7);
   });
 
   test('returns undefined when path not found', () => {
-    expect(getBase({}, ['a', 'b'])).toBeUndefined();
+    expect(getBase({}, [
+      'a',
+      'b',
+    ])).toBeUndefined();
   });
 });
 
@@ -57,7 +63,10 @@ describe('getWithContext', () => {
         b: 99,
       },
     };
-    const result = getWithContext(obj, ['a', 'b']);
+    const result = getWithContext(obj, [
+      'a',
+      'b',
+    ]);
     expect(result).not.toBeNull();
     expect(result![0]).toEqual({
       b: 99,

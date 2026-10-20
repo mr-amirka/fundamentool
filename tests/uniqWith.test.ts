@@ -29,11 +29,14 @@ describe('uniqWith', () => {
         a: 2,
       },
     ];
-    expect(uniqWith(input, (x, y) => x.a === y.a)).toEqual([{
-      a: 1,
-    }, {
-      a: 2,
-    }]);
+    expect(uniqWith(input, (x, y) => x.a === y.a)).toEqual([
+      {
+        a: 1,
+      },
+      {
+        a: 2,
+      },
+    ]);
   });
 
   test('handles null/undefined input', () => {

@@ -7,7 +7,10 @@ import {
 
 describe('templatePartsJoin', () => {
   test('joins parts by calling each with scope', () => {
-    const parts = [(s: Record<string, unknown>) => String(s.a), (s: Record<string, unknown>) => String(s.b)];
+    const parts = [
+      (s: Record<string, unknown>) => String(s.a),
+      (s: Record<string, unknown>) => String(s.b),
+    ];
     const t = templatePartsJoin(parts);
     expect(t({
       a: 1,

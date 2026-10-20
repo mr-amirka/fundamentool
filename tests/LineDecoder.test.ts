@@ -11,7 +11,10 @@ describe('LineDecoder', () => {
     const r3 = decoder.end();
 
     expect(r1).toEqual(['a']);
-    expect(r2).toEqual(['b', 'c']);
+    expect(r2).toEqual([
+      'b',
+      'c',
+    ]);
     expect(r3).toEqual([]);
   });
 

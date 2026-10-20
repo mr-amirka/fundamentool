@@ -26,7 +26,10 @@ const codec = createSparseCodec<{
     },
     {
       id: 0x02,
-      path: ['phys', 'grav'],
+      path: [
+        'phys',
+        'grav',
+      ],
       type: 'f32',
       default: 1.0,
     }, // array path to same field
@@ -115,12 +118,14 @@ describe('SparseCodec', () => {
 
   test('roundtrip: empty string', () => {
     const codec2 = createSparseCodec<{ s?: string }>({
-      fields: [{
-        id: 0x90,
-        path: 's',
-        type: 'string',
-        default: 'default',
-      }],
+      fields: [
+        {
+          id: 0x90,
+          path: 's',
+          type: 'string',
+          default: 'default',
+        },
+      ],
     });
     const enc = codec2.encode({
       s: '',
@@ -221,12 +226,14 @@ describe('SparseCodec', () => {
   test('version mismatch: returns null', () => {
     const codecV2 = createSparseCodec<{ x?: number }>({
       version: 0x02,
-      fields: [{
-        id: 0x01,
-        path: 'x',
-        type: 'f32',
-        default: 0,
-      }],
+      fields: [
+        {
+          id: 0x01,
+          path: 'x',
+          type: 'f32',
+          default: 0,
+        },
+      ],
     });
     const enc = codecV2.encode({
       x: 1,
@@ -284,12 +291,14 @@ describe('SparseCodec', () => {
 
   test('number encoded as wrong type is skipped', () => {
     const codec3 = createSparseCodec<{ v?: number | string }>({
-      fields: [{
-        id: 0x01,
-        path: 'v',
-        type: 'f32',
-        default: 0,
-      }],
+      fields: [
+        {
+          id: 0x01,
+          path: 'v',
+          type: 'f32',
+          default: 0,
+        },
+      ],
     });
     // v is a string, but field expects number — should be skipped (getBase returns it, but typeof check in encode skips)
     const enc = codec3.encode({

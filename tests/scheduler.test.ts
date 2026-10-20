@@ -9,13 +9,16 @@ describe('nextScheduleTime', () => {
   test('daily: ближайшее время сегодня', () => {
     const from = new Date('2026-06-10T08:30:00Z');
     const s: ScheduleTime = {
-      daily: [{
-        hour: 9,
-        minute: 0,
-      }, {
-        hour: 12,
-        minute: 0,
-      }],
+      daily: [
+        {
+          hour: 9,
+          minute: 0,
+        },
+        {
+          hour: 12,
+          minute: 0,
+        },
+      ],
     };
     expect(nextScheduleTime(s, from).toISOString()).toBe('2026-06-10T09:00:00.000Z');
   });
@@ -23,10 +26,12 @@ describe('nextScheduleTime', () => {
   test('daily: на завтра если все прошли', () => {
     const from = new Date('2026-06-10T17:00:00Z');
     const s: ScheduleTime = {
-      daily: [{
-        hour: 9,
-        minute: 0,
-      }],
+      daily: [
+        {
+          hour: 9,
+          minute: 0,
+        },
+      ],
     };
     expect(nextScheduleTime(s, from).toISOString()).toBe('2026-06-11T09:00:00.000Z');
   });
@@ -105,25 +110,29 @@ describe('Scheduler with store', () => {
     const s = new Scheduler(
       store, 60_000, 0,
     );
-    const events: ScheduledEvent[] = [{
-      name: 'meeting',
-      schedule: {
-        everyWeek: 1,
-        weekDay: 3,
-        hour: 9,
-        minute: 0,
-      },
-      actionPrompt: 'prompt',
-      childs: [{
-        name: '10m',
-        offset: {
-          before: {
-            minutes: 10,
-          },
+    const events: ScheduledEvent[] = [
+      {
+        name: 'meeting',
+        schedule: {
+          everyWeek: 1,
+          weekDay: 3,
+          hour: 9,
+          minute: 0,
         },
-        actionPrompt: '10m',
-      }],
-    }];
+        actionPrompt: 'prompt',
+        childs: [
+          {
+            name: '10m',
+            offset: {
+              before: {
+                minutes: 10,
+              },
+            },
+            actionPrompt: '10m',
+          },
+        ],
+      },
+    ];
     await s.setEvents(events, 'test');
     s.start({
       onFire: () => {},
@@ -133,21 +142,25 @@ describe('Scheduler with store', () => {
 
   test('fires due events', async () => {
     const now = Date.now();
-    const recs: SchedulerRecord[] = [{
-      id: 'test:ev',
-      parentId: null,
-      scheduleJson: JSON.stringify({
-        daily: [{
-          hour: 0,
-          minute: 0,
-        }],
-      }),
-      offsetJson: null,
-      actionPrompt: 'fire!',
-      nextRunAt: now - 1000,
-      lastFiredAt: 0,
-      scope: 'test',
-    }];
+    const recs: SchedulerRecord[] = [
+      {
+        id: 'test:ev',
+        parentId: null,
+        scheduleJson: JSON.stringify({
+          daily: [
+            {
+              hour: 0,
+              minute: 0,
+            },
+          ],
+        }),
+        offsetJson: null,
+        actionPrompt: 'fire!',
+        nextRunAt: now - 1000,
+        lastFiredAt: 0,
+        scope: 'test',
+      },
+    ];
     const fired: string[] = [];
     const store: ISchedulerStore = {
       getDueEvents: async () => recs.filter(r => r.nextRunAt <= Date.now()),

@@ -51,9 +51,11 @@ describe('browser/wsSeriesRequestProvider', () => {
     expect(socket.sent.length).toBeGreaterThanOrEqual(1);
 
     socket.onmessage?.({
-      data: new Blob([JSON.stringify({
-        data: 10,
-      })], {
+      data: new Blob([
+        JSON.stringify({
+          data: 10,
+        }),
+      ], {
         type: 'text/plain',
       }),
     } as any);
@@ -61,9 +63,11 @@ describe('browser/wsSeriesRequestProvider', () => {
     await Promise.resolve();
 
     socket.onmessage?.({
-      data: new Blob([JSON.stringify({
-        data: 20,
-      })], {
+      data: new Blob([
+        JSON.stringify({
+          data: 20,
+        }),
+      ], {
         type: 'text/plain',
       }),
     } as any);

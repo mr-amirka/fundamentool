@@ -9,10 +9,22 @@ describe('forIn', () => {
       a: 1,
       b: 2,
       c: 3,
-    }, (v, k) => result.push([k, v]));
-    expect(result).toContainEqual(['a', 1]);
-    expect(result).toContainEqual(['b', 2]);
-    expect(result).toContainEqual(['c', 3]);
+    }, (v, k) => result.push([
+      k,
+      v,
+    ]));
+    expect(result).toContainEqual([
+      'a',
+      1,
+    ]);
+    expect(result).toContainEqual([
+      'b',
+      2,
+    ]);
+    expect(result).toContainEqual([
+      'c',
+      3,
+    ]);
   });
 
   test('passes the object as the third argument', () => {

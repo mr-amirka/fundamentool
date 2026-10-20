@@ -27,7 +27,10 @@ describe('executeTry', () => {
 
   test('passes args to the function', () => {
     const fn = jest.fn((a, b) => a + b);
-    const result = executeTry(fn, [1, 2]);
+    const result = executeTry(fn, [
+      1,
+      2,
+    ]);
     expect(result).toBe(3);
   });
 });

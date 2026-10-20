@@ -33,12 +33,27 @@ describe('find', () => {
 
   test('passes index and collection to iteratee', () => {
     const calls: any[] = [];
-    find(['a', 'b'], (
+    find([
+      'a',
+      'b',
+    ], (
       v, i, _c,
     ) => {
-      calls.push([v, i]); return false;
+      calls.push([
+        v,
+        i,
+      ]); return false;
     });
-    expect(calls).toEqual([['a', 0], ['b', 1]]);
+    expect(calls).toEqual([
+      [
+        'a',
+        0,
+      ],
+      [
+        'b',
+        1,
+      ],
+    ]);
   });
 });
 
@@ -76,7 +91,10 @@ describe('findIndex', () => {
   });
 
   test('returns index 0 for first element', () => {
-    expect(findIndex([5, 10], (v) => v === 5)).toBe(0);
+    expect(findIndex([
+      5,
+      10,
+    ], (v) => v === 5)).toBe(0);
   });
 });
 

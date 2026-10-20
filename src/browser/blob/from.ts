@@ -21,14 +21,29 @@ function normalize(content: any): [
   return isDefined(content) ? (
     isObject(content) ? (
       isArrayBuffer(content)
-        ? [content, TYPE_BINARY]
+        ? [
+          content,
+          TYPE_BINARY,
+        ]
         : (
           isArrayBuffer(buffer = (content as any).buffer)
-            ? [buffer, TYPE_BINARY]
-            : [JSON.stringify(content), 'application/json']
+            ? [
+              buffer,
+              TYPE_BINARY,
+            ]
+            : [
+              JSON.stringify(content),
+              'application/json',
+            ]
         )
-    ) : ['' + content, 'text/plain']
-  ) : ['', TYPE_BINARY];
+    ) : [
+      '' + content,
+      'text/plain',
+    ]
+  ) : [
+    '',
+    TYPE_BINARY,
+  ];
 }
 
 /**

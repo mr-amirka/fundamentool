@@ -55,7 +55,10 @@ describe('RpcClient ↔ RpcConnect integration', () => {
     });
     const client = new RpcClient(clientOptions);
 
-    const result = await client.call('add', [3, 4]);
+    const result = await client.call('add', [
+      3,
+      4,
+    ]);
     expect(result).toBe(7);
 
     client.destroy();
@@ -110,7 +113,10 @@ describe('RpcClient ↔ RpcConnect integration', () => {
       exports: {
         getData: () => ({
           name: 'Alice',
-          tags: ['a', 'b'],
+          tags: [
+            'a',
+            'b',
+          ],
         }),
       },
     });
@@ -119,7 +125,10 @@ describe('RpcClient ↔ RpcConnect integration', () => {
     const result = await client.call('getData');
     expect(result).toEqual({
       name: 'Alice',
-      tags: ['a', 'b'],
+      tags: [
+        'a',
+        'b',
+      ],
     });
 
     client.destroy();

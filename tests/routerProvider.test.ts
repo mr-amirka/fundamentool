@@ -147,7 +147,10 @@ describe('routerProvider — the address', () => {
     expect(router.getFromLocation()).toMatchObject({
       path: '/start',
     });
-    expect(router.getHistory().map((loc) => loc.path)).toEqual(['/start', '/a']);
+    expect(router.getHistory().map((loc) => loc.path)).toEqual([
+      '/start',
+      '/a',
+    ]);
   });
 
   it('replaceLocation: the same depth, a new address', async () => {
@@ -430,16 +433,24 @@ describe('routerProvider — inherited bugs, fixed (2026-10-18)', () => {
       });
     });
     expect((host.querySelector('a') as HTMLAnchorElement).className).toContain('active');
-    expect([...errors.mock.calls, ...warnings.mock.calls].map(String).join('\n')).not.toMatch(/componentWillMount/);
+    expect([
+      ...errors.mock.calls,
+      ...warnings.mock.calls,
+    ].map(String).join('\n')).not.toMatch(/componentWillMount/);
     act(() => root.unmount());
     errors.mockRestore();
     warnings.mockRestore();
   });
 
   it('a route\'s `-` / `_` match each other before its first group, and the group is left as written', () => {
-    const match = routerForObservableMapProvider<{ page: string }>([['/my-items/([a-z]+)', () => ({
-      page: 'items',
-    })]], () => ({
+    const match = routerForObservableMapProvider<{ page: string }>([
+      [
+        '/my-items/([a-z]+)',
+        () => ({
+          page: 'items',
+        }),
+      ],
+    ], () => ({
       page: 'none',
     }));
     expect(match(atPath('/my_items/abc')).page).toBe('items');
@@ -449,9 +460,14 @@ describe('routerProvider — inherited bugs, fixed (2026-10-18)', () => {
 
 describe('routerProvider — routes, params, links, focus', () => {
   it('routerForObservableMapProvider maps an address to its route with params; not found → the fallback', () => {
-    const match = routerForObservableMapProvider<{ page: string }>([['/user/:id', (params) => ({
-      page: `user ${params.id}`,
-    })]],
+    const match = routerForObservableMapProvider<{ page: string }>([
+      [
+        '/user/:id',
+        (params) => ({
+          page: `user ${params.id}`,
+        }),
+      ],
+    ],
     () => ({
       page: 'not found',
     }));
@@ -479,10 +495,12 @@ describe('routerProvider — routes, params, links, focus', () => {
     expect(router.paramStorage.getKeys()).toEqual(['tab']);
     router.paramStorage.remove('tab');
     await settle();
-    expect(events).toEqual(expect.arrayContaining([{
-      key: 'tab',
-      value: 'b',
-    }]));
+    expect(events).toEqual(expect.arrayContaining([
+      {
+        key: 'tab',
+        value: 'b',
+      },
+    ]));
   });
 
   it('Link pushes its href on click; NavLink marks itself active', async () => {
@@ -543,7 +561,10 @@ describe('routerProvider — routes, params, links, focus', () => {
     await act(async () => {
       await router.backLocation();
     });
-    expect(events).toEqual(['focus', 'blur']);
+    expect(events).toEqual([
+      'focus',
+      'blur',
+    ]);
     act(() => root.unmount());
   });
 
@@ -656,7 +677,10 @@ describe('routerProvider — on the navigation core (D-022)', () => {
     });
     expect(router.$path.getState()).toBe('/');
     await expect(router.open('W')).resolves.toBeNull();
-    expect(asked).toEqual(['/', '/']);
+    expect(asked).toEqual([
+      '/',
+      '/',
+    ]);
     allow = true;
     await router.pushLocation({
       path: '/a',
@@ -762,7 +786,10 @@ describe('routerProvider — on the navigation core (D-022)', () => {
       path: '/level/1',
     });
     expect(seen).toContain('/level/1');
-    expect(router.$state.getState().layers.map((entry) => entry.depth)).toEqual([0, 1]);
+    expect(router.$state.getState().layers.map((entry) => entry.depth)).toEqual([
+      0,
+      1,
+    ]);
     await router.switchSection('top');
     expect(dom.window.location.hash).toBe('#/top');
     expect(dom.window.location.pathname).toBe('/app');

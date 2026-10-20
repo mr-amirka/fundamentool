@@ -32,21 +32,36 @@ describe('createLimitedTimeProcess', () => {
       const calls: Array<[number, number]> = [];
       const proc = createLimitedTimeProcess(
         3, (index, dt) => {
-          calls.push([index, dt]);
+          calls.push([
+            index,
+            dt,
+          ]);
         }, 999, true, makeClock(),
       );
       proc();
       expect(calls).toEqual([
-        [0, 1],
-        [1, 2],
-        [2, 3],
+        [
+          0,
+          1,
+        ],
+        [
+          1,
+          2,
+        ],
+        [
+          2,
+          3,
+        ],
       ]);
     });
 
     test('second call delivers correct dt since last processing', () => {
       // Call 1: lastUpdates → [2, 3, 4], clock at 5 after
       // Call 2: callStart=6; idx0: dt=6-2=4; idx1: dt=7-3=4; idx2: dt=8-4=4
-      const dts: number[][] = [[], []];
+      const dts: number[][] = [
+        [],
+        [],
+      ];
       let callIdx = 0;
       const proc = createLimitedTimeProcess(
         3, (_, dt) => {
@@ -79,7 +94,10 @@ describe('createLimitedTimeProcess', () => {
         4, (index) => visited.push(index), 2, true, makeClock(),
       );
       proc();
-      expect(visited).toEqual([0, 1]);
+      expect(visited).toEqual([
+        0,
+        1,
+      ]);
     });
 
     test('resumes from last position on the next call', () => {
@@ -267,7 +285,10 @@ describe('createLimitedTimeProcess', () => {
     test('breaks loop when dt is 0, saves position for retry', () => {
       // preStart and callStart return the same timestamp → dt = 0
       const clock = (() => {
-        const seq = [100, 100];
+        const seq = [
+          100,
+          100,
+        ];
         let i = 0;
         return () => seq[i++] ?? 100;
       })();

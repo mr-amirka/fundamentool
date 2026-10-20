@@ -16,7 +16,10 @@ describe('bind', () => {
 
     logInfo('Хрю!');
     expect(log.mock.calls.length).toBe(1);
-    expect(log.mock.calls[0]).toEqual(['info:', 'Хрю!']);
+    expect(log.mock.calls[0]).toEqual([
+      'info:',
+      'Хрю!',
+    ]);
   });
 
   test('add several args', () => {
@@ -26,7 +29,10 @@ describe('bind', () => {
     };
 
     const logBinded = bind(
-      consoleObj.log, consoleObj, ['a', 'b'],
+      consoleObj.log, consoleObj, [
+        'a',
+        'b',
+      ],
     );
     expect(log.mock.calls.length).toBe(0);
 

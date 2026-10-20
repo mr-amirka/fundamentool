@@ -81,7 +81,10 @@ _src?:
   const unalias = unpath + dirname;
   const unextension = unalias + alias,
     unsearch = unextension + (extension ? '.' + extension : ''),
-    query = merge([first.query, src.query], {}),
+    query = merge([
+      first.query,
+      src.query,
+    ], {}),
     search = param(query);
   const unhash = unsearch + (search ? '?' + search : '');
   const srcChild = src.child,

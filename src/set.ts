@@ -102,11 +102,17 @@ function getKeySlot(nested: any, key: string | number): [
     const arrayLength = nested ? nested.length : 0;
     if (isLength(arrayLength)) {
       if (isNewItem) {
-        return [arrayLength, arrayLength + 1];
+        return [
+          arrayLength,
+          arrayLength + 1,
+        ];
       }
       const index = Number(key);
       const maxLength = index + 1;
-      return [index, maxLength > arrayLength ? maxLength : arrayLength];
+      return [
+        index,
+        maxLength > arrayLength ? maxLength : arrayLength,
+      ];
     }
   }
 

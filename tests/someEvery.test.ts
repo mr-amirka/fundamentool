@@ -90,7 +90,10 @@ describe('every', () => {
     ], (v) => {
       calls.push(v); return v < 2;
     });
-    expect(calls).toEqual([1, 2]);
+    expect(calls).toEqual([
+      1,
+      2,
+    ]);
   });
 });
 

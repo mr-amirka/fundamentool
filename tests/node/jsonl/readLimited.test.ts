@@ -67,9 +67,11 @@ describe('node/jsonl/readLimited', () => {
   test('returns empty array when stream is exhausted', async () => {
     const dir = tmpDir();
     const path = join(dir, 'data.jsonl');
-    writeJsonl(path, [{
-      n: 1,
-    }]);
+    writeJsonl(path, [
+      {
+        n: 1,
+      },
+    ]);
 
     const next = readLimited(path, {
       limit: 10,
@@ -148,21 +150,27 @@ describe('node/jsonl/readUnopened', () => {
   test('reads existing JSONL file', (done) => {
     const dir = tmpDir();
     const path = join(dir, 'data.jsonl');
-    writeJsonl(path, [{
-      a: 1,
-    }, {
-      a: 2,
-    }]);
+    writeJsonl(path, [
+      {
+        a: 1,
+      },
+      {
+        a: 2,
+      },
+    ]);
 
     const items: any[] = [];
     const stream = readUnopened(path);
     stream.on('data', (obj) => items.push(obj));
     stream.on('end', () => {
-      expect(items).toEqual([{
-        a: 1,
-      }, {
-        a: 2,
-      }]);
+      expect(items).toEqual([
+        {
+          a: 1,
+        },
+        {
+          a: 2,
+        },
+      ]);
       rmSync(dir, {
         recursive: true,
       });

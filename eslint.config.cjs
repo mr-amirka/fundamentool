@@ -89,8 +89,10 @@ module.exports = [
       }],
       '@stylistic/object-property-newline': ['error', { allowAllPropertiesOnSameLine: false }],
       '@stylistic/function-paren-newline':  ['error', { minItems: 3 }],
-      '@stylistic/array-bracket-newline':   ['error', { minItems: 3 }],
-      '@stylistic/array-element-newline':   ['error', { minItems: 3 }],
+      // LAB D-013: arrays of two or more elements — each element on its own line; destructuring stays on one line.
+      // Brackets break when the elements do — so destructuring, whose elements stay on one line, keeps its brackets too.
+      '@stylistic/array-bracket-newline':   ['error', { multiline: true }],
+      '@stylistic/array-element-newline':   ['error', { ArrayExpression: { minItems: 2 }, ArrayPattern: 'consistent' }],
       '@stylistic/comma-dangle': ['error', 'always-multiline'],
       // D-029 — the auto-fix of object-curly-newline used to leave a space before the line break
       '@stylistic/no-trailing-spaces': 'error',

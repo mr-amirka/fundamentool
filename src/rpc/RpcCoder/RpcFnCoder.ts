@@ -28,7 +28,10 @@ export class RpcFnCoder {
     const {
       internals,
     } = this;
-    internals.push([fn, ctx]);
+    internals.push([
+      fn,
+      ctx,
+    ]);
     return internals.length - 1;
   }
 
@@ -42,7 +45,10 @@ export class RpcFnCoder {
   ): TRpcEncodedValueFn | undefined {
     let index = this.externals.indexOf(fn);
     if (index > -1) {
-      return [1, index];
+      return [
+        1,
+        index,
+      ];
     }
 
     if (!withInternalFns) {
@@ -57,9 +63,15 @@ export class RpcFnCoder {
 
     if (index === -1) {
       index = internals.length;
-      internals.push([fn, context]);
+      internals.push([
+        fn,
+        context,
+      ]);
     }
-    return [0, index];
+    return [
+      0,
+      index,
+    ];
   }
 
   decode(encodedFnValue: TRpcEncodedValueFn, withExternalFns = true): TRpcFn | undefined {

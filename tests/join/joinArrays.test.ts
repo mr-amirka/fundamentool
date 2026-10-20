@@ -4,7 +4,13 @@ import {
 
 describe('joinArrays', () => {
   test('joins prefixes and suffixes with default empty separator', () => {
-    expect(joinArrays(['a', 'b'], ['d', 'e'])).toEqual([
+    expect(joinArrays([
+      'a',
+      'b',
+    ], [
+      'd',
+      'e',
+    ])).toEqual([
       'ad',
       'ae',
       'bd',
@@ -14,7 +20,13 @@ describe('joinArrays', () => {
 
   test('joins prefixes and suffixes with custom separator', () => {
     expect(joinArrays(
-      ['a', 'b'], ['d', 'e'], '.',
+      [
+        'a',
+        'b',
+      ], [
+        'd',
+        'e',
+      ], '.',
     )).toEqual([
       'a.d',
       'a.e',
@@ -24,7 +36,10 @@ describe('joinArrays', () => {
   });
 
   test('returns empty array when suffixes is empty', () => {
-    expect(joinArrays(['a', 'b'], [])).toEqual([]);
+    expect(joinArrays([
+      'a',
+      'b',
+    ], [])).toEqual([]);
   });
 
   test('appends to existing output array', () => {
@@ -32,6 +47,9 @@ describe('joinArrays', () => {
     joinArrays(
       ['a'], ['b'], '.', output,
     );
-    expect(output).toEqual(['x', 'a.b']);
+    expect(output).toEqual([
+      'x',
+      'a.b',
+    ]);
   });
 });

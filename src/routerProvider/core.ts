@@ -276,7 +276,10 @@ export function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     }
     const list = section === homeSection
       ? stacks.get(homeSection) as TEntry[]
-      : [(stacks.get(homeSection) as TEntry[])[0], ...(stacks.get(section) as TEntry[])];
+      : [
+        (stacks.get(homeSection) as TEntry[])[0],
+        ...(stacks.get(section) as TEntry[]),
+      ];
     return list.map((entry, depth) => (entry.depth === depth ? entry : {
       ...entry,
       depth,
@@ -389,12 +392,18 @@ export function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     entries = entries.slice(0, depth + 1);
     // What was left goes ahead (Forward brings it back), up to a window that isn't reopened (D-024).
     const stop = removed.findIndex((entry) => entry.kind === WINDOW && !entry.reopen);
-    ahead = stop < 0 ? [...removed, ...ahead] : removed.slice(0, stop);
+    ahead = stop < 0 ? [
+      ...removed,
+      ...ahead,
+    ] : removed.slice(0, stop);
     const windows = removed.filter((entry): entry is TWindowEntry => entry.kind === WINDOW);
     for (const entry of removed) {
       forget(entry);
     }
-    leaving = [...leaving, ...windows];
+    leaving = [
+      ...leaving,
+      ...windows,
+    ];
     const top = entries[entries.length - 1];
     const back = returns.list(top.id);
     returns.forget(top.id);
@@ -521,12 +530,18 @@ export function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     ahead = ahead.slice(restore.length);
     const ids = new Set(restore.map((entry) => entry.id));
     leaving = leaving.filter((entry) => !ids.has(entry.id));
-    entries = [...entries, ...restore];
+    entries = [
+      ...entries,
+      ...restore,
+    ];
     publish();
   }
 
   function reset(location: TUrlProps): void {
-    const all = [...entries, ...[...stacks].filter(([name]) => name !== shown).flatMap(([, list]) => list)];
+    const all = [
+      ...entries,
+      ...[...stacks].filter(([name]) => name !== shown).flatMap(([, list]) => list),
+    ];
     runOpened(entries, CLOSE);
     stacks.clear();
     if (separate) {
@@ -580,7 +595,10 @@ export function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
     pushState(
       mark(entry), '', hrefOf(entry),
     );
-    entries = [...entries, entry];
+    entries = [
+      ...entries,
+      entry,
+    ];
     ahead = []; // a new step forgets what was ahead, as the browser does
     publish();
   }
@@ -637,7 +655,10 @@ export function routerProviderBase(deps: TRouterProviderDeps, hash: boolean) {
       replaceState(
         mark(fresh), '', location.href,
       );
-      entries = [...entries.slice(0, index), fresh];
+      entries = [
+        ...entries.slice(0, index),
+        fresh,
+      ];
       ahead = [];
       publish();
     });

@@ -34,7 +34,10 @@ export const getWithContext = (scope: any, path: ArrayLike<string | number>): nu
     value = context[key];
   }
 
-  return i === length ? [context, value] : null;
+  return i === length ? [
+    context,
+    value,
+  ] : null;
 };
 
 /**

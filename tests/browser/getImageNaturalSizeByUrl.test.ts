@@ -14,6 +14,9 @@ describe('browser/getImageNaturalSizeByUrl', () => {
     const getImageNaturalSizeByUrl = extractExportedFn(require('../../src/browser/getImageNaturalSizeByUrl')) as (url: string) => Promise<[number, number]>;
 
     const result = await getImageNaturalSizeByUrl('https://example.com/image.png');
-    expect(result).toEqual([100, 50]);
+    expect(result).toEqual([
+      100,
+      50,
+    ]);
   });
 });

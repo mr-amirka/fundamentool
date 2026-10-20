@@ -16,7 +16,10 @@ export const curry = <F extends (...args: any[]) => any>(fn: F, ctx?: any): Curr
 
   function base(args: any[]): any {
     return function () {
-      const _args = [...args, ...arguments];
+      const _args = [
+        ...args,
+        ...arguments,
+      ];
       return _args.length >= length
         ? fn.apply(ctx || this, _args)
         : base(_args);

@@ -9,7 +9,10 @@ describe('isStandardObject', () => {
       a: 1,
     })).toBe(true);
     expect(isStandardObject([])).toBe(true);
-    expect(isStandardObject([1, 2])).toBe(true);
+    expect(isStandardObject([
+      1,
+      2,
+    ])).toBe(true);
   });
 
   test('returns false for class instances', () => {

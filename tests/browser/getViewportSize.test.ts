@@ -26,6 +26,9 @@ describe('browser/getViewportSize', () => {
     };
 
     const size = getViewportSize();
-    expect(size).toEqual([800, 600]);
+    expect(size).toEqual([
+      800,
+      600,
+    ]);
   });
 });

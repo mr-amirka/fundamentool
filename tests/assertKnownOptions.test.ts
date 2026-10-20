@@ -11,7 +11,10 @@ describe('assertKnownOptions', () => {
       WHERE, {
         a: 1,
         b: 2,
-      }, ['a', 'b'],
+      }, [
+        'a',
+        'b',
+      ],
     )).not.toThrow();
     expect(() => assertKnownOptions(
       WHERE, {
@@ -43,7 +46,10 @@ describe('assertKnownOptions', () => {
     expect(() => assertKnownOptions(
       WHERE, {
         [key]: 1,
-      }, ['manifestUrl', 'fetchJson'],
+      }, [
+        'manifestUrl',
+        'fetchJson',
+      ],
     ))
       .toThrow(`${WHERE}: unknown option "${key}". ${message}`);
   });
@@ -52,7 +58,10 @@ describe('assertKnownOptions', () => {
     expect(() => assertKnownOptions(
       WHERE, {
         cdn: 1,
-      }, ['manifestUrl', 'fetchJson'],
+      }, [
+        'manifestUrl',
+        'fetchJson',
+      ],
     ))
       .toThrow(`${WHERE}: unknown option "cdn". Known options: manifestUrl, fetchJson`);
   });
@@ -70,7 +79,10 @@ describe('assertKnownOptions', () => {
     expect(() => assertKnownOptions(
       WHERE, {
         wieght: 1,
-      }, ['width', 'weight'],
+      }, [
+        'width',
+        'weight',
+      ],
     ))
       .toThrow('Did you mean "weight"?');
   });
@@ -78,14 +90,38 @@ describe('assertKnownOptions', () => {
 
 describe('describeValue', () => {
   it.each([
-    [null, 'null'],
-    ['p10', 'string "p10"'],
-    [() => 1, 'function'],
-    [[1], 'array'],
-    [{}, 'object'],
-    [42, 'number 42'],
-    [undefined, 'undefined undefined'],
-    [true, 'boolean true'],
+    [
+      null,
+      'null',
+    ],
+    [
+      'p10',
+      'string "p10"',
+    ],
+    [
+      () => 1,
+      'function',
+    ],
+    [
+      [1],
+      'array',
+    ],
+    [
+      {},
+      'object',
+    ],
+    [
+      42,
+      'number 42',
+    ],
+    [
+      undefined,
+      'undefined undefined',
+    ],
+    [
+      true,
+      'boolean true',
+    ],
   ])('%p → %s', (value, expected) => {
     expect(describeValue(value)).toBe(expected);
   });

@@ -167,7 +167,10 @@ export function wsAsyncRequestProvider<TResponse = any>(wsUrl: string,
         stackAfter.push([
           resolve,
           reject,
-          [method, data],
+          [
+            method,
+            data,
+          ],
           _generateIdempotencyKey(),
         ]);
         if (!hasAfterRequest) {
@@ -279,7 +282,10 @@ export function wsAsyncRequestProvider<TResponse = any>(wsUrl: string,
       const item = [
         resolve,
         reject,
-        [method, data],
+        [
+          method,
+          data,
+        ],
         _generateIdempotencyKey(),
       ];
 

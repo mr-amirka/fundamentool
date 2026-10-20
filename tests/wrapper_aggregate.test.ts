@@ -29,13 +29,19 @@ describe('aggregate', () => {
       return funcs.map((fn) => fn.apply(ctx, args));
     };
 
-    const aggrFn = aggregate<[number]>([f1, f2], aggregator as any);
+    const aggrFn = aggregate<[number]>([
+      f1,
+      f2,
+    ], aggregator as any);
 
     const result = aggrFn.call({
       ctx: true,
     }, 10) as number[];
 
-    expect(result).toEqual([11, 20]);
+    expect(result).toEqual([
+      11,
+      20,
+    ]);
     expect(calls).toHaveLength(1);
     expect(calls[0].funcs).toBe(2);
     expect(calls[0].args).toEqual([10]);

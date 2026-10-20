@@ -19,7 +19,10 @@ describe('cssProperties* helpers', () => {
     const stringify = cssPropertiesStringifyProvider();
     const props: TCssProps = {
       color: 'red',
-      fontSize: ['12px', '14px'],
+      fontSize: [
+        '12px',
+        '14px',
+      ],
     };
 
     const s = stringify(props);

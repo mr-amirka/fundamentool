@@ -67,7 +67,10 @@ export function computeState(input: TStateInput): TRouterState {
   let kept = 0;
   let section: string | null = separate ? shown : null;
   // The shown stack first (most recent first), then the other sections' stacks.
-  const lists = [entries, ...[...stacks].filter(([name]) => name !== shown).map(([, list]) => list)];
+  const lists = [
+    entries,
+    ...[...stacks].filter(([name]) => name !== shown).map(([, list]) => list),
+  ];
   for (const list of lists) {
     for (let i = list.length - 1; i >= 0; i--) {
       const entry = list[i];

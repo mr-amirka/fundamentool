@@ -24,7 +24,10 @@ describe('slice', () => {
       2,
       3,
       4,
-    ], 2)).toEqual([3, 4]);
+    ], 2)).toEqual([
+      3,
+      4,
+    ]);
   });
 
   test('slices with start and end', () => {
@@ -35,7 +38,10 @@ describe('slice', () => {
         3,
         4,
       ], 1, 3,
-    )).toEqual([2, 3]);
+    )).toEqual([
+      2,
+      3,
+    ]);
   });
 
   test('works with array-like', () => {
@@ -45,6 +51,9 @@ describe('slice', () => {
       2: 'c',
       length: 3,
     };
-    expect(slice(like, 1)).toEqual(['b', 'c']);
+    expect(slice(like, 1)).toEqual([
+      'b',
+      'c',
+    ]);
   });
 });

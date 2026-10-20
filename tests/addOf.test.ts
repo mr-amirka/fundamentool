@@ -4,7 +4,10 @@ import {
 
 describe('addOf', () => {
   test('adds item when not present', () => {
-    const arr = [1, 2];
+    const arr = [
+      1,
+      2,
+    ];
     addOf(arr, 3);
     expect(arr).toEqual([
       1,
@@ -33,9 +36,15 @@ describe('addOf', () => {
   });
 
   test('works with strings', () => {
-    const arr = ['a', 'b'];
+    const arr = [
+      'a',
+      'b',
+    ];
     addOf(arr, 'a');
-    expect(arr).toEqual(['a', 'b']);
+    expect(arr).toEqual([
+      'a',
+      'b',
+    ]);
     addOf(arr, 'c');
     expect(arr).toEqual([
       'a',

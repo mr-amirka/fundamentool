@@ -72,7 +72,10 @@ describe('localStorageProvider', () => {
     const ls = localStorageProvider(win as any);
     ls.set('a', 1);
     ls.set('b', 2);
-    expect(ls.getKeys().sort()).toEqual(['a', 'b']);
+    expect(ls.getKeys().sort()).toEqual([
+      'a',
+      'b',
+    ]);
   });
 
   test('clear removes all keys', () => {

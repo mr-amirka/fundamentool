@@ -4,7 +4,10 @@ import {
 
 describe('push', () => {
   test('pushes multiple items into the array', () => {
-    const arr = [1, 2];
+    const arr = [
+      1,
+      2,
+    ];
     push(
       arr, 3, 4, 5,
     );
@@ -23,8 +26,14 @@ describe('push', () => {
   });
 
   test('does nothing when no items provided', () => {
-    const arr = [1, 2];
+    const arr = [
+      1,
+      2,
+    ];
     push(arr);
-    expect(arr).toEqual([1, 2]);
+    expect(arr).toEqual([
+      1,
+      2,
+    ]);
   });
 });

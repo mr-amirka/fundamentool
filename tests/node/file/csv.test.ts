@@ -21,9 +21,27 @@ describe('node/file/csv — write & read', () => {
   test('writes and reads a 2D array', async () => {
     const dir = tmpDir();
     const path = join(dir, 'data');
-    await csv.write(path, [['a', 'b'], ['1', '2']]);
+    await csv.write(path, [
+      [
+        'a',
+        'b',
+      ],
+      [
+        '1',
+        '2',
+      ],
+    ]);
     const result = await csv.read(path);
-    expect(result).toEqual([['a', 'b'], ['1', '2']]);
+    expect(result).toEqual([
+      [
+        'a',
+        'b',
+      ],
+      [
+        '1',
+        '2',
+      ],
+    ]);
     rmSync(dir, {
       recursive: true,
     });
@@ -45,10 +63,16 @@ describe('node/file/csv — write & read', () => {
   test('read with output array pushes into it', async () => {
     const dir = tmpDir();
     const path = join(dir, 'data');
-    await csv.write(path, [['a'], ['b']]);
+    await csv.write(path, [
+      ['a'],
+      ['b'],
+    ]);
     const out: any[][] = [];
     await csv.read(path, out);
-    expect(out).toEqual([['a'], ['b']]);
+    expect(out).toEqual([
+      ['a'],
+      ['b'],
+    ]);
     rmSync(dir, {
       recursive: true,
     });
@@ -57,10 +81,28 @@ describe('node/file/csv — write & read', () => {
   test('readEachLine calls callback for each row', async () => {
     const dir = tmpDir();
     const path = join(dir, 'data');
-    await csv.write(path, [['r1c1', 'r1c2'], ['r2c1', 'r2c2']]);
+    await csv.write(path, [
+      [
+        'r1c1',
+        'r1c2',
+      ],
+      [
+        'r2c1',
+        'r2c2',
+      ],
+    ]);
     const rows: any[][] = [];
     await csv.readEachLine(path, (row) => rows.push(row));
-    expect(rows).toEqual([['r1c1', 'r1c2'], ['r2c1', 'r2c2']]);
+    expect(rows).toEqual([
+      [
+        'r1c1',
+        'r1c2',
+      ],
+      [
+        'r2c1',
+        'r2c2',
+      ],
+    ]);
     rmSync(dir, {
       recursive: true,
     });
@@ -75,7 +117,12 @@ describe('node/file/csv/snapshot — write & read', () => {
   test('writes main and .recov files', async () => {
     const dir = tmpDir();
     const path = join(dir, 'snap');
-    await csv.snapshot.write(path, [['v', '1']]);
+    await csv.snapshot.write(path, [
+      [
+        'v',
+        '1',
+      ],
+    ]);
     const {
       existsSync,
     } = require('fs');

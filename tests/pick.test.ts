@@ -9,7 +9,10 @@ describe('pick', () => {
       b: 2,
       c: 3,
     };
-    const result = pick(input, ['a', 'c']);
+    const result = pick(input, [
+      'a',
+      'c',
+    ]);
     expect(result).toEqual({
       a: 1,
       c: 3,

@@ -70,7 +70,10 @@ describe('cookieStorageProvider', () => {
     const storage = cookieStorageProvider(win);
     storage.set('a', 1);
     storage.set('b', 2);
-    expect(storage.getKeys().sort()).toEqual(['a', 'b']);
+    expect(storage.getKeys().sort()).toEqual([
+      'a',
+      'b',
+    ]);
   });
 
   test('deps — custom createObservable is called', () => {

@@ -40,6 +40,9 @@ describe('async filter', () => {
       }, null,
     );
 
-    expect(res).toEqual([2, 4]);
+    expect(res).toEqual([
+      2,
+      4,
+    ]);
   });
 });

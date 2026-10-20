@@ -6,15 +6,18 @@ describe('csv.parseEachLine', () => {
   test('calls callback for each line with parsed columns', () => {
     const rows: any[][] = [];
     parseEachLine('1;2;3\n4;5;6', row => rows.push(row));
-    expect(rows).toEqual([[
-      1,
-      2,
-      3,
-    ], [
-      4,
-      5,
-      6,
-    ]]);
+    expect(rows).toEqual([
+      [
+        1,
+        2,
+        3,
+      ],
+      [
+        4,
+        5,
+        6,
+      ],
+    ]);
   });
 
   test('decodes URI components', () => {
@@ -37,27 +40,45 @@ describe('csv.parseEachLine', () => {
 
 describe('csv.parse', () => {
   test('parses CSV string into 2D array', () => {
-    expect(parse('1;2;3\n4;5;6')).toEqual([[
-      1,
-      2,
-      3,
-    ], [
-      4,
-      5,
-      6,
-    ]]);
+    expect(parse('1;2;3\n4;5;6')).toEqual([
+      [
+        1,
+        2,
+        3,
+      ],
+      [
+        4,
+        5,
+        6,
+      ],
+    ]);
   });
 
   test('pushes into provided output array', () => {
     const output: any[][] = [[0]];
     parse('1;2', output);
-    expect(output).toEqual([[0], [1, 2]]);
+    expect(output).toEqual([
+      [0],
+      [
+        1,
+        2,
+      ],
+    ]);
   });
 });
 
 describe('csv.stringify', () => {
   test('serializes 2D array to CSV string (rows joined with "\\n")', () => {
-    const result = stringify([[1, 2], [3, 4]]);
+    const result = stringify([
+      [
+        1,
+        2,
+      ],
+      [
+        3,
+        4,
+      ],
+    ]);
     expect(result).toBe('1;2\n3;4');
   });
 
@@ -68,15 +89,18 @@ describe('csv.stringify', () => {
   });
 
   test('round-trip: stringify → parse preserves all rows and columns', () => {
-    const data = [[
-      1,
-      'hello',
-      true,
-    ], [
-      null,
-      2,
-      false,
-    ]];
+    const data = [
+      [
+        1,
+        'hello',
+        true,
+      ],
+      [
+        null,
+        2,
+        false,
+      ],
+    ];
     expect(parse(stringify(data))).toEqual(data);
   });
 });

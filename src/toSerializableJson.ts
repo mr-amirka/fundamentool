@@ -38,7 +38,10 @@ export const toSerializableJsonBase = (value: any, excludes: any[]): any => {
     return null;
   }
 
-  const nextExcludes = [...excludes, value];
+  const nextExcludes = [
+    ...excludes,
+    value,
+  ];
 
   if (Array.isArray(value)) {
     const length = value.length;

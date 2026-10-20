@@ -96,7 +96,10 @@ describe('RpcClientWorker', () => {
       add: (a: number, b: number) => a + b,
     });
 
-    expect(await client.call('add', [3, 4])).toBe(7);
+    expect(await client.call('add', [
+      3,
+      4,
+    ])).toBe(7);
     client.destroy();
     connect.destroy();
   });
@@ -274,7 +277,10 @@ describe('RpcConnectWorker', () => {
         },
       });
 
-      expect(await client.call('add', [5, 3])).toBe(8);
+      expect(await client.call('add', [
+        5,
+        3,
+      ])).toBe(8);
       client.destroy();
     } finally {
       (global as any).addEventListener = origAddEL;

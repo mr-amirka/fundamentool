@@ -15,7 +15,10 @@ describe('toPlainFields', () => {
 
   test('flattens array values with index keys', () => {
     expect(toPlainFields({
-      list: ['x', 'y'],
+      list: [
+        'x',
+        'y',
+      ],
     })).toEqual({
       'list.0': 'x',
       'list.1': 'y',
@@ -27,7 +30,10 @@ describe('toPlainFields', () => {
       a: {
         b: 1,
       },
-      list: ['x', 'y'],
+      list: [
+        'x',
+        'y',
+      ],
     })).toEqual({
       'a.b': 1,
       'list.0': 'x',

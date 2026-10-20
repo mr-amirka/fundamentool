@@ -28,17 +28,23 @@ describe('toSerializableJson', () => {
   test('arrays and objects are cloned recursively', () => {
     const src = {
       a: 1,
-      b: [2, {
-        c: 3,
-      }],
+      b: [
+        2,
+        {
+          c: 3,
+        },
+      ],
     };
     const safe = toSerializableJson(src);
 
     expect(safe).toEqual({
       a: 1,
-      b: [2, {
-        c: 3,
-      }],
+      b: [
+        2,
+        {
+          c: 3,
+        },
+      ],
     });
     expect(safe).not.toBe(src);
     expect(safe.b).not.toBe(src.b);

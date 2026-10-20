@@ -7,7 +7,10 @@ describe('keys', () => {
     expect(keys({
       a: 1,
       b: 2,
-    })).toEqual(['a', 'b']);
+    })).toEqual([
+      'a',
+      'b',
+    ]);
   });
 
   test('returns empty for empty object', () => {

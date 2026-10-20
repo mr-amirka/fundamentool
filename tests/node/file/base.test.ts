@@ -98,7 +98,10 @@ describe('node/file/base — readDir', () => {
     await write(join(dir, 'a.txt'), '');
     await write(join(dir, 'b.txt'), '');
     const files = await readDir(dir) as string[];
-    expect(files.sort()).toEqual(['a.txt', 'b.txt']);
+    expect(files.sort()).toEqual([
+      'a.txt',
+      'b.txt',
+    ]);
     rmSync(dir, {
       recursive: true,
     });

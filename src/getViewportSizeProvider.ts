@@ -24,6 +24,9 @@ export function getViewportSizeProvider(w: TViewportWindowContext): (() => [numb
   const d = w.document;
   const de = d.documentElement;
   return () => {
-    return [w.innerWidth || d.width || de.clientWidth, w.innerHeight || d.height || de.clientHeight] as [number, number];
+    return [
+      w.innerWidth || d.width || de.clientWidth,
+      w.innerHeight || d.height || de.clientHeight,
+    ] as [number, number];
   };
 }

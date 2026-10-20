@@ -68,7 +68,13 @@ describe('variantsProvider', () => {
       scopeEnd: ')',
       maxDepth: 1,
     });
-    expect(shallow('a(b|c)')).toEqual([['ab', 'ac'], 1]);
+    expect(shallow('a(b|c)')).toEqual([
+      [
+        'ab',
+        'ac',
+      ],
+      1,
+    ]);
     expect(() => shallow('a((b|c))')).toThrow(RangeError);
   });
 
@@ -95,8 +101,17 @@ describe('variantsProvider', () => {
       scopeEnd: '>>',
       maxDepth: Number.POSITIVE_INFINITY,
     });
-    expect(angle('x<<a|b>>')).toEqual([['xa', 'xb'], 1]);
-    expect(variants('x(a|b)')[0]).toEqual(['xa', 'xb']);
+    expect(angle('x<<a|b>>')).toEqual([
+      [
+        'xa',
+        'xb',
+      ],
+      1,
+    ]);
+    expect(variants('x(a|b)')[0]).toEqual([
+      'xa',
+      'xb',
+    ]);
   });
 
   test('maxOutputCount rejects too many strings', () => {

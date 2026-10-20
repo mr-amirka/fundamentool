@@ -14,8 +14,14 @@ import {
 describe('eachApply', () => {
   test('calls each function with given args', () => {
     const calls: number[] = [];
-    eachApply([(x: number) => calls.push(x + 1), (x: number) => calls.push(x * 2)], [5]);
-    expect(calls).toEqual([6, 10]);
+    eachApply([
+      (x: number) => calls.push(x + 1),
+      (x: number) => calls.push(x * 2),
+    ], [5]);
+    expect(calls).toEqual([
+      6,
+      10,
+    ]);
   });
 
   test('works with object of functions', () => {
@@ -24,7 +30,10 @@ describe('eachApply', () => {
       a: () => calls.push('a'),
       b: () => calls.push('b'),
     });
-    expect(calls.sort()).toEqual(['a', 'b']);
+    expect(calls.sort()).toEqual([
+      'a',
+      'b',
+    ]);
   });
 
   test('passes context to each function', () => {
@@ -33,9 +42,11 @@ describe('eachApply', () => {
     };
     let received: any;
     eachApply(
-      [function(this: any) {
-        received = this.value;
-      }], [], ctx,
+      [
+        function(this: any) {
+          received = this.value;
+        },
+      ], [], ctx,
     );
     expect(received).toBe(42);
   });
@@ -43,8 +54,14 @@ describe('eachApply', () => {
 
 describe('eachApplyMap', () => {
   test('maps array of functions to results', () => {
-    const result = eachApplyMap([(x: number) => x + 1, (x: number) => x * 2], [5]);
-    expect(result).toEqual([6, 10]);
+    const result = eachApplyMap([
+      (x: number) => x + 1,
+      (x: number) => x * 2,
+    ], [5]);
+    expect(result).toEqual([
+      6,
+      10,
+    ]);
   });
 
   test('maps object of functions to result object', () => {
@@ -68,16 +85,21 @@ describe('eachTry', () => {
       () => result.push(3),
     ],
     []);
-    expect(result).toEqual([1, 3]);
+    expect(result).toEqual([
+      1,
+      3,
+    ]);
   });
 
   test('calls onError for each thrown error', () => {
     const errors: unknown[] = [];
     const err = new Error('oops');
     eachTry(
-      [() => {
-        throw err;
-      }], [], null, (e) => errors.push(e),
+      [
+        () => {
+          throw err;
+        },
+      ], [], null, (e) => errors.push(e),
     );
     expect(errors).toEqual([err]);
   });

@@ -18,7 +18,10 @@ describe('routeParseProviderBase', () => {
     const re = routeParseProviderBase('/user/:id', keys);
 
     expect(re).toBeInstanceOf(RegExp);
-    expect(keys).toEqual(['all', 'id']);
+    expect(keys).toEqual([
+      'all',
+      'id',
+    ]);
   });
 
   test('collects keys for regex params /(ru|en):lang/(user/([0-9]+):id)?', () => {
@@ -51,7 +54,10 @@ describe('routeParseProviderBase', () => {
 
     expect(re).toBeInstanceOf(RegExp);
     // безымянная группа переименована в section, числового индекса нет
-    expect(keys).toEqual(['all', 'section']);
+    expect(keys).toEqual([
+      'all',
+      'section',
+    ]);
   });
 
   test('collects keys for regex group renamed to deep path ([a-z_-]+):user.slug', () => {
@@ -60,7 +66,10 @@ describe('routeParseProviderBase', () => {
 
     expect(re).toBeInstanceOf(RegExp);
     // безымянная группа переименована в user.slug
-    expect(keys).toEqual(['all', 'user.slug']);
+    expect(keys).toEqual([
+      'all',
+      'user.slug',
+    ]);
   });
 
   test('adds numeric key for unnamed group', () => {

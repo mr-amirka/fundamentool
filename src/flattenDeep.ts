@@ -15,7 +15,10 @@ import {
 export const flattenDeep = <T = any>(input: any[]): T[] => {
   const output: T[] = [];
   const stack: Array<[any[], number]> = [];
-  let stackItem: [any[], number] | undefined = [input, 0];
+  let stackItem: [any[], number] | undefined = [
+    input,
+    0,
+  ];
   let item: any;
   let offset: number;
   let length: number;
@@ -27,7 +30,10 @@ export const flattenDeep = <T = any>(input: any[]): T[] => {
     while (offset < length) {
       item = input[offset];
       if (isArray(item)) {
-        stack.push([input, offset + 1]);
+        stack.push([
+          input,
+          offset + 1,
+        ]);
         input = item;
         offset = 0;
         length = input.length;

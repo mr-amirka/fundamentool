@@ -8,7 +8,10 @@ describe('destroyProvider', () => {
     const destroy = destroyProvider();
     destroy.add(() => calls.push('a'), () => calls.push('b'));
     destroy();
-    expect(calls.sort()).toEqual(['a', 'b']);
+    expect(calls.sort()).toEqual([
+      'a',
+      'b',
+    ]);
   });
 
   test('returns true on first call, false on subsequent calls', () => {

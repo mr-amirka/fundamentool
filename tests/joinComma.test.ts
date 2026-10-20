@@ -9,7 +9,10 @@ describe('joinComma', () => {
       2,
       3,
     ])).toBe('1,2,3');
-    expect(joinComma(['a', 'b'])).toBe('a,b');
+    expect(joinComma([
+      'a',
+      'b',
+    ])).toBe('a,b');
   });
 
   test('single element', () => {

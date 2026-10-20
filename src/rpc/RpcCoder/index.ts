@@ -27,10 +27,22 @@ const NON_ENCODABLE_TYPES = [
   'string',
   'boolean',
 ];
-const ENCODED_UNDEFINED: TRpcEncodedValue = [TRpcEncodedType.Other, TRpcEncodedValueOther.Undefined];
-const ENCODED_INFINITY: TRpcEncodedValue = [TRpcEncodedType.Other, TRpcEncodedValueOther.Infinity];
-const ENCODED_NEGATIVE_INFINITY: TRpcEncodedValue = [TRpcEncodedType.Other, TRpcEncodedValueOther.NegativeInfinity];
-const ENCODED_NAN: TRpcEncodedValue = [TRpcEncodedType.Other, TRpcEncodedValueOther.NaN];
+const ENCODED_UNDEFINED: TRpcEncodedValue = [
+  TRpcEncodedType.Other,
+  TRpcEncodedValueOther.Undefined,
+];
+const ENCODED_INFINITY: TRpcEncodedValue = [
+  TRpcEncodedType.Other,
+  TRpcEncodedValueOther.Infinity,
+];
+const ENCODED_NEGATIVE_INFINITY: TRpcEncodedValue = [
+  TRpcEncodedType.Other,
+  TRpcEncodedValueOther.NegativeInfinity,
+];
+const ENCODED_NAN: TRpcEncodedValue = [
+  TRpcEncodedType.Other,
+  TRpcEncodedValueOther.NaN,
+];
 
 function storeProvider<A = any>(): [
     indexOf: (value: A) => number | undefined,
@@ -38,11 +50,14 @@ function storeProvider<A = any>(): [
 ] {
   const valueMap = new Map<A, number>();
 
-  return [(value: A) => valueMap.get(value), (value: A) => {
-    const index = valueMap.size;
-    valueMap.set(value, index);
-    return index;
-  }];
+  return [
+    (value: A) => valueMap.get(value),
+    (value: A) => {
+      const index = valueMap.size;
+      valueMap.set(value, index);
+      return index;
+    },
+  ];
 }
 
 /**
@@ -129,12 +144,18 @@ export class RpcCoder {
     const getEncodedPromiseFnValue = fnCoder ? (value: Promise<any>): TRpcEncodedValueFn => {
       const promiseIndex = this.internalPromises.indexOf(value);
       if (promiseIndex > -1) {
-        return [0, internalPromiseFnIndexs[promiseIndex]];
+        return [
+          0,
+          internalPromiseFnIndexs[promiseIndex],
+        ];
       }
       const fnIndex = fnCoder.addInternal(() => value);
       internalPromiseFnIndexs.push(fnIndex);
       internalPromises.push(value);
-      return [0, fnIndex];
+      return [
+        0,
+        fnIndex,
+      ];
     } : null;
 
     const encodedValue = base(value);
@@ -164,7 +185,10 @@ export class RpcCoder {
       }
 
       for (key in keyMap) {
-        output.push([getStringIndex(key), base(v[key], v)]);
+        output.push([
+          getStringIndex(key),
+          base(v[key], v),
+        ]);
       }
       return index;
     }
@@ -173,7 +197,10 @@ export class RpcCoder {
       switch (typeof value) {
         case 'symbol':
           return symbolCoder
-            ? [TRpcEncodedType.Symbol, symbolCoder.encode(value, getStringIndex(value.toString()))]
+            ? [
+              TRpcEncodedType.Symbol,
+              symbolCoder.encode(value, getStringIndex(value.toString())),
+            ]
             : ENCODED_UNDEFINED;
 
         case 'undefined':
@@ -193,17 +220,26 @@ export class RpcCoder {
           break;
 
         case 'bigint':
-          return [TRpcEncodedType.BigInt, getStringIndex(value.toString())];
+          return [
+            TRpcEncodedType.BigInt,
+            getStringIndex(value.toString()),
+          ];
 
         case 'string':
-          return [TRpcEncodedType.String, getStringIndex(value)];
+          return [
+            TRpcEncodedType.String,
+            getStringIndex(value),
+          ];
 
         case 'function': {
           const index = fnCoder?.encode(
             value, context, withInternalFns,
           );
           return index
-            ? [TRpcEncodedType.Function, index]
+            ? [
+              TRpcEncodedType.Function,
+              index,
+            ]
             : ENCODED_UNDEFINED;
         }
 
@@ -213,15 +249,24 @@ export class RpcCoder {
           }
 
           if (value instanceof Date) {
-            return [TRpcEncodedType.Date, value.getTime()];
+            return [
+              TRpcEncodedType.Date,
+              value.getTime(),
+            ];
           }
 
           if (value instanceof RegExp) {
-            return [TRpcEncodedType.RegExp, getStringIndex(value.toString())];
+            return [
+              TRpcEncodedType.RegExp,
+              getStringIndex(value.toString()),
+            ];
           }
 
           if (getEncodedPromiseFnValue && typeof value.then === 'function') {
-            return [TRpcEncodedType.Promise, getEncodedPromiseFnValue(value)];
+            return [
+              TRpcEncodedType.Promise,
+              getEncodedPromiseFnValue(value),
+            ];
           }
 
           if (Array.isArray(value)) {
@@ -234,24 +279,36 @@ export class RpcCoder {
                 output[i] = base(value[i]);
               }
             }
-            return [TRpcEncodedType.Array, index];
+            return [
+              TRpcEncodedType.Array,
+              index,
+            ];
           }
 
           const index = getObjectIndex(value);
 
           if (index !== undefined) {
-            return [TRpcEncodedType.Object, index];
+            return [
+              TRpcEncodedType.Object,
+              index,
+            ];
           }
 
           if (value instanceof Error) {
-            return [TRpcEncodedType.Error, encodeObject({
-              name: value.name,
-              message: value.toString(),
-              code: (value as any).code || 0,
-            })];
+            return [
+              TRpcEncodedType.Error,
+              encodeObject({
+                name: value.name,
+                message: value.toString(),
+                code: (value as any).code || 0,
+              }),
+            ];
           }
 
-          return [TRpcEncodedType.Object, encodeObject(value)];
+          return [
+            TRpcEncodedType.Object,
+            encodeObject(value),
+          ];
         }
       }
 

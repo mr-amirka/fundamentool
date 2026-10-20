@@ -34,7 +34,10 @@ describe('sort', () => {
   });
 
   test('returns the same array (mutates)', () => {
-    const arr = [2, 1];
+    const arr = [
+      2,
+      1,
+    ];
     expect(sort(arr)).toBe(arr);
   });
 
@@ -82,14 +85,20 @@ describe('sortBy', () => {
   });
 
   test('handles stable equal values', () => {
-    const result = sortBy([{
-      k: 1,
-      v: 'b',
-    }, {
-      k: 1,
-      v: 'a',
-    }], (i) => i.k);
-    expect(result.map((i) => i.k)).toEqual([1, 1]);
+    const result = sortBy([
+      {
+        k: 1,
+        v: 'b',
+      },
+      {
+        k: 1,
+        v: 'a',
+      },
+    ], (i) => i.k);
+    expect(result.map((i) => i.k)).toEqual([
+      1,
+      1,
+    ]);
   });
 });
 
@@ -120,11 +129,14 @@ describe('uniqWith', () => {
         a: 2,
       },
     ], (x, y) => x.a === y.a);
-    expect(result).toEqual([{
-      a: 1,
-    }, {
-      a: 2,
-    }]);
+    expect(result).toEqual([
+      {
+        a: 1,
+      },
+      {
+        a: 2,
+      },
+    ]);
   });
 
   test('returns empty array for null input', () => {
@@ -140,6 +152,9 @@ describe('uniqWith', () => {
         1,
       ], undefined, out,
     );
-    expect(out).toEqual([1, 2]);
+    expect(out).toEqual([
+      1,
+      2,
+    ]);
   });
 });

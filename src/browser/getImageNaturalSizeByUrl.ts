@@ -18,4 +18,7 @@ export const getImageNaturalSizeByUrl =(url: string): Promise<[
 const imageToSize = (img: HTMLImageElement): [
   width: number,
   height: number,
-] => [img.naturalWidth || img.width || 0, img.naturalHeight || img.height || 0];
+] => [
+  img.naturalWidth || img.width || 0,
+  img.naturalHeight || img.height || 0,
+];

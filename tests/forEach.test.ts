@@ -35,11 +35,13 @@ describe('forEach', () => {
       i,
       c,
     ]));
-    expect(calls).toEqual([[
-      'a',
-      0,
-      ['a'],
-    ]]);
+    expect(calls).toEqual([
+      [
+        'a',
+        0,
+        ['a'],
+      ],
+    ]);
   });
 
   test('does nothing for empty array', () => {
@@ -56,7 +58,10 @@ describe('forIn', () => {
       a: 1,
       b: 2,
     }, (v, k) => result.push(k + '=' + v));
-    expect(result.sort()).toEqual(['a=1', 'b=2']);
+    expect(result.sort()).toEqual([
+      'a=1',
+      'b=2',
+    ]);
   });
 
   test('passes value, key, collection', () => {
@@ -70,13 +75,15 @@ describe('forIn', () => {
       k,
       c,
     ]));
-    expect(calls).toEqual([[
-      42,
-      'x',
-      {
-        x: 42,
-      },
-    ]]);
+    expect(calls).toEqual([
+      [
+        42,
+        'x',
+        {
+          x: 42,
+        },
+      ],
+    ]);
   });
 });
 
@@ -114,6 +121,9 @@ describe('each', () => {
       a: 1,
       b: 2,
     }, (_v, k) => result.push(String(k)));
-    expect(result.sort()).toEqual(['a', 'b']);
+    expect(result.sort()).toEqual([
+      'a',
+      'b',
+    ]);
   });
 });

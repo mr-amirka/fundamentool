@@ -66,29 +66,34 @@ describe('core basics', () => {
       },
     );
 
-    expect(calls).toEqual([{
-      type: 'click',
-      listener,
-      options: {
-        passive: true,
+    expect(calls).toEqual([
+      {
+        type: 'click',
+        listener,
+        options: {
+          passive: true,
+        },
       },
-    }]);
+    ]);
 
     unsubscribe();
 
-    expect(calls).toEqual([{
-      type: 'click',
-      listener,
-      options: {
-        passive: true,
+    expect(calls).toEqual([
+      {
+        type: 'click',
+        listener,
+        options: {
+          passive: true,
+        },
       },
-    }, {
-      type: 'remove:click',
-      listener,
-      options: {
-        passive: true,
+      {
+        type: 'remove:click',
+        listener,
+        options: {
+          passive: true,
+        },
       },
-    }]);
+    ]);
   });
 });
 

@@ -53,7 +53,10 @@ describe('routerProvider — the stack', () => {
     ]);
 
     await nav.back();
-    expect(paths()).toEqual(['/a', '/a/1']);
+    expect(paths()).toEqual([
+      '/a',
+      '/a/1',
+    ]);
     browser.userBack();
     await waitFor(() => expect(paths()).toEqual(['/a']));
     await nav.back(); // at the bottom: nothing
@@ -76,7 +79,10 @@ describe('routerProvider — the stack', () => {
         text: 'hi',
       },
     });
-    expect(browser.paths()).toEqual(['/a', '/a']); // the address keeps the page
+    expect(browser.paths()).toEqual([
+      '/a',
+      '/a',
+    ]); // the address keeps the page
     await nav.close(win.id, 'saved');
     await expect(first).resolves.toBe('saved');
     expect(nav.getState().leaving).toHaveLength(1);
@@ -153,15 +159,24 @@ describe('routerProvider — the stack', () => {
     await nav.go('/b/1');
     expect(nav.getState().section).toBe('b');
     await nav.switchSection('b'); // the current tab again → its main page
-    expect(paths()).toEqual(['/a', '/b']);
+    expect(paths()).toEqual([
+      '/a',
+      '/b',
+    ]);
     await nav.switchSection('c'); // no main page known
-    expect(paths()).toEqual(['/a', '/b']);
+    expect(paths()).toEqual([
+      '/a',
+      '/b',
+    ]);
   });
 
   it('backToSection without the main page in the history opens it; without a section — nothing', async () => {
     const deep = setup({}, '/b/7');
     await deep.nav.backToSection();
-    expect(deep.paths()).toEqual(['/b/7', '/b']);
+    expect(deep.paths()).toEqual([
+      '/b/7',
+      '/b',
+    ]);
 
     const none = setup({
       sections: {},
@@ -205,7 +220,10 @@ describe('routerProvider — the stack', () => {
       return () => log.push('close');
     });
     await nav.back();
-    expect(log).toEqual(['open', 'close']);
+    expect(log).toEqual([
+      'open',
+      'close',
+    ]);
 
     const stop = nav.whileOpen(nav.getState().page.id, () => () => log.push('unmounted'));
     stop();
@@ -236,7 +254,10 @@ describe('routerProvider — the stack', () => {
     await nav.go('/a/1');
     expect(log).toEqual(['forward']);
     await nav.back();
-    expect(log).toEqual(['forward', 'back on top']);
+    expect(log).toEqual([
+      'forward',
+      'back on top',
+    ]);
     stop();
 
     nav.onForward(
@@ -266,7 +287,10 @@ describe('routerProvider — the stack', () => {
     expect(paths()).toEqual(['/a']);
     release();
     await expect(going).resolves.toBe(true);
-    expect(paths()).toEqual(['/a', '/a/1']);
+    expect(paths()).toEqual([
+      '/a',
+      '/a/1',
+    ]);
   });
 
   it('onBeforeLeave: a refusal keeps the entry (the browser is stepped forward again) and reopens whileOpen', async () => {
@@ -288,7 +312,10 @@ describe('routerProvider — the stack', () => {
       'close',
       'open',
     ]));
-    expect(paths()).toEqual(['/a', '/a/form']);
+    expect(paths()).toEqual([
+      '/a',
+      '/a/form',
+    ]);
     await waitFor(() => expect(browser.index()).toBe(1));
 
     allow = true;
@@ -340,7 +367,10 @@ describe('routerProvider — the stack', () => {
     await nav.back();
     expect(nav.getState().ahead).toEqual([left]);
     browser.userForward();
-    await waitFor(() => expect(paths()).toEqual(['/a', '/a/1']));
+    await waitFor(() => expect(paths()).toEqual([
+      '/a',
+      '/a/1',
+    ]));
     expect(nav.getState().page).toBe(left);
     expect(nav.getState().ahead).toEqual([]);
 
@@ -349,7 +379,10 @@ describe('routerProvider — the stack', () => {
     expect(nav.getState().ahead).toEqual([]);
     browser.userForward(); // nothing ahead any more — undone
     await settle(100);
-    expect(paths()).toEqual(['/a', '/a/2']);
+    expect(paths()).toEqual([
+      '/a',
+      '/a/2',
+    ]);
     expect(browser.index()).toBe(1);
   });
 
@@ -383,11 +416,17 @@ describe('routerProvider — the stack', () => {
     const answer = nav.open('Menu', {
       scene: 1,
     });
-    await waitFor(() => expect(paths()).toEqual(['/a', 'window']));
+    await waitFor(() => expect(paths()).toEqual([
+      '/a',
+      'window',
+    ]));
     await nav.back();
     await expect(answer).resolves.toBeNull();
     browser.userForward();
-    await waitFor(() => expect(paths()).toEqual(['/a', 'window']));
+    await waitFor(() => expect(paths()).toEqual([
+      '/a',
+      'window',
+    ]));
     expect(nav.getState().entries[1]).toMatchObject({
       window: 'Menu',
       params: {
@@ -417,11 +456,17 @@ describe('routerProvider — the stack', () => {
     await waitFor(() => expect(browser.index()).toBe(0));
     expect(paths()).toEqual(['/a']);
     browser.userForward();
-    await waitFor(() => expect(paths()).toEqual(['/a', 'window']));
+    await waitFor(() => expect(paths()).toEqual([
+      '/a',
+      'window',
+    ]));
     browser.userForward(); // the confirmation isn't kept ahead: undone
     await settle(100);
     await waitFor(() => expect(browser.index()).toBe(1));
-    expect(paths()).toEqual(['/a', 'window']);
+    expect(paths()).toEqual([
+      '/a',
+      'window',
+    ]);
   });
 
   it('Forward asks the forward handlers of the page first: false keeps the player where they are', async () => {
@@ -444,7 +489,10 @@ describe('routerProvider — the stack', () => {
 
     allow = true;
     browser.userForward();
-    await waitFor(() => expect(paths()).toEqual(['/a', '/a/1']));
+    await waitFor(() => expect(paths()).toEqual([
+      '/a',
+      '/a/1',
+    ]));
     expect(browser.index()).toBe(1);
   });
 
@@ -453,14 +501,20 @@ describe('routerProvider — the stack', () => {
       nav, browser, paths,
     } = setup();
     void nav.open('W');
-    await waitFor(() => expect(paths()).toEqual(['/a', 'window']));
+    await waitFor(() => expect(paths()).toEqual([
+      '/a',
+      'window',
+    ]));
     await nav.back();
     const asked: string[] = [];
     nav.onForward(nav.getState().page.id, () => {
       asked.push('pages only');
     });
     browser.userForward();
-    await waitFor(() => expect(paths()).toEqual(['/a', 'window']));
+    await waitFor(() => expect(paths()).toEqual([
+      '/a',
+      'window',
+    ]));
     expect(asked).toEqual([]);
   });
 
@@ -480,7 +534,10 @@ describe('routerProvider — the stack', () => {
     await expect(nav.go('/a/1')).rejects.toThrow('quota');
     restore();
     await nav.go('/a/2');
-    expect(paths()).toEqual(['/a', '/a/2']);
+    expect(paths()).toEqual([
+      '/a',
+      '/a/2',
+    ]);
   });
 
   it('replace swaps the top page in place: no new history entry, its whileOpen cleaned up', async () => {
@@ -491,8 +548,14 @@ describe('routerProvider — the stack', () => {
     const log: string[] = [];
     nav.whileOpen(nav.getState().page.id, () => () => log.push('closed /a/1'));
     await nav.replace('/a/2');
-    expect(paths()).toEqual(['/a', '/a/2']);
-    expect(browser.paths()).toEqual(['/a', '/a/2']);
+    expect(paths()).toEqual([
+      '/a',
+      '/a/2',
+    ]);
+    expect(browser.paths()).toEqual([
+      '/a',
+      '/a/2',
+    ]);
     expect(log).toEqual(['closed /a/1']);
     await nav.back();
     expect(paths()).toEqual(['/a']);
@@ -507,7 +570,10 @@ describe('routerProvider — the stack', () => {
     await settle();
     await nav.replace('/a/2');
     await expect(win).resolves.toBeNull();
-    expect(paths()).toEqual(['/a', '/a/2']);
+    expect(paths()).toEqual([
+      '/a',
+      '/a/2',
+    ]);
 
     void nav.open('Form');
     await settle();

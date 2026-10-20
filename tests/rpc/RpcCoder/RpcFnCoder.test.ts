@@ -22,7 +22,10 @@ describe('RpcFnCoder', () => {
     const coder = new RpcFnCoder(provider);
     const fn = () => 42;
     const encoded = coder.encode(fn);
-    expect(encoded).toEqual([0, 0]);
+    expect(encoded).toEqual([
+      0,
+      0,
+    ]);
   });
 
   test('encode returns same index for same fn', () => {
@@ -31,8 +34,14 @@ describe('RpcFnCoder', () => {
     } = makeProvider();
     const coder = new RpcFnCoder(provider);
     const fn = () => 42;
-    expect(coder.encode(fn)).toEqual([0, 0]);
-    expect(coder.encode(fn)).toEqual([0, 0]);
+    expect(coder.encode(fn)).toEqual([
+      0,
+      0,
+    ]);
+    expect(coder.encode(fn)).toEqual([
+      0,
+      0,
+    ]);
   });
 
   test('different fns get different indexes', () => {
@@ -53,7 +62,10 @@ describe('RpcFnCoder', () => {
       provider,
     } = makeProvider();
     const coder = new RpcFnCoder(provider);
-    const externalFn = coder.decode([0, 3]);
+    const externalFn = coder.decode([
+      0,
+      3,
+    ]);
     expect(typeof externalFn).toBe('function');
     expect(await externalFn!()).toBe('external:3');
   });
@@ -66,7 +78,10 @@ describe('RpcFnCoder', () => {
     const coder = new RpcFnCoder(provider);
     const fn = () => 99;
     coder.encode(fn); // stored as internals[0]
-    expect(coder.decode([1, 0])).toBe(fn);
+    expect(coder.decode([
+      1,
+      0,
+    ])).toBe(fn);
   });
 
   test('invoke calls internal fn with args', () => {
@@ -76,7 +91,10 @@ describe('RpcFnCoder', () => {
     const coder = new RpcFnCoder(provider);
     const fn = (a: number, b: number) => a + b;
     coder.encode(fn);
-    expect(coder.invoke(0, [3, 4])).toBe(7);
+    expect(coder.invoke(0, [
+      3,
+      4,
+    ])).toBe(7);
   });
 
   test('addInternal adds fn and returns its index', () => {

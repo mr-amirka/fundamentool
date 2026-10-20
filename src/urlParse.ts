@@ -75,7 +75,10 @@ export const urlParse = (href: string): TUrlProps => {
   ))[0];
   const basePath = parts[1];
 
-  parts = protocol ? half(basePath, '/') : ['', basePath];
+  parts = protocol ? half(basePath, '/') : [
+    '',
+    basePath,
+  ];
 
   const path = (parts[2] ? '/' : '') + parts[1];
   const userpart = (parts = half(

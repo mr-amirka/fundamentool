@@ -15,7 +15,10 @@ describe('variants', () => {
 
   test('with "re(build|code)"', () => {
     const [strings, depth] = variants('re(build|code)');
-    expect(strings).toEqual(['rebuild', 'recode']);
+    expect(strings).toEqual([
+      'rebuild',
+      'recode',
+    ]);
     expect(depth).toBe(1);
   });
 
@@ -33,7 +36,10 @@ describe('variants', () => {
 
   test('with "В(олод|ас)я"', () => {
     const [strings] = variants('В(олод|ас)я');
-    expect(strings).toEqual(['Володя', 'Вася']);
+    expect(strings).toEqual([
+      'Володя',
+      'Вася',
+    ]);
   });
 
   test('with "V((olod|as)ya|italiy)"', () => {

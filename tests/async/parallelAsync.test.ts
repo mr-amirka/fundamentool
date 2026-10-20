@@ -78,7 +78,10 @@ describe('parallel async helpers', () => {
     );
 
     expect(result).toBe(obj);
-    expect(keys.sort()).toEqual(['a:1', 'b:2']);
+    expect(keys.sort()).toEqual([
+      'a:1',
+      'b:2',
+    ]);
   });
 
   test('mapParallel maps array sequentially (taskLimit=1)', async () => {

@@ -74,11 +74,17 @@ export class RpcConnect {
   }
 
   dispatchEncoded(encodedData: TRpcEncodedData) {
-    this.sendMessage([TRpcType.Dispatch, encodedData]);
+    this.sendMessage([
+      TRpcType.Dispatch,
+      encodedData,
+    ]);
   }
 
   private sendMessage(data: TRpcConnectMessage[1]) {
-    this.postMessage([TRpcAgent.Server, data] as TRpcConnectMessage);
+    this.postMessage([
+      TRpcAgent.Server,
+      data,
+    ] as TRpcConnectMessage);
   }
   private async invokeBase(
     requestId: string,
@@ -172,13 +178,19 @@ export class RpcConnect {
           result.name = error.name;
           result.code = error.code;
         }
-        return [isError, result];
+        return [
+          isError,
+          result,
+        ];
       },
     );
   }
 
   private async proxyProvide(args: [callback: (exports: Record<string, any>) => any]) {
-    return [0, await args[0](this.exports)];
+    return [
+      0,
+      await args[0](this.exports),
+    ];
   }
 
   private async handleMessage(data: TRpcClientMessage) {
@@ -202,7 +214,10 @@ export class RpcConnect {
         console.warn('Connect: Unknown meta method', data);
         return this.invokeBase(
           requestId, dataArgs[3], () => {
-            return [1, new Error(`Connect: Unknown meta method: ${method}`)];
+            return [
+              1,
+              new Error(`Connect: Unknown meta method: ${method}`),
+            ];
           },
         );
       }

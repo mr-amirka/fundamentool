@@ -82,7 +82,10 @@ describe('deflags', () => {
       c: true,
       d: false,
     });
-    expect(result.sort()).toEqual(['a', 'c']);
+    expect(result.sort()).toEqual([
+      'a',
+      'c',
+    ]);
   });
 
   test('returns empty array for all-falsy', () => {
@@ -97,7 +100,10 @@ describe('deflags', () => {
       x: 1,
       y: 2,
     });
-    expect(result.sort()).toEqual(['x', 'y']);
+    expect(result.sort()).toEqual([
+      'x',
+      'y',
+    ]);
   });
 });
 

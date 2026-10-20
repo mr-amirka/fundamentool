@@ -15,7 +15,10 @@ describe('param / unparam', () => {
   });
 
   test('serializes arrays with numeric keys', () => {
-    const q = param(['a', 'b']);
+    const q = param([
+      'a',
+      'b',
+    ]);
     expect(q).toBe('0=a&1=b');
   });
 

@@ -43,15 +43,30 @@ describe('async collection helpers', () => {
     const result = await forInAsync(obj, async function (
       value, key, collection,
     ) {
-      pairs.push([key, value + collection[key]]);
+      pairs.push([
+        key,
+        value + collection[key],
+      ]);
     });
 
     expect(result).toBe(obj);
-    expect(pairs).toEqual([['a', 2], ['b', 4]]);
+    expect(pairs).toEqual([
+      [
+        'a',
+        2,
+      ],
+      [
+        'b',
+        4,
+      ],
+    ]);
   });
 
   test('eachAsync chooses correct iterator for arrays and objects', async () => {
-    const arr = [1, 2];
+    const arr = [
+      1,
+      2,
+    ];
     const obj = {
       a: 1,
       b: 2,
@@ -70,8 +85,14 @@ describe('async collection helpers', () => {
 
     expect(arrResult).toBe(arr);
     expect(objResult).toBe(obj);
-    expect(arrVisited).toEqual([1, 2]);
-    expect(objVisited.sort()).toEqual(['a:1', 'b:2']);
+    expect(arrVisited).toEqual([
+      1,
+      2,
+    ]);
+    expect(objVisited.sort()).toEqual([
+      'a:1',
+      'b:2',
+    ]);
   });
 
   test('mapAsync maps array with async iteratee', async () => {
@@ -110,7 +131,10 @@ describe('async collection helpers', () => {
     const result = await filterAsync(
       items, async (v) => v % 2 === 0, null,
     );
-    expect(result).toEqual([2, 4]);
+    expect(result).toEqual([
+      2,
+      4,
+    ]);
   });
 
   test('filterInAsync filters object and returns object', async () => {

@@ -90,7 +90,10 @@ export class RpcClientPool<Client extends IRpcClient = IRpcClient> extends Event
         return worker;
       }
 
-      taskCounts[i] = [i, taskCount];
+      taskCounts[i] = [
+        i,
+        taskCount,
+      ];
 
       i++;
     }

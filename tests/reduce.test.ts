@@ -22,7 +22,10 @@ describe('reduceIn', () => {
     );
 
     expect(sum).toBe(3);
-    expect(keys.sort()).toEqual(['a', 'b']);
+    expect(keys.sort()).toEqual([
+      'a',
+      'b',
+    ]);
   });
 });
 

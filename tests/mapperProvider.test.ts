@@ -4,14 +4,23 @@ import {
 
 describe('mapperProvider', () => {
   test('maps array to object by keys', () => {
-    const mapper = mapperProvider(['name', 'age']);
-    expect(mapper(['Vasya', 30])).toEqual({
+    const mapper = mapperProvider([
+      'name',
+      'age',
+    ]);
+    expect(mapper([
+      'Vasya',
+      30,
+    ])).toEqual({
       name: 'Vasya',
       age: 30,
     });
   });
   test('without values returns dst or new object', () => {
-    const mapper = mapperProvider(['a', 'b']);
+    const mapper = mapperProvider([
+      'a',
+      'b',
+    ]);
     const dst = {};
     expect(mapper(undefined, dst)).toBe(dst);
     expect(mapper()).toEqual({});

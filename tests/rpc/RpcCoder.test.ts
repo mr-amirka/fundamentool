@@ -89,7 +89,10 @@ describe('RpcCoder — objects and arrays', () => {
     const obj = {
       user: {
         name: 'Bob',
-        tags: ['a', 'b'],
+        tags: [
+          'a',
+          'b',
+        ],
       },
     };
     expect(server.decode(client.encode(obj))).toEqual(obj);

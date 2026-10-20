@@ -12,7 +12,10 @@ describe('merge', () => {
       height: 170,
     };
 
-    const dst = merge([obj1, obj2]);
+    const dst = merge([
+      obj1,
+      obj2,
+    ]);
 
     expect(dst).toEqual({
       name: 'Vasya',
@@ -32,7 +35,10 @@ describe('merge', () => {
       country: 'RU',
     };
 
-    const dst = merge([obj1, obj2], base);
+    const dst = merge([
+      obj1,
+      obj2,
+    ], base);
 
     expect(dst).toBe(base);
     expect(dst).toEqual({

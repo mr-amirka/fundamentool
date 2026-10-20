@@ -15,7 +15,10 @@ describe('bindMethods', () => {
     }
 
     const counter = new Counter();
-    bindMethods(counter, ['increment', 'decrement']);
+    bindMethods(counter, [
+      'increment',
+      'decrement',
+    ]);
 
     const {
       increment, decrement,

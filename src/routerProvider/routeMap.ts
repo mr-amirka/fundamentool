@@ -42,7 +42,10 @@ export function routerForObservableMapProvider<T>(_routes: TRouteArgs<T>[],
 
     const handler = (isFunction(render) ? render : wrapper(render)) as TRouteHandler<T>;
 
-    return [routeParseProvider(route.slice(0, scopePos).replace(/[-_]/gim, '[-_]') + route.slice(scopePos, length)), handler];
+    return [
+      routeParseProvider(route.slice(0, scopePos).replace(/[-_]/gim, '[-_]') + route.slice(scopePos, length)),
+      handler,
+    ];
   });
   return (state: TRouterState): T & TRoute => {
     const {

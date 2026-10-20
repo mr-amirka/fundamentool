@@ -87,7 +87,16 @@ const PREACT: TLibrary = {
   },
 };
 
-describe.each([['React', REACT], ['Preact', PREACT]])('router.NavigationHostProvider with %s', (_name, library) => {
+describe.each([
+  [
+    'React',
+    REACT,
+  ],
+  [
+    'Preact',
+    PREACT,
+  ],
+])('router.NavigationHostProvider with %s', (_name, library) => {
   let container: HTMLElement;
   let unmount: () => void;
   let harness: ReturnType<typeof setup>;
@@ -185,31 +194,39 @@ describe.each([['React', REACT], ['Preact', PREACT]])('router.NavigationHostProv
     ]);
 
   it('the top page is shown; a kept page under it stays mounted, hidden; others unmount', async () => {
-    expect(layers()).toEqual([[
-      '0',
-      'block',
-      null,
-    ]]);
+    expect(layers()).toEqual([
+      [
+        '0',
+        'block',
+        null,
+      ],
+    ]);
     await library.act(() => nav.go('/detail').then(() => undefined));
-    expect(layers()).toEqual([[
-      '0',
-      'none',
-      'true',
-    ], [
-      '1',
-      'block',
-      null,
-    ]]);
+    expect(layers()).toEqual([
+      [
+        '0',
+        'none',
+        'true',
+      ],
+      [
+        '1',
+        'block',
+        null,
+      ],
+    ]);
     await library.act(() => nav.go('/more').then(() => undefined));
-    expect(layers()).toEqual([[
-      '0',
-      'none',
-      'true',
-    ], [
-      '2',
-      'block',
-      null,
-    ]]);
+    expect(layers()).toEqual([
+      [
+        '0',
+        'none',
+        'true',
+      ],
+      [
+        '2',
+        'block',
+        null,
+      ],
+    ]);
     expect(log).toEqual([
       'open 0',
       'forward 0',
@@ -253,7 +270,10 @@ describe.each([['React', REACT], ['Preact', PREACT]])('router.NavigationHostProv
       (container.querySelector('[data-window] button') as HTMLButtonElement).click();
       await result;
     });
-    expect(log).toEqual(['covered', 'uncovered']);
+    expect(log).toEqual([
+      'covered',
+      'uncovered',
+    ]);
     await library.act(async () => {
       await expect(nav.go('/next')).resolves.toBe(false);
     });
