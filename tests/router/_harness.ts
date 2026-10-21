@@ -321,8 +321,8 @@ function wire(
       id, handler, forwardOptions,
     ),
     onBeforeLeave: (id: number, guard: TLeaveGuard) => nav.onBeforeLeave(id, guard),
-    /** Whether the entry is marked as being left (its guards are asked). */
-    isClosing: (id: number) => nav.getState().entries.some((entry) => entry.id === id && entry.closing),
+    /** Whether the entry's leave is being confirmed (its guards are asked). */
+    isConfirmingLeave: (id: number) => nav.isConfirmingLeave(id),
   };
 
   const browser = {

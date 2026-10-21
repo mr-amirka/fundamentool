@@ -143,8 +143,23 @@ export const NavigationHost = nav.NavigationHostProvider({
   `nav.getNextLocation()` (what Forward brings back), `nav.$depth` (the depth, observable —
   `nav.$depth.watch((depth) => …)`), `nav.$state` / `nav.getState()` / `nav.useNavigatorState()` (everything).
 - **Guards and handlers**: `nav.onBeforeLeave`, `nav.onForward`, `nav.whileOpen` and the hooks `useBeforeLeave`,
-  `useOnForward`, `useWhileOpen`, `useEntry`; an entry is `closing` while its leave guards are asked
-  (`<Button disabled={nav.useEntry().closing}>`).
+  `useOnForward`, `useWhileOpen`. A hook belongs to the page it is called on (outside the host — the page on top); it
+  takes no id. **Leave being confirmed** (`entry.confirmingLeave`, D-047) — while the page's leave guards are asked it
+  may be left, or stay:
+
+  ```tsx
+  const confirming = nav.useConfirmingLeave();   // re-renders only when it flips
+  nav.useConfirmingLeaveEffect(() => {           // no re-render
+    video.pause();
+    return () => video.play();                   // confirming ended: the player stayed (or the page is gone)
+  });
+  nav.isConfirmingLeave(entryId);                // outside components
+  nav.watchConfirmingLeave(entryId, (confirming) => …);
+  ```
+
+  `nav.useEntry()` — the whole entry; it re-renders at every change of it, every step of the page included: prefer the
+  hook for the one fact you need. The host passes a page's id down, so the hooks under a page don't re-render at its
+  steps.
 - **Links**: `nav.Link` / `nav.NavLink` with `href` — a string read as `<a href>` reads it (`/x`, `?q=1`, `42`) or a
   change (`{ path, query }`, encoded); `NavLink` is active on its address, under it (`activeAsParent`), or while the
   section it leads to is shown.

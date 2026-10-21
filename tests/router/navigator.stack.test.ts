@@ -638,7 +638,7 @@ describe('createNavigator — the stack', () => {
     ]));
   });
 
-  it('back tells whether the entry was left; the entry is `closing` in the state while its guards are asked', async () => {
+  it('back tells whether the entry was left; the entry is `confirmingLeave` while its guards are asked', async () => {
     const {
       nav,
     } = setup();
@@ -650,15 +650,15 @@ describe('createNavigator — the stack', () => {
       answer = resolve;
     }));
     const first = nav.back();
-    await waitFor(() => expect(nav.isClosing(id)).toBe(true));
+    await waitFor(() => expect(nav.isConfirmingLeave(id)).toBe(true));
     answer(false);
     await expect(first).resolves.toBe(false);
-    expect(nav.isClosing(id)).toBe(false);
+    expect(nav.isConfirmingLeave(id)).toBe(false);
     const second = nav.back();
-    await waitFor(() => expect(nav.isClosing(id)).toBe(true));
+    await waitFor(() => expect(nav.isConfirmingLeave(id)).toBe(true));
     answer(true);
     await expect(second).resolves.toBe(true);
-    expect(nav.isClosing(id)).toBe(false);
+    expect(nav.isConfirmingLeave(id)).toBe(false);
   });
 
   it('back after the stack changed while a guard was asked: nothing more to leave', async () => {
@@ -671,7 +671,7 @@ describe('createNavigator — the stack', () => {
       answer = resolve;
     }));
     const leaving = nav.back();
-    await waitFor(() => expect(nav.isClosing(nav.getState().page.id)).toBe(true));
+    await waitFor(() => expect(nav.isConfirmingLeave(nav.getState().page.id)).toBe(true));
     await nav.startOver('/a');
     answer(true);
     await expect(leaving).resolves.toBe(false);

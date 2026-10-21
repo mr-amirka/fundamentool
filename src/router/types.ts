@@ -215,8 +215,12 @@ export type TPageEntry<R = Record<string, unknown>> = {
   section: string | null;
   /** Restored after a reload and not shown since: in the stack, not mounted. */
   dormant: boolean;
-  /** Its leave guards are being asked: it may be left in a moment (a page can disable its buttons). */
-  closing: boolean;
+  /**
+   * Its leave guards are being asked ("discard changes?"): it may be left in a moment — or stay, if they refuse
+   * (D-047). Read it with `nav.useConfirmingLeave()` / `useConfirmingLeaveEffect` / `isConfirmingLeave` /
+   * `watchConfirmingLeave`.
+   */
+  confirmingLeave: boolean;
 };
 
 /** A window in the stack. */
@@ -229,8 +233,8 @@ export type TWindowEntry = {
   params: unknown;
   /** `false`: the browser's Forward doesn't reopen it after it was closed (D-024). */
   reopen: boolean;
-  /** Its leave guards are being asked. */
-  closing: boolean;
+  /** Its leave guards are being asked (it may stay). */
+  confirmingLeave: boolean;
 };
 
 export type TEntry<R = Record<string, unknown>> = TPageEntry<R> | TWindowEntry;

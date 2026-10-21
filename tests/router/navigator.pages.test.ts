@@ -44,6 +44,7 @@ import {
 import {
   inMemory,
   mount,
+  settle,
   setup,
   waitFor,
 } from './_harness';
@@ -235,6 +236,233 @@ describe('the same page (D-043)', () => {
       '/map/base',
       '/map/sat',
     ]);
+    unmount();
+  });
+});
+
+describe('confirmingLeave in its forms (D-047)', () => {
+  /** A navigator over home and a form page with a leave guard the test answers. */
+  function guarded() {
+    const made = inMemory('/#/home');
+    let answer: (value: boolean) => void = () => undefined;
+    const renders: string[] = [];
+    const effects: string[] = [];
+    function Form(): React.ReactElement {
+      const confirming = made.nav.useConfirmingLeave();
+      renders.push(String(confirming));
+      made.nav.useConfirmingLeaveEffect(() => {
+        effects.push('start');
+        return () => effects.push('end');
+      });
+      made.nav.useBeforeLeave(() => new Promise<boolean>((resolve) => {
+        answer = resolve;
+      }));
+      return h(
+        'p', null, 'form',
+      );
+    }
+    const view = made.nav.NavigationHostProvider({
+      routes: [
+        [
+          '/home',
+          {
+            main: Plain,
+          },
+        ],
+        [
+          '/form',
+          {
+            main: Form,
+            quietQuery: true, // a query step doesn't re-render the page: what re-renders it is the hook alone
+          },
+        ],
+      ],
+    });
+    return {
+      ...made,
+      view,
+      renders,
+      effects,
+      answer: (value: boolean) => answer(value),
+    };
+  }
+
+  it('the hook re-renders only when it flips — not at the page\'s own steps; the effect starts and ends with it', async () => {
+    const {
+      nav, router, view, renders, effects, answer,
+    } = guarded();
+    const {
+      unmount,
+    } = mount(view);
+    await act(() => router.pushLocation({
+      path: '/form',
+    }).then(() => undefined));
+    const id = nav.getState().page.id;
+    const flips: boolean[] = [];
+    const stop = nav.watchConfirmingLeave(id, (confirming) => flips.push(confirming));
+    await act(async () => {
+      router.params.set('step', 2); // a step of the page: no re-render for the hook
+      await waitFor(() => expect(nav.getHistory()).toHaveLength(3));
+    });
+    expect(renders).toEqual(['false']);
+    // Back: the guard is asked — refused, the page stays
+    let leaving = router.backRepeat(2);
+    await act(async () => {
+      await waitFor(() => expect(nav.isConfirmingLeave(id)).toBe(true));
+    });
+    expect(renders).toEqual([
+      'false',
+      'true',
+    ]);
+    expect(effects).toEqual(['start']);
+    await act(async () => {
+      answer(false);
+      await leaving;
+    });
+    expect(nav.isConfirmingLeave(id)).toBe(false);
+    expect(effects).toEqual([
+      'start',
+      'end',
+    ]);
+    // Back again: agreed — the page is gone
+    leaving = router.backRepeat(2);
+    await act(async () => {
+      await waitFor(() => expect(nav.isConfirmingLeave(id)).toBe(true));
+      answer(true);
+      await leaving;
+    });
+    expect(nav.getState().page.location.path).toBe('/home');
+    expect(effects).toEqual([
+      'start',
+      'end',
+      'start',
+      'end',
+    ]);
+    expect(flips).toEqual([
+      true,
+      false,
+      true,
+      false,
+    ]);
+    stop();
+    unmount();
+  });
+
+  it('mounted while the leave is being confirmed: the hook starts true, the effect runs at once; unmount ends it', async () => {
+    const {
+      nav, router, effects, renders,
+    } = guarded();
+    nav.NavigationHostProvider({
+      routes: [
+        [
+          '/home',
+          {
+            main: Plain,
+          },
+        ],
+        [
+          '/form',
+          {
+            main: Plain,
+          },
+        ],
+      ],
+    });
+    await router.pushLocation({
+      path: '/form',
+    });
+    const id = nav.getState().page.id;
+    nav.onBeforeLeave(id, () => new Promise<boolean>(() => undefined)); // never answers
+    void router.backLocation();
+    await waitFor(() => expect(nav.isConfirmingLeave(id)).toBe(true));
+    // A component outside the host belongs to the page on top — the form being confirmed.
+    function Probe(): React.ReactElement {
+      renders.push(String(nav.useConfirmingLeave()));
+      nav.useConfirmingLeaveEffect(() => {
+        effects.push('start');
+        return () => effects.push('end');
+      });
+      return h(
+        'b', null, 'probe',
+      );
+    }
+    const {
+      unmount,
+    } = mount(Probe);
+    expect(renders).toEqual(['true']);
+    expect(effects).toEqual(['start']);
+    unmount();
+    expect(effects).toEqual([
+      'start',
+      'end',
+    ]);
+  });
+});
+
+describe('useEntry (D-047)', () => {
+  it('follows its own entry — a kept page of another section, a window playing its exit — and only its own', async () => {
+    const {
+      nav, router,
+    } = inMemory('/#/a');
+    const seen: string[] = [];
+    function Page(): React.ReactElement {
+      const entry = nav.useEntry();
+      seen.push(`${entry.kind === 'page' ? entry.location.href : 'window'} ${String(entry.confirmingLeave)}`);
+      return h(
+        'p', null, 'page',
+      );
+    }
+    function Win(): React.ReactElement {
+      const entry = nav.useEntry();
+      seen.push(`window ${entry.depth}`);
+      return h(
+        'dialog', null, 'w',
+      );
+    }
+    const view = nav.NavigationHostProvider({
+      routes: [
+        [
+          '/a',
+          {
+            main: Page,
+            section: true,
+            keep: true,
+          },
+        ],
+        [
+          '/b',
+          {
+            main: Plain,
+            section: true,
+          },
+        ],
+      ],
+    });
+    const {
+      unmount,
+    } = mount(view);
+    await act(() => router.pushLocation({
+      path: '/b',
+    }).then(() => undefined)); // /a stays mounted, hidden — in another section's stack
+    await act(() => router.pushLocation({
+      path: '/b',
+      query: {
+        x: 1,
+      },
+    }).then(() => undefined)); // the shown section's start replaced; /a untouched
+    expect(seen).toEqual(['/a false']);
+    await act(() => router.pushLocation({
+      path: '/a',
+    }).then(() => undefined));
+    void nav.open(Win);
+    await act(() => waitFor(() => expect(nav.getHistory()).toHaveLength(2)));
+    await act(() => router.backLocation().then(() => undefined)); // the window plays its exit: still its entry
+    expect(seen).toEqual([
+      '/a false', // back on /a: the kept page isn't drawn again
+      'window 1',
+      'window 1', // drawn closed (`open: false`) — its entry still there while it plays its exit
+    ]);
+    await act(() => settle(350));
     unmount();
   });
 });

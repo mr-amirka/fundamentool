@@ -83,6 +83,8 @@ export type TNavigatorCore = {
   setRoutes: (routes: readonly TRouteRow[]) => void;
   /** The section whose root a location is (`null` — not a root, or no sections). */
   rootOf: (location: TUrlProps) => string | null;
+  isConfirmingLeave: (entryId: number) => boolean;
+  watchConfirmingLeave: (entryId: number, listener: (confirming: boolean) => void) => () => void;
 };
 
 /** A link's props: where it goes, and the anchor's own. */
@@ -170,6 +172,8 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
     whileOpen,
     setRoutes,
     rootOf,
+    isConfirmingLeave,
+    watchConfirmingLeave,
   } = core;
   const h = createElement;
   const primitive = router.historyPrimitive;
@@ -178,13 +182,27 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
   const EntryContext = createContext(null);
 
   /** The entry a component belongs to: the one it is rendered in, or (outside the host) the top entry at render. */
-  function currentEntry(): TEntry {
-    const entry = useContext(EntryContext) as TEntry | null;
-    if (entry) {
-      return entry;
+  function currentEntryId(): number {
+    const id = useContext(EntryContext) as number | null;
+    if (id !== null) {
+      return id;
     }
     const all = entries();
-    return all[all.length - 1];
+    return all[all.length - 1].id;
+  }
+
+  /**
+   * The entry `id` names in a state: the latest of its steps in the stack, a kept page of another section, or a window
+   * playing its exit; `undefined` — it is gone.
+   */
+  function entryIn(value: TNavigatorState, id: number): TEntry | undefined {
+    const list = value.entries;
+    for (let i = list.length - 1; i >= 0; i--) {
+      if (list[i].id === id) {
+        return list[i];
+      }
+    }
+    return value.layers.find((entry) => entry.id === id) || value.leaving.find((entry) => entry.id === id);
   }
 
   /** Keeps the latest callback in a ref, so a registration made once calls what the component rendered last. */
@@ -231,7 +249,8 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
     function withEntry(entry: TEntry, child: unknown): unknown {
       return h(
         (EntryContext as { Provider: unknown }).Provider, {
-          value: entry,
+          // The id, not the entry: it stays the same through the page's steps, so the hooks under it don't re-render.
+          value: entry.id,
           key: entry.id,
         }, child,
       );
@@ -243,7 +262,7 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
     /**
      * A page by its row; a path no row fits draws nothing ("not found" is a catch-all last row). Drawn again only when
      * its location changed — and for a `quietQuery` row, only when its path did (D-043): the page keeps its `route`, its
-     * parts follow the query through `router.params`. Its entry's flags (`closing`, …) reach it through `useEntry`.
+     * parts follow the query through `router.params`. Its entry's flags reach it through the hooks (`useConfirmingLeave`, …).
      */
     function drawPage(entry: TPageEntry, next: typeof drawn): unknown {
       const row = entry.row;
@@ -317,23 +336,32 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
 
   /** The entry this component is rendered in (inside the host). */
   function useEntry(): TEntry {
-    const entry = useContext(EntryContext) as TEntry | null;
-    if (!entry) {
+    const id = useContext(EntryContext) as number | null;
+    if (id === null) {
       throw new Error(`${WHERE}: useEntry is used outside a page or a window of the NavigationHost`);
     }
+    const [
+      entry,
+      setEntry,
+    ] = useState(() => entryIn($state.getState(), id) as TEntry);
+    // Re-renders when this entry changes (a step of the page, a flag); a gone entry keeps its last value.
+    useEffect(() => $state.watch((value) => {
+      const next = entryIn(value, id);
+      next && setEntry(next);
+    }), []);
     return entry;
   }
 
   /** `effect` while this component's entry is open: cleaned up when it starts being left, run again if that's refused. */
   function useWhileOpen(effect: () => void | (() => void)): void {
-    const entryId = currentEntry().id;
+    const entryId = currentEntryId();
     const latest = useLatest(effect);
     useEffect(() => whileOpen(entryId, () => latest.current()), []);
   }
 
   /** `handler` before a page (with `{ windows: true }` — also a window) opens over this component's entry. */
   function useOnForward(handler: TForwardHandler, options?: { windows?: boolean }): void {
-    const entryId = currentEntry().id;
+    const entryId = currentEntryId();
     const latest = useLatest(handler);
     const windows = Boolean(options?.windows);
     useEffect(() => onForward(
@@ -345,9 +373,64 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
 
   /** `guard` before this component's entry is left by going back — "discard changes?". */
   function useBeforeLeave(guard: TLeaveGuard): void {
-    const entryId = currentEntry().id;
+    const entryId = currentEntryId();
     const latest = useLatest(guard);
     useEffect(() => onBeforeLeave(entryId, () => latest.current()), []);
+  }
+
+  /**
+   * Whether this page's leave is being confirmed (D-047) — the component re-renders only when it flips, not at every
+   * step of the page.
+   *
+   * @example
+   * const confirming = nav.useConfirmingLeave();
+   * return <Button disabled={confirming}>Save</Button>;
+   */
+  function useConfirmingLeave(): boolean {
+    const entryId = currentEntryId();
+    const [
+      value,
+      setValue,
+    ] = useState(() => isConfirmingLeave(entryId));
+    useEffect(() => watchConfirmingLeave(entryId, setValue), []);
+    return value;
+  }
+
+  /**
+   * `effect` runs when this page's leave starts being confirmed; its cleanup runs when that ends — the leave refused
+   * (the page stays) or done (the page is gone) — or when the component unmounts (D-047). No re-render.
+   *
+   * @example
+   * nav.useConfirmingLeaveEffect(() => {
+   *   video.pause();
+   *   return () => video.play(); // the player chose to stay
+   * });
+   */
+  function useConfirmingLeaveEffect(effect: () => void | (() => void)): void {
+    const entryId = currentEntryId();
+    const latest = useLatest(effect);
+    useEffect(() => {
+      let cleanup: void | (() => void);
+      const end = () => {
+        isFunction(cleanup) && cleanup();
+        cleanup = undefined;
+      };
+      // Mounted while it is already being confirmed: the effect runs now.
+      if (isConfirmingLeave(entryId)) {
+        cleanup = latest.current();
+      }
+      const stop = watchConfirmingLeave(entryId, (confirming) => {
+        if (confirming) {
+          cleanup = latest.current();
+        } else {
+          end();
+        }
+      });
+      return () => {
+        stop();
+        end();
+      };
+    }, []);
   }
 
   /** Where a link goes: its `href` read against the current location (left out — the current location). */
@@ -420,6 +503,8 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
     useWhileOpen,
     useOnForward,
     useBeforeLeave,
+    useConfirmingLeave,
+    useConfirmingLeaveEffect,
     Link,
     NavLink,
   };

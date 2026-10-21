@@ -276,7 +276,7 @@ export function createNavigator(deps: TNavigatorDeps) {
       params: found ? found.params : {},
       section: (found && rootKeys.get(found.row)) ?? section,
       dormant: quietStep,
-      closing: false,
+      confirmingLeave: false,
     };
   }
 
@@ -354,10 +354,10 @@ export function createNavigator(deps: TNavigatorDeps) {
   }
 
   /** Marks the entries `ids` names as having their leave guards asked (or not); the state isn't emitted. */
-  function markClosing(ids: ReadonlySet<number>, closing: boolean): void {
-    entries = entries.map((entry) => (ids.has(entry.id) && entry.closing !== closing ? {
+  function markConfirming(ids: ReadonlySet<number>, confirming: boolean): void {
+    entries = entries.map((entry) => (ids.has(entry.id) && entry.confirmingLeave !== confirming ? {
       ...entry,
-      closing,
+      confirmingLeave: confirming,
     } : entry));
   }
 
@@ -498,7 +498,7 @@ export function createNavigator(deps: TNavigatorDeps) {
           window: null,
           params: undefined,
           reopen: false,
-          closing: false,
+          confirmingLeave: false,
         };
       }
       return {
@@ -578,9 +578,9 @@ export function createNavigator(deps: TNavigatorDeps) {
   /** Removes every entry above `depth`: windows resolve and play their exit; the new top's return cleanups run. */
   function removeAbove(depth: number): void {
     // What is left isn't being left any more (Forward may bring it back).
-    const removed = entries.slice(depth + 1).map((entry) => (entry.closing ? {
+    const removed = entries.slice(depth + 1).map((entry) => (entry.confirmingLeave ? {
       ...entry,
-      closing: false,
+      confirmingLeave: false,
     } : entry));
     entries = entries.slice(0, depth + 1);
     // What was left goes ahead (Forward brings it back), up to a window that isn't reopened (D-024).
@@ -680,12 +680,12 @@ export function createNavigator(deps: TNavigatorDeps) {
   }
 
   /**
-   * Asks the guards of `removed`, top entry first; meanwhile they are `closing` in the state. All agree — go to
+   * Asks the guards of `removed`, top entry first; meanwhile they are `confirmingLeave` in the state. All agree — go to
    * `target`. One refuses — stop at its entry: what was above it is left, it and what is below stay (their `whileOpen`
    * effects run again).
    */
   async function confirmLeave(target: number, removed: readonly TEntry[]): Promise<boolean> {
-    markClosing(new Set(removed.map((entry) => entry.id)), true);
+    markConfirming(new Set(removed.map((entry) => entry.id)), true);
     publish();
     let stop = target;
     const asked = new Set<number>();
@@ -706,7 +706,7 @@ export function createNavigator(deps: TNavigatorDeps) {
     const staying = removed.filter((entry) => entry.depth <= stop);
     reopenOpened(staying);
     if (staying.length) {
-      markClosing(new Set(staying.map((entry) => entry.id)), false);
+      markConfirming(new Set(staying.map((entry) => entry.id)), false);
       publish();
     }
     return enqueue(async () => {
@@ -946,7 +946,7 @@ export function createNavigator(deps: TNavigatorDeps) {
           window: win,
           params,
           reopen: options?.reopen !== false,
-          closing: false,
+          confirmingLeave: false,
         };
         resolvers.set(entry.id, done as (result: unknown) => void);
         push(entry);
@@ -1092,6 +1092,29 @@ export function createNavigator(deps: TNavigatorDeps) {
     }
   }
 
+  // ── whether an entry's leave is being confirmed (D-047) ───────────────────────────────────────────────────────
+
+  /** Whether the entry's leave guards are being asked now ("discard changes?"); it may stay. */
+  const isConfirmingLeave = (entryId: number): boolean => entries.some((entry) => entry.id === entryId && entry.confirmingLeave);
+
+  /**
+   * Calls `listener` when the entry's `confirmingLeave` flips — only then (`true` — its guards are asked; `false` — they
+   * answered: it stays, or it is gone). Returns the unsubscribe.
+   *
+   * @example
+   * const stop = nav.watchConfirmingLeave(entryId, (confirming) => autosave.pause(confirming));
+   */
+  function watchConfirmingLeave(entryId: number, listener: (confirming: boolean) => void): () => void {
+    let last = isConfirmingLeave(entryId);
+    return $state.watch((value) => {
+      const now = value.entries.some((entry) => entry.id === entryId && entry.confirmingLeave);
+      if (now !== last) {
+        last = now;
+        listener(now);
+      }
+    });
+  }
+
   // ── reading the stack (shortcuts, D-045) ──────────────────────────────────────────────────────────────────────
 
   /** The stack, bottom to top: pages and windows (the reference's `getHistory`). */
@@ -1171,7 +1194,7 @@ export function createNavigator(deps: TNavigatorDeps) {
         entry.location, entry.depth, entry.section, entry.id,
       ),
       dormant: entry.dormant,
-      closing: entry.closing,
+      confirmingLeave: entry.confirmingLeave,
     } : entry);
     entries = entries.map(describe);
     ahead = ahead.map(describe);
@@ -1234,6 +1257,8 @@ export function createNavigator(deps: TNavigatorDeps) {
     onBeforeLeave,
     setRoutes,
     rootOf,
+    isConfirmingLeave,
+    watchConfirmingLeave,
   });
 
   return {
@@ -1244,6 +1269,8 @@ export function createNavigator(deps: TNavigatorDeps) {
     getHistory,
     getPrevLocation,
     getNextLocation,
+    isConfirmingLeave,
+    watchConfirmingLeave,
     open,
     close,
     startOver,

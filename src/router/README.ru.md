@@ -144,8 +144,22 @@ export const NavigationHost = nav.NavigationHostProvider({
   `nav.getNextLocation()` (что вернёт Вперёд), `nav.$depth` (глубина, наблюдаемая — `nav.$depth.watch((depth) => …)`),
   `nav.$state` / `nav.getState()` / `nav.useNavigatorState()` (всё).
 - **Подтверждения и обработчики**: `nav.onBeforeLeave`, `nav.onForward`, `nav.whileOpen` и хуки `useBeforeLeave`,
-  `useOnForward`, `useWhileOpen`, `useEntry`; запись `closing`, пока спрашивают её подтверждения ухода
-  (`<Button disabled={nav.useEntry().closing}>`).
+  `useOnForward`, `useWhileOpen`. Хук принадлежит странице, на которой вызван (вне хоста — верхней); id он не берёт.
+  **Уход подтверждается** (`entry.confirmingLeave`, D-047) — пока спрашивают подтверждения ухода со страницы, её могут
+  покинуть, а могут и остаться:
+
+  ```tsx
+  const confirming = nav.useConfirmingLeave();   // перерисовывает, только когда значение меняется
+  nav.useConfirmingLeaveEffect(() => {           // без перерисовки
+    video.pause();
+    return () => video.play();                   // подтверждение кончилось: игрок остался (или страницы уже нет)
+  });
+  nav.isConfirmingLeave(entryId);                // вне компонентов
+  nav.watchConfirmingLeave(entryId, (confirming) => …);
+  ```
+
+  `nav.useEntry()` — запись целиком; перерисовывает при любом её изменении, каждый шаг страницы тоже: для одного факта
+  лучше свой хук. Хост передаёт вниз id страницы, поэтому хуки под страницей не перерисовываются на её шагах.
 - **Ссылки**: `nav.Link` / `nav.NavLink` с `href` — строкой, как её читает `<a href>` (`/x`, `?q=1`, `42`), или
   изменением (`{ path, query }`, закодировано); `NavLink` активна на своём адресе, под ним (`activeAsParent`) или пока
   показан раздел, куда она ведёт.
