@@ -399,6 +399,77 @@ describe('confirmingLeave in its forms (D-047)', () => {
   });
 });
 
+describe('the fact hooks outside the host (D-047)', () => {
+  it('follow whichever page is on top — not the one on top when they first rendered', async () => {
+    const {
+      nav, router,
+    } = inMemory('/#/home');
+    nav.NavigationHostProvider({
+      routes: [
+        [
+          '/home',
+          {
+            main: Plain,
+          },
+        ],
+        [
+          '/form',
+          {
+            main: Plain,
+          },
+        ],
+      ],
+    });
+    const seen: string[] = [];
+    const effects: string[] = [];
+    // An app-level component (a header): mounted while home is on top
+    function Header(): React.ReactElement {
+      seen.push(String(nav.useConfirmingLeave()));
+      nav.useConfirmingLeaveEffect(() => {
+        effects.push('start');
+        return () => effects.push('end');
+      });
+      return h(
+        'header', null, 'h',
+      );
+    }
+    const {
+      unmount,
+    } = mount(Header);
+    await act(() => router.pushLocation({
+      path: '/form',
+    }).then(() => undefined));
+    let answer: (value: boolean) => void = () => undefined;
+    nav.onBeforeLeave(nav.getState().page.id, () => new Promise<boolean>((resolve) => {
+      answer = resolve;
+    }));
+    let leaving: Promise<boolean> = Promise.resolve(false);
+    await act(async () => {
+      leaving = router.backLocation();
+      await waitFor(() => expect(nav.isConfirmingLeave(nav.getState().page.id)).toBe(true));
+    });
+    expect(seen).toEqual([
+      'false',
+      'true',
+    ]); // the form, now on top, is being confirmed
+    expect(effects).toEqual(['start']);
+    await act(async () => {
+      answer(true);
+      await leaving;
+    });
+    expect(seen).toEqual([
+      'false',
+      'true',
+      'false',
+    ]);
+    expect(effects).toEqual([
+      'start',
+      'end',
+    ]);
+    unmount();
+  });
+});
+
 describe('useEntry (D-047)', () => {
   it('follows its own entry — a kept page of another section, a window playing its exit — and only its own', async () => {
     const {

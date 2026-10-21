@@ -143,8 +143,9 @@ export const NavigationHost = nav.NavigationHostProvider({
   `nav.getNextLocation()` (what Forward brings back), `nav.$depth` (the depth, observable —
   `nav.$depth.watch((depth) => …)`), `nav.$state` / `nav.getState()` / `nav.useNavigatorState()` (everything).
 - **Guards and handlers**: `nav.onBeforeLeave`, `nav.onForward`, `nav.whileOpen` and the hooks `useBeforeLeave`,
-  `useOnForward`, `useWhileOpen`. A hook belongs to the page it is called on (outside the host — the page on top); it
-  takes no id. **Leave being confirmed** (`entry.confirmingLeave`, D-047) — while the page's leave guards are asked it
+  `useOnForward`, `useWhileOpen`. A hook belongs to the page it is called on (outside the host — the page on top; the
+  fact hooks `useConfirmingLeave` / `useConfirmingLeaveEffect` follow whichever entry is on top as it changes — a
+  header's mark stays right); it takes no id. **Leave being confirmed** (`entry.confirmingLeave`, D-047) — while the page's leave guards are asked it
   may be left, or stay:
 
   ```tsx

@@ -144,7 +144,9 @@ export const NavigationHost = nav.NavigationHostProvider({
   `nav.getNextLocation()` (что вернёт Вперёд), `nav.$depth` (глубина, наблюдаемая — `nav.$depth.watch((depth) => …)`),
   `nav.$state` / `nav.getState()` / `nav.useNavigatorState()` (всё).
 - **Подтверждения и обработчики**: `nav.onBeforeLeave`, `nav.onForward`, `nav.whileOpen` и хуки `useBeforeLeave`,
-  `useOnForward`, `useWhileOpen`. Хук принадлежит странице, на которой вызван (вне хоста — верхней); id он не берёт.
+  `useOnForward`, `useWhileOpen`. Хук принадлежит странице, на которой вызван (вне хоста — верхней; хуки фактов
+  `useConfirmingLeave` / `useConfirmingLeaveEffect` следуют за той записью, что сверху сейчас, — отметка в шапке остаётся
+  верной); id он не берёт.
   **Уход подтверждается** (`entry.confirmingLeave`, D-047) — пока спрашивают подтверждения ухода со страницы, её могут
   покинуть, а могут и остаться:
 

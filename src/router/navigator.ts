@@ -1257,8 +1257,6 @@ export function createNavigator(deps: TNavigatorDeps) {
     onBeforeLeave,
     setRoutes,
     rootOf,
-    isConfirmingLeave,
-    watchConfirmingLeave,
   });
 
   return {

@@ -83,8 +83,6 @@ export type TNavigatorCore = {
   setRoutes: (routes: readonly TRouteRow[]) => void;
   /** The section whose root a location is (`null` — not a root, or no sections). */
   rootOf: (location: TUrlProps) => string | null;
-  isConfirmingLeave: (entryId: number) => boolean;
-  watchConfirmingLeave: (entryId: number, listener: (confirming: boolean) => void) => () => void;
 };
 
 /** A link's props: where it goes, and the anchor's own. */
@@ -172,8 +170,6 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
     whileOpen,
     setRoutes,
     rootOf,
-    isConfirmingLeave,
-    watchConfirmingLeave,
   } = core;
   const h = createElement;
   const primitive = router.historyPrimitive;
@@ -203,6 +199,16 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
       }
     }
     return value.layers.find((entry) => entry.id === id) || value.leaving.find((entry) => entry.id === id);
+  }
+
+  /**
+   * Whether the entry a fact hook watches is having its leave confirmed: the page it is called on (`id` from the
+   * host), or — outside the host — whichever entry is on top in this state (it follows the top as it changes).
+   */
+  function confirmingIn(value: TNavigatorState, id: number | null): boolean {
+    const list = value.entries;
+    const watched = id === null ? list[list.length - 1].id : id;
+    return list.some((entry) => entry.id === watched && entry.confirmingLeave);
   }
 
   /** Keeps the latest callback in a ref, so a registration made once calls what the component rendered last. */
@@ -387,12 +393,22 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
    * return <Button disabled={confirming}>Save</Button>;
    */
   function useConfirmingLeave(): boolean {
-    const entryId = currentEntryId();
+    const id = useContext(EntryContext) as number | null;
     const [
       value,
       setValue,
-    ] = useState(() => isConfirmingLeave(entryId));
-    useEffect(() => watchConfirmingLeave(entryId, setValue), []);
+    ] = useState(() => confirmingIn($state.getState(), id));
+    useEffect(() => {
+      let last = confirmingIn($state.getState(), id);
+      setValue(last); // a flip between the render and the subscription
+      return $state.watch((state) => {
+        const now = confirmingIn(state, id);
+        if (now !== last) {
+          last = now;
+          setValue(now);
+        }
+      });
+    }, []);
     return value;
   }
 
@@ -407,7 +423,7 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
    * });
    */
   function useConfirmingLeaveEffect(effect: () => void | (() => void)): void {
-    const entryId = currentEntryId();
+    const id = useContext(EntryContext) as number | null;
     const latest = useLatest(effect);
     useEffect(() => {
       let cleanup: void | (() => void);
@@ -415,12 +431,18 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
         isFunction(cleanup) && cleanup();
         cleanup = undefined;
       };
+      let last = confirmingIn($state.getState(), id);
       // Mounted while it is already being confirmed: the effect runs now.
-      if (isConfirmingLeave(entryId)) {
+      if (last) {
         cleanup = latest.current();
       }
-      const stop = watchConfirmingLeave(entryId, (confirming) => {
-        if (confirming) {
+      const stop = $state.watch((state) => {
+        const now = confirmingIn(state, id);
+        if (now === last) {
+          return;
+        }
+        last = now;
+        if (now) {
           cleanup = latest.current();
         } else {
           end();
