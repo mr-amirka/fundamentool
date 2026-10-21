@@ -278,6 +278,18 @@ export class RpcConnect {
         return;
       }
 
+      case TRpcType.Event: {
+        // The client's signal: `abort` (its timeout, its AbortSignal) and the events it forwards reach the task's own
+        // `signal` — what `TRpcTaskContext.signal` promises ("aborted when the client cancels the call")
+        const task = this.slotTaskMap.get(requestId);
+        if (task) {
+          task[0].signal.dispatchEvent(new CustomEvent(dataArgs[2], {
+            detail: task[1]?.decode(dataArgs[3]) ?? dataArgs[3],
+          }));
+        }
+        return;
+      }
+
       case TRpcType.SubResult: {
         const task = this.slotTaskMap.get(requestId);
         if (!task) {

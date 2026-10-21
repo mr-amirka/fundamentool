@@ -4,43 +4,9 @@ import {
 import {
   RpcConnect,
 } from '../../src/rpc/RpcConnect';
-
-function makeChannel() {
-  type Listener = (msg: any) => void;
-  const clientListeners: Listener[] = [];
-  const serverListeners: Listener[] = [];
-
-  const clientOptions = {
-    postMessage: (msg: any) => {
-      serverListeners[0]?.(msg);
-      return () => {};
-    },
-    onMessage: (cb: Listener) => {
-      clientListeners.push(cb);
-      return () => {
-        clientListeners.splice(clientListeners.indexOf(cb), 1);
-      };
-    },
-  };
-
-  const serverOptions = {
-    postMessage: (msg: any) => {
-      clientListeners.forEach((cb) => cb(msg));
-      return () => {};
-    },
-    onMessage: (cb: Listener) => {
-      serverListeners.push(cb);
-      return () => {
-        serverListeners.splice(serverListeners.indexOf(cb), 1);
-      };
-    },
-  };
-
-  return {
-    clientOptions,
-    serverOptions,
-  };
-}
+import {
+  makeChannel,
+} from './_channel';
 
 describe('RpcClient ↔ RpcConnect integration', () => {
   test('client.call resolves with server export result', async () => {

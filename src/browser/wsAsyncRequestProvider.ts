@@ -146,9 +146,17 @@ export function wsAsyncRequestProvider<TResponse = any>(wsUrl: string,
     }
   }
 
+  /** Rejects every request that waits — sent and not sent yet (it would hang otherwise). */
+  function failAll(error: any): void {
+    expectedMain.error(error);
+    stackMain.eachPop((item) => {
+      item[1](error);
+    });
+  }
+
   function reconnect(error: any, lazy?: boolean): any {
     if (closed) {
-      return expectedMain.error(error);
+      return failAll(error);
     }
     reconnection = 1;
     if (lazy) {
@@ -201,7 +209,8 @@ export function wsAsyncRequestProvider<TResponse = any>(wsUrl: string,
           return;
         }
         if (hasAfterRequest) {
-          Promise.all(promises).then(wrapError).then(() => {
+          // Its own requests settled — answered or failed (a failure has already reconnected): go on either way
+          Promise.all(promises).then(wrapError, wrapError).then(() => {
             if (socket) {
               (socket as any).onclose = (socket as any).onerror = once((err2: any) => {
                 destroy();
@@ -216,7 +225,7 @@ export function wsAsyncRequestProvider<TResponse = any>(wsUrl: string,
         }
         const err = errorBox?.[0];
         if (err) {
-          expectedMain.error(err);
+          failAll(err);
           reconnection = 0;
           return;
         }
@@ -304,6 +313,7 @@ export function wsAsyncRequestProvider<TResponse = any>(wsUrl: string,
   (request as any).close = () => {
     closed = 1;
     destroy();
+    failAll(new Error('Connection is closed'));
   };
   (request as any).reset = destroy;
 

@@ -305,7 +305,7 @@ export class RpcCoder {
               TRpcEncodedType.Error,
               encodeObject({
                 name: value.name,
-                message: value.toString(),
+                message: value.message,
                 code: (value as any).code || 0,
               }),
             ];
