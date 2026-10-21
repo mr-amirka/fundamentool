@@ -187,8 +187,10 @@ export const NavigationHost = nav.NavigationHostProvider({
   a page don't re-render at its steps.
 - **Links**: `nav.Link` / `nav.NavLink` are fundamentool's `linksProvider` (`src/view` — links for any router, with a
   navigator or without) plus the sections: `href` — a string read as `<a href>` reads it (`/x`, `?q=1`, `42`) or a
-  change (`{ path, query }`, encoded); `NavLink` is active on its address, under it (`activeAsParent`), when told
-  (`active`), or while the section it leads to is shown; each re-renders only when its own target or mark changes.
+  change (`{ path, query }`, encoded); with a scheme or a host (`https://…`, `mailto:…`) — another site's, a plain
+  anchor. A click with a modifier key (a new tab), `target="_blank"` or `download` is the browser's. `NavLink` is
+  active on its address, under it (`activeAsParent`), when told (`active`), or while the section it leads to is shown;
+  each re-renders only when its own target or mark changes.
 
 A five-tab test app using all of it: web-games `frontend/labs/navigation`.
 

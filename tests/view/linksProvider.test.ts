@@ -59,6 +59,31 @@ function setup(start = '/#/planets?n=Earth') {
   };
 }
 
+/**
+ * Clicks `element` with `init` (a modifier key, a button); resolves whether the link took the click (prevented the
+ * browser's default). Read after the links' handler, then prevented here — jsdom doesn't navigate.
+ */
+async function clickWith(
+  container: HTMLElement, element: HTMLElement, init: MouseEventInit,
+): Promise<boolean> {
+  let taken = false;
+  const look = (event: Event) => {
+    taken = event.defaultPrevented;
+    event.preventDefault();
+  };
+  container.addEventListener('click', look);
+  await act(async () => {
+    element.dispatchEvent(new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      ...init,
+    }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+  container.removeEventListener('click', look);
+  return taken;
+}
+
 function mount(view: () => unknown) {
   const container = document.createElement('div');
   const root = createRoot(container);
@@ -191,6 +216,128 @@ describe('linksProvider — a router without a navigator', () => {
     }).then(() => undefined));
     expect(className('planets')).toBe('tab');
     expect(className('stars')).toBe('active');
+    unmount();
+  });
+
+  it('a click the browser handles — a modifier key, another button, a target, a download — is left to it; onClick hears it', async () => {
+    const {
+      router, Link,
+    } = setup('/#/planets');
+    const L = Link as unknown as React.FC<TLinkProps>;
+    const heard: string[] = [];
+    const view = () => React.createElement(
+      'nav', null,
+      React.createElement(L, {
+        href: '/moons',
+        onClick: () => {
+          heard.push('plain');
+        },
+        'data-link': 'plain',
+      }),
+      React.createElement(L, {
+        href: '/moons',
+        target: '_blank',
+        onClick: () => false, // ignored: no step to cancel
+        'data-link': 'blank',
+      }),
+      React.createElement(L, {
+        href: '/moons',
+        download: 'moons.html',
+        'data-link': 'download',
+      }),
+      React.createElement(L, {
+        href: '/moons',
+        target: '_self',
+        'data-link': 'self',
+      }),
+    );
+    const {
+      container, unmount,
+    } = mount(view);
+    const at = (name: string) => container.querySelector(`[data-link="${name}"]`) as HTMLAnchorElement;
+    for (const init of [
+      {
+        metaKey: true,
+      },
+      {
+        ctrlKey: true,
+      },
+      {
+        shiftKey: true,
+      },
+      {
+        altKey: true,
+      },
+      {
+        button: 1,
+      },
+    ]) {
+      await expect(clickWith(
+        container, at('plain'), init,
+      )).resolves.toBe(false); // not prevented: the browser opens it
+    }
+    await expect(clickWith(
+      container, at('blank'), {},
+    )).resolves.toBe(false);
+    await expect(clickWith(
+      container, at('download'), {},
+    )).resolves.toBe(false);
+    expect(heard).toEqual([
+      'plain',
+      'plain',
+      'plain',
+      'plain',
+      'plain',
+    ]);
+    expect(router.getLocation().path).toBe('/planets'); // no step was taken
+    await expect(clickWith(
+      container, at('self'), {},
+    )).resolves.toBe(true); // `_self` — a step of ours
+    expect(router.getLocation().path).toBe('/moons');
+    unmount();
+  });
+
+  it('an href outside the router\'s part (another site, mailto:, a host) is a plain anchor; NavLink isn\'t marked by it', async () => {
+    const {
+      router, Link, NavLink,
+    } = setup('/#/faq');
+    const L = Link as unknown as React.FC<TLinkProps>;
+    const N = NavLink as unknown as React.FC<TLinkProps>;
+    const heard: string[] = [];
+    const view = () => React.createElement(
+      'nav', null,
+      React.createElement(L, {
+        href: 'https://vk.com/faq?from=app',
+        onClick: () => {
+          heard.push('site');
+        },
+        'data-link': 'site',
+      }),
+      React.createElement(L, {
+        href: 'mailto:help@example.com',
+        'data-link': 'mail',
+      }),
+      React.createElement(N, {
+        href: '//cdn.example/faq',
+        'data-link': 'host',
+      }),
+    );
+    const {
+      container, unmount,
+    } = mount(view);
+    const at = (name: string) => container.querySelector(`[data-link="${name}"]`) as HTMLAnchorElement;
+    expect(at('site').getAttribute('href')).toBe('https://vk.com/faq?from=app');
+    expect(at('mail').getAttribute('href')).toBe('mailto:help@example.com');
+    expect(at('host').getAttribute('href')).toBe('//cdn.example/faq');
+    expect(at('host').className).toBe(''); // its path is the one shown, but it leads elsewhere
+    await expect(clickWith(
+      container, at('site'), {},
+    )).resolves.toBe(false); // the browser follows it
+    await expect(clickWith(
+      container, at('host'), {},
+    )).resolves.toBe(false);
+    expect(heard).toEqual(['site']);
+    expect(router.getLocation().href).toBe('/faq');
     unmount();
   });
 

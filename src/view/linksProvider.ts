@@ -40,10 +40,15 @@ export type TLinkProps = {
   /**
    * Where it goes in the router's part (D-043): a string read as `<a href>` reads it (`/level/2`, `?tab=map`, `42`), or
    * a change of the current location (`{ path, query }` — the values encoded, no `path` — the current one). Left out —
-   * the current location.
+   * the current location. A string with a scheme or a host (`https://…`, `mailto:…`, `//cdn…`) leads outside the part:
+   * a plain anchor the browser follows.
    */
   href?: string | Partial<TUrlProps>;
-  /** `false` (or a promise of it) cancels the step. */
+  /**
+   * Hears every click. In the router's part `false` (or a promise of it) cancels the step; on a click the browser
+   * handles (a new tab, a download, an address outside the part) its result is ignored — `event.preventDefault()` stops
+   * the browser.
+   */
   onClick?: (event: { preventDefault?: () => void }) => unknown;
   /** The element to render instead of `a`. */
   component?: unknown;
@@ -58,16 +63,42 @@ export type TLinksDeps = Pick<TViewLibrary, 'createElement' | 'forwardRef' | 'us
   router: TRouter;
 };
 
-/** Where a link goes from `location`: its `href` read against it (left out — `location` itself). */
-export function targetOf(href: TLinkProps['href'], location: TUrlProps): TUrlProps {
+/** What a link's click handler reads of the event: the button and the modifier keys (a new tab or window). */
+type TClickEvent = {
+  preventDefault?: () => void;
+  button?: number;
+  metaKey?: boolean;
+  ctrlKey?: boolean;
+  shiftKey?: boolean;
+  altKey?: boolean;
+};
+
+/** An `href` with a scheme (`https:`, `mailto:`) or a host (`//cdn.example`) — an address outside the router's part. */
+const OUTSIDE_HREF = /^(?:[a-z][a-z\d+.-]*:|\/\/)/i;
+
+/** Where a link goes from `location`: its `href` read against it (left out — `location` itself); `null` — outside the part. */
+export function targetOf(href: TLinkProps['href'], location: TUrlProps): TUrlProps | null {
   if (href === undefined) {
     return location;
   }
-  return typeof href === 'string' ? resolveHref(href, location) : locate(href, location);
+  if (typeof href !== 'string') {
+    return locate(href, location);
+  }
+  return OUTSIDE_HREF.test(href) ? null : resolveHref(href, location);
 }
 
+/** A target's address; `null` — outside the part. */
+const hrefOf = (target: TUrlProps | null): string | null => (target === null ? null : target.href);
+
 /** `useStoreMap`'s update filter: a link's target changed when it leads to another address. */
-const targetChanged = (update: TUrlProps, current: TUrlProps): boolean => update.href !== current.href;
+const targetChanged = (update: TUrlProps | null, current: TUrlProps | null): boolean => hrefOf(update) !== hrefOf(current);
+
+/** A click the browser handles itself: a modifier key or another button (a new tab or window), a `target`, a download. */
+function browserClick(event: TClickEvent, anchor: Record<string, unknown>): boolean {
+  return Boolean(event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+    || (anchor.target !== undefined && anchor.target !== '_self')
+    || anchor.download !== undefined;
+}
 
 /**
  * `Link` and `NavLink` for a router — with a navigator or without one (a single-screen app keeping its settings in the
@@ -105,8 +136,8 @@ export function linksProvider(deps: TLinksDeps) {
   const primitive = router.historyPrimitive;
   const $location = router.$location;
 
-  /** The link's target; re-renders only when it changes (an absolute `href` never does). */
-  function useTarget(href: TLinkProps['href']): TUrlProps {
+  /** The link's target (`null` — outside the part); re-renders only when it changes (an absolute `href` never does). */
+  function useTarget(href: TLinkProps['href']): TUrlProps | null {
     return useStoreMap({
       store: $location,
       keys: [href] as const,
@@ -124,7 +155,10 @@ export function linksProvider(deps: TLinksDeps) {
     }
   });
 
-  /** An anchor in the router's part: its `href` is what the address bar would show; a click steps there. */
+  /**
+   * An anchor in the router's part: its `href` is what the address bar would show; a click steps there — unless the
+   * browser handles it (a new tab, a download). Outside the part — a plain anchor.
+   */
   const Link = forwardRef((props: TLinkProps, ref: unknown) => {
     const {
       href,
@@ -135,11 +169,24 @@ export function linksProvider(deps: TLinksDeps) {
       ...anchor
     } = props;
     const target = useTarget(href);
+    if (target === null) {
+      // Another site, `mailto:` — the browser follows it
+      return h(component || 'a', {
+        ...anchor,
+        ref,
+        href,
+        onClick,
+      });
+    }
     return h(component || 'a', {
       ...anchor,
       ref,
       href: primitive.href(target),
-      onClick: (event: { preventDefault?: () => void }) => {
+      onClick: (event: TClickEvent) => {
+        if (browserClick(event, anchor)) {
+          onClick?.(event);
+          return;
+        }
         event.preventDefault?.();
         void click(
           event, onClick, target,
@@ -154,17 +201,17 @@ export function linksProvider(deps: TLinksDeps) {
    */
   function NavLink(props: TLinkProps): unknown {
     const target = useTarget(props.href);
-    // A resolved target always has a path (`resolveHref`, `locate`)
+    // A resolved target always has a path (`resolveHref`, `locate`); outside the part — never shown
     const shown = useStoreMap({
       store: $location,
       keys: [
-        target.path,
+        target === null ? null : target.path,
         !!props.activeAsParent,
       ] as const,
       fn: (location, [
         path,
         parent,
-      ]) => location.path === path || parent && location.path.startsWith(pathPrefix(path)),
+      ]) => path !== null && (location.path === path || parent && location.path.startsWith(pathPrefix(path))),
     });
     const active = shown || !!props.active;
     return h(Link, {

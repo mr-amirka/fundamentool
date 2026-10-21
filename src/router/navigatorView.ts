@@ -496,7 +496,13 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
     const sectionShown = useStoreMap({
       store: $state,
       keys: [props.href] as const,
-      fn: (value, [href]) => value.section !== null && rootOf(targetOf(href, value.location)) === value.section,
+      fn: (value, [href]) => {
+        if (value.section === null) {
+          return false;
+        }
+        const target = targetOf(href, value.location);
+        return target !== null && rootOf(target) === value.section;
+      },
     });
     return h(links.NavLink, {
       ...props,

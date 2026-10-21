@@ -51,7 +51,13 @@ the address) has links too; a navigator's `nav.Link` / `nav.NavLink` are these, 
 <Link href={{ path: '/search', query: { q: text } }}>  // a change of the location: the values encoded
 <NavLink href="/catalog" activeAsParent>Catalog</NavLink> // `active` on its address or under it
 <NavLink href="/help" active={isHelpOpen}>Help</NavLink>   // or when told
+<Link href="https://vk.com/faq">FAQ</Link>              // another site (a scheme or a host): a plain anchor
 ```
+
+A click the browser handles stays the browser's: a modifier key (Cmd / Ctrl — a new tab, Shift — a new window), a
+middle click, `target="_blank"`, `download` — `onClick` still hears it. An `href` with a scheme or a host
+(`https://…`, `mailto:…`, `//cdn…`) leads outside the router's part: the browser follows it, and it is never taken for
+a path of the app (nor marks a `NavLink`).
 
 A `Link` re-renders only when its own target changes (an absolute `href` never does); a `NavLink` — only when its mark
 flips.

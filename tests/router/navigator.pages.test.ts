@@ -820,12 +820,19 @@ describe('sections by links (D-043)', () => {
           'data-nav': 'user',
         }, 'user',
       ),
+      h(
+        nav.NavLink as unknown as string, {
+          href: 'https://other.example/user/1',
+          'data-nav': 'outside',
+        }, 'outside',
+      ),
       h(view as unknown as string),
     );
     const {
       container, unmount,
     } = mount(Bar);
     const user = () => container.querySelector('[data-nav="user"]')?.className;
+    const outside = () => container.querySelector('[data-nav="outside"]')?.className;
     expect(user()).toBe('');
     await act(async () => {
       await router.pushLocation({
@@ -837,6 +844,7 @@ describe('sections by links (D-043)', () => {
     });
     expect(nav.getState().section).toBe('/user/:id');
     expect(user()).toBe('active');
+    expect(outside()).toBe(''); // another site's address with the same path isn't the section
     unmount();
   });
 });
