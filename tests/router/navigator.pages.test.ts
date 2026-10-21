@@ -314,7 +314,7 @@ describe('quiet steps (D-042)', () => {
       '/wizard/3',
     ]);
     expect(router.$path.getState()).toBe('/wizard/3');
-    await router.backLocation({
+    await router.backRepeat(1, {
       quiet: true,
     });
     expect(router.$path.getState()).toBe('/wizard/3');
@@ -385,7 +385,7 @@ describe('quiet steps (D-042)', () => {
       '/b?x=1&y=2',
       '/b?x=1&y=2&z=3',
     ]);
-    await router.backLocation({
+    await router.backRepeat(1, {
       quiet: true,
     });
     expect(router.$query.getState()).toEqual({

@@ -48,7 +48,7 @@ export type TLocalStorageEvent = {
  * Creates a local storage provider.
  *
  * @param win - The Window whose `localStorage` is managed.
- * @returns A reactive store with `get`, `set`, `remove`, `getKeys`, and `clear`.
+ * @returns A reactive store with `get`, `set`, `assign`, `remove`, `getKeys`, and `clear`.
  * @example
  * const storage = localStorageProvider(window);
  * storage.set('user', { name: 'Alice' });
@@ -107,6 +107,12 @@ export const localStorageProvider = (win: TLocalStorageWindowContext,
       : originLocalStorage.setItem(key, JSON.stringify(value));
   });
   ($instance as any).set = __set;
+  ($instance as any).assign = (values: Record<string, any>) => {
+    for (const key of Object.keys(values)) {
+      __set(key, values[key]);
+    }
+    return $instance;
+  };
   ($instance as any).get = (key: string) => tryJsonParse(originLocalStorage.getItem(key));
   ($instance as any).remove = (key: string) => __set(key, null);
   ($instance as any).getKeys = getKeys;

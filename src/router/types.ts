@@ -101,7 +101,8 @@ export type TParamsOptions = TStepOptions & {
 export type TRouterDriver = {
   push(location: TUrlProps, options?: TStepOptions): Promise<void>;
   replace(location: TUrlProps, options?: TStepOptions): Promise<void>;
-  back(options?: TBackOptions): Promise<boolean>;
+  /** `count` steps back (as far as the history goes); `true` when a step was taken. */
+  back(count: number, options?: TBackOptions): Promise<boolean>;
 };
 
 /** The router's dependencies. */
@@ -110,31 +111,63 @@ export type TRouterDeps = TObservableAdapter & {
   historyPrimitive: THistoryPrimitive;
 };
 
-/** A router: one part of the history — its location, its steps, its `params`. */
+/**
+ * A router: one part of the history — its location, its steps, its `params`. Two kinds of location (D-045): what is
+ * shown (`$location`, `$path`, `$query`, `params` — what the pages follow; a quiet step leaves it behind) and where
+ * the history actually is (`$actual…`, `actualParams` — every step, quiet ones included).
+ */
 export type TRouter = {
-  /** The part's location. */
+  /** The location shown. */
   $location: Observable<TUrlProps>;
   $path: Observable<string>;
   $query: Observable<TParams>;
+  /** The actual location — where the history is, quiet steps included. */
+  $actualLocation: Observable<TUrlProps>;
+  $actualPath: Observable<string>;
+  $actualQuery: Observable<TParams>;
+  /** The location shown before the last change, in either direction (`null` — none yet): analytics' `from`. */
+  $fromLocation: Observable<TUrlProps | null>;
   getLocation(): TUrlProps;
-  /** A new entry: `change.path` (or the current one) with `change.query` (no query when not given). */
+  getActualLocation(): TUrlProps;
+  getFromLocation(): TUrlProps | null;
+  /** A new entry: `change.path` (or the current one) with `change.query` (no query when not given) — "go there". */
   pushLocation(change: Partial<TUrlProps>, options?: TStepOptions): Promise<TUrlProps>;
   /** The current entry, changed the same way. */
   replaceLocation(change: Partial<TUrlProps>, options?: TStepOptions): Promise<TUrlProps>;
-  /** One step back; `true` when it was taken (`false` at the history's first entry, or a leave guard refused). */
-  backLocation(options?: TBackOptions): Promise<boolean>;
   /**
-   * The location's query as a key-value storage — `storeProvider`'s port too. With a navigator a change is a step in
-   * its queue: `get` reads the new value once the step is taken.
+   * The given parts changed, the rest kept — "change these, keep the rest" (the reference's `storagePushLocation`):
+   * `change.path` if given, `change.query` merged over the current query (a key set to `undefined` — removed). A new
+   * entry, or the current one with `replace`.
+   */
+  extendLocation(change: Partial<TUrlProps>, options?: TParamsOptions): Promise<TUrlProps>;
+  /**
+   * One step back; `true` when it was taken (`false` at the history's first entry, or a leave guard refused). Takes no
+   * arguments — a handler as it is: `onClick={router.backLocation}`.
+   */
+  backLocation(): Promise<boolean>;
+  /** `count` steps back in one move (as far as the history goes), the leave guards of what is left asked. */
+  backRepeat(count: number, options?: TBackOptions): Promise<boolean>;
+  /** `pushLocation` that skips a call while the last one runs and for 300 ms from its start (a double tap). */
+  pushLocationThrottled(change: Partial<TUrlProps>, options?: TStepOptions): Promise<TUrlProps | undefined>;
+  /** `replaceLocation`, throttled the same way. */
+  replaceLocationThrottled(change: Partial<TUrlProps>, options?: TStepOptions): Promise<TUrlProps | undefined>;
+  /** `backLocation`, throttled the same way — `onClick={router.backLocationThrottled}`. */
+  backLocationThrottled(): Promise<boolean | undefined>;
+  /**
+   * The shown location's query as a key-value storage — `storeProvider`'s port. It reads the query as last written; a
+   * changed key is reported once the location shown has it.
    */
   params: TKeyValueStorage<TParamsOptions>;
+  /** The same over the actual location: a store stays right through quiet steps. */
+  actualParams: TKeyValueStorage<TParamsOptions>;
   /** The part this router works in. */
   historyPrimitive: THistoryPrimitive;
   /**
    * Hands the router's steps to `driver` (a navigator, or another driver of your own); returns how the driver shows a
-   * location it moved to. One driver per router — a second `attach` is an error.
+   * location it moved to (`quiet` — only the actual location moves). One driver per router — a second `attach` is an
+   * error.
    */
-  attach(driver: TRouterDriver): (location: TUrlProps) => void;
+  attach(driver: TRouterDriver): (location: TUrlProps, quiet?: boolean) => void;
 };
 
 // ── the navigator ───────────────────────────────────────────────────────────────────────────────────────────────
@@ -226,12 +259,6 @@ export type TNavigatorState<R = Record<string, unknown>> = {
 export type TOpenOptions = {
   /** Reopen the window when the player goes Forward after closing it (default `true`; `false` for confirmations). */
   reopen?: boolean;
-};
-
-/** Options of `nav.leavePage`. */
-export type TLeavePageOptions = {
-  /** Where to go when the stack has no earlier page (default — the navigator's `fallback`). */
-  fallback?: Partial<TUrlProps>;
 };
 
 /** What a window renders with: its params, whether it is open (false while it plays its exit), how to close it. */

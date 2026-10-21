@@ -65,6 +65,17 @@ describe('cookieStorageProvider', () => {
     expect(storage.get('token')).toBe('abc');
   });
 
+  test('assign writes several keys', () => {
+    const win = makeWindow();
+    const storage = cookieStorageProvider(win);
+    expect(storage.assign({
+      a: 'x',
+      b: 'y',
+    })).toBe(storage);
+    expect(storage.get('a')).toBe('x');
+    expect(storage.get('b')).toBe('y');
+  });
+
   test('remove a value', () => {
     const win = makeWindow();
     const storage = cookieStorageProvider(win);

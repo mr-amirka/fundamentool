@@ -50,7 +50,7 @@ export const storageInit = (cookie: string): any => {
  * Creates a cookie storage provider.
  *
  * @param ctx - The Window whose `document.cookie` is managed.
- * @returns A reactive cookie storage with `get`, `set`, `remove`, `getKeys`, and `clear`.
+ * @returns A reactive cookie storage with `get`, `set`, `assign`, `remove`, `getKeys`, and `clear`.
  * @example
  * const storage = cookieStorageProvider(window);
  * storage.set('token', 'abc123');
@@ -99,6 +99,12 @@ export const cookieStorageProvider = (ctx: TCookieWindowContext,
     }
   });
   ($instance as any).set = set;
+  ($instance as any).assign = (values: Record<string, any>) => {
+    for (const key of Object.keys(values)) {
+      set(key, values[key]);
+    }
+    return $instance;
+  };
   ($instance as any).get = (key: string) => cache[key];
   ($instance as any).remove = (key: string) => set(key, null);
   ($instance as any).getKeys = () => Object.keys(cache);

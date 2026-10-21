@@ -28,7 +28,11 @@ import type {
   TUrlProps,
 } from '../urlParse';
 import {
+  withAsyncLock,
+} from '../withAsyncLock';
+import {
   ROOT_PATH,
+  THROTTLE_MS,
 } from './constants';
 import {
   locate,
@@ -40,7 +44,6 @@ import {
   STEP_OPTION_KEYS,
 } from './options';
 import type {
-  TBackOptions,
   TParamsOptions,
   TRouter,
   TRouterDeps,
@@ -85,15 +88,33 @@ function assertRouterDeps(deps: TRouterDeps): void {
   }
 }
 
+/** A location with the keys of `query` set over its own (`undefined` / `null` — the key removed). */
+function withQuery(query: TParams, values: Record<string, unknown>): TParams {
+  const next: TParams = {
+    ...query,
+  };
+  for (const key of Object.keys(values)) {
+    const value = values[key];
+    if (isDefined(value)) {
+      next[key] = value as TParams[string];
+    } else {
+      delete next[key];
+    }
+  }
+  return next;
+}
+
 /**
  * A router over one part of the history (fundamentool D-039): `history.url`, `history.hash`, `history.state` or a
- * primitive of your own. Its location as observables, its steps, its query as `params`. A navigator over it
+ * primitive of your own. Its location as observables — the one shown (`$location`) and the actual one, quiet steps
+ * included (`$actualLocation`, D-045); its steps; its query as `params` / `actualParams`. A navigator over it
  * (`createNavigator({ router })`) takes its steps over — pages, windows, leave guards.
  *
  * @example
  * const router = createRouter({ historyPrimitive: browserHistoryPrimitivesProvider(window).hash, createObservable, createApi });
  * await router.pushLocation({ path: '/level/2' });
- * router.params.set('tab', 'map', { replace: true });
+ * router.params.assign({ tab: 'map', zoom: 3 }, { replace: true });
+ * button.onclick = router.backLocationThrottled;
  */
 export function createRouter(deps: TRouterDeps): TRouter {
   assertRouterDeps(deps);
@@ -102,85 +123,155 @@ export function createRouter(deps: TRouterDeps): TRouter {
     createObservable,
     createApi,
   } = deps;
+  const start = historyPrimitive.current().location;
 
-  const $location = createObservable<TUrlProps>(historyPrimitive.current().location);
+  const $location = createObservable<TUrlProps>(start);
+  const $actualLocation = createObservable<TUrlProps>(start);
+  const $fromLocation = createObservable<TUrlProps | null>(null);
   const {
-    show,
+    emitLocation,
   } = createApi($location, {
-    show: (_, location: TUrlProps) => location,
+    emitLocation: (_, location: TUrlProps) => location,
   });
-  const $path = $location.map(getPath);
-  const $query = $location.map(getQuery);
+  const {
+    emitActual,
+  } = createApi($actualLocation, {
+    emitActual: (_, location: TUrlProps) => location,
+  });
+  const {
+    emitFrom,
+  } = createApi($fromLocation, {
+    emitFrom: (_, location: TUrlProps | null) => location,
+  });
 
-  // Without a navigator: the steps go to the primitive; the player's moves are shown as they come; a quiet step isn't
-  // shown (the next step that isn't quiet shows where the history is).
+  /** Where the history is now; a quiet step goes no further. */
+  function setActual(location: TUrlProps): void {
+    $actualLocation.getState().href === location.href || emitActual(location);
+  }
+
+  /** Shows `location` — the shown one before it becomes the from-location; a quiet one is only the actual one. */
+  function show(location: TUrlProps, quiet?: boolean): void {
+    setActual(location);
+    const shown = $location.getState();
+    if (quiet || shown === location) {
+      return;
+    }
+    shown.href === location.href || emitFrom(shown);
+    emitLocation(location);
+  }
+
+  // Without a navigator: the steps go to the primitive; the player's moves are shown as they come.
   let driver: TRouterDriver = {
     async push(location, options) {
       historyPrimitive.push(location);
-      options?.quiet || show(location);
+      show(location, options?.quiet);
     },
     async replace(location, options) {
       historyPrimitive.replace(location);
-      options?.quiet || show(location);
+      show(location, options?.quiet);
     },
-    async back(options) {
-      // At the first entry Back would leave the app (and no move would ever be reported).
-      if (!historyPrimitive.canGo(-1)) {
+    async back(count, options) {
+      // As far back as the history goes; at the first entry Back would leave the app (and no move would be reported).
+      let steps = count;
+      while (steps > 0 && !historyPrimitive.canGo(-steps)) {
+        steps--;
+      }
+      if (!steps) {
         return false;
       }
-      const entry = await historyPrimitive.go(-1);
-      options?.quiet || show(entry.location);
+      show((await historyPrimitive.go(-steps)).location, options?.quiet);
       return true;
     },
   };
   let stopWatching: (() => void) | null = historyPrimitive.watch((entry) => show(entry.location));
 
-  /** The location a step starts from: the history's (a quiet step leaves `$location` behind it). */
-  const here = (): TUrlProps => historyPrimitive.current().location;
-
   async function step(
     change: Partial<TUrlProps>, replace: boolean, options?: TStepOptions,
   ): Promise<TUrlProps> {
-    const location = locate(change, here());
+    const location = locate(change, $actualLocation.getState());
     await (replace ? driver.replace(location, options) : driver.push(location, options));
     return $location.getState();
   }
 
-  const params = createParams($location, (query, options) => void step(
+  /** The given parts set over the actual location's (the query merged) — a new entry, or with `replace` the current. */
+  function extend(change: Partial<TUrlProps>, options?: TParamsOptions): Promise<TUrlProps> {
+    const actual = $actualLocation.getState();
+    return step(
+      {
+        path: change.path || getPath(actual),
+        query: withQuery(getQuery(actual), change.query || NO_QUERY),
+      }, !!options?.replace, options,
+    );
+  }
+
+  const writeQuery = (query: TParams, options?: TParamsOptions) => void step(
     {
-      path: getPath(here()),
+      path: getPath($actualLocation.getState()),
       query,
     }, !!options?.replace, options,
-  ));
+  );
+
+  async function pushLocation(change: Partial<TUrlProps>, options?: TStepOptions): Promise<TUrlProps> {
+    assertFlags(
+      `${WHERE} pushLocation`, options, STEP_OPTION_KEYS,
+    );
+    return step(
+      change, false, options,
+    );
+  }
+
+  async function replaceLocation(change: Partial<TUrlProps>, options?: TStepOptions): Promise<TUrlProps> {
+    assertFlags(
+      `${WHERE} replaceLocation`, options, STEP_OPTION_KEYS,
+    );
+    return step(
+      change, true, options,
+    );
+  }
+
+  /** One step back; takes no arguments, so it is a handler as it is (`onClick={router.backLocation}`, D-045). */
+  const backLocation = (): Promise<boolean> => driver.back(1);
 
   return {
     $location,
-    $path,
-    $query,
+    $path: $location.map(getPath),
+    $query: $location.map(getQuery),
+    $actualLocation,
+    $actualPath: $actualLocation.map(getPath),
+    $actualQuery: $actualLocation.map(getQuery),
+    $fromLocation,
     getLocation: () => $location.getState(),
-    async pushLocation(change, options) {
+    getActualLocation: () => $actualLocation.getState(),
+    getFromLocation: () => $fromLocation.getState(),
+    pushLocation,
+    replaceLocation,
+    async extendLocation(change, options) {
       assertFlags(
-        `${WHERE} pushLocation`, options, STEP_OPTION_KEYS,
+        `${WHERE} extendLocation`, options, PARAMS_OPTION_KEYS,
       );
-      return step(
-        change, false, options,
-      );
+      return extend(change, options);
     },
-    async replaceLocation(change, options) {
+    backLocation,
+    async backRepeat(count, options) {
+      if (!Number.isInteger(count) || count < 1) {
+        throw new TypeError(`${WHERE} backRepeat: expects a whole number of steps ≥ 1, got ${describeValue(count)}`);
+      }
       assertFlags(
-        `${WHERE} replaceLocation`, options, STEP_OPTION_KEYS,
+        `${WHERE} backRepeat`, options, BACK_OPTION_KEYS,
       );
-      return step(
-        change, true, options,
-      );
+      return driver.back(count, options);
     },
-    async backLocation(options?: TBackOptions) {
-      assertFlags(
-        `${WHERE} backLocation`, options, BACK_OPTION_KEYS,
-      );
-      return driver.back(options);
-    },
-    params,
+    pushLocationThrottled: withAsyncLock(pushLocation, {
+      minMs: THROTTLE_MS,
+    }),
+    replaceLocationThrottled: withAsyncLock(replaceLocation, {
+      minMs: THROTTLE_MS,
+    }),
+    backLocationThrottled: withAsyncLock(backLocation, {
+      minMs: THROTTLE_MS,
+    }),
+    params: createParams($location, writeQuery),
+    actualParams: createParams($actualLocation, writeQuery),
     historyPrimitive,
     attach(next) {
       if (!stopWatching) {
@@ -194,9 +285,9 @@ export function createRouter(deps: TRouterDeps): TRouter {
   };
 
   /**
-   * The location's query as a key-value storage: a change of a key is a step (a new entry, or `replace`). It reads the
-   * query as last written — a step still queued by a navigator, or a quiet one, is already there — and reports a
-   * changed key once the location shows it (whoever changed it).
+   * The query of a location (`$source` — the shown one or the actual one) as a key-value storage: a write is a step (a
+   * new entry, or `replace`). It reads the query as last written — a step still queued by a navigator, or a quiet one,
+   * is already there — and reports a changed key once `$source` has it (whoever changed it).
    */
   function createParams($source: typeof $location, write: (query: TParams, options?: TParamsOptions) => void): TKeyValueStorage<TParamsOptions> {
     const $changes = createObservable<TKeyValueChange>({
@@ -207,60 +298,56 @@ export function createRouter(deps: TRouterDeps): TRouter {
     } = createApi($changes, {
       emit: (_, change: TKeyValueChange) => change,
     });
-    /** The query the location shows. */
-    let shown = getQuery($source.getState());
-    /** The query as last written (or shown, after a move by the player). */
-    let query = shown;
+    /** The query `$source` has. */
+    let seen = getQuery($source.getState());
+    /** The query as last written (or as `$source` has it, after a move). */
+    let query = seen;
     $source.watch((location) => {
-      const previous = shown;
-      shown = getQuery(location);
-      query = shown;
+      const previous = seen;
+      seen = getQuery(location);
+      query = seen;
       for (const key of new Set([
         ...Object.keys(previous),
-        ...Object.keys(shown),
+        ...Object.keys(seen),
       ])) {
-        isEqual(previous[key], shown[key]) || emit({
+        isEqual(previous[key], seen[key]) || emit({
           key,
-          value: shown[key],
+          value: seen[key],
         });
       }
     });
     const instance = $changes as unknown as TKeyValueStorage<TParamsOptions>;
-    function writeQuery(next: TParams, options: TParamsOptions | undefined): void {
-      query = next;
-      write(next, options);
-    }
-    const set = (
-      key: string, value: unknown, options?: TParamsOptions,
-    ) => {
+    const assign = (values: Record<string, unknown>, options?: TParamsOptions) => {
       assertFlags(
         `${WHERE} params`, options, PARAMS_OPTION_KEYS,
       );
-      if (!isEqual(query[key], value)) {
-        const next: TParams = {
-          ...query,
-        };
-        if (isDefined(value)) {
-          next[key] = value as TParams[string];
-        } else {
-          delete next[key];
-        }
-        writeQuery(next, options);
+      const next = withQuery(query, values);
+      if (!isEqual(next, query)) {
+        query = next;
+        write(next, options);
       }
       return instance;
     };
     return Object.assign(instance, {
-      set,
+      set: (
+        key: string, value: unknown, options?: TParamsOptions,
+      ) => assign({
+        [key]: value,
+      }, options),
+      assign,
       get: (key: string) => query[key],
-      remove: (key: string, options?: TParamsOptions) => set(
-        key, undefined, options,
-      ),
+      remove: (key: string, options?: TParamsOptions) => assign({
+        [key]: undefined,
+      }, options),
       getKeys: () => Object.keys(query),
       clear: (options?: TParamsOptions) => {
         assertFlags(
           `${WHERE} params`, options, PARAMS_OPTION_KEYS,
         );
-        Object.keys(query).length && writeQuery({}, options);
+        if (Object.keys(query).length) {
+          query = NO_QUERY;
+          write({}, options);
+        }
         return instance;
       },
     });

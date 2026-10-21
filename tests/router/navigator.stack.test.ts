@@ -202,9 +202,10 @@ describe('createNavigator — the stack', () => {
       '/c',
     ]);
     expect(nav.getState().section).toBe('/b');
-    await expect(nav.backToRoot({
+    await expect(nav.backToDepth(0, {
       force: 1,
     } as never)).rejects.toThrow(/"force" expects true or false, got number 1/);
+    await expect(nav.backToDepth(-1)).rejects.toThrow(/backToDepth: expects a depth/);
   });
 
   it('a deep link lays out over the start section\'s root; its start is the deep page; without sections — the first page', async () => {
@@ -693,9 +694,9 @@ describe('createNavigator — the stack', () => {
     await waitFor(() => expect(paths()).toEqual(['/a']));
   });
 
-  it('{ force: true }: back without asking — refusing guards are skipped, windows left resolve null (D-026)', async () => {
+  it('backRepeat(n, { force: true }): back without asking — refusing guards are skipped, windows left resolve null (D-026)', async () => {
     const {
-      nav, router, paths,
+      nav, navigator, router, paths,
     } = setup();
     await nav.go('/a/form');
     const asked: string[] = [];
@@ -709,11 +710,11 @@ describe('createNavigator — the stack', () => {
       '/a/form',
       'window',
     ]));
-    await expect(router.backLocation({
+    await expect(router.backRepeat(1, {
       force: true,
     })).resolves.toBe(true);
     await expect(win).resolves.toBeNull();
-    await expect(router.backLocation({
+    await expect(router.backRepeat(1, {
       force: true,
     })).resolves.toBe(true);
     expect(paths()).toEqual(['/a']);
@@ -721,16 +722,36 @@ describe('createNavigator — the stack', () => {
 
     await nav.go('/a/form');
     nav.onBeforeLeave(nav.getState().page.id, () => false);
-    await expect(router.backLocation({
+    await nav.go('/a/list');
+    // Two steps in one move, the refusing guard skipped; then sign out — to depth 0 without asking, nothing shown.
+    await expect(router.backRepeat(2, {
       force: true,
     })).resolves.toBe(true);
     expect(paths()).toEqual(['/a']);
+    await nav.go('/a/form');
+    nav.onBeforeLeave(nav.getState().page.id, () => false);
+    await expect(nav.backToDepth(0, {
+      force: true,
+      quiet: true,
+    })).resolves.toBe(true);
+    expect(navigator.getHistory()).toHaveLength(1); // the stack moved…
+    expect(paths()).toEqual([
+      '/a',
+      '/a/form',
+    ]); // …the state shown didn't (quiet)
+    expect(router.$path.getState()).toBe('/a/form');
+    expect(router.$actualPath.getState()).toBe('/a');
+    await expect(router.backRepeat(0)).rejects.toThrow(/backRepeat: expects a whole number of steps ≥ 1, got number 0/);
   });
 
   it('leavePage: back to the previous page of the app (windows over the page close too); the first page is replaced', async () => {
     const {
       router, navigator, paths, win,
-    } = setup();
+    } = setup({
+      fallback: {
+        path: '/a',
+      },
+    });
     await router.pushLocation({
       path: '/a/level',
     });
@@ -740,21 +761,13 @@ describe('createNavigator — the stack', () => {
       '/a/level',
       'window',
     ]));
-    await navigator.leavePage({
-      fallback: {
-        path: '/a',
-      },
-    });
+    await navigator.leavePage();
     expect(paths()).toEqual(['/a']);
 
     await navigator.startOver({
       path: '/a/locked',
     });
-    await navigator.leavePage({
-      fallback: {
-        path: '/a',
-      },
-    });
+    await navigator.leavePage();
     expect(paths()).toEqual(['/a']);
     expect(win.location.pathname).toBe('/a');
   });
@@ -778,15 +791,14 @@ describe('createNavigator — the stack', () => {
     ]));
     await navigator.leavePage(); // the window over the fallback page closes
     expect(paths()).toEqual(['/home']);
+    // An event a handler passes is ignored: leavePage is a handler as it is.
     await navigator.startOver({
       path: '/locked',
     });
-    await navigator.leavePage({
-      fallback: {
-        path: '/other',
-      },
-    }); // the call's fallback wins
-    expect(paths()).toEqual(['/other']);
+    await (navigator.leavePage as (event: unknown) => Promise<void>)({
+      type: 'click',
+    });
+    expect(paths()).toEqual(['/home']);
 
     const without = setup({
       routes: PLAIN,
@@ -796,20 +808,10 @@ describe('createNavigator — the stack', () => {
     expect(without.paths()).toEqual(['/locked']);
   });
 
-  it('leavePage checks its options', async () => {
-    const {
-      navigator,
-    } = setup();
-    await expect(navigator.leavePage(null as never)).rejects.toThrow(/leavePage: expects an options object, got null/);
+  it('the navigator checks its fallback', () => {
     expect(() => setup({
       fallback: '/' as never,
     })).toThrow(/createNavigator: "fallback" expects a location/);
-    await expect(navigator.leavePage({
-      fallbak: {},
-    } as never)).rejects.toThrow(/Did you mean "fallback"/);
-    await expect(navigator.leavePage({
-      fallback: '/',
-    } as never)).rejects.toThrow(/"fallback" expects a location/);
   });
 
   it('subscribe / unsubscribe', async () => {

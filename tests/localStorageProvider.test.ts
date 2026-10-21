@@ -54,6 +54,23 @@ describe('localStorageProvider', () => {
     expect(ls.get('name')).toBe('Alice');
   });
 
+  test('assign writes several keys; undefined / null removes one', () => {
+    const {
+      storage, win,
+    } = makeLocalStorageMock();
+    win._storage = storage;
+    const ls = localStorageProvider(win as any);
+    ls.set('gone', 1);
+    expect(ls.assign({
+      a: 1,
+      b: 'two',
+      gone: undefined,
+    })).toBe(ls);
+    expect(ls.get('a')).toBe(1);
+    expect(ls.get('b')).toBe('two');
+    expect(ls.get('gone')).toBeNull();
+  });
+
   test('remove a value', () => {
     const {
       storage, win,

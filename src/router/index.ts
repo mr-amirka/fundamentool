@@ -11,7 +11,6 @@ export {
 } from './createRouter';
 export {
   createNavigator,
-  LEAVE_PAGE_OPTION_KEYS,
   NAVIGATOR_DEPS_KEYS,
   OPEN_OPTION_KEYS,
 } from './navigator';

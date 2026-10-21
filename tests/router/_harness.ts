@@ -306,6 +306,7 @@ function wire(
     /** One step back; `true` if the entry was left. */
     back: () => router.backLocation(),
     backToRoot: nav.backToRoot,
+    backToDepth: nav.backToDepth,
     /** A tab tapped: a link to the section's root `/<name>` (D-043). */
     switchSection: (name: string) => router.pushLocation({
       path: '/' + name,

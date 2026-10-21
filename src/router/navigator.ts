@@ -70,7 +70,6 @@ import type {
   THistoryEntry,
   TForwardHandler,
   TLeaveGuard,
-  TLeavePageOptions,
   TNavigatorDeps,
   TNavigatorState,
   TOpenOptions,
@@ -112,9 +111,6 @@ export const NAVIGATOR_DEPS_KEYS = [
 
 /** The single list of `open`'s option keys. */
 export const OPEN_OPTION_KEYS = ['reopen'] as const;
-
-/** The single list of `leavePage`'s option keys. */
-export const LEAVE_PAGE_OPTION_KEYS = ['fallback'] as const;
 
 /** An entry as the history keeps it (to rebuild the stack after a reload): a page's address and tab, a window's place. */
 type TSaved = [kind: typeof PAGE, id: number, href: string, section: string | null] | [kind: typeof WINDOW, id: number];
@@ -342,10 +338,14 @@ export function createNavigator(deps: TNavigatorDeps) {
     });
   }
 
-  /** The stack as the state, emitted; the router shows the top page's location. A quiet step publishes nothing. */
+  /**
+   * The stack as the state, emitted; the router shows the top page's location. A quiet step publishes nothing — only
+   * the router's actual location follows it (D-045).
+   */
   function publish(): void {
     storeShown();
     if (quietStep) {
+      showLocation(pageAt(entries, entries.length - 1).location, true);
       return;
     }
     state = snapshot();
@@ -992,20 +992,29 @@ export function createNavigator(deps: TNavigatorDeps) {
   const sectionStart = (): number => (shown === null || shown === homeSection ? 0 : 1);
 
   /**
-   * Back in one move to the start of the shown section — its first entry; without sections, the first page. `force` —
-   * the leave guards aren't asked (sign out, D-026); `quiet` — nothing is shown until the next step (D-042). Resolves
-   * `true` when it is there.
+   * Back in one move to the start of the shown section — its first entry; without sections, the first page; the leave
+   * guards of what is left are asked. Takes no arguments — a handler as it is (`onClick={nav.backToRoot}`, D-045).
+   * Resolves `true` when it is there.
+   */
+  const backToRoot = (): Promise<boolean> => backTo(sectionStart, false);
+
+  /**
+   * Back in one move to `depth` (`0` — the very first page, whatever the section). `force` — the leave guards aren't
+   * asked (sign out, D-026); `quiet` — nothing is shown until the next step (D-042). Resolves `true` when it is there.
    *
    * @example
-   * await nav.backToRoot({ force: true, quiet: true }); // sign out: back to the start, nothing shown on the way
+   * await nav.backToDepth(0, { force: true, quiet: true }); // sign out: back to the start, nothing shown on the way
    * await nav.open(SignIn);
    */
-  async function backToRoot(options?: TBackOptions): Promise<boolean> {
+  async function backToDepth(depth: number, options?: TBackOptions): Promise<boolean> {
+    if (!Number.isInteger(depth) || depth < 0) {
+      throw new TypeError(`${WHERE} backToDepth: expects a depth (a whole number ≥ 0), got ${describeValue(depth)}`);
+    }
     assertFlags(
-      `${WHERE} backToRoot`, options, BACK_OPTION_KEYS,
+      `${WHERE} backToDepth`, options, BACK_OPTION_KEYS,
     );
     return backTo(
-      sectionStart, !!options?.force, !!options?.quiet,
+      () => depth, !!options?.force, !!options?.quiet,
     );
   }
 
@@ -1066,33 +1075,38 @@ export function createNavigator(deps: TNavigatorDeps) {
 
   /**
    * Leaves the shown page — e.g. one the player may not open: back to the previous page if the stack has one (windows
-   * over the page close too), otherwise the page is replaced with `fallback` — the call's, else the navigator's
-   * (`createNavigator({ fallback })`, D-044); without either it stays. A leave guard that refuses keeps it.
+   * over the page close too), otherwise the page is replaced with the navigator's `fallback` (D-044); without one it
+   * stays. A leave guard that refuses keeps it. Takes no arguments — a handler as it is (`onClick={nav.leavePage}`).
    *
    * @example
    * if (!progress.isUnlocked(levelId)) {
    *   await nav.leavePage(); // createNavigator({ …, fallback: { path: '/' } })
    * }
    */
-  async function leavePage(options?: TLeavePageOptions): Promise<void> {
-    if (options !== undefined) {
-      if (!isObject(options) || isArray(options)) {
-        throw new TypeError(`${WHERE} leavePage: expects an options object, got ${describeValue(options)}`);
-      }
-      assertKnownOptions(
-        `${WHERE} leavePage`, options, LEAVE_PAGE_OPTION_KEYS,
-      );
-      assertLocation(
-        `${WHERE} leavePage`, 'fallback', options.fallback,
-      );
-    }
-    const fallback = options?.fallback || deps.fallback;
+  async function leavePage(): Promise<void> {
     // The page's place is read when the step's turn comes (a window closing before it may have changed the stack).
     if (pageIndexAt(entries, entries.length - 1) > 0) {
       await backTo((current) => pageIndexAt(entries, current) - 1, false);
     } else {
-      await enqueue(() => toFallback(fallback));
+      await enqueue(() => toFallback(deps.fallback));
     }
+  }
+
+  // ── reading the stack (shortcuts, D-045) ──────────────────────────────────────────────────────────────────────
+
+  /** The stack, bottom to top: pages and windows (the reference's `getHistory`). */
+  const getHistory = (): readonly TEntry[] => entries;
+
+  /** The location of the entry below the top one — what Back shows (`undefined` at the first entry). */
+  const getPrevLocation = (): TUrlProps | undefined => (entries.length > 1 ? pageAt(entries, entries.length - 2).location : undefined);
+
+  /** The location the browser's Forward brings back (`undefined` — nothing ahead); a window ahead keeps the page's. */
+  function getNextLocation(): TUrlProps | undefined {
+    const next = ahead[0];
+    if (!next) {
+      return undefined;
+    }
+    return next.kind === PAGE ? next.location : topPage(entries).location;
   }
 
   // ── registrations ─────────────────────────────────────────────────────────────────────────────────────────────
@@ -1181,8 +1195,8 @@ export function createNavigator(deps: TNavigatorDeps) {
     },
     replace,
     // At the first page Back goes to the navigator's fallback, if it has one (D-044).
-    back: (options?: TBackOptions) => (entries.length < 2 ? enqueue(() => quietly(!!options?.quiet, () => toFallback(deps.fallback))) : backTo(
-      (current) => current - 1, !!options?.force, !!options?.quiet,
+    back: (count: number, options?: TBackOptions) => (entries.length < 2 ? enqueue(() => quietly(!!options?.quiet, () => toFallback(deps.fallback))) : backTo(
+      (current) => current - count, !!options?.force, !!options?.quiet,
     )),
   });
 
@@ -1224,12 +1238,18 @@ export function createNavigator(deps: TNavigatorDeps) {
 
   return {
     $state,
+    /** The depth of the top entry, observable (the reference's `$historyDepth`). */
+    $depth: $state.map((value) => value.depth),
     getState: () => state,
+    getHistory,
+    getPrevLocation,
+    getNextLocation,
     open,
     close,
     startOver,
     leavePage,
     backToRoot,
+    backToDepth,
     whileOpen,
     onForward,
     onBeforeLeave,

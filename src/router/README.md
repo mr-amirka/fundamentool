@@ -35,25 +35,57 @@ const router = createRouter({
   createObservable,
   createApi,
 });
-router.$location; router.$path; router.$query;          // the part's location
-await router.pushLocation({ path: '/level/2' });         // a path (or the current one) with its query
+
+// Go somewhere — a path (or the current one) with its query (a query left out is cleared)
+await router.pushLocation({ path: '/level/2' });
 await router.replaceLocation({ query: { tab: 'map' } });
-await router.backLocation();
-router.params.set('tab', 'map');                         // the query as a key-value storage: a new entry…
+// Change some parts, keep the rest — the query merged, a key set to undefined removed
+await router.extendLocation({ query: { page: 2 } });
+await router.extendLocation({ query: { page: undefined } }, { replace: true });
+
+// Back — no arguments, a handler as it is
+button.onclick = router.backLocation;
+await router.backRepeat(3, { force: true });             // 3 steps in one move, without asking the leave guards
+
+// Throttled — a call while the last one runs, or within 300 ms of its start, is skipped (a double tap)
+card.onclick = () => router.pushLocationThrottled({ path: '/item/7' });
+back.onclick = router.backLocationThrottled;
+
+// The query as a key-value storage
+router.params.set('tab', 'map');                         // a new entry…
 router.params.set('scroll', 120, { replace: true });     // …or the current one
-await router.pushLocation({ path: '/wizard/3' }, { quiet: true }); // a quiet step (D-042)
+router.params.assign({ sort: 'price', page: 2 });        // several keys in one entry
 ```
 
-`params` has the interface of `localStorageProvider` / `cookieStorageProvider` (`TKeyValueStorage`) and is
-`storeProvider`'s port: `storeProvider(deps, router.params)` keeps stores in the address. It reads the query as last
-written (a step still queued, or a quiet one, is already there); a changed key is reported once the location shows it.
-One part — one router. `backLocation()` at the history's first entry resolves `false` (a step back from there would
-leave the app).
+**What is shown and where the history is** (D-045). `$location` / `$path` / `$query`, `getLocation()` and `params` are
+**what is shown** — what the pages follow. `$actualLocation` / `$actualPath` / `$actualQuery`, `getActualLocation()`
+and `actualParams` are **where the history actually is**. They differ only while quiet steps are pending.
 
-**Quiet steps** — `{ quiet: true }` on `pushLocation`, `replaceLocation`, `backLocation`, `params.set / remove /
-clear`, `nav.backToRoot`: the history (and the navigator's stack) changes, nothing is shown — `$location`, the pages and
-the hooks see it at the next step that isn't quiet; pages opened quietly aren't mounted until shown. A home page under a
-deep link, a wizard's jump over several steps (each a history entry, only the last shown), leaving onboarding.
+```ts
+await router.pushLocation({ path: '/wizard/3', query: { draft: 1 } }, { quiet: true });
+router.$path.getState();          // '/home' — shown
+router.$actualPath.getState();    // '/wizard/3'
+router.actualParams.get('draft'); // 1
+```
+
+**The from-location**: `getFromLocation()` / `$fromLocation` — the location shown before the last change, in either
+direction (`null` before the first): analytics' `from`, which list item to highlight after Back.
+
+```ts
+sendEvent(name, { screen: router.getLocation().path, from: router.getFromLocation()?.path });
+```
+
+**Quiet steps** — `{ quiet: true }` on `pushLocation`, `replaceLocation`, `extendLocation`, `backRepeat`, `params.set /
+assign / remove / clear`, `nav.backToDepth`: the history (and the navigator's stack) changes, nothing is shown — the
+pages and the hooks see it at the next step that isn't quiet; pages opened quietly aren't mounted until shown. A home
+page under a deep link, a wizard's jump over several steps (each a history entry, only the last shown), leaving
+onboarding.
+
+`params` / `actualParams` have the interface of `localStorageProvider` / `cookieStorageProvider` (`TKeyValueStorage`:
+`get`, `set`, `assign`, `remove`, `getKeys`, `clear`, `watch`) and are `storeProvider`'s port:
+`storeProvider(deps, router.params)` keeps stores in the address. They read the query as last written; a changed key is
+reported once the location (shown / actual) has it. One part — one router. `backLocation()` at the history's first
+entry resolves `false` (a step back from there would leave the app) — or, with a navigator's `fallback`, goes there.
 
 The router's plumbing is public: `router.historyPrimitive` (its part) and `router.attach(driver)` (a navigator — or a
 driver of your own — takes its steps over; one per router).
@@ -99,17 +131,23 @@ export const NavigationHost = nav.NavigationHostProvider({
   section as it was left (the link's address isn't applied); the first visit — its root at the link's address; in the
   same section — back to its start, and if the link's address differs, the start takes it. Back from a section's start
   shows the start section; a page belongs to the section it was opened in; `state.section` — the shown section's root
-  pattern. `nav.backToRoot({ force, quiet })` — back to the section's start (without sections — the first page).
+  pattern. `nav.backToRoot()` — back to the section's start (without sections — the first page).
 - **A reload** restores the stack from the history: the pages below the top are `dormant` (not mounted) until reached;
   the windows' entries are passed (a window isn't reopened, D-011).
-- **More**: `nav.startOver(location)` (sign out — every page before is gone), `nav.leavePage()` (a page without
-  access: back, or `fallback` in its place — `createNavigator({ fallback })` once, or per call; `router.backLocation()`
-  at the first page goes there too, D-044), `nav.backToRoot`; leave guards and forward
-  handlers — `nav.onBeforeLeave`, `nav.onForward`, `nav.whileOpen` and the hooks `useBeforeLeave`, `useOnForward`,
-  `useWhileOpen`, `useEntry`, `useNavigatorState`; an entry is `closing` while its leave guards are asked (a page can
-  disable its buttons); `nav.Link` / `nav.NavLink` with `href` — a string read as `<a href>` reads it (`/x`, `?q=1`,
-  `42`) or a change (`{ path, query }`, encoded); `NavLink` is active on its address, under it (`activeAsParent`), or
-  while the section it leads to is shown.
+- **Backs**: `router.backLocation()`, `nav.leavePage()` (back a page — windows over it close too — or, at the first
+  page, the navigator's `fallback` in its place, D-044) and `nav.backToRoot()` (the section's start) take no
+  arguments — `onClick={nav.leavePage}`; with options — `router.backRepeat(count, { force, quiet })` and
+  `nav.backToDepth(depth, { force, quiet })` (`0` — the very first page: sign out). `nav.startOver(location)` — every
+  page before is gone.
+- **Reading the stack**: `nav.getHistory()` (the entries, bottom to top), `nav.getPrevLocation()` (what Back shows),
+  `nav.getNextLocation()` (what Forward brings back), `nav.$depth` (the depth, observable —
+  `nav.$depth.watch((depth) => …)`), `nav.$state` / `nav.getState()` / `nav.useNavigatorState()` (everything).
+- **Guards and handlers**: `nav.onBeforeLeave`, `nav.onForward`, `nav.whileOpen` and the hooks `useBeforeLeave`,
+  `useOnForward`, `useWhileOpen`, `useEntry`; an entry is `closing` while its leave guards are asked
+  (`<Button disabled={nav.useEntry().closing}>`).
+- **Links**: `nav.Link` / `nav.NavLink` with `href` — a string read as `<a href>` reads it (`/x`, `?q=1`, `42`) or a
+  change (`{ path, query }`, encoded); `NavLink` is active on its address, under it (`activeAsParent`), or while the
+  section it leads to is shown.
 
 A five-tab test app using all of it: web-games `frontend/labs/navigation`.
 

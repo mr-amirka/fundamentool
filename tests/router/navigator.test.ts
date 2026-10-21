@@ -15,13 +15,11 @@ import {
 } from 'react';
 import {
   createNavigator,
-  LEAVE_PAGE_OPTION_KEYS,
   NAVIGATION_HOST_OPTION_KEYS,
   NAVIGATOR_DEPS_KEYS,
   OPEN_OPTION_KEYS,
 } from '../../src/router';
 import type {
-  TLeavePageOptions,
   TNavigationHostOptions,
   TNavigatorDeps,
   TOpenOptions,
@@ -55,10 +53,6 @@ describe('createNavigator — options', () => {
       reopen: true,
     };
     expect([...OPEN_OPTION_KEYS]).toEqual(Object.keys(open));
-    const leave: Required<TLeavePageOptions> = {
-      fallback: {},
-    };
-    expect([...LEAVE_PAGE_OPTION_KEYS]).toEqual(Object.keys(leave));
     const host: Required<TNavigationHostOptions> = {
       routes: [],
       render: () => null,
@@ -323,22 +317,14 @@ describe('createNavigator — tabs and hooks', () => {
     ]));
     let allow = false;
     nav.onBeforeLeave(nav.getState().entries[2].id, () => allow);
-    await navigator.leavePage({
-      fallback: {
-        path: '/a',
-      },
-    });
+    await navigator.leavePage();
     await waitFor(() => expect(paths()).toEqual([
       '/a',
       '/b',
       'window',
     ]));
     allow = true;
-    await navigator.leavePage({
-      fallback: {
-        path: '/a',
-      },
-    });
+    await navigator.leavePage();
     await waitFor(() => expect(paths()).toEqual([
       '/a',
       '/b',

@@ -36,25 +36,57 @@ const router = createRouter({
   createObservable,
   createApi,
 });
-router.$location; router.$path; router.$query;          // адрес части
-await router.pushLocation({ path: '/level/2' });         // путь (или текущий) со своим query
+
+// Перейти — путь (или текущий) со своим query (не указанный query очищается)
+await router.pushLocation({ path: '/level/2' });
 await router.replaceLocation({ query: { tab: 'map' } });
-await router.backLocation();
-router.params.set('tab', 'map');                         // query как хранилище ключ-значение: новая запись…
+// Изменить часть, остальное оставить — query сливается, ключ со значением undefined удаляется
+await router.extendLocation({ query: { page: 2 } });
+await router.extendLocation({ query: { page: undefined } }, { replace: true });
+
+// Назад — без аргументов, сразу обработчик
+button.onclick = router.backLocation;
+await router.backRepeat(3, { force: true });             // 3 шага за один переход, не спрашивая подтверждений
+
+// С защитой от двойного нажатия — вызов, пока идёт прошлый или 300 мс от его начала, пропускается
+card.onclick = () => router.pushLocationThrottled({ path: '/item/7' });
+back.onclick = router.backLocationThrottled;
+
+// query как хранилище ключ-значение
+router.params.set('tab', 'map');                         // новая запись…
 router.params.set('scroll', 120, { replace: true });     // …или текущая
-await router.pushLocation({ path: '/wizard/3' }, { quiet: true }); // тихий шаг (D-042)
+router.params.assign({ sort: 'price', page: 2 });        // несколько ключей одной записью
 ```
 
-`params` — с интерфейсом `localStorageProvider` / `cookieStorageProvider` (`TKeyValueStorage`), порт для
-`storeProvider`: `storeProvider(deps, router.params)` хранит сторы в адресе. Читает query, каким его записали последним
-(шаг ещё в очереди или тихий — уже там); об изменённом ключе сообщает, когда адрес его показал. Одна часть — один
-роутер. `backLocation()` на первой записи истории возвращает `false` (шаг назад оттуда ушёл бы из приложения).
+**Что показано и где история** (D-045). `$location` / `$path` / `$query`, `getLocation()` и `params` — **то, что
+показано**, за ним следят страницы. `$actualLocation` / `$actualPath` / `$actualQuery`, `getActualLocation()` и
+`actualParams` — **где история на самом деле**. Расходятся, только пока есть тихие шаги.
 
-**Тихие шаги** — `{ quiet: true }` у `pushLocation`, `replaceLocation`, `backLocation`, `params.set / remove / clear`,
-`nav.backToRoot`: история (и стек навигатора) меняется, ничего не показывается — `$location`, страницы и хуки увидят это
-на следующем не тихом шаге; страницы, открытые тихо, не монтируются, пока их не покажут. Домашняя страница под
-глубокой ссылкой, прыжок мастера через несколько шагов (каждый — запись истории, показан только последний), выход из
-онбординга.
+```ts
+await router.pushLocation({ path: '/wizard/3', query: { draft: 1 } }, { quiet: true });
+router.$path.getState();          // '/home' — показано
+router.$actualPath.getState();    // '/wizard/3'
+router.actualParams.get('draft'); // 1
+```
+
+**Откуда пришли**: `getFromLocation()` / `$fromLocation` — адрес, показанный до последней смены, в любую сторону
+(`null` до первой): `from` в аналитике, какой пункт списка подсветить после «Назад».
+
+```ts
+sendEvent(name, { screen: router.getLocation().path, from: router.getFromLocation()?.path });
+```
+
+**Тихие шаги** — `{ quiet: true }` у `pushLocation`, `replaceLocation`, `extendLocation`, `backRepeat`, `params.set /
+assign / remove / clear`, `nav.backToDepth`: история (и стек навигатора) меняется, ничего не показывается — страницы и
+хуки увидят это на следующем не тихом шаге; страницы, открытые тихо, не монтируются, пока их не покажут. Домашняя
+страница под глубокой ссылкой, прыжок мастера через несколько шагов (каждый — запись истории, показан только
+последний), выход из онбординга.
+
+`params` / `actualParams` — с интерфейсом `localStorageProvider` / `cookieStorageProvider` (`TKeyValueStorage`: `get`,
+`set`, `assign`, `remove`, `getKeys`, `clear`, `watch`), порт для `storeProvider`: `storeProvider(deps, router.params)`
+хранит сторы в адресе. Читают query, каким его записали последним; об изменённом ключе сообщают, когда адрес (показанный
+/ настоящий) его получил. Одна часть — один роутер. `backLocation()` на первой записи истории возвращает `false` (шаг
+назад оттуда ушёл бы из приложения) — или, с `fallback` навигатора, идёт туда.
 
 Устройство роутера открыто: `router.historyPrimitive` (его часть) и `router.attach(driver)` (навигатор — или свой
 драйвер — забирает его шаги; один на роутер).
@@ -100,17 +132,23 @@ export const NavigationHost = nav.NavigationHostProvider({
   оставили (адрес ссылки не применяется); первый визит — корень по адресу ссылки; в том же разделе — назад к его началу,
   а если адрес ссылки другой, начало его получает. Назад с начала раздела показывает стартовый раздел; страница
   принадлежит разделу, в котором открыта; `state.section` — шаблон корня показанного раздела.
-  `nav.backToRoot({ force, quiet })` — назад к началу раздела (без разделов — к первой странице).
+  `nav.backToRoot()` — назад к началу раздела (без разделов — к первой странице).
 - **Перезагрузка** восстанавливает стек из истории: страницы под верхней — `dormant` (не смонтированы), пока до них не
   дойдут; записи окон проходятся (окно не открывается заново, D-011).
-- **Ещё**: `nav.startOver(location)` (выход из аккаунта — всё прежнее уходит), `nav.leavePage()` (страница без
-  доступа: назад или `fallback` на её месте — `createNavigator({ fallback })` один раз или в вызове;
-  `router.backLocation()` с первой страницы идёт туда же, D-044), `nav.backToRoot`; подтверждения
-  ухода и обработчики «вперёд» — `nav.onBeforeLeave`, `nav.onForward`, `nav.whileOpen` и хуки `useBeforeLeave`,
-  `useOnForward`, `useWhileOpen`, `useEntry`, `useNavigatorState`; запись `closing`, пока спрашивают её подтверждения
-  ухода (страница может выключить кнопки); `nav.Link` / `nav.NavLink` с `href` — строкой, как её читает `<a href>`
-  (`/x`, `?q=1`, `42`), или изменением (`{ path, query }`, закодировано); `NavLink` активна на своём адресе, под ним
-  (`activeAsParent`) или пока показан раздел, куда она ведёт.
+- **Назад**: `router.backLocation()`, `nav.leavePage()` (назад на страницу — окна над ней тоже закрываются — или, на
+  первой странице, `fallback` навигатора на её месте, D-044) и `nav.backToRoot()` (начало раздела) — без аргументов:
+  `onClick={nav.leavePage}`; с опциями — `router.backRepeat(count, { force, quiet })` и
+  `nav.backToDepth(depth, { force, quiet })` (`0` — самая первая страница: выход из аккаунта).
+  `nav.startOver(location)` — всё прежнее уходит.
+- **Чтение стека**: `nav.getHistory()` (записи снизу вверх), `nav.getPrevLocation()` (что покажет Назад),
+  `nav.getNextLocation()` (что вернёт Вперёд), `nav.$depth` (глубина, наблюдаемая — `nav.$depth.watch((depth) => …)`),
+  `nav.$state` / `nav.getState()` / `nav.useNavigatorState()` (всё).
+- **Подтверждения и обработчики**: `nav.onBeforeLeave`, `nav.onForward`, `nav.whileOpen` и хуки `useBeforeLeave`,
+  `useOnForward`, `useWhileOpen`, `useEntry`; запись `closing`, пока спрашивают её подтверждения ухода
+  (`<Button disabled={nav.useEntry().closing}>`).
+- **Ссылки**: `nav.Link` / `nav.NavLink` с `href` — строкой, как её читает `<a href>` (`/x`, `?q=1`, `42`), или
+  изменением (`{ path, query }`, закодировано); `NavLink` активна на своём адресе, под ним (`activeAsParent`) или пока
+  показан раздел, куда она ведёт.
 
 Тестовое приложение на пять вкладок, где всё это используется: web-games `frontend/labs/navigation`.
 

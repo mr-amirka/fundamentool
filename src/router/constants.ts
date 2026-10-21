@@ -20,3 +20,6 @@ export const DEFAULT_KEEP = 10;
 
 /** How long a closed window plays its exit, ms, unless `createNavigator({ exitMs })` says otherwise. */
 export const DEFAULT_EXIT_MS = 300;
+
+/** How long a throttled step locks its kind of step from its start, ms (a double tap steps once; D-045). */
+export const THROTTLE_MS = 300;
