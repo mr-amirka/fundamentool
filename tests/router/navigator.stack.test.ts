@@ -563,15 +563,20 @@ describe('createNavigator — the stack', () => {
     expect(asked).toEqual([]);
   });
 
-  it('an entry another script wrote starts the stack over at its path', async () => {
+  it('an address from outside (another script\'s entry, a typed hash) opens over the shown page, in its section (D-050)', async () => {
     const {
-      browser, paths,
+      navigator, browser, paths,
     } = setup();
     browser.foreign('/b/old');
     await waitFor(() => expect(paths()).toEqual([
       '/a',
       '/b/old',
     ]));
+    expect(navigator.getState().section).toBe('/a'); // opened from the start section — a page belongs where it was opened
+    expect(browser.paths()).toEqual([
+      '/a',
+      '/b/old',
+    ]);
   });
 
   it('a failed step (e.g. the history refuses) rejects it but doesn\'t block the next ones', async () => {

@@ -6,6 +6,7 @@ import type {
   TEntry,
   TNavigatorState,
   TPageEntry,
+  TUrlProps,
   TWindowEntry,
 } from './types';
 
@@ -25,6 +26,8 @@ export type TStateInput = {
   keepLimit: number;
   /** Some entry of any section has a leave guard. */
   anyLeaveGuarded: boolean;
+  /** The location held behind a closed gate (D-050). */
+  held: TUrlProps | null;
 };
 
 /**
@@ -60,7 +63,7 @@ export function topPage(list: readonly TEntry[]): TPageEntry {
  * lose its scroll).
  *
  * @example
- * const state = computeState({ entries, leaving, ahead, stacks, shown: null, keepLimit: DEFAULT_KEEP, anyLeaveGuarded: false });
+ * const state = computeState({ entries, leaving, ahead, stacks, shown: null, keepLimit: DEFAULT_KEEP, anyLeaveGuarded: false, held: null });
  */
 export function computeState(input: TStateInput): TNavigatorState {
   const {
@@ -99,5 +102,6 @@ export function computeState(input: TStateInput): TNavigatorState {
     page: top,
     section: shown,
     anyLeaveGuarded: input.anyLeaveGuarded,
+    held: input.held,
   };
 }

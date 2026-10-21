@@ -3,6 +3,7 @@
 // bindings (`viewHooksProvider`, `linksProvider`, D-049).
 import {
   assertKnownOptions,
+  nearestKnown,
 } from '../assertKnownOptions';
 import {
   describeValue,
@@ -86,9 +87,11 @@ export type TNavigatorCore = {
   setRoutes: (routes: readonly TRouteRow[]) => void;
   /** The section whose root a location is (`null` — not a root, or no sections). */
   rootOf: (location: TUrlProps) => string | null;
+  /** The names of the navigator's gates (D-050) — what a row's `gate` may say. */
+  gateNames: readonly string[];
 };
 
-function assertHostOptions(options: TNavigationHostOptions): void {
+function assertHostOptions(options: TNavigationHostOptions, gateNames: readonly string[]): void {
   if (!isObject(options) || isArray(options)) {
     throw new TypeError(`${WHERE} NavigationHostProvider: expects an options object, got ${describeValue(options)}`);
   }
@@ -114,6 +117,11 @@ function assertHostOptions(options: TNavigationHostOptions): void {
       if (value !== undefined && typeof value !== 'boolean') {
         throw new TypeError(`${WHERE} NavigationHostProvider: the row "${pattern}": "${key}" expects true or false, got ${describeValue(value)}`);
       }
+    }
+    const gate = fields.gate;
+    if (gate !== undefined && (typeof gate !== 'string' || !gateNames.includes(gate))) {
+      const near = typeof gate === 'string' ? nearestKnown(gate, gateNames) : '';
+      throw new TypeError(`${WHERE} NavigationHostProvider: the row "${pattern}": "gate" expects the name of a gate (createNavigator({ gates })), got ${describeValue(gate)}${near ? `. Did you mean "${near}"?` : `. Gates: ${gateNames.join(', ') || 'none'}`}`);
     }
     if (fields.section && firstRoot) {
       firstRoot = false;
@@ -240,7 +248,7 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
    * root.render(<NavigationHost />);
    */
   function NavigationHostProvider<R = Record<string, unknown>>(options: TNavigationHostOptions<R>): () => unknown {
-    assertHostOptions(options as TNavigationHostOptions);
+    assertHostOptions(options as TNavigationHostOptions, core.gateNames);
     // Called for every layer and window at every render: taken from the options once (D-035).
     const {
       routes,

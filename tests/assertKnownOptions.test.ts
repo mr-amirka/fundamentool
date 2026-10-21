@@ -1,6 +1,7 @@
 import {
   assertKnownOptions,
   describeValue,
+  nearestKnown,
 } from '../src/index';
 
 const WHERE = '[fundamentool test] factory';
@@ -124,5 +125,18 @@ describe('describeValue', () => {
     ],
   ])('%p → %s', (value, expected) => {
     expect(describeValue(value)).toBe(expected);
+  });
+});
+
+describe('nearestKnown', () => {
+  it('the name nearest to a key (case aside, at most two edits away), or none', () => {
+    const gates = [
+      'onboarding',
+      'signIn',
+    ];
+    expect(nearestKnown('onbording', gates)).toBe('onboarding');
+    expect(nearestKnown('SIGNIN', gates)).toBe('signIn');
+    expect(nearestKnown('payment', gates)).toBe('');
+    expect(nearestKnown('x', [])).toBe('');
   });
 });

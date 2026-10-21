@@ -39,9 +39,12 @@ Not yet — they come with fundamentool's own Effector: `store.updates`, `store.
 prepend`, `combine`, `sample`, scopes. Not adopted: a reducer's `undefined` skipped (`skipVoid`, deprecated in effector
 itself). The full comparison — research 12 (`PROJECTS_CONTEXT/fundamentool/AGENT_DRAFT/RESEARCH/`).
 
+Code that only reads a store takes a `TStore` (`getState` + `watch` — fundamentool's or effector's: `useUnit`, a
+navigator's gate); `isStore(unit)` tells a store from an event.
+
 ## Files
 
 | File | What's in it |
 |------|--------------|
-| `index.ts` | `createObservable`, `createEvent`, `createApi` |
-| `types.ts` | `Observable`, `ObservableWritable`, `TEvent`, `Unsubscribe`, `TObservableAdapter` |
+| `index.ts` | `createObservable`, `createEvent`, `createApi`, `isStore` |
+| `types.ts` | `Observable`, `ObservableWritable`, `TStore`, `TEvent`, `Unsubscribe`, `TObservableAdapter` |

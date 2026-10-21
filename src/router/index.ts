@@ -11,6 +11,7 @@ export {
 } from './createRouter';
 export {
   createNavigator,
+  GATE_KEYS,
   NAVIGATOR_DEPS_KEYS,
   OPEN_OPTION_KEYS,
 } from './navigator';

@@ -2,10 +2,17 @@
 import {
   forIn,
 } from '../forIn';
+import {
+  isFunction,
+} from '../is/isFunction';
+import {
+  isObject,
+} from '../is/isObject';
 import type {
   Observable,
   ObservableWritable,
   TEvent,
+  TStore,
   Unsubscribe,
   Watcher,
 } from './types';
@@ -175,6 +182,18 @@ export function createApi<
     api[key as keyof E] = event;
   });
   return api;
+}
+
+/**
+ * Whether `unit` is a store — `getState` + `watch` (fundamentool's or effector's); an event — a function without
+ * `getState` — isn't one.
+ *
+ * @example
+ * isStore(createObservable(0)); // => true
+ * isStore(createEvent());       // => false
+ */
+export function isStore(unit: unknown): unit is TStore {
+  return (isObject(unit) || isFunction(unit)) && isFunction((unit as TStore).getState) && isFunction((unit as TStore).watch);
 }
 
 export * from './types';

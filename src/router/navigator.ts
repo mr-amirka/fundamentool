@@ -26,6 +26,9 @@ import {
   keyedRegistry,
 } from '../keyedRegistry';
 import {
+  isStore,
+} from '../Observable';
+import {
   assertViewLibrary,
   VIEW_LIBRARY_KEYS,
 } from '../view/library';
@@ -60,6 +63,7 @@ import {
 import {
   assertFlags,
   BACK_OPTION_KEYS,
+  STEP_OPTION_KEYS,
 } from './options';
 import {
   fixedPathOf,
@@ -69,11 +73,14 @@ import type {
   TRouteMatch,
 } from './routeTable';
 import type {
+  TStore,
   Unsubscribe,
 } from '../Observable/types';
 import type {
   TBackOptions,
+  TEnterGuard,
   TEntry,
+  TGate,
   THistoryEntry,
   TForwardHandler,
   TLeaveGuard,
@@ -119,7 +126,20 @@ export const NAVIGATOR_DEPS_KEYS = [
   ...VIEW_LIBRARY_KEYS,
   ...NUMBER_DEPS,
   'fallback',
+  'gates',
 ] as const;
+
+/** The single list of a gate's keys (D-050). */
+export const GATE_KEYS = [
+  'closed',
+  'to',
+] as const;
+
+/** At most this many redirects of the entry guards in a row — more is a loop. */
+const MAX_REDIRECTS = 10;
+
+/** A gate as the navigator keeps it: its name, its store (`true` — closed), its first page. */
+type TGateItem = [name: string, closed: TStore<boolean>, to: Partial<TUrlProps>];
 
 /** The single list of `open`'s option keys. */
 export const OPEN_OPTION_KEYS = ['reopen'] as const;
@@ -144,6 +164,8 @@ type TNavData = {
   /** The tab shown, and the other tabs' stacks. */
   shown: string | null;
   tabs: Record<string, TSaved[]>;
+  /** The location held behind a closed gate (D-050), its address; left out — none. */
+  held?: string;
 };
 
 /** How a step back ended: `left` settles `true` when the entries were left, `false` when a guard kept them. */
@@ -201,6 +223,40 @@ function assertNavigatorDeps(deps: TNavigatorDeps): void {
   assertLocation(
     WHERE, 'fallback', deps.fallback,
   );
+  assertGates(deps.gates);
+}
+
+/** `gates`: left out, or `{ [name]: { closed, to } }` — a store of `true` / `false` and a location (D-050). */
+function assertGates(gates: unknown): void {
+  if (gates === undefined) {
+    return;
+  }
+  if (!isObject(gates) || isArray(gates)) {
+    throw new TypeError(`${WHERE}: "gates" expects { [name]: { closed, to } }, got ${describeValue(gates)}`);
+  }
+  for (const name of Object.keys(gates)) {
+    const gate = (gates as Record<string, unknown>)[name];
+    const where = `${WHERE}: the gate "${name}"`;
+    if (!isObject(gate) || isArray(gate)) {
+      throw new TypeError(`${where} expects { closed, to }, got ${describeValue(gate)}`);
+    }
+    assertKnownOptions(
+      where, gate, GATE_KEYS,
+    );
+    const {
+      closed,
+      to,
+    } = gate as TGate;
+    if (!isStore(closed)) {
+      throw new TypeError(`${where}: "closed" expects a store of true / false (getState + watch), got ${describeValue(closed)}`);
+    }
+    if (to === undefined) {
+      throw new TypeError(`${where}: "to" expects its first page ({ path, … }), got undefined`);
+    }
+    assertLocation(
+      where, 'to', to,
+    );
+  }
 }
 
 /** A location option (`fallback`): left out, or an object (`{ path, query, … }`). */
@@ -244,6 +300,26 @@ export function createNavigator(deps: TNavigatorDeps) {
   /** The start section — the first root; its root (a fixed path) is put under every deep link. */
   let homeSection: string | null = null;
   let homeRoot: TUrlProps | null = null;
+
+  // ── arriving (D-050) ──────────────────────────────────────────────────────────────────────────────────────────
+
+  /** The gates, in the order given: the name, the store (`true` — closed), the first page. */
+  const gates: TGateItem[] = Object.keys(deps.gates || {}).map((name) => {
+    const gate = (deps.gates as Record<string, TGate>)[name];
+    return [
+      name,
+      gate.closed,
+      gate.to,
+    ];
+  });
+  /** The entry guards, in the order registered (an item each: one guard may be registered twice). */
+  const enterGuards: { guard: TEnterGuard }[] = [];
+  /** The location held behind a closed gate; `null` — none. */
+  let held: TUrlProps | null = null;
+  /** The route table has come (the host is made): from then on the gates hold, and the start was checked. */
+  let routed = false;
+  /** The first visit's page — the stack is still a first visit while it is the only one. */
+  let firstId = 0;
 
   // ── the stack ─────────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -358,6 +434,7 @@ export function createNavigator(deps: TNavigatorDeps) {
       shown,
       keepLimit,
       anyLeaveGuarded: anyLeaveGuarded(),
+      held,
     });
   }
 
@@ -552,6 +629,9 @@ export function createNavigator(deps: TNavigatorDeps) {
       shown,
       tabs: savedTabs(),
     };
+    if (held !== null) {
+      data.held = held.href;
+    }
     (replace ? primitive.replace : primitive.push)(pageAt(entries, depth).location, data);
     return placed;
   }
@@ -597,6 +677,7 @@ export function createNavigator(deps: TNavigatorDeps) {
       stacks.set(name, fromSaved(data.tabs[name]));
     }
     entries = fromSaved(data.stack);
+    held = typeof data.held === 'string' ? urlParse(data.held) : null;
     ahead = [];
     for (const entry of dropped) {
       forget(entry);
@@ -718,6 +799,13 @@ export function createNavigator(deps: TNavigatorDeps) {
   ): Promise<TOutcome> {
     const data = entry.data;
     if (!isNavData(data)) {
+      if (entry.index > entries[entries.length - 1].historyIndex) {
+        // An address from outside (a typed hash, a plain anchor) ahead of the shown page: back where the player was, and
+        // the step taken as any step of the app — over the shown page, asked like one (D-050)
+        await travelToIndex(from);
+        void go(entry.location);
+        return STAYED;
+      }
       reset(entry.location);
       publish();
       return LEFT;
@@ -732,8 +820,7 @@ export function createNavigator(deps: TNavigatorDeps) {
     if (entries[target]?.id !== data.id) {
       // An entry of a stack we don't hold (written before a reload): the stack is what it kept.
       restore(data);
-      publish();
-      await passGoneWindows();
+      await showRestored();
       return LEFT;
     }
     /* istanbul ignore next -- the history never reports the entry it is already on */
@@ -829,8 +916,7 @@ export function createNavigator(deps: TNavigatorDeps) {
       }
       // Pages we don't hold (after a reload): the stack the history kept.
       restore(data);
-      publish();
-      await passGoneWindows();
+      await showRestored();
       return LEFT;
     }
     const kind = back[0].kind;
@@ -939,8 +1025,19 @@ export function createNavigator(deps: TNavigatorDeps) {
    * are asked first — outside the queue, they may open windows; with none, the step takes its place in the queue at
    * once, so steps keep their call order.
    */
-  async function go(location: TUrlProps, options?: TStepOptions): Promise<boolean> {
+  async function go(change: TUrlProps, options?: TStepOptions): Promise<boolean> {
     const quiet = !!options?.quiet;
+    const before = held;
+    const admitted = admit(change);
+    if (admitted === null) {
+      await keepHeld(before);
+      return false;
+    }
+    const location = admitted.location;
+    if (admitted.gated) {
+      await enqueue(() => startOverIn([location], quiet));
+      return true;
+    }
     const root = rootOf(location);
     if (root !== null) {
       await toSection(
@@ -992,21 +1089,57 @@ export function createNavigator(deps: TNavigatorDeps) {
     publish();
   }
 
-  function replace(location: TUrlProps, options?: TStepOptions): Promise<void> {
-    return enqueue(() => quietly(!!options?.quiet, () => replaceTop(location)));
+  async function replace(change: TUrlProps, options?: TStepOptions): Promise<void> {
+    const quiet = !!options?.quiet;
+    const before = held;
+    const admitted = admit(change);
+    if (admitted === null) {
+      await keepHeld(before);
+      return;
+    }
+    const location = admitted.location;
+    await enqueue(() => (admitted.gated ? startOverIn([location], quiet) : quietly(quiet, () => replaceTop(location))));
   }
 
-  /** Drops every page and window and opens `change` alone — sign out, switching account. */
-  function startOver(change: Partial<TUrlProps>): Promise<void> {
-    return enqueue(async () => {
-      const location = locate(change, topPage(entries).location);
-      const current = entries.length - 1;
-      if (current > 0) {
-        await travelToStart();
+  /**
+   * Drops every page and window and lays the history out anew from its first entry (D-050): `change` alone — sign out,
+   * switching account — or a list, bottom to top, each located against the one before: every page but the last is
+   * dormant, only the last is shown, nothing on the way. A section's root can only be first (it decides the section).
+   * `quiet` — nothing shown until the next step. The last page is asked as any step's (the gates, the entry guards).
+   *
+   * @example
+   * await nav.startOver({ path: '/signin' });
+   * await nav.startOver([{ path: '/' }, { path: '/place/5' }]); // the place shown; Back goes home
+   */
+  async function startOver(change: Partial<TUrlProps> | readonly Partial<TUrlProps>[], options?: TStepOptions): Promise<void> {
+    const list = isArray(change) ? change : [change];
+    if (!list.length || list.some((item) => !isObject(item) || isArray(item))) {
+      throw new TypeError(`${WHERE} startOver: expects a location ({ path, query, … }) or a non-empty list of them, got ${describeValue(change)}`);
+    }
+    assertFlags(
+      `${WHERE} startOver`, options, STEP_OPTION_KEYS,
+    );
+    const locations: TUrlProps[] = [];
+    let base = topPage(entries).location;
+    for (const item of list) {
+      base = locate(item, base);
+      if (locations.length && rootOf(base) !== null) {
+        throw new TypeError(`${WHERE} startOver: "${base.path}" is a section's root — it can only be first (the first location decides the section)`);
       }
-      reset(location);
-      publish();
-    });
+      locations.push(base);
+    }
+    const before = held;
+    const last = locations.length - 1;
+    const admitted = admit(locations[last]);
+    if (admitted === null) {
+      await keepHeld(before);
+      return;
+    }
+    const target = admitted.gated ? [admitted.location] : [
+      ...locations.slice(0, last),
+      admitted.location,
+    ];
+    await enqueue(() => startOverIn(target, !!options?.quiet));
   }
 
   /**
@@ -1163,7 +1296,11 @@ export function createNavigator(deps: TNavigatorDeps) {
     if (!fallback || pageIndexAt(entries, entries.length - 1) > 0) {
       return false; // no fallback — or a page was opened while the step waited: not the first page any more
     }
-    const location = locate(fallback, topPage(entries).location);
+    const admitted = admit(locate(fallback, topPage(entries).location), false);
+    if (admitted === null || admitted.gated) {
+      return false; // refused — or a gate keeps the player on its pages
+    }
+    const location = admitted.location;
     if (entries.length === 1 && topPage(entries).location.href === location.href) {
       return false; // already there, nothing over it
     }
@@ -1188,6 +1325,274 @@ export function createNavigator(deps: TNavigatorDeps) {
     } else {
       await enqueue(() => toFallback(deps.fallback));
     }
+  }
+
+  // ── arriving: the gates, the entry guards, a first visit's layout (D-050) ───────────────────────────────────────
+
+  /** A location's row (`null` — none, or no table yet). */
+  function rowOf(location: TUrlProps): (TRouteRowBase & Record<string, unknown>) | null {
+    const found = match(location.path);
+    return found ? found.row : null;
+  }
+
+  /** The gate a location's page belongs to — its row's `gate`; `null` — none. */
+  function gateOf(location: TUrlProps): string | null {
+    const gate = rowOf(location)?.gate;
+    return typeof gate === 'string' ? gate : null;
+  }
+
+  /** The first closed gate, in order — the one to pass now; `null` — all are open (or the table hasn't come). */
+  function activeGate(): TGateItem | null {
+    if (routed) {
+      for (const gate of gates) {
+        if (gate[1].getState()) {
+          return gate;
+        }
+      }
+    }
+    return null;
+  }
+
+  /** The entry guards' answer for `location`: the first one that isn't `true`; all agree — `true`. */
+  function askEnterGuards(location: TUrlProps): boolean | Partial<TUrlProps> {
+    const found = match(location.path);
+    const target = {
+      location,
+      row: found ? found.row : null,
+      params: found ? found.params : {},
+    };
+    for (const item of enterGuards.slice()) {
+      const answer = item.guard(target);
+      if (answer !== true) {
+        if (answer !== false && (!isObject(answer) || isArray(answer))) {
+          throw new TypeError(`${WHERE} onBeforeEnter: a guard answers true, false or a location ({ path, … }), got ${describeValue(answer)}`);
+        }
+        return answer;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * What a step to `location` shows. The active gate admits only its own pages: another location is held (the newest
+   * wins; a gate's page never is) and the player stays on the gate's page — or, not on it yet, is shown its first page
+   * (`gated`). Then the entry guards, in order: a location one answers is asked again. `null` — nothing is shown.
+   * `hold` — `false` for a location the player didn't ask for (the fallback).
+   */
+  function admit(location: TUrlProps, hold = true): { location: TUrlProps;
+    gated: boolean } | null {
+    let target = location;
+    for (let redirects = 0; ; redirects++) {
+      const gate = activeGate();
+      const own = gateOf(target);
+      if (gate !== null && own !== gate[0]) {
+        if (hold && own === null) {
+          held = target;
+        }
+        return gateOf(topPage(entries).location) === gate[0] ? null : {
+          location: locate(gate[2], target),
+          gated: true,
+        };
+      }
+      const answer = askEnterGuards(target);
+      if (answer === true) {
+        return {
+          location: target,
+          gated: false,
+        };
+      }
+      if (answer === false) {
+        return null;
+      }
+      if (redirects === MAX_REDIRECTS) {
+        throw new Error(`${WHERE} onBeforeEnter: more than ${MAX_REDIRECTS} redirects in a row — a loop? (the last to "${target.href}")`);
+      }
+      target = locate(answer, target);
+    }
+  }
+
+  /** A step wasn't taken: if it was held meanwhile, the held location goes into the state and the history. */
+  async function keepHeld(before: TUrlProps | null): Promise<void> {
+    if (held !== before) {
+      await enqueue(saveHeld);
+    }
+  }
+
+  /** The held location into the state and into the history's entry on top (it survives a reload). Inside the queue. */
+  function saveHeld(): void {
+    write(entries[entries.length - 1], true);
+    publish();
+  }
+
+  /**
+   * How a first visit lays `location` out: without sections over the `fallback` (unless it is the fallback); with
+   * sections `reset` puts the start root under it.
+   */
+  function firstVisit(location: TUrlProps): TUrlProps[] {
+    if (homeSection === null && deps.fallback) {
+      const base = locate(deps.fallback, location);
+      if (base.href !== location.href) {
+        return [
+          base,
+          location,
+        ];
+      }
+    }
+    return [location];
+  }
+
+  /**
+   * Drops the stack and lays it out anew from the history's current entry: `locations`, bottom to top — every page but
+   * the last dormant, the last shown (unless `quiet`); published once. Inside the queue, or at the start.
+   */
+  function layOut(locations: readonly TUrlProps[], quiet: boolean): void {
+    const last = locations.length - 1;
+    quietStep = last > 0 || quiet;
+    reset(locations[0]);
+    for (let i = 1; i <= last; i++) {
+      quietStep = i < last || quiet;
+      const same = samePage(locations[i]);
+      push(page(
+        locations[i], entries.length, same ? same.section : shown, same?.id,
+      ));
+    }
+    if (last === 0) {
+      publish();
+    }
+    quietStep = false;
+  }
+
+  /** Back to the stack's first entry, then `layOut`. Inside the queue. */
+  async function startOverIn(locations: readonly TUrlProps[], quiet: boolean): Promise<void> {
+    if (entries.length > 1) {
+      await travelToStart();
+    }
+    layOut(locations, quiet);
+  }
+
+  /**
+   * The active gate shows its page: the page on screen is held — unless it is a gate's, or something is held already
+   * (it passes from gate to gate) — and the stack starts over at the gate's first page. Inside the queue.
+   */
+  async function holdForGate(gate: TGateItem): Promise<void> {
+    const location = topPage(entries).location;
+    if (gateOf(location) === null && held === null) {
+      held = location;
+    }
+    await startOverIn([locate(gate[2], location)], false);
+  }
+
+  /**
+   * A stack restored from the history (a move into one the navigator doesn't hold — after a reload, after a start over)
+   * is shown — unless the active gate must hold it (D-050). Inside the queue.
+   */
+  async function showRestored(): Promise<void> {
+    const gate = activeGate();
+    if (gate !== null && gateOf(topPage(entries).location) !== gate[0]) {
+      await holdForGate(gate);
+      return;
+    }
+    publish();
+    await passGoneWindows();
+  }
+
+  /**
+   * Every gate is open: the held location is laid out as a first visit would lay it out, nothing shown on the way (the
+   * entry guards asked; refused — the `fallback`); nothing held, a gate's page on screen — the `fallback`. Checked when
+   * its turn comes: a gate closed meanwhile, or released already — nothing. Inside the queue.
+   */
+  async function release(): Promise<void> {
+    const location = topPage(entries).location;
+    if (activeGate() !== null || held === null && gateOf(location) === null) {
+      return;
+    }
+    const fallback = deps.fallback ? locate(deps.fallback, location) : null;
+    const target = held;
+    held = null;
+    const admitted = (target && admit(target, false)) || (fallback && admit(fallback, false));
+    if (!admitted) {
+      saveHeld(); // nothing to show: the gate's page stays, nothing is held any more
+      return;
+    }
+    await startOverIn(firstVisit(admitted.location), false);
+  }
+
+  /** A gate's store changed: the active gate holds; none closed — the held location is shown. Inside the queue. */
+  async function gatesChanged(): Promise<void> {
+    if (!routed) {
+      return; // the start check decides when the table comes
+    }
+    const gate = activeGate();
+    if (gate === null) {
+      await release();
+    } else if (gateOf(topPage(entries).location) !== gate[0]) {
+      await holdForGate(gate);
+    }
+  }
+
+  /**
+   * The route table has come for the first time — the host is made, nothing is drawn yet: the page in the address is
+   * asked (the gates, the entry guards; refused — the `fallback`), and a first visit is laid out (`firstVisit`). A
+   * location held before a reload with every gate open now: shown if a gate's page is on screen, otherwise dropped.
+   */
+  function startCheck(): void {
+    const location = topPage(entries).location;
+    const single = entries.length === 1;
+    const admitted = admit(location) || (deps.fallback ? admit(locate(deps.fallback, location), false) : null);
+    let target: TUrlProps[] | null = null;
+    if (admitted && admitted.gated) {
+      target = [admitted.location]; // the gate's page alone: Back from it leaves the app
+    } else if (admitted && admitted.location.href !== location.href) {
+      target = firstVisit(admitted.location); // a guard sent it elsewhere, or the fallback took it
+    } else if (!restored && single && entries[0].id === firstId && firstVisit(location).length > 1) {
+      target = firstVisit(location); // a deep link: the fallback under it (sections — the start root, below)
+    }
+    if (held !== null && activeGate() === null) {
+      if (gateOf(location) === null) {
+        held = null;
+      } else {
+        void enqueue(release);
+      }
+    }
+    if (target === null) {
+      if (homeSection !== null && shown === null) {
+        reset(location);
+      }
+      publish();
+    } else if (single) {
+      layOut(target, false);
+    } else {
+      publish();
+      const locations = target;
+      void enqueue(() => startOverIn(locations, false));
+    }
+  }
+
+  /**
+   * `guard` is asked before a location is shown — by any step, a link, a tab, `startOver`, `leavePage`'s fallback, an
+   * address from outside, and for the page in the address at the start (D-050): `true` — open it; a location — open that
+   * instead (asked again); `false` — it isn't opened, the player stays (at the start — the `fallback`). Not asked: Back
+   * and Forward over pages already in the stack, windows. Synchronous — the start is decided before the first render.
+   * Returns the unsubscribe.
+   *
+   * @example
+   * nav.onBeforeEnter(({ params }) => params.levelId === undefined || progress.isUnlocked(params.levelId)); // locked: stays
+   * nav.onBeforeEnter(({ location }) => (location.path === '/old-shop' ? { path: '/shop' } : true));      // moved
+   */
+  function onBeforeEnter(guard: TEnterGuard): () => void {
+    if (!isFunction(guard)) {
+      throw new TypeError(`${WHERE} onBeforeEnter: expects a function, got ${describeValue(guard)}`);
+    }
+    const item = {
+      guard,
+    };
+    enterGuards.push(item);
+    return () => {
+      const at = enterGuards.indexOf(item);
+      if (at >= 0) {
+        enterGuards.splice(at, 1);
+      }
+    };
   }
 
   // ── whether an entry's leave is being confirmed (D-047) ───────────────────────────────────────────────────────
@@ -1320,7 +1725,17 @@ export function createNavigator(deps: TNavigatorDeps) {
    * once draw the same pages.
    */
   function setRoutes(routes: readonly TRouteRow[]): void {
-    match = routeTableMatcher(routes);
+    const matcher = routeTableMatcher(routes);
+    for (const [
+      name,,
+      to,
+    ] of gates) {
+      const first = locate(to, topPage(entries).location);
+      if (matcher(first.path)?.row.gate !== name) {
+        throw new TypeError(`${WHERE}: the gate "${name}": its page "${first.path}" isn't one of its pages — mark its row \`gate: '${name}'\``);
+      }
+    }
+    match = matcher;
     rootKeys = new Map();
     roots = [];
     for (const [
@@ -1356,6 +1771,11 @@ export function createNavigator(deps: TNavigatorDeps) {
     ] of stacks) {
       stacks.set(name, list.map(describe));
     }
+    if (!routed) {
+      routed = true;
+      startCheck();
+      return;
+    }
     if (homeSection !== null && shown === null) {
       reset(topPage(entries).location);
     }
@@ -1383,6 +1803,7 @@ export function createNavigator(deps: TNavigatorDeps) {
     restored = true;
   } else {
     reset(start.location);
+    firstId = entries[0].id;
   }
   storeShown();
   let state = snapshot();
@@ -1399,6 +1820,12 @@ export function createNavigator(deps: TNavigatorDeps) {
   primitive.watch((entry, from) => {
     void enqueue(() => settle(entry, from.index));
   });
+  // A gate's store fires at once too (a store's watch) — before the table that one is the start check's (D-050)
+  for (const gate of gates) {
+    gate[1].watch(() => {
+      void enqueue(gatesChanged);
+    });
+  }
 
   const view = createNavigatorView(deps, {
     $state,
@@ -1409,6 +1836,7 @@ export function createNavigator(deps: TNavigatorDeps) {
     onBeforeLeave,
     setRoutes,
     rootOf,
+    gateNames: gates.map((gate) => gate[0]),
   });
 
   return {
@@ -1434,6 +1862,7 @@ export function createNavigator(deps: TNavigatorDeps) {
     whileOpen,
     onForward,
     onBeforeLeave,
+    onBeforeEnter,
     ...view,
   };
 }

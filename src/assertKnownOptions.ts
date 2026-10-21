@@ -43,6 +43,29 @@ function editDistance(
 }
 
 /**
+ * The name of `known` nearest to `key` (case aside, at most two edits away) — the "did you mean" of an error; `''` —
+ * none is near.
+ *
+ * @example
+ * nearestKnown('onbording', ['onboarding', 'signIn']); // => 'onboarding'
+ * nearestKnown('x', ['onboarding']); // => ''
+ */
+export function nearestKnown(key: string, known: readonly string[]): string {
+  let best = '';
+  let bestDistance = 3;
+  for (const candidate of known) {
+    const distance = editDistance(
+      key.toLowerCase(), candidate.toLowerCase(), 2,
+    );
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = candidate;
+    }
+  }
+  return best;
+}
+
+/**
  * Throws if `options` has a key outside `known` (`undefined` values are treated as absent).
  *
  * @param where   - prefix for messages, e.g. `[fundamentool] createNavigation`.
@@ -62,17 +85,7 @@ export function assertKnownOptions(
     if (record[key] === undefined || known.includes(key)) {
       continue;
     }
-    let best = '';
-    let bestDistance = 3;
-    for (const candidate of known) {
-      const distance = editDistance(
-        key.toLowerCase(), candidate.toLowerCase(), 2,
-      );
-      if (distance < bestDistance) {
-        bestDistance = distance;
-        best = candidate;
-      }
-    }
+    const best = nearestKnown(key, known);
     throw new TypeError(best
       ? `${where}: unknown option "${key}". Did you mean "${best}"?`
       : `${where}: unknown option "${key}". Known options: ${known.join(', ')}`);

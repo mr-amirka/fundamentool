@@ -2,6 +2,7 @@
 import type {
   Observable,
   TObservableAdapter,
+  TStore,
 } from '../Observable/types';
 import type {
   TKeyValueStorage,
@@ -199,6 +200,11 @@ export type TRouteRowBase = {
    * through `router.params` (`storeProvider(deps, router.params)`).
    */
   quietQuery?: boolean;
+  /**
+   * The row is a page of this gate (`createNavigator({ gates })`, D-050): while the gate is closed only its pages are
+   * shown.
+   */
+  gate?: string;
 };
 
 /** A row of the route table: a path pattern and what the app puts there. */
@@ -283,6 +289,8 @@ export type TNavigatorState<R = Record<string, unknown>> = {
   section: string | null;
   /** Some entry — in any section — has a leave guard: leaving the app would lose something (D-049). */
   anyLeaveGuarded: boolean;
+  /** The location held behind a closed gate — shown when it opens (D-050); `null` — none. */
+  held: TUrlProps | null;
 };
 
 /** Options of `nav.open`. */
@@ -304,6 +312,29 @@ export type TForwardHandler = () => void | false | (() => void) | Promise<void |
 /** Asked before an entry is left by going back; `false` keeps it. */
 export type TLeaveGuard = () => boolean | Promise<boolean>;
 
+/** What an entry guard is asked about: the location a step would show, its row and that row's parameters. */
+export type TEnterTarget<R = Record<string, unknown>> = {
+  location: TUrlProps;
+  /** Its row of the table (`null` — no row fits, or the table hasn't come yet). */
+  row: (TRouteRowBase & R) | null;
+  /** The parameters its row's pattern gave, decoded (`/level/:levelId` → `{ levelId }`). */
+  params: TParams;
+};
+
+/**
+ * Asked before a location is shown (`nav.onBeforeEnter`, D-050): `true` — open it; a location — open that instead;
+ * `false` — it isn't opened (the player stays where they are; at the start — the `fallback`).
+ */
+export type TEnterGuard<R = Record<string, unknown>> = (target: TEnterTarget<R>) => boolean | Partial<TUrlProps>;
+
+/** A gate (`createNavigator({ gates })`, D-050): pages that must come first — onboarding, sign-in, terms. */
+export type TGate = {
+  /** `true` while the gate holds: only its pages (rows with `gate: <its name>`) are shown. */
+  closed: TStore<boolean>;
+  /** Its first page — shown when a location is held. */
+  to: Partial<TUrlProps>;
+};
+
 /** The navigator's dependencies: the router, the observable adapter, the view library (React, Preact, …), settings. */
 export type TNavigatorDeps = TObservableAdapter & Pick<TViewLibrary,
   'createElement' | 'forwardRef' | 'useSyncExternalStore' | 'useEffect' | 'useRef' | 'createContext' | 'useContext'
@@ -318,6 +349,11 @@ export type TNavigatorDeps = TObservableAdapter & Pick<TViewLibrary,
    * the first page replace it with this. Left out — they stay.
    */
   fallback?: Partial<TUrlProps>;
+  /**
+   * Pages that must come first (D-050), asked in this order: while a gate is closed only its pages are shown — any other
+   * location is held (`state.held`) and shown when the gate opens, over the `fallback`.
+   */
+  gates?: Record<string, TGate>;
 };
 
 /** What `nav.NavigationHostProvider` takes. */

@@ -28,6 +28,12 @@ export interface Observable<T> {
 }
 
 /** Observable with write access. */
+/**
+ * Any store, read-only — `getState` + `watch`: fundamentool's (`createObservable`, a derived one) or effector's. What
+ * code that only reads a store takes (`useUnit`, a navigator's gate).
+ */
+export type TStore<T = unknown> = Pick<Observable<T>, 'getState' | 'watch'>;
+
 export type ObservableWritable<T> = Observable<T> & {
   setState(next: T): void;
 };

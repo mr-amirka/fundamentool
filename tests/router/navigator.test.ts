@@ -14,12 +14,17 @@ import {
   act,
 } from 'react';
 import {
+  createObservable,
+} from '../../src/Observable';
+import {
   createNavigator,
+  GATE_KEYS,
   NAVIGATION_HOST_OPTION_KEYS,
   NAVIGATOR_DEPS_KEYS,
   OPEN_OPTION_KEYS,
 } from '../../src/router';
 import type {
+  TGate,
   TNavigationHostOptions,
   TNavigatorDeps,
   TOpenOptions,
@@ -28,8 +33,10 @@ import {
   freshDeps,
   inMemory,
   mount,
+  PLAIN,
   settle,
   setup,
+  TABS,
   waitFor,
 } from './_harness';
 
@@ -47,9 +54,15 @@ describe('createNavigator — options', () => {
       keep: 1,
       exitMs: 1,
       fallback: {},
+      gates: {},
       useState: React.useState, // a member of the view library the navigator accepts but doesn't need
     };
     expect([...NAVIGATOR_DEPS_KEYS].sort()).toEqual(Object.keys(deps).sort());
+    const gate: Required<TGate> = {
+      closed: createObservable(false),
+      to: {},
+    };
+    expect([...GATE_KEYS]).toEqual(Object.keys(gate));
     const open: Required<TOpenOptions> = {
       reopen: true,
     };
@@ -199,6 +212,23 @@ describe('createNavigator — the host', () => {
     } = mount(next);
     expect(container.textContent).toBe('new');
     unmount();
+  });
+
+  it('a new table that brings sections (a hot reload) lays the stack out by them', () => {
+    const {
+      navigator, paths,
+    } = setup({
+      routes: PLAIN,
+    }, '/b/7');
+    expect(paths()).toEqual(['/b/7']);
+    navigator.NavigationHostProvider({
+      routes: TABS,
+    });
+    expect(paths()).toEqual([
+      '/a',
+      '/b/7',
+    ]);
+    expect(navigator.getState().section).toBe('/b');
   });
 
   it('entries get their rows when the host is made; a page opened before it has none', async () => {
@@ -454,19 +484,14 @@ describe('createNavigator — a reload (D-039)', () => {
     ]));
   });
 
-  it('an entry of another stack (the one before a start over by another script) rebuilds the stack from it', async () => {
+  it('an entry of another stack (the one before a start over), reached by Forward, rebuilds the stack from it', async () => {
     const {
       nav, browser, paths,
     } = setup({}, '/a');
     await nav.go('/a/1');
-    browser.foreign('/b/old');
-    await waitFor(() => expect(paths()).toEqual([
-      '/a',
-      '/b/old',
-    ]));
-    browser.userBack(); // the new stack's start (written over the other script's entry)
-    await waitFor(() => expect(paths()).toEqual(['/a']));
-    browser.userBack(); // an entry of the stack from before: rebuilt from it
+    await nav.back(); // the step ahead
+    await nav.startOver('/a'); // the first entry written anew; the browser keeps the entry ahead (only a push drops it)
+    browser.userForward(); // an entry of the stack from before: rebuilt from it (a closed gate would hold it — D-050)
     await waitFor(() => expect(paths()).toEqual([
       '/a',
       '/a/1',

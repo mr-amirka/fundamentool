@@ -39,9 +39,12 @@ api.add(2);                                          // их наблюдате�
 prepend`, `combine`, `sample`, скоупы. Не принято: пропуск `undefined` из редьюсера (`skipVoid`, устаревший в самом
 effector). Полное сравнение — исследование 12 (`PROJECTS_CONTEXT/fundamentool/AGENT_DRAFT/RESEARCH/`).
 
+Код, который стор только читает, принимает `TStore` (`getState` + `watch` — fundamentool или effector: `useUnit`,
+ворота навигатора); `isStore(unit)` отличает стор от события.
+
 ## Файлы
 
 | Файл | Что в нём |
 |------|-----------|
-| `index.ts` | `createObservable`, `createEvent`, `createApi` |
-| `types.ts` | `Observable`, `ObservableWritable`, `TEvent`, `Unsubscribe`, `TObservableAdapter` |
+| `index.ts` | `createObservable`, `createEvent`, `createApi`, `isStore` |
+| `types.ts` | `Observable`, `ObservableWritable`, `TStore`, `TEvent`, `Unsubscribe`, `TObservableAdapter` |

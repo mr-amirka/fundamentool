@@ -144,7 +144,7 @@ export const NavigationHost = nav.NavigationHostProvider({
   page, the navigator's `fallback` in its place, D-044) and `nav.backToRoot()` (the section's start) take no
   arguments — `onClick={nav.leavePage}`; with options — `router.backRepeat(count, { force, quiet })` and
   `nav.backToDepth(depth, { force, quiet })` (`0` — the very first page: sign out). `nav.startOver(location)` — every
-  page before is gone.
+  page before is gone (a list — a whole history in one step, below).
 - **Reading the stack**: `nav.getHistory()` (the entries, bottom to top), `nav.getPrevLocation()` (what Back shows),
   `nav.getNextLocation()` (what Forward brings back), `nav.$depth` (the depth, observable —
   `nav.$depth.watch((depth) => …)`), `nav.$state` / `nav.getState()` / `nav.useNavigatorState()` (everything, re-rendering
@@ -192,7 +192,99 @@ export const NavigationHost = nav.NavigationHostProvider({
   active on its address, under it (`activeAsParent`), when told (`active`), or while the section it leads to is shown;
   each re-renders only when its own target or mark changes.
 
-A five-tab test app using all of it: web-games `frontend/labs/navigation`.
+A five-tab test app using it: web-games `frontend/labs/navigation` (arriving by a link — the unit tests,
+`tests/router/navigator.arriving.test.ts`).
+
+## Arriving by a link (D-050)
+
+A link in a chat, a push notification, a VK link to the mini-app: the user lands on a page from outside — and some
+pages must come first (onboarding, sign-in).
+
+**A deep link lies over the home.** A first visit to a page other than the `fallback` puts the fallback under it (with
+sections — the start section's root): every Back — the app's, the browser's, Android's — goes home, not out of the app.
+The page under it waits dormant (not drawn until reached).
+
+```ts
+createNavigator({ router, …, fallback: { path: '/' } });
+// opened at #/place/5  →  history [ /  ·  /place/5 ← shown ]  →  Back → /
+```
+
+**An address from outside opens over the shown page** — a typed address, a plain `<a href="#/route/7">` in an
+article's HTML, what a platform reports (VK's `VKWebAppChangeFragment`). A step like any other: Back returns to where
+the user was.
+
+```ts
+bridge.subscribe(({ detail }) => {
+  if (detail.type === 'VKWebAppChangeFragment' && detail.data?.location) {
+    router.pushLocation(urlParse(detail.data.location));
+  }
+});
+// [ / · /place/5 ]  — a link to /route/7 arrives  →  [ / · /place/5 · /route/7 ]  →  Back → /place/5
+```
+
+**A whole history in one step** — `nav.startOver(location | locations, { quiet })`: every page and window dropped; a
+list is written bottom to top, each read against the one before; only the last is shown, the rest wait dormant. A
+section's root can only be first (it decides the section).
+
+```ts
+await nav.startOver({ path: '/signin' });                   // sign out
+await nav.startOver([{ path: '/' }, { path: '/place/5' }]); // [ / · /place/5 ] — the home never shown
+```
+
+The browser keeps its entries ahead of a single page written in place (only a new entry drops them): the browser's
+Forward may bring the old pages back — while a gate is closed, it holds them.
+
+**Entry guards** — `nav.onBeforeEnter(({ location, row, params }) => …)` is asked before a location is shown: a step, a link, a tab, `startOver`,
+the `fallback`, an address from outside, the page in the address at the start (not Back and Forward over pages already
+in the stack). `true` — open it; a location — open that instead (asked again); `false` — not opened: the user stays
+(at the start — the `fallback`). Synchronous: the start is decided before the first render.
+
+```ts
+// a locked level is never drawn — the tap does nothing; `params` — the row's, decoded ('/level/:levelId')
+nav.onBeforeEnter(({ params }) => params.levelId === undefined || progress.isUnlocked(params.levelId));
+// an old address — its new place
+nav.onBeforeEnter(({ location }) => (location.path === '/old-shop' ? { path: '/shop' } : true));
+```
+
+**Gates** — pages that must come first. While a gate is closed only its pages are shown; any other location is
+**held** and shown when the gate opens — over the `fallback`, nothing shown on the way.
+
+```tsx
+// deps.ts
+export const nav = createNavigator({
+  router, …,
+  fallback: { path: '/' },
+  gates: {
+    signIn: { closed: $signedOut, to: { path: '/signin' } },               // passed first
+    onboarding: { closed: $needsOnboarding, to: { path: '/onboarding' } },
+  },
+});
+// navigation.tsx — the gates' pages
+['/signin', { main: SignIn, gate: 'signIn' }],
+['/onboarding', { main: Onboarding, gate: 'onboarding' }],
+['/onboarding/:step', { main: Onboarding, gate: 'onboarding' }],
+// Onboarding.tsx — plain steps, nothing carried along
+<nav.Link href={`/onboarding/${step + 1}`}>Next</nav.Link>
+await saveOnboardingPassed(); // $needsOnboarding → false: the navigator does the rest
+```
+
+The user taps a link to `/place/5` and hasn't passed onboarding:
+
+| Moment | History | On screen |
+|--------|---------|-----------|
+| the app opens at `/place/5` | `[ /onboarding ]` | onboarding — `/place/5` is held, never drawn |
+| Next, Next | `[ /onboarding · /onboarding/2 · /onboarding/3 ]` | the steps |
+| a link to `/route/7` arrives | unchanged | the step stays; `/route/7` is held now (the newest wins) |
+| a reload | as it was | the held link kept |
+| `$needsOnboarding` → `false` | `[ / · /route/7 ]` | `/route/7`; the home never shown; Back → `/` |
+
+- The first closed gate in order is the one to pass; the held link goes on from gate to gate (sign-in, then
+  onboarding).
+- A gate closing while another page is shown holds that page: signed out on `/profile` → `/signin` → signed in →
+  `[ / · /profile ]`. A stack the history brings back while a gate is closed (Forward, a reload) is held too.
+- `state.held` — the link waiting: `nav.useNavigatorState((state) => state.held)` ("next: the route …").
+- Back from the gate's first page leaves the app; `leavePage` there does nothing (the `fallback` is outside the gate).
+- A gate's page with the gate open is an ordinary page (to forbid it — `onBeforeEnter`).
 
 ## Files
 

@@ -8,10 +8,10 @@ import {
   isFunction,
 } from '../is/isFunction';
 import {
-  isObject,
-} from '../is/isObject';
+  isStore,
+} from '../Observable';
 import type {
-  Observable,
+  TStore,
 } from '../Observable/types';
 import {
   assertViewLibrary,
@@ -21,9 +21,6 @@ import type {
 } from './library';
 
 const WHERE = '[fundamentool] viewHooksProvider';
-
-/** A store: `getState` + `watch` (an event — a function without `getState` — isn't one). */
-type TStore<T = unknown> = Pick<Observable<T>, 'getState' | 'watch'>;
 
 /** What `useUnit` takes: a store, an event (any function), or a list / a shape of them. */
 type TUnitShape = TStore | ((...args: any[]) => any) | readonly unknown[] | Record<string, unknown>;
@@ -52,10 +49,6 @@ export type TStoreMapConfig<S, R, K extends readonly unknown[]> = {
 
 /** No keys, shared. */
 const NO_KEYS: readonly unknown[] = [];
-
-function isStore(unit: unknown): unit is TStore {
-  return (isObject(unit) || isFunction(unit)) && isFunction((unit as TStore).getState) && isFunction((unit as TStore).watch);
-}
 
 /** Whether two lists hold the same items, in order (`===`). */
 function sameList(a: readonly unknown[], b: readonly unknown[]): boolean {
