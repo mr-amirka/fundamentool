@@ -138,6 +138,7 @@ export * from './repeat';
 export * from './responsibilityChain';
 export * from './routeParseProvider';
 export * from './router';
+export * from './view';
 export * from './keyValueStorage';
 export * from './scopeJoin';
 export * from './scopeSplit';

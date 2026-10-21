@@ -1,12 +1,9 @@
 import {
-  createObservable as _createObservable,
-  createApi as _createApi,
-} from './Observable';
-import type {
-  TObservableAdapter,
+  createEvent,
 } from './Observable';
 
 import type {
+  TKeyValueChange,
   TKeyValueStorage,
 } from './keyValueStorage';
 import {
@@ -33,97 +30,79 @@ export type TLocalStorageWindowContext = {
 
 /** The local storage — a key-value storage (`TKeyValueStorage`, fundamentool D-039). */
 export type TLocalStorage = TKeyValueStorage;
-export type TLocalStorageEvent = {
-  /**
-   * The key of the event.
-   */
-  key: string;
-  /**
-   * The value of the event.
-   */
-  value?: any;
-};
 
 /**
- * Creates a local storage provider.
+ * The window's `localStorage` as a key-value storage: values are JSON; a change another tab makes is reported too
+ * (the `storage` event).
  *
- * @param win - The Window whose `localStorage` is managed.
- * @returns A reactive store with `get`, `set`, `assign`, `remove`, `getKeys`, and `clear`.
+ * @param win - The window whose `localStorage` is used.
+ * @returns `get`, `set`, `assign`, `remove`, `getKeys`, `clear`, and `watch` for every change.
  * @example
  * const storage = localStorageProvider(window);
+ * storage.watch(({ key, value }) => console.log(key, value)); // this tab's changes and other tabs'
  * storage.set('user', { name: 'Alice' });
  * storage.get('user'); // => { name: 'Alice' }
- * storage.remove('user');
  */
-export const localStorageProvider = (win: TLocalStorageWindowContext,
-  deps: Partial<TObservableAdapter> = {}): TLocalStorage => {
-  const {
-    createObservable = _createObservable, createApi = _createApi,
-  } = deps;
-  let locked = false;
-  const $instance = createObservable<TLocalStorageEvent>({
-    key: '',
-  });
-  const {
-    emit,
-  } = createApi($instance, {
-    emit: (_: TLocalStorageEvent, payload: TLocalStorageEvent) => payload,
-  });
-  const originLocalStorage = win.localStorage;
-  function __set(key: string, value: any) {
-    emit({
-      key,
-      value,
-    });
-    return $instance;
-  }
-  function getKeys() {
-    const l = originLocalStorage.length;
-    const keys: string[] = [];
-    let i = 0;
-    for (; i < l; i++) {
-      keys.push(originLocalStorage.key(i) || '');
-    }
-    return keys;
-  }
-  attachEvent(
-    win as any, 'storage', (event: any) => {
-      locked = true;
-      emit({
-        key: event.key,
-        value: tryJsonParse(event.newValue),
-      });
-      locked = false;
-    },
-  );
-  $instance.watch(({
+export const localStorageProvider = (win: TLocalStorageWindowContext): TLocalStorage => {
+  const native = win.localStorage;
+  const changed = createEvent<TKeyValueChange>();
+  /** The change being reported came from another tab — it is in the storage already. */
+  let external = false;
+
+  changed.watch(({
     key, value,
-  }: TLocalStorageEvent) => {
-    if (locked) {
+  }) => {
+    if (external) {
       return;
     }
     !isDefined(value)
-      ? originLocalStorage.removeItem(key)
-      : originLocalStorage.setItem(key, JSON.stringify(value));
+      ? native.removeItem(key)
+      : native.setItem(key, JSON.stringify(value));
   });
-  ($instance as any).set = __set;
-  ($instance as any).assign = (values: Record<string, any>) => {
-    for (const key of Object.keys(values)) {
-      __set(key, values[key]);
-    }
-    return $instance;
-  };
-  ($instance as any).get = (key: string) => tryJsonParse(originLocalStorage.getItem(key));
-  ($instance as any).remove = (key: string) => __set(key, null);
-  ($instance as any).getKeys = getKeys;
-  ($instance as any).clear = () => {
-    getKeys().forEach((key) => {
-      emit({
-        key,
-        value: null,
+  attachEvent(
+    win as any, 'storage', (event: any) => {
+      external = true;
+      changed({
+        key: event.key,
+        value: tryJsonParse(event.newValue),
       });
-    });
-    return $instance;
+      external = false;
+    },
+  );
+
+  function getKeys(): string[] {
+    const length = native.length;
+    const keys: string[] = [];
+    for (let i = 0; i < length; i++) {
+      keys.push(native.key(i) || '');
+    }
+    return keys;
+  }
+
+  const storage: TLocalStorage = {
+    watch: changed.watch,
+    get: (key) => tryJsonParse(native.getItem(key)),
+    set(key, value) {
+      changed({
+        key,
+        value,
+      });
+      return storage;
+    },
+    assign(values) {
+      for (const key of Object.keys(values)) {
+        storage.set(key, values[key]);
+      }
+      return storage;
+    },
+    remove: (key) => storage.set(key, null),
+    getKeys,
+    clear() {
+      for (const key of getKeys()) {
+        storage.set(key, null);
+      }
+      return storage;
+    },
   };
-  return $instance as any;
+  return storage;
 };

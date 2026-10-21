@@ -65,6 +65,7 @@ const PREACT: TLibrary = {
   deps: {
     createElement: preact.h,
     forwardRef: preactCompat.forwardRef,
+    useSyncExternalStore: preactCompat.useSyncExternalStore,
     createContext: preact.createContext,
     useContext: preactHooks.useContext,
     useEffect: preactHooks.useEffect,

@@ -26,6 +26,10 @@ import {
   keyedRegistry,
 } from '../keyedRegistry';
 import {
+  assertViewLibrary,
+  VIEW_LIBRARY_KEYS,
+} from '../view/library';
+import {
   queueProvider,
 } from '../queueProvider';
 import {
@@ -65,6 +69,9 @@ import type {
   TRouteMatch,
 } from './routeTable';
 import type {
+  Unsubscribe,
+} from '../Observable/types';
+import type {
   TBackOptions,
   TEntry,
   THistoryEntry,
@@ -82,14 +89,18 @@ import type {
 
 const WHERE = '[fundamentool] createNavigator';
 
-/** The dependencies that are functions: the observable adapter and the view library. */
-const FUNCTION_DEPS = [
+/** The observable adapter's members (functions). */
+const ADAPTER_DEPS = [
   'createObservable',
   'createApi',
+] as const;
+
+/** The view library's members the navigator uses (the rest of the library may come along). */
+const VIEW_DEPS = [
   'createElement',
   'forwardRef',
+  'useSyncExternalStore',
   'useEffect',
-  'useState',
   'useRef',
   'createContext',
   'useContext',
@@ -104,7 +115,8 @@ const NUMBER_DEPS = [
 /** The single list of `createNavigator`'s keys. */
 export const NAVIGATOR_DEPS_KEYS = [
   'router',
-  ...FUNCTION_DEPS,
+  ...ADAPTER_DEPS,
+  ...VIEW_LIBRARY_KEYS,
   ...NUMBER_DEPS,
   'fallback',
 ] as const;
@@ -113,10 +125,14 @@ export const NAVIGATOR_DEPS_KEYS = [
 export const OPEN_OPTION_KEYS = ['reopen'] as const;
 
 /** An entry as the history keeps it (to rebuild the stack after a reload): a page's address and tab, a window's place. */
-type TSaved = [kind: typeof PAGE, id: number, href: string, section: string | null] | [kind: typeof WINDOW, id: number];
+type TSaved = [kind: typeof PAGE, id: number, href: string, section: string | null, historyIndex: number]
+  | [kind: typeof WINDOW, id: number, historyIndex: number];
+
+/** An entry's place in the history before it is written. */
+const NOT_WRITTEN = -1;
 
 /** The shape of what the navigator writes into an entry; a new shape — a new number (older entries start the stack anew). */
-const NAV_FORMAT = 1;
+const NAV_FORMAT = 2;
 
 /** What the navigator writes into its part of an entry: the entry and the whole stack it closes. */
 type TNavData = {
@@ -168,11 +184,14 @@ function assertNavigatorDeps(deps: TNavigatorDeps): void {
   if (!isObject(deps.router) || !isFunction(deps.router.attach)) {
     throw new TypeError(`${WHERE}: "router" expects a router (createRouter(…)), got ${describeValue(deps.router)}`);
   }
-  for (const key of FUNCTION_DEPS) {
+  for (const key of ADAPTER_DEPS) {
     if (!isFunction(deps[key])) {
       throw new TypeError(`${WHERE}: "${key}" expects a function, got ${describeValue(deps[key])}`);
     }
   }
+  assertViewLibrary(
+    WHERE, deps, VIEW_DEPS,
+  );
   for (const key of NUMBER_DEPS) {
     const value = deps[key];
     if (value !== undefined && !(isNumber(value) && value >= 0)) {
@@ -277,6 +296,9 @@ export function createNavigator(deps: TNavigatorDeps) {
       section: (found && rootKeys.get(found.row)) ?? section,
       dormant: quietStep,
       confirmingLeave: false,
+      // A step of a page that has a guard keeps the fact
+      leaveGuarded: !!id && guards.has(id),
+      historyIndex: NOT_WRITTEN,
     };
   }
 
@@ -335,6 +357,7 @@ export function createNavigator(deps: TNavigatorDeps) {
       stacks,
       shown,
       keepLimit,
+      anyLeaveGuarded: anyLeaveGuarded(),
     });
   }
 
@@ -351,6 +374,39 @@ export function createNavigator(deps: TNavigatorDeps) {
     state = snapshot();
     emitState(state);
     showLocation(state.location);
+  }
+
+  /** Some entry of the stack shown or of another section has a leave guard. */
+  function anyLeaveGuarded(): boolean {
+    if (entries.some((entry) => entry.leaveGuarded)) {
+      return true;
+    }
+    for (const list of stacks.values()) {
+      if (list.some((entry) => entry.leaveGuarded)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * The page or window `id` got its first leave guard or lost its last: its entries — in the stack shown and in the
+   * sections' stacks — carry the fact, and the state is published (D-049).
+   */
+  function refreshLeaveGuarded(id: number): void {
+    const guarded = guards.has(id);
+    const mark = (entry: TEntry): TEntry => (entry.id === id && entry.leaveGuarded !== guarded ? {
+      ...entry,
+      leaveGuarded: guarded,
+    } : entry);
+    entries = entries.map(mark);
+    for (const [
+      name,
+      list,
+    ] of stacks) {
+      stacks.set(name, list.map(mark));
+    }
+    publish();
   }
 
   /** Marks the entries `ids` names as having their leave guards asked (or not); the state isn't emitted. */
@@ -417,10 +473,11 @@ export function createNavigator(deps: TNavigatorDeps) {
     shown = section;
     hiddenTabs = null;
     entries = list.slice(0, 1);
-    write(list[0], true);
+    // Each written entry keeps its place in the history: the next slice is cut from the list that has it
+    list[0] = write(list[0], true);
     for (let i = 1; i < length; i++) {
       entries = list.slice(0, i + 1);
-      write(list[i], false);
+      list[i] = write(list[i], false);
     }
     ahead = [];
     publish();
@@ -450,9 +507,11 @@ export function createNavigator(deps: TNavigatorDeps) {
       entry.id,
       entry.location.href,
       entry.section,
+      entry.historyIndex,
     ] : [
       WINDOW,
       entry.id,
+      entry.historyIndex,
     ];
   }
 
@@ -472,9 +531,19 @@ export function createNavigator(deps: TNavigatorDeps) {
     return hiddenTabs;
   }
 
-  /** Writes `entry` (the top of `entries`) into the router's part: a new entry or the current one. */
-  function write(entry: TEntry, replace: boolean): void {
+  /**
+   * Writes `entry` (the top of `entries`) into the router's part: a new entry or the current one. The entry learns its
+   * place in the history (`historyIndex`) — set in `entries` and returned. The entry's own place, written in its data
+   * too, is the one it is being written at.
+   */
+  function write(entry: TEntry, replace: boolean): TEntry {
     const depth = entry.depth;
+    const historyIndex = primitive.current().index + (replace ? 0 : 1);
+    const placed = entry.historyIndex === historyIndex ? entry : {
+      ...entry,
+      historyIndex,
+    };
+    entries[depth] = placed;
     const data: TNavData = {
       nav: NAV_FORMAT,
       id: entry.id,
@@ -484,6 +553,7 @@ export function createNavigator(deps: TNavigatorDeps) {
       tabs: savedTabs(),
     };
     (replace ? primitive.replace : primitive.push)(pageAt(entries, depth).location, data);
+    return placed;
   }
 
   /** Entries rebuilt from what the history kept: pages dormant (not mounted until reached), windows gone. */
@@ -499,6 +569,8 @@ export function createNavigator(deps: TNavigatorDeps) {
           params: undefined,
           reopen: false,
           confirmingLeave: false,
+          leaveGuarded: false,
+          historyIndex: item[2],
         };
       }
       return {
@@ -506,6 +578,7 @@ export function createNavigator(deps: TNavigatorDeps) {
           urlParse(item[2]), depth, item[3], item[1],
         ),
         dormant: true,
+        historyIndex: item[4],
       };
     });
   }
@@ -531,8 +604,18 @@ export function createNavigator(deps: TNavigatorDeps) {
     }
   }
 
-  /** A move made by the code; resolves with the part in the entry arrived at. */
-  const travel = (delta: number): Promise<THistoryEntry> => primitive.go(delta);
+  /** A move made by the code to the history's entry at `index`; resolves with the part in the entry arrived at. */
+  const travelToIndex = (index: number): Promise<THistoryEntry> => primitive.go(index - primitive.current().index);
+
+  /**
+   * Back to the entry of the stack at `depth` as it was left: the history's last place before the entry above it — by
+   * places, not by counting: another router's entries (an inner part's steps) may lie between the navigator's own, and
+   * those of `depth` stay (C8, D-049).
+   */
+  const travelBelow = (depth: number): Promise<THistoryEntry> => travelToIndex(entries[depth + 1].historyIndex - 1);
+
+  /** To the very first entry of the stack — what follows is dropped (a start over, a section laid out anew). */
+  const travelToStart = (): Promise<THistoryEntry> => travelToIndex(entries[0].historyIndex);
 
   /** One step at a time, in call order (fundamentool's `queueProvider`). */
   const queue = queueProvider()((work: () => unknown) => work());
@@ -577,10 +660,12 @@ export function createNavigator(deps: TNavigatorDeps) {
 
   /** Removes every entry above `depth`: windows resolve and play their exit; the new top's return cleanups run. */
   function removeAbove(depth: number): void {
-    // What is left isn't being left any more (Forward may bring it back).
-    const removed = entries.slice(depth + 1).map((entry) => (entry.confirmingLeave ? {
+    // What is left isn't being left any more (Forward may bring it back); a page left has no guards any more (forgotten).
+    const kept = entries[depth].id;
+    const removed = entries.slice(depth + 1).map((entry) => (entry.confirmingLeave || entry.leaveGuarded && entry.id !== kept ? {
       ...entry,
       confirmingLeave: false,
+      leaveGuarded: entry.leaveGuarded && entry.id === kept,
     } : entry));
     entries = entries.slice(0, depth + 1);
     // What was left goes ahead (Forward brings it back), up to a window that isn't reopened (D-024).
@@ -617,7 +702,7 @@ export function createNavigator(deps: TNavigatorDeps) {
   async function passGoneWindows(): Promise<void> {
     let top = entries[entries.length - 1];
     while (top.kind === WINDOW && top.window === null) {
-      await travel(-1);
+      await travelBelow(entries.length - 2);
       removeAbove(entries.length - 2);
       top = entries[entries.length - 1];
     }
@@ -625,10 +710,12 @@ export function createNavigator(deps: TNavigatorDeps) {
 
   /**
    * The history is now at `entry` — make the stack match. Going back past entries with leave guards: step forward
-   * again, ask the guards (they may open windows, so outside the queue), and leave as far as they agree. `force` —
-   * the guards aren't asked.
+   * again — to `from`, the place the move started at — ask the guards (they may open windows, so outside the queue),
+   * and leave as far as they agree. `force` — the guards aren't asked.
    */
-  async function settle(entry: THistoryEntry, force = false): Promise<TOutcome> {
+  async function settle(
+    entry: THistoryEntry, from: number, force = false,
+  ): Promise<TOutcome> {
     const data = entry.data;
     if (!isNavData(data)) {
       reset(entry.location);
@@ -638,7 +725,9 @@ export function createNavigator(deps: TNavigatorDeps) {
     const current = entries.length - 1;
     const target = data.depth;
     if (target > current) {
-      return forwardTo(target, data);
+      return forwardTo(
+        target, data, entry.index, from,
+      );
     }
     if (entries[target]?.id !== data.id) {
       // An entry of a stack we don't hold (written before a reload): the stack is what it kept.
@@ -656,7 +745,7 @@ export function createNavigator(deps: TNavigatorDeps) {
       const removed = leftBy(entries.slice(2), entries[1]);
       closeOpened(removed);
       if (!force && removed.some((item) => guards.has(item.id))) {
-        await travel(current);
+        await travelToIndex(from);
         return {
           left: confirmLeave(1, removed),
         };
@@ -672,7 +761,7 @@ export function createNavigator(deps: TNavigatorDeps) {
       await passGoneWindows();
       return LEFT;
     }
-    await travel(current - target);
+    await travelToIndex(from);
     // Asked outside the queue (a guard may open a window); the caller may wait for the answer through `left`.
     return {
       left: confirmLeave(target, removed),
@@ -714,7 +803,7 @@ export function createNavigator(deps: TNavigatorDeps) {
       if (current <= stop) {
         return false; // the stack changed while the guards were asked: nothing more to leave
       }
-      await travel(stop - current);
+      await travelBelow(stop);
       removeAbove(stop);
       return stop === target;
     });
@@ -725,7 +814,9 @@ export function createNavigator(deps: TNavigatorDeps) {
    * reopened (nobody awaits them). An entry we don't keep ahead (after a reload) — the stack the history kept, its
    * windows passed. Forward handlers of the current top are asked first (outside the queue: they may open windows).
    */
-  async function forwardTo(target: number, data: TNavData): Promise<TOutcome> {
+  async function forwardTo(
+    target: number, data: TNavData, arrived: number, from: number,
+  ): Promise<TOutcome> {
     const current = entries.length - 1;
     const count = target - current;
     const back = ahead.slice(0, count);
@@ -733,7 +824,7 @@ export function createNavigator(deps: TNavigatorDeps) {
       const ours = data.stack.slice(0, current + 1).every((item, depth) => item[1] === entries[depth].id);
       if (ours && data.stack.slice(current + 1).some((item) => item[0] === WINDOW)) {
         // Our own stack with windows ahead we don't keep (they come back only from `ahead`): the move is undone.
-        await travel(current - target);
+        await travelToIndex(from);
         return STAYED;
       }
       // Pages we don't hold (after a reload): the stack the history kept.
@@ -748,10 +839,10 @@ export function createNavigator(deps: TNavigatorDeps) {
       restoreAhead(back);
       return LEFT;
     }
-    await travel(current - target);
+    await travelToIndex(from);
     void askForward(kind).then((go) => (go ? enqueue(async () => {
       if (entries.length - 1 === current && ahead[count - 1] === back[count - 1]) {
-        await travel(count);
+        await travelToIndex(arrived);
         restoreAhead(back);
       }
     }) : undefined));
@@ -787,7 +878,7 @@ export function createNavigator(deps: TNavigatorDeps) {
       ]);
       const list = layout(shown);
       entries = list.slice(0, 1);
-      write(list[0], true);
+      list[0] = write(list[0], true);
       if (list.length > 1) {
         entries = list;
         write(list[1], false);
@@ -877,7 +968,8 @@ export function createNavigator(deps: TNavigatorDeps) {
     const current = entries.length - 1;
     const index = pageIndexAt(entries, current);
     if (index < current) {
-      await settle(await travel(index - current));
+      const from = primitive.current().index;
+      await settle(await travelBelow(index), from);
       if (entries.length - 1 !== index) {
         return; // a window's guard kept it open
       }
@@ -910,7 +1002,7 @@ export function createNavigator(deps: TNavigatorDeps) {
       const location = locate(change, topPage(entries).location);
       const current = entries.length - 1;
       if (current > 0) {
-        await travel(-current);
+        await travelToStart();
       }
       reset(location);
       publish();
@@ -947,6 +1039,8 @@ export function createNavigator(deps: TNavigatorDeps) {
           params,
           reopen: options?.reopen !== false,
           confirmingLeave: false,
+          leaveGuarded: false,
+          historyIndex: NOT_WRITTEN,
         };
         resolvers.set(entry.id, done as (result: unknown) => void);
         push(entry);
@@ -964,7 +1058,8 @@ export function createNavigator(deps: TNavigatorDeps) {
       if (result !== undefined) {
         results.set(entryId, result);
       }
-      await settle(await travel(entry.depth - 1 - (entries.length - 1)));
+      const from = primitive.current().index;
+      await settle(await travelBelow(entry.depth - 1), from);
     });
   }
 
@@ -981,7 +1076,10 @@ export function createNavigator(deps: TNavigatorDeps) {
       const wanted = target(current);
       const depth = Math.max(0, wanted);
       if (depth < current) {
-        return settle(await travel(depth - current), force);
+        const from = primitive.current().index;
+        return settle(
+          await travelBelow(depth), from, force,
+        );
       }
       return wanted === current ? LEFT : STAYED; // there already — or nothing to go back to
     }));
@@ -1033,7 +1131,7 @@ export function createNavigator(deps: TNavigatorDeps) {
       dropWindows();
       storeShown();
       if (entries.length > 1) {
-        await travel(-(entries.length - 1));
+        await travelToStart();
       }
       if (!stacks.has(key)) {
         stacks.set(key, [
@@ -1098,14 +1196,15 @@ export function createNavigator(deps: TNavigatorDeps) {
   const isConfirmingLeave = (entryId: number): boolean => entries.some((entry) => entry.id === entryId && entry.confirmingLeave);
 
   /**
-   * Calls `listener` when the entry's `confirmingLeave` flips — only then (`true` — its guards are asked; `false` — they
-   * answered: it stays, or it is gone). Returns the unsubscribe.
+   * Watches the entry's `confirmingLeave` — a fact of the state, so (as a store's `watch`, D-049) `listener` is called
+   * at once with its value, then whenever it flips (`true` — its guards are asked; `false` — they answered: it stays,
+   * or it is gone). Returns the unsubscribe.
    *
    * @example
    * const stop = nav.watchConfirmingLeave(entryId, (confirming) => autosave.pause(confirming));
    */
-  function watchConfirmingLeave(entryId: number, listener: (confirming: boolean) => void): () => void {
-    let last = isConfirmingLeave(entryId);
+  function watchConfirmingLeave(entryId: number, listener: (confirming: boolean) => void): Unsubscribe {
+    let last: boolean | undefined;
     return $state.watch((value) => {
       const now = value.entries.some((entry) => entry.id === entryId && entry.confirmingLeave);
       if (now !== last) {
@@ -1159,9 +1258,60 @@ export function createNavigator(deps: TNavigatorDeps) {
     });
   }
 
-  /** `guard` is asked before the entry is left by going back; `false` keeps it. */
+  /**
+   * `guard` is asked before the entry is left by going back; `false` keeps it. While it is registered the entry is
+   * `leaveGuarded` (D-049) — register it while there is something to lose, so the fact means "unsaved".
+   */
   function onBeforeLeave(entryId: number, guard: TLeaveGuard): () => void {
-    return guards.add(entryId, guard);
+    const remove = guards.add(entryId, guard);
+    refreshLeaveGuarded(entryId);
+    return () => {
+      remove();
+      refreshLeaveGuarded(entryId);
+    };
+  }
+
+  // ── whether an entry has a leave guard (D-049) ─────────────────────────────────────────────────────────────────
+
+  /** Whether the entry has a leave guard now — leaving it would ask. */
+  const isLeaveGuarded = (entryId: number): boolean => guards.has(entryId);
+
+  /**
+   * Watches whether the entry has a leave guard — a fact of the state: `listener` is called at once with it, then
+   * whenever it flips (D-049). Returns the unsubscribe.
+   *
+   * @example
+   * nav.watchLeaveGuarded(entryId, (guarded) => saveIndicator.toggle(guarded));
+   */
+  function watchLeaveGuarded(entryId: number, listener: (guarded: boolean) => void): Unsubscribe {
+    let last: boolean | undefined;
+    return $state.watch(() => {
+      const now = guards.has(entryId);
+      if (now !== last) {
+        last = now;
+        listener(now);
+      }
+    });
+  }
+
+  /** Whether some entry — in any section — has a leave guard: leaving the app would lose something. */
+  const isAnyLeaveGuarded = (): boolean => anyLeaveGuarded();
+
+  /**
+   * Watches whether some entry — in any section — has a leave guard: `listener` at once, then on every flip.
+   *
+   * @example
+   * attachEvent(window, 'beforeunload', (event) => nav.isAnyLeaveGuarded() && event.preventDefault());
+   * nav.watchAnyLeaveGuarded((guarded) => showUnsavedMark(guarded));
+   */
+  function watchAnyLeaveGuarded(listener: (guarded: boolean) => void): Unsubscribe {
+    let last: boolean | undefined;
+    return $state.watch((value) => {
+      if (value.anyLeaveGuarded !== last) {
+        last = value.anyLeaveGuarded;
+        listener(last);
+      }
+    });
   }
 
   /**
@@ -1195,6 +1345,8 @@ export function createNavigator(deps: TNavigatorDeps) {
       ),
       dormant: entry.dormant,
       confirmingLeave: entry.confirmingLeave,
+      leaveGuarded: entry.leaveGuarded,
+      historyIndex: entry.historyIndex,
     } : entry);
     entries = entries.map(describe);
     ahead = ahead.map(describe);
@@ -1244,8 +1396,8 @@ export function createNavigator(deps: TNavigatorDeps) {
   if (restored) {
     void enqueue(passGoneWindows);
   }
-  primitive.watch((entry) => {
-    void enqueue(() => settle(entry));
+  primitive.watch((entry, from) => {
+    void enqueue(() => settle(entry, from.index));
   });
 
   const view = createNavigatorView(deps, {
@@ -1269,6 +1421,10 @@ export function createNavigator(deps: TNavigatorDeps) {
     getNextLocation,
     isConfirmingLeave,
     watchConfirmingLeave,
+    isLeaveGuarded,
+    watchLeaveGuarded,
+    isAnyLeaveGuarded,
+    watchAnyLeaveGuarded,
     open,
     close,
     startOver,

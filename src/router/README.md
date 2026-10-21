@@ -14,12 +14,18 @@ createNavigator({ router, … })                                    pages and wi
 
 A primitive is one part of a history entry — the address (path + query) ⊃ its hash ⊃ the entry's own state — with how
 the browser moves through the history hidden inside: `current()`, `push(location, data)`, `replace(location, data)`,
-`canGo(delta)`, `go(delta)`, `watch(listener)` (a move by the player), `href(location)` (what the address bar shows).
+`canGo(delta)`, `go(delta)`, `watch((entry, from) => …)` (a move by the player — where the history is now and where it
+was; nothing at subscription: a move is an event), `href(location)` (what the address bar shows). An entry read gives
+its `location`, its `data` and its `index` — its place on the timeline.
 
 - **Nested scopes**: a step in a part keeps the outer parts and clears the inner ones in that entry; Back / Forward
   restore an entry whole.
-- **One timeline**: every entry carries its place. A Back by the player that jumps over entries (Chrome skips entries
-  made without a user gesture) lands one entry back. A hash the player typed (or a plain `#anchor`) is the next entry.
+- **One timeline**: every entry carries its place (`index`). A Back by the player that jumps over entries (Chrome skips
+  entries made without a user gesture) lands one entry back. A hash the player typed (or a plain `#anchor`) is the next
+  entry.
+- **Several routers at once** (D-039): a router per part; a navigator on one part moves to its own entries **by their
+  places** (`entry.historyIndex`), not by counting — another router's steps on an inner part (a page's filter steps in
+  the entry's own state) lie between them, and Back to an entry keeps that entry's own inner steps (C8, D-049).
 - **The ends**: `canGo(delta)` — whether a move stays on the timeline (not before its first entry — that's another site;
   not past the last entry known — entries ahead made before a reload count once seen); a move it refuses isn't made,
   `go` resolves at once.
@@ -141,7 +147,9 @@ export const NavigationHost = nav.NavigationHostProvider({
   page before is gone.
 - **Reading the stack**: `nav.getHistory()` (the entries, bottom to top), `nav.getPrevLocation()` (what Back shows),
   `nav.getNextLocation()` (what Forward brings back), `nav.$depth` (the depth, observable —
-  `nav.$depth.watch((depth) => …)`), `nav.$state` / `nav.getState()` / `nav.useNavigatorState()` (everything).
+  `nav.$depth.watch((depth) => …)`), `nav.$state` / `nav.getState()` / `nav.useNavigatorState()` (everything, re-rendering
+  at every change) — with a selector only what it selects: `nav.useNavigatorState((state) => state.section)` re-renders
+  a tab bar on a tab switch only (D-049; it is fundamentool's `useStoreMap`, `src/view`).
 - **Guards and handlers**: `nav.onBeforeLeave`, `nav.onForward`, `nav.whileOpen` and the hooks `useBeforeLeave`,
   `useOnForward`, `useWhileOpen`. A hook belongs to the page it is called on (outside the host — the page on top; the
   fact hooks `useConfirmingLeave` / `useConfirmingLeaveEffect` follow whichever entry is on top as it changes — a
@@ -158,12 +166,29 @@ export const NavigationHost = nav.NavigationHostProvider({
   nav.watchConfirmingLeave(entryId, (confirming) => …);
   ```
 
-  `nav.useEntry()` — the whole entry; it re-renders at every change of it, every step of the page included: prefer the
-  hook for the one fact you need. The host passes a page's id down, so the hooks under a page don't re-render at its
-  steps.
-- **Links**: `nav.Link` / `nav.NavLink` with `href` — a string read as `<a href>` reads it (`/x`, `?q=1`, `42`) or a
-  change (`{ path, query }`, encoded); `NavLink` is active on its address, under it (`activeAsParent`), or while the
-  section it leads to is shown.
+  **Leave guards as a fact** (`entry.leaveGuarded`, D-049) — the entry has a guard: leaving it would ask. Register a
+  guard only while there is something to lose, and the fact means "unsaved":
+
+  ```tsx
+  nav.useBeforeLeave(dirty ? () => confirmDiscard() : null);  // null — no guard
+  const unsaved = nav.useLeaveGuarded();                       // this page (outside the host — the entry on top)
+  nav.useLeaveGuardedEffect(() => {                            // VK: the swipe-back can't wait for a question
+    bridge.send('VKWebAppSetSwipeSettings', { history: false });
+    return () => bridge.send('VKWebAppSetSwipeSettings', { history: true });
+  });
+  attachEvent(window, 'beforeunload', (event) => nav.isAnyLeaveGuarded() && event.preventDefault()); // the whole app
+  nav.isLeaveGuarded(entryId); nav.watchLeaveGuarded(entryId, (guarded) => …);
+  nav.watchAnyLeaveGuarded((guarded) => …); nav.useAnyLeaveGuarded();
+  ```
+
+  A store-like `watch…` (`watchConfirmingLeave`, `watchLeaveGuarded`, `watchAnyLeaveGuarded`) fires at once with the
+  value, then on every flip (D-049). `nav.useEntry()` — the whole entry; it re-renders at every change of it, every step
+  of the page included: prefer the hook for the one fact you need. The host passes a page's id down, so the hooks under
+  a page don't re-render at its steps.
+- **Links**: `nav.Link` / `nav.NavLink` are fundamentool's `linksProvider` (`src/view` — links for any router, with a
+  navigator or without) plus the sections: `href` — a string read as `<a href>` reads it (`/x`, `?q=1`, `42`) or a
+  change (`{ path, query }`, encoded); `NavLink` is active on its address, under it (`activeAsParent`), when told
+  (`active`), or while the section it leads to is shown; each re-renders only when its own target or mark changes.
 
 A five-tab test app using all of it: web-games `frontend/labs/navigation`.
 
@@ -177,7 +202,7 @@ A five-tab test app using all of it: web-games `frontend/labs/navigation`.
 | `options.ts` | the steps' option keys and their check |
 | `navigator.ts` | the navigator's engine: the stack, windows, tabs, guards, the restore after a reload |
 | `navigatorState.ts` | the state from the stack: the mounted pages (`layers`), the tab shown |
-| `navigatorView.ts` | the host, the hooks, `Link` / `NavLink` |
+| `navigatorView.ts` | the host, the hooks, the navigator's `Link` / `NavLink` (over `src/view`) |
 | `routeTable.ts` | the route table matched to a path |
 | `location.ts` | the location a step goes to; a link's `href`; what "under a path" means |
 | `types.ts` | the types |

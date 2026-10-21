@@ -20,9 +20,6 @@ export type {
 export {
   NAVIGATION_HOST_OPTION_KEYS,
 } from './navigatorView';
-export type {
-  TLinkProps,
-} from './navigatorView';
 export {
   BACK_OPTION_KEYS,
   PARAMS_OPTION_KEYS,

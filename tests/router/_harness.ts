@@ -126,6 +126,7 @@ export async function waitFor(check: () => void, timeout = 3000): Promise<void> 
 export const REACT_DEPS = {
   createElement: React.createElement,
   forwardRef: React.forwardRef,
+  useSyncExternalStore: React.useSyncExternalStore,
   useEffect: React.useEffect,
   useState: React.useState,
   useRef: React.useRef,

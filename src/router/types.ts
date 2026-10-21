@@ -13,6 +13,9 @@ import type {
   TUrlProps,
 } from '../urlParse';
 import type {
+  TViewLibrary,
+} from '../view/library';
+import type {
   PAGE,
   WINDOW,
 } from './constants';
@@ -38,6 +41,12 @@ export type THistoryEntry = {
   location: TUrlProps;
   /** What the part's owner wrote into the entry; `undefined` — nobody did (a first visit). */
   data: unknown;
+  /**
+   * The entry's place on the history's timeline (`0` — the first entry of the app's history): every part of an entry
+   * has the same one, so a navigator moves to its own entries by their places — another router's entries may lie
+   * between them (D-049, C8).
+   */
+  index: number;
 };
 
 /** One part of the history: read, write, move — how the browser does it stays inside. */
@@ -55,8 +64,12 @@ export type THistoryPrimitive = {
   canGo(delta: number): boolean;
   /** A move made by the code; resolves with the part in the entry arrived at. A move `canGo` refuses isn't made. */
   go(delta: number): Promise<THistoryEntry>;
-  /** A move made by the player (Back / Forward) that changed this part. Returns the unsubscribe. */
-  watch(listener: (entry: THistoryEntry) => void): () => void;
+  /**
+   * A move made by the player (Back / Forward) that changed this part — an event: nothing at subscription. `entry` —
+   * where the history is now; `from` — where it was (a navigator steps back there to ask its leave guards). Returns the
+   * unsubscribe.
+   */
+  watch(listener: (entry: THistoryEntry, from: THistoryEntry) => void): () => void;
   /** What the address bar shows for `location` in this part — a link's `href`. */
   href(location: TUrlProps): string;
 };
@@ -221,6 +234,13 @@ export type TPageEntry<R = Record<string, unknown>> = {
    * `watchConfirmingLeave`.
    */
   confirmingLeave: boolean;
+  /**
+   * It has a leave guard: leaving it would ask — while there is something to lose, when guards are registered only then
+   * (`useBeforeLeave(dirty ? guard : null)`, D-049). Read it with `nav.useLeaveGuarded()` and its forms.
+   */
+  leaveGuarded: boolean;
+  /** Its place on the history's timeline (`THistoryEntry.index`; `-1` — not written yet). */
+  historyIndex: number;
 };
 
 /** A window in the stack. */
@@ -235,6 +255,10 @@ export type TWindowEntry = {
   reopen: boolean;
   /** Its leave guards are being asked (it may stay). */
   confirmingLeave: boolean;
+  /** It has a leave guard: leaving it would ask. */
+  leaveGuarded: boolean;
+  /** Its place on the history's timeline (`THistoryEntry.index`; `-1` — not written yet). */
+  historyIndex: number;
 };
 
 export type TEntry<R = Record<string, unknown>> = TPageEntry<R> | TWindowEntry;
@@ -257,6 +281,8 @@ export type TNavigatorState<R = Record<string, unknown>> = {
   page: TPageEntry<R>;
   /** The section shown — its root's pattern (`'/feed'`); `null` without sections. */
   section: string | null;
+  /** Some entry — in any section — has a leave guard: leaving the app would lose something (D-049). */
+  anyLeaveGuarded: boolean;
 };
 
 /** Options of `nav.open`. */
@@ -279,15 +305,10 @@ export type TForwardHandler = () => void | false | (() => void) | Promise<void |
 export type TLeaveGuard = () => boolean | Promise<boolean>;
 
 /** The navigator's dependencies: the router, the observable adapter, the view library (React, Preact, …), settings. */
-export type TNavigatorDeps = TObservableAdapter & {
+export type TNavigatorDeps = TObservableAdapter & Pick<TViewLibrary,
+  'createElement' | 'forwardRef' | 'useSyncExternalStore' | 'useEffect' | 'useRef' | 'createContext' | 'useContext'
+> & Partial<TViewLibrary> & {
   router: TRouter;
-  createElement: (...args: any[]) => any;
-  forwardRef: (...args: any[]) => any;
-  useEffect: (...args: any[]) => void;
-  useState: (...args: any[]) => any;
-  useRef: (...args: any[]) => any;
-  createContext: (...args: any[]) => any;
-  useContext: (...args: any[]) => any;
   /** How many covered pages stay mounted at most (default `DEFAULT_KEEP`, 10). */
   keep?: number;
   /** How long a closed window plays its exit, ms (default `DEFAULT_EXIT_MS`, 300). */

@@ -47,6 +47,7 @@ describe('createNavigator — options', () => {
       keep: 1,
       exitMs: 1,
       fallback: {},
+      useState: React.useState, // a member of the view library the navigator accepts but doesn't need
     };
     expect([...NAVIGATOR_DEPS_KEYS].sort()).toEqual(Object.keys(deps).sort());
     const open: Required<TOpenOptions> = {
@@ -76,8 +77,12 @@ describe('createNavigator — options', () => {
     } as never)).toThrow(/"router" expects a router/);
     expect(() => createNavigator({
       ...fresh(),
-      useState: undefined,
-    } as never)).toThrow(/"useState" expects a function, got undefined/);
+      useSyncExternalStore: undefined,
+    } as never)).toThrow(/"useSyncExternalStore" expects the view library's function \(React's, Preact's\), got undefined/);
+    expect(() => createNavigator({
+      ...fresh(),
+      createApi: 1,
+    } as never)).toThrow(/"createApi" expects a function, got number 1/);
     expect(() => createNavigator({
       ...fresh(),
       keep: -1,
@@ -489,7 +494,7 @@ describe('createNavigator — a reload (D-039)', () => {
       },
       data: {
         url: {
-          nav: 1,
+          nav: 2,
           id: 999,
           depth: 0,
           stack: [
@@ -497,10 +502,11 @@ describe('createNavigator — a reload (D-039)', () => {
               'page',
               999,
               '/b/x',
-              'b',
+              '/b',
+              0, // its place in the history
             ],
           ],
-          shown: 'b',
+          shown: '/b',
           tabs: {},
         },
       },

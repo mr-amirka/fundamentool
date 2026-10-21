@@ -339,6 +339,7 @@ describe('confirmingLeave in its forms (D-047)', () => {
       'end',
     ]);
     expect(flips).toEqual([
+      false, // at subscription — a fact of the state (D-049)
       true,
       false,
       true,

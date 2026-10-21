@@ -820,11 +820,12 @@ describe('createNavigator — the stack', () => {
     } = setup();
     const listener = jest.fn();
     const stop = nav.subscribe(listener);
+    expect(listener).toHaveBeenCalledTimes(1); // at subscription (D-049 — a store's watch fires at once)
     await nav.go('/a/1');
-    expect(listener).toHaveBeenCalledTimes(1);
+    expect(listener).toHaveBeenCalledTimes(2);
     stop();
     await nav.go('/a/2');
-    expect(listener).toHaveBeenCalledTimes(1);
+    expect(listener).toHaveBeenCalledTimes(2);
   });
 
   it('defaults: a closed window plays its exit for 300 ms', async () => {

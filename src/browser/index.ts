@@ -27,5 +27,6 @@ export * from '../getViewportSizeProvider';
 export * from '../localStorageProvider';
 export * from '../readyProvider';
 export * from '../router';
+export * from '../view';
 export * from '../setStyleSheet';
 export * from '../stylesRenderProvider';

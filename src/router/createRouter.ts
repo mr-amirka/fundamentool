@@ -21,6 +21,9 @@ import type {
   TKeyValueChange,
   TKeyValueStorage,
 } from '../keyValueStorage';
+import {
+  createEvent,
+} from '../Observable';
 import type {
   TParams,
 } from '../unparam';
@@ -290,14 +293,8 @@ export function createRouter(deps: TRouterDeps): TRouter {
    * is already there — and reports a changed key once `$source` has it (whoever changed it).
    */
   function createParams($source: typeof $location, write: (query: TParams, options?: TParamsOptions) => void): TKeyValueStorage<TParamsOptions> {
-    const $changes = createObservable<TKeyValueChange>({
-      key: '',
-    });
-    const {
-      emit,
-    } = createApi($changes, {
-      emit: (_, change: TKeyValueChange) => change,
-    });
+    // A change of a key is an event (D-049): reported as it happens, never at subscription
+    const changed = createEvent<TKeyValueChange>();
     /** The query `$source` has. */
     let seen = getQuery($source.getState());
     /** The query as last written (or as `$source` has it, after a move). */
@@ -310,37 +307,36 @@ export function createRouter(deps: TRouterDeps): TRouter {
         ...Object.keys(previous),
         ...Object.keys(seen),
       ])) {
-        isEqual(previous[key], seen[key]) || emit({
+        isEqual(previous[key], seen[key]) || changed({
           key,
           value: seen[key],
         });
       }
     });
-    const instance = $changes as unknown as TKeyValueStorage<TParamsOptions>;
-    const assign = (values: Record<string, unknown>, options?: TParamsOptions) => {
-      assertFlags(
-        `${WHERE} params`, options, PARAMS_OPTION_KEYS,
-      );
-      const next = withQuery(query, values);
-      if (!isEqual(next, query)) {
-        query = next;
-        write(next, options);
-      }
-      return instance;
-    };
-    return Object.assign(instance, {
+    const storage: TKeyValueStorage<TParamsOptions> = {
+      watch: changed.watch,
       set: (
-        key: string, value: unknown, options?: TParamsOptions,
-      ) => assign({
+        key, value, options,
+      ) => storage.assign({
         [key]: value,
       }, options),
-      assign,
-      get: (key: string) => query[key],
-      remove: (key: string, options?: TParamsOptions) => assign({
+      assign(values, options) {
+        assertFlags(
+          `${WHERE} params`, options, PARAMS_OPTION_KEYS,
+        );
+        const next = withQuery(query, values);
+        if (!isEqual(next, query)) {
+          query = next;
+          write(next, options);
+        }
+        return storage;
+      },
+      get: (key) => query[key],
+      remove: (key, options) => storage.assign({
         [key]: undefined,
       }, options),
       getKeys: () => Object.keys(query),
-      clear: (options?: TParamsOptions) => {
+      clear(options) {
         assertFlags(
           `${WHERE} params`, options, PARAMS_OPTION_KEYS,
         );
@@ -348,8 +344,9 @@ export function createRouter(deps: TRouterDeps): TRouter {
           query = NO_QUERY;
           write({}, options);
         }
-        return instance;
+        return storage;
       },
-    });
+    };
+    return storage;
   }
 }

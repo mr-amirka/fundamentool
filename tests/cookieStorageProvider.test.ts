@@ -2,10 +2,6 @@ import {
   cookieStorageProvider,
   storageInit,
 } from '../src/cookieStorageProvider';
-import {
-  createObservable,
-  createApi,
-} from '../src/Observable';
 
 describe('storageInit', () => {
   test('parses cookie string into object', () => {
@@ -95,23 +91,45 @@ describe('cookieStorageProvider', () => {
     ]);
   });
 
-  test('deps — custom createObservable is called', () => {
-    const win = makeWindow();
-    let called = false;
-    cookieStorageProvider(win, {
-      createObservable: (initial) => {
-        called = true;
-        return createObservable(initial);
-      },
-      createApi,
-    });
-    expect(called).toBe(true);
-  });
-
-  test('deps — default store works when no deps provided', () => {
+  test('clear removes every key (it removed none before: each key was emitted with its own value)', () => {
     const win = makeWindow();
     const storage = cookieStorageProvider(win);
-    storage.set('key', 'value');
-    expect(storage.get('key')).toBe('value');
+    storage.assign({
+      a: 1,
+      b: 2,
+    });
+    storage.clear();
+    expect(storage.getKeys()).toEqual([]);
+    expect(win.document.cookie).toBe('');
+  });
+
+  test('writing the value a key already has writes no cookie', () => {
+    const win = makeWindow();
+    const storage = cookieStorageProvider(win);
+    storage.set('a', 'x');
+    const before = win.document.cookie;
+    Object.defineProperty(
+      win.document, 'cookie', {
+        get: () => before,
+        set: () => {
+          throw new Error('written again');
+        },
+      },
+    );
+    expect(() => storage.set('a', 'x')).not.toThrow();
+  });
+
+  test('watch reports every change, never at subscription', () => {
+    const storage = cookieStorageProvider(makeWindow());
+    const changes: unknown[] = [];
+    storage.watch((change) => changes.push(change));
+    expect(changes).toEqual([]);
+    storage.set('a', 'x');
+    expect(changes).toEqual([
+      {
+        key: 'a',
+        value: 'x',
+      },
+    ]);
   });
 });

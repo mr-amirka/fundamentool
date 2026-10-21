@@ -23,6 +23,8 @@ export type TStateInput = {
   shown: string | null;
   /** At most this many kept pages stay mounted. */
   keepLimit: number;
+  /** Some entry of any section has a leave guard. */
+  anyLeaveGuarded: boolean;
 };
 
 /**
@@ -58,7 +60,7 @@ export function topPage(list: readonly TEntry[]): TPageEntry {
  * lose its scroll).
  *
  * @example
- * const state = computeState({ entries, leaving, ahead, stacks, shown: null, keepLimit: DEFAULT_KEEP });
+ * const state = computeState({ entries, leaving, ahead, stacks, shown: null, keepLimit: DEFAULT_KEEP, anyLeaveGuarded: false });
  */
 export function computeState(input: TStateInput): TNavigatorState {
   const {
@@ -96,5 +98,6 @@ export function computeState(input: TStateInput): TNavigatorState {
     layers,
     page: top,
     section: shown,
+    anyLeaveGuarded: input.anyLeaveGuarded,
   };
 }

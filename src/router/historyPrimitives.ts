@@ -118,7 +118,7 @@ function isOurs(value: unknown): value is TEntryState {
 
 /** The primitives over a timeline: one per part, in step. */
 function createPrimitives(driver: TTimelineDriver): THistoryPrimitives {
-  const listeners = {} as Record<THistoryPart, Set<(entry: THistoryEntry) => void>>;
+  const listeners = {} as Record<THistoryPart, Set<(entry: THistoryEntry, from: THistoryEntry) => void>>;
   for (const part of PARTS) {
     listeners[part] = new Set();
   }
@@ -195,13 +195,14 @@ function createPrimitives(driver: TTimelineDriver): THistoryPrimitives {
     notify(from);
   });
 
-  /** Tells each part whose address or data changed with the player's move. */
+  /** Tells each part whose address or data changed with the player's move: where it is now, and where it was. */
   function notify(from: TRawEntry): void {
     for (const part of PARTS) {
       const rule = RULES[part];
       if (rule.read(from) !== rule.read(current) || from.state.rev[part] !== current.state.rev[part]) {
         const entry = view(current, part);
-        listeners[part].forEach((listener) => listener(entry));
+        const before = view(from, part);
+        listeners[part].forEach((listener) => listener(entry, before));
       }
     }
   }
@@ -210,6 +211,7 @@ function createPrimitives(driver: TTimelineDriver): THistoryPrimitives {
     return {
       location: urlParse(RULES[part].read(entry) || ROOT_PATH),
       data: entry.state.data[part],
+      index: entry.state.index,
     };
   }
 

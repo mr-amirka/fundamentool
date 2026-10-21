@@ -1,7 +1,7 @@
-// The interface of fundamentool's key-value storages (fundamentool D-039): `localStorageProvider`,
+// The interface of fundamentool's key-value storages (fundamentool D-039, D-049): `localStorageProvider`,
 // `cookieStorageProvider` and a router's `params` — one shape, so any of them is `storeProvider`'s port.
 import type {
-  ObservableWritable,
+  Unsubscribe,
 } from './Observable/types';
 
 /** A change of one key: its new value (`undefined` / `null` — removed). */
@@ -11,10 +11,15 @@ export type TKeyValueChange = {
 };
 
 /**
- * A key-value storage: an observable of its changes (`{ key, value }`) with `get` / `set` / `assign` / `remove` /
- * `getKeys` / `clear`. `O` — the options a write takes (a router's `params`: `{ replace, quiet }`).
+ * A key-value storage: its values (`get`, `getKeys`), its writes (`set`, `assign`, `remove`, `clear`) and the stream of
+ * its changes. `O` — the options a write takes (a router's `params`: `{ replace, quiet }`).
  */
-export type TKeyValueStorage<O = never> = ObservableWritable<any> & {
+export type TKeyValueStorage<O = never> = {
+  /**
+   * Reports every change (`{ key, value }`) as it happens, whoever made it (another tab, the address bar) — a change is
+   * an event: nothing at subscription (Effector's `event.watch`, D-049).
+   */
+  watch: (fn: (change: TKeyValueChange) => void) => Unsubscribe;
   /** Writes `value` under `key`. */
   set: (key: string, value: any, options?: O) => TKeyValueStorage<O>;
   /** Writes every key of `values` in one write (`undefined` / `null` — the key is removed). */

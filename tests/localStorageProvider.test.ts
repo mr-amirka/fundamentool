@@ -1,10 +1,6 @@
 import {
   localStorageProvider,
 } from '../src/localStorageProvider';
-import {
-  createObservable,
-  createApi,
-} from '../src/Observable';
 
 function makeLocalStorageMock() {
   const store: Record<string, string> = {};
@@ -33,14 +29,6 @@ function makeLocalStorageMock() {
     },
     store,
   };
-}
-
-function makeLocalStorageWin() {
-  const {
-    storage, win,
-  } = makeLocalStorageMock();
-  win._storage = storage;
-  return win as any;
 }
 
 describe('localStorageProvider', () => {
@@ -108,23 +96,52 @@ describe('localStorageProvider', () => {
     expect(ls.getKeys()).toEqual([]);
   });
 
-  test('deps — custom createObservable is called', () => {
-    const win = makeLocalStorageWin();
-    let called = false;
-    localStorageProvider(win, {
-      createObservable: (initial) => {
-        called = true;
-        return createObservable(initial);
-      },
-      createApi,
-    });
-    expect(called).toBe(true);
+  test('getKeys — a key the storage can\'t name reads as an empty string', () => {
+    const {
+      storage, win,
+    } = makeLocalStorageMock();
+    win._storage = {
+      ...storage,
+      length: 1,
+      key: () => null,
+    };
+    expect(localStorageProvider(win as any).getKeys()).toEqual(['']);
   });
 
-  test('deps — default store works when no deps provided', () => {
-    const win = makeLocalStorageWin();
-    const ls = localStorageProvider(win);
-    ls.set('k', 'v');
-    expect(ls.get('k')).toBe('v');
+  test('watch reports every change — this tab\'s and another tab\'s (the storage event) — never at subscription', () => {
+    const {
+      storage, win,
+    } = makeLocalStorageMock();
+    win._storage = storage;
+    let fireStorage: (event: unknown) => void = () => undefined;
+    (win as { addEventListener: unknown }).addEventListener = (_: string, cb: (event: unknown) => void) => {
+      fireStorage = cb;
+    };
+    const ls = localStorageProvider(win as any);
+    const changes: unknown[] = [];
+    const stop = ls.watch((change) => changes.push(change));
+    expect(changes).toEqual([]);
+    ls.set('a', 1);
+    // Another tab wrote `b`: reported, and not written back
+    storage.setItem('b', JSON.stringify(2));
+    const setItem = jest.spyOn(storage, 'setItem');
+    fireStorage({
+      key: 'b',
+      newValue: JSON.stringify(2),
+    });
+    expect(setItem).not.toHaveBeenCalled();
+    expect(changes).toEqual([
+      {
+        key: 'a',
+        value: 1,
+      },
+      {
+        key: 'b',
+        value: 2,
+      },
+    ]);
+    stop.unsubscribe();
+    ls.set('c', 3);
+    expect(changes).toHaveLength(2);
   });
 });

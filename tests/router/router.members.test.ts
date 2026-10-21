@@ -211,6 +211,7 @@ describe('the from-location (D-045)', () => {
       path: '/b',
     }); // the same address as shown: nothing changed
     expect(seen).toEqual([
+      undefined, // at subscription: none yet (D-049 — a store's watch fires at once)
       '/a',
       '/b',
       '/a',
@@ -326,6 +327,7 @@ describe('the history shortcuts (D-045)', () => {
     await router.backLocation();
     expect(nav.getNextLocation()?.path).toBe('/list'); // a window ahead: the page under it
     expect(depths).toEqual([
+      0, // at subscription
       1,
       2,
       1,

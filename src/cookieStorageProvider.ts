@@ -1,11 +1,8 @@
 import {
-  createObservable as _createObservable,
-  createApi as _createApi,
+  createEvent,
 } from './Observable';
 import type {
-  TObservableAdapter,
-} from './Observable';
-import type {
+  TKeyValueChange,
   TKeyValueStorage,
 } from './keyValueStorage';
 import {
@@ -24,7 +21,8 @@ export type TCookieWindowContext = {
 /** The cookies — a key-value storage (`TKeyValueStorage`, fundamentool D-039). */
 export type TCookieStorage = TKeyValueStorage;
 
-const expires = 400 * 86400000;
+/** How long a cookie lives, ms: 400 days — the longest the browsers keep one. */
+const COOKIE_LIFETIME_MS = 400 * 86400000;
 
 /**
  * Initializes the storage.
@@ -47,74 +45,66 @@ export const storageInit = (cookie: string): any => {
 };
 
 /**
- * Creates a cookie storage provider.
+ * The document's cookies as a key-value storage: values are JSON, kept 400 days.
  *
- * @param ctx - The Window whose `document.cookie` is managed.
- * @returns A reactive cookie storage with `get`, `set`, `assign`, `remove`, `getKeys`, and `clear`.
+ * @param ctx - The window whose `document.cookie` is used.
+ * @returns `get`, `set`, `assign`, `remove`, `getKeys`, `clear`, and `watch` for every change.
  * @example
  * const storage = cookieStorageProvider(window);
  * storage.set('token', 'abc123');
  * storage.get('token'); // => 'abc123'
  * storage.remove('token');
  */
-export const cookieStorageProvider = (ctx: TCookieWindowContext,
-  deps: Partial<TObservableAdapter> = {}): TCookieStorage => {
-  const {
-    createObservable = _createObservable, createApi = _createApi,
-  } = deps;
-  const $instance = createObservable<any>({} as any);
-  const {
-    emit,
-  } = createApi($instance, {
-    emit: (_: any, payload: any) => payload,
-  });
-
+export const cookieStorageProvider = (ctx: TCookieWindowContext): TCookieStorage => {
   const doc = ctx.document;
   const cache = storageInit(doc.cookie);
-  function __set(key: string, value: string) {
+  const changed = createEvent<TKeyValueChange>();
+
+  function write(key: string, value: string): void {
     const date = new Date();
-    date.setMilliseconds(date.getMilliseconds() + expires);
-    doc.cookie =
-      encodeURIComponent(key) + '=' + encodeURIComponent(value) + '; expires=' + date.toUTCString();
+    date.setMilliseconds(date.getMilliseconds() + COOKIE_LIFETIME_MS);
+    doc.cookie = encodeURIComponent(key) + '=' + encodeURIComponent(value) + '; expires=' + date.toUTCString();
   }
-  function set(key: string, value: any) {
-    emit({
-      key,
-      value,
-    } as any);
-    return $instance;
-  }
-  $instance.watch(({
+
+  changed.watch(({
     key, value,
-  }: { key: string;
-    value: any }) => {
+  }) => {
     if (value === cache[key]) {
       return;
     }
     if (!isDefined(value)) {
       delete cache[key];
-      __set(key, '');
+      write(key, '');
     } else {
-      __set(key, JSON.stringify((cache[key] = value)));
+      write(key, JSON.stringify((cache[key] = value)));
     }
   });
-  ($instance as any).set = set;
-  ($instance as any).assign = (values: Record<string, any>) => {
-    for (const key of Object.keys(values)) {
-      set(key, values[key]);
-    }
-    return $instance;
+
+  const storage: TCookieStorage = {
+    watch: changed.watch,
+    get: (key) => cache[key],
+    set(key, value) {
+      changed({
+        key,
+        value,
+      });
+      return storage;
+    },
+    assign(values) {
+      for (const key of Object.keys(values)) {
+        storage.set(key, values[key]);
+      }
+      return storage;
+    },
+    remove: (key) => storage.set(key, null),
+    getKeys: () => Object.keys(cache),
+    // Every key removed (it emitted each key's own value before — which the watcher skips: nothing was cleared)
+    clear() {
+      for (const key of Object.keys(cache)) {
+        storage.set(key, null);
+      }
+      return storage;
+    },
   };
-  ($instance as any).get = (key: string) => cache[key];
-  ($instance as any).remove = (key: string) => set(key, null);
-  ($instance as any).getKeys = () => Object.keys(cache);
-  ($instance as any).clear = () => {
-    let key;
-    for (key in cache) emit({ // eslint-disable-line
-      key,
-      value: cache[key],
-    } as any);
-    return $instance;
-  };
-  return $instance as any;
+  return storage;
 };
