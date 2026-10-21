@@ -20,6 +20,37 @@ export type TStorage = {
 
 type TNormalize<A> = (prev: A | null) => A;
 
+/**
+ * A store library's stores as a type of their value — how `storeProvider` knows what it returns (TypeScript has no
+ * "a store type for any value" parameter, so a kind names it through `this['value']`). Declare one for the library an
+ * app injects; fundamentool's own stores are the default.
+ *
+ * @example
+ * import type { Store } from 'effector';
+ * interface TEffectorStores extends TStoreKind { store: Store<this['value']> }
+ * const localStore = storeProvider<TEffectorStores>({ createStore, createApi }, localStorageProvider(window));
+ * const $theme = localStore('theme', 'light'); // Store<string> & { setState(value: string): void } — no cast
+ */
+export interface TStoreKind {
+  /** The value a store holds — filled in by `TStoreOf`. */
+  value: unknown;
+  /** The store for that value. */
+  store: unknown;
+}
+
+/** fundamentool's own stores (`createObservable`) — `storeProvider`'s default kind. */
+export interface TObservableStores extends TStoreKind {
+  store: ObservableWritable<this['value']>;
+}
+
+/** The store of kind `K` for values `A`. */
+export type TStoreOf<K extends TStoreKind, A> = (K & { value: A })['store'];
+
+/** What `storeProvider` makes: the library's store, plus a `setState` that writes to the storage and shows the value. */
+export type TPersistedStore<K extends TStoreKind, A> = TStoreOf<K, A> & {
+  setState(value: A): void;
+};
+
 /** DI ports for the store implementation `storeProvider` is bound to (e.g. Effector's `createStore`/`createApi`). */
 export type TStoreProviderDeps = {
   /** Creates a store instance seeded with `initial`. */
@@ -35,16 +66,18 @@ export type TStoreProviderDeps = {
  * `storage`, writes back on every `setState`, and re-syncs when `storage.watch`
  * reports an external change to the same key (e.g. another tab).
  *
+ * @typeParam K - The injected library's kind of store (`TStoreKind`) — what the stores are typed as; default
+ *   fundamentool's own.
  * @param deps - Store-library DI ports (`createStore`/`createApi`).
  * @param storage - Persistence port to read/write/watch values through.
  * @param originalPrefix - Optional prefix prepended to every store's name/key.
- * @returns A factory `(name, defaultValue?, isObjectExtension?) => ObservableWritable<A>`.
+ * @returns A factory `(name, defaultValue?, isObjectExtension?) => TPersistedStore<K, A>`.
  * @example
  * const createPersistedStore = storeProvider({ createStore, createApi }, localStorageProvider(window));
  * const $theme = createPersistedStore('theme', 'light');
  * $theme.setState('dark'); // persisted to storage and re-emitted on external change
  */
-export const storeProvider = (
+export const storeProvider = <K extends TStoreKind = TObservableStores>(
   {
     createStore, createApi,
   }: TStoreProviderDeps,
@@ -57,7 +90,7 @@ export const storeProvider = (
     originalName: string,
     defaultValue: A | null | TNormalize<A> = null,
     isObjectExtension?: boolean,
-  ): ObservableWritable<A> => {
+  ): TPersistedStore<K, A> => {
     const name = prefix + originalName;
     const defaultValueIsFunc = typeof defaultValue === 'function';
     const normalize: TNormalize<A> = isObjectExtension
@@ -96,6 +129,6 @@ export const storeProvider = (
       show(normalize(v));
     };
 
-    return $store as unknown as ObservableWritable<A>;
+    return $store as TPersistedStore<K, A>;
   };
 };
