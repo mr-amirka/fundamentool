@@ -93,6 +93,12 @@ for (const file of listJs(esmRoot)) {
   }
 }
 
+// Bundlers take `sideEffects` from the nearest package.json — the ES modules' own must say what the package says.
+const esmPkg = JSON.parse(fs.readFileSync(path.join(esmRoot, 'package.json'), 'utf8'));
+if (JSON.stringify(esmPkg.sideEffects) !== JSON.stringify(pkg.sideEffects)) {
+  failures.push(`dist/esm/package.json: "sideEffects" is ${JSON.stringify(esmPkg.sideEffects)}, the package's is ${JSON.stringify(pkg.sideEffects)}`);
+}
+
 if (failures.length) {
   process.stderr.write(failures.join('\n') + '\n');
   process.exit(1);

@@ -4,7 +4,9 @@
  * The ESM output is loadable by plain Node, not only by bundlers: relative
  * specifiers are rewritten to explicit files (`./x` → `./x.js` or
  * `./x/index.js`), and `dist/esm/package.json` marks the folder as
- * `"type": "module"`. A specifier that resolves to no source file fails the
+ * `"type": "module"` — carrying the package's `sideEffects` (bundlers read the nearest
+ * package.json: without it every ES module counts as having side effects and stays in an
+ * app's bundle whatever it imports). A specifier that resolves to no source file fails the
  * build instead of being emitted as is.
  *
  * Usage: `node scripts/build.mjs`
@@ -166,5 +168,6 @@ fs.writeFileSync(path.join(
 ), JSON.stringify(
   {
     type: 'module',
+    sideEffects: JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8')).sideEffects,
   }, null, 2,
 ) + '\n');
