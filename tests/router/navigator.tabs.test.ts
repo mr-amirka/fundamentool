@@ -157,7 +157,7 @@ describe('createNavigator — a history per tab', () => {
     expect(nav.getState().page.id).toBe(kept);
   });
 
-  it('a deep link into another tab starts with the first tab\'s main page under it', () => {
+  it('a deep link at the start is a page of the start tab, over its main page — not the tab its path looks like (D-053)', () => {
     const {
       paths, nav,
     } = setup('/b/7');
@@ -165,16 +165,19 @@ describe('createNavigator — a history per tab', () => {
       '/a',
       '/b/7',
     ]);
-    expect(nav.getState().section).toBe('/b');
+    expect(nav.getState().section).toBe('/a');
   });
 
   it('a page of no known section opens in the first tab; tapping that tab then goes to its main page', async () => {
     const {
       nav, paths,
     } = setup('/elsewhere');
-    expect(paths()).toEqual(['/elsewhere']);
+    expect(paths()).toEqual([
+      '/a',
+      '/elsewhere',
+    ]); // over the start tab's main page (D-053)
     expect(nav.getState().section).toBe('/a');
-    await nav.switchSection('a'); // the start is a page of no root: the root's link replaces it (D-043)
+    await nav.switchSection('a'); // the tab of the shown section: back to its start (D-043)
     expect(paths()).toEqual(['/a']);
   });
 
@@ -194,7 +197,7 @@ describe('createNavigator — a history per tab', () => {
     ]);
   });
 
-  it('a tab whose root is `/`: every page no other tab claims is in it', () => {
+  it('a tab whose root is `/`: a deep link at the start is its page, whatever its path (D-053)', () => {
     const routes: readonly TRouteRow[] = [
       [
         '/',
@@ -224,11 +227,14 @@ describe('createNavigator — a history per tab', () => {
       '/',
       '/b/1',
     ]);
-    expect(inB.nav.getState().section).toBe('/b');
+    expect(inB.nav.getState().section).toBe('/');
     const inHome = harness({
       routes,
     }, '/x');
-    expect(inHome.paths()).toEqual(['/x']);
+    expect(inHome.paths()).toEqual([
+      '/',
+      '/x',
+    ]);
     expect(inHome.nav.getState().section).toBe('/');
   });
 });

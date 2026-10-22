@@ -32,7 +32,9 @@ import {
   func,
   number,
   object,
+  oneOf,
   record,
+  string,
   union,
 } from '../schema';
 import {
@@ -126,6 +128,13 @@ const NAVIGATOR_DEPS = object({
   exitMs: number().min(0).optional(),
   fallback: LOCATION.optional(),
   gates: record(GATE).describe('{ [name]: { closed, to } }').optional(),
+  externalLinks: object({
+    backlinkParam: string().optional(),
+    section: oneOf([
+      'shown',
+      'none',
+    ]).optional(),
+  }).optional(),
 });
 
 /** The single list of `createNavigator`'s keys. */
@@ -355,7 +364,10 @@ export function createNavigator(deps: TNavigatorDeps) {
   /** The shown stack goes into its tab's place. */
   function storeShown(): void {
     if (shown !== null) {
-      stacks.set(shown, shown === homeSection ? entries : entries.slice(1));
+      const kept = shown === homeSection ? entries : entries.slice(1);
+      // A page in no section (an external link, D-053) and what is above it aren't the section's: left on a switch
+      const loose = kept.findIndex((entry) => entry.kind === PAGE && entry.section === null);
+      stacks.set(shown, loose < 0 ? kept : kept.slice(0, loose));
     }
   }
 
@@ -750,7 +762,7 @@ export function createNavigator(deps: TNavigatorDeps) {
         // An address from outside (a typed hash, a plain anchor) ahead of the shown page: back where the player was, and
         // the step taken as any step of the app — over the shown page, asked like one (D-050)
         await travelToIndex(from);
-        void go(entry.location);
+        void openExternalLink(entry.location);
         return STAYED;
       }
       reset(entry.location);
@@ -1189,25 +1201,7 @@ export function createNavigator(deps: TNavigatorDeps) {
   async function toSection(
     key: string, location: TUrlProps, quiet: boolean,
   ): Promise<void> {
-    const switched = await enqueue(() => quietly(quiet, async () => {
-      if (key === shown) {
-        return false;
-      }
-      dropWindows();
-      storeShown();
-      if (entries.length > 1) {
-        await travelToStart();
-      }
-      if (!stacks.has(key)) {
-        stacks.set(key, [
-          page(
-            location, 0, key,
-          ),
-        ]);
-      }
-      rebuild(key);
-      return true;
-    }));
+    const switched = await enqueue(() => quietly(quiet, () => switchSection(key, location)));
     if (switched || !(await backTo(
       sectionStart, false, quiet,
     ))) {
@@ -1218,6 +1212,128 @@ export function createNavigator(deps: TNavigatorDeps) {
         await replaceTop(location);
       }
     }));
+  }
+
+  /**
+   * To the section `key` as it was left — a first visit: its root at `location`; `false` — it is shown already. Inside
+   * the queue.
+   */
+  async function switchSection(key: string, location: TUrlProps): Promise<boolean> {
+    if (key === shown) {
+      return false;
+    }
+    dropWindows();
+    storeShown();
+    if (entries.length > 1) {
+      await travelToStart();
+    }
+    if (!stacks.has(key)) {
+      stacks.set(key, [
+        page(
+          location, 0, key,
+        ),
+      ]);
+    }
+    rebuild(key);
+    return true;
+  }
+
+  /** `location` pushed in `section` — a step of the shown page when it is its row. Inside the queue. */
+  function pushIn(location: TUrlProps, section: string | null): void {
+    const same = samePage(location);
+    push(page(
+      location, entries.length, same ? same.section : section, same?.id,
+    ));
+  }
+
+  /**
+   * An external link's backlink (D-053): the link without the navigator's `backlinkParam`, and the address it carried
+   * (`null` — none).
+   */
+  function backlinkOf(location: TUrlProps): [link: TUrlProps, back: TUrlProps | null] {
+    const param = deps.externalLinks?.backlinkParam;
+    const query = location.query || {};
+    if (!param || !(param in query)) {
+      return [
+        location,
+        null,
+      ];
+    }
+    const rest = {
+      ...query,
+    };
+    const raw = rest[param];
+    delete rest[param];
+    return [
+      locate({
+        path: location.path,
+        query: rest,
+      }, location),
+      typeof raw === 'string' && raw ? urlParse(raw) : null,
+    ];
+  }
+
+  /**
+   * An external link, admitted (D-053), inside the queue. A section's root — that section, the link pushed on its history
+   * unless it is exactly the page on top. A page — into the section its backlink names (the backlink pushed first when
+   * it carries parameters and isn't the section's start or top), otherwise the section shown — or none
+   * (`externalLinks.section: 'none'`). Without sections — a push.
+   */
+  async function takeExternalLink(link: TUrlProps, back: TUrlProps | null): Promise<void> {
+    if (homeSection === null) {
+      pushIn(link, shown);
+      return;
+    }
+    const root = rootOf(link);
+    if (root !== null) {
+      await switchSection(root, link);
+      if (topPage(entries).location.href !== link.href) {
+        pushIn(link, root);
+      }
+      return;
+    }
+    const named = back && rootOf(back);
+    if (back && named) {
+      // A first visit starts the section at the backlink; a visited one gets it pushed — with parameters, if it isn't
+      // already its start or its top
+      const first = named !== shown && !stacks.has(named);
+      await switchSection(named, back);
+      if (!first && back.query && Object.keys(back.query).length
+        && back.href !== pageAt(entries, sectionStart()).location.href && back.href !== topPage(entries).location.href) {
+        pushIn(back, named);
+      }
+      pushIn(link, named);
+      return;
+    }
+    pushIn(link, deps.externalLinks?.section === 'none' ? null : shown);
+  }
+
+  /**
+   * Opens a link that came from outside the app (D-053) — what a platform reports: VK's `VKWebAppChangeFragment`, a push
+   * notification. As any step it is asked (the gates, the entry guards); where it goes — `takeExternalLink`. The cold
+   * start and an address typed in take the same way.
+   *
+   * @example
+   * bridge.subscribe(({ detail }) => {
+   *   if (detail.type === 'VKWebAppChangeFragment' && detail.data?.location) {
+   *     void nav.openExternalLink(urlParse(detail.data.location));
+   *   }
+   * });
+   */
+  async function openExternalLink(change: Partial<TUrlProps>): Promise<void> {
+    LOCATION.parse(change, `${WHERE} openExternalLink`);
+    const [
+      link,
+      back,
+    ] = backlinkOf(locate(change, topPage(entries).location));
+    const before = held;
+    const admitted = admit(link);
+    if (admitted === null) {
+      await keepHeld(before);
+      return;
+    }
+    const location = admitted.location;
+    await enqueue(() => (admitted.gated ? startOverIn([location], false) : takeExternalLink(location, back)));
   }
 
   /**
@@ -1465,15 +1581,23 @@ export function createNavigator(deps: TNavigatorDeps) {
    * location held before a reload with every gate open now: shown if a gate's page is on screen, otherwise dropped.
    */
   function startCheck(): void {
-    const location = topPage(entries).location;
     const single = entries.length === 1;
+    const fresh = !restored && single && entries[0].id === firstId;
+    // A first visit's address is an external link (D-053): its backlink taken off
+    const [
+      location,
+      back,
+    ] = fresh ? backlinkOf(topPage(entries).location) : [
+      topPage(entries).location,
+      null,
+    ];
     const admitted = admit(location) || (deps.fallback ? admit(locate(deps.fallback, location), false) : null);
     let target: TUrlProps[] | null = null;
     if (admitted && admitted.gated) {
       target = [admitted.location]; // the gate's page alone: Back from it leaves the app
     } else if (admitted && admitted.location.href !== location.href) {
       target = firstVisit(admitted.location); // a guard sent it elsewhere, or the fallback took it
-    } else if (!restored && single && entries[0].id === firstId && firstVisit(location).length > 1) {
+    } else if (fresh && firstVisit(location).length > 1) {
       target = firstVisit(location); // a deep link: the fallback under it (sections — the start root, below)
     }
     if (held !== null && activeGate() === null) {
@@ -1485,6 +1609,10 @@ export function createNavigator(deps: TNavigatorDeps) {
     }
     if (target === null) {
       if (homeSection !== null && shown === null) {
+        if (fresh) {
+          externalStart(location, back);
+          return;
+        }
         reset(location);
       }
       publish();
@@ -1495,6 +1623,24 @@ export function createNavigator(deps: TNavigatorDeps) {
       const locations = target;
       void enqueue(() => startOverIn(locations, false));
     }
+  }
+
+  /**
+   * A first visit with sections (D-053), the address taken as an external link: a section's root — that section; a page
+   * — over the start of the section its backlink names, else the start section's (in it, or in none —
+   * `externalLinks.section`). Published.
+   */
+  function externalStart(link: TUrlProps, back: TUrlProps | null): void {
+    if (rootOf(link) !== null) {
+      reset(link);
+      publish();
+      return;
+    }
+    const named = back && rootOf(back);
+    quietStep = true;
+    reset(back && named ? back : homeRoot as TUrlProps);
+    quietStep = false;
+    pushIn(link, back && named ? named : deps.externalLinks?.section === 'none' ? null : shown);
   }
 
   /**
@@ -1790,6 +1936,7 @@ export function createNavigator(deps: TNavigatorDeps) {
     onForward,
     onBeforeLeave,
     onBeforeEnter,
+    openExternalLink,
     ...view,
   };
 }

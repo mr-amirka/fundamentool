@@ -1000,3 +1000,212 @@ describe('createNavigator — arriving by a link (D-050)', () => {
     });
   });
 });
+
+/** Tabs `/` (home), `/catalog`, `/search` (a root with parameters: `/search?q=…`), `/cart`; every other page. */
+const SHOP: readonly TRouteRow[] = [
+  ...[
+    '/',
+    '/catalog',
+    '/search',
+    '/cart',
+  ].map((root): TRouteRow => [
+    root,
+    {
+      main: Page,
+      section: true,
+    },
+  ]),
+  ...[
+    '/place/:id',
+    '/item/:id',
+  ].map((pattern): TRouteRow => [
+    pattern,
+    {
+      main: Page,
+    },
+  ]),
+  [
+    '/(.*)',
+    {
+      main: Page,
+    },
+  ],
+];
+
+/** The shop over a window at `start`; external links read `back=…`. */
+const shop = (start: string, section?: 'shown' | 'none') => setup({
+  routes: SHOP,
+  externalLinks: {
+    backlinkParam: 'back',
+    section,
+  },
+}, start);
+
+describe('createNavigator — external links and sections (D-053)', () => {
+  it('a page joins the section shown (`shown`, the default); a root — its section, pushed unless it is on top', async () => {
+    const {
+      router, navigator, paths,
+    } = shop('/cart');
+    await router.pushLocation({
+      path: '/cart/2',
+    });
+    await navigator.openExternalLink({
+      path: '/item/7',
+    });
+    expect(paths()).toEqual([
+      '/',
+      '/cart',
+      '/cart/2',
+      '/item/7',
+    ]);
+    expect(navigator.getState().section).toBe('/cart');
+    await navigator.openExternalLink(urlParse('/search?q=dogs')); // another section's root: there, the address pushed
+    expect(navigator.getState().section).toBe('/search');
+    expect(paths()).toEqual([
+      '/',
+      '/search?q=dogs'.split('?')[0],
+    ]);
+    await navigator.openExternalLink(urlParse('/search?q=dogs')); // exactly the page on top: nothing more
+    expect(navigator.getState().entries).toHaveLength(2);
+    await navigator.openExternalLink(urlParse('/search?q=cats')); // the same section, other parameters: pushed
+    expect(navigator.getState().entries.map((entry) => (entry as TPageEntry).location.href)).toEqual([
+      '/',
+      '/search?q=dogs',
+      '/search?q=cats',
+    ]);
+    await router.backLocation();
+    expect(navigator.getState().location.href).toBe('/search?q=dogs');
+  });
+
+  it('a backlink names the section: its root with no parameters only names it; with parameters it is pushed first', async () => {
+    const {
+      router, navigator, paths,
+    } = shop('/catalog');
+    await router.pushLocation({
+      path: '/catalog/3',
+    });
+    await navigator.openExternalLink(urlParse('/cart')); // to ‹cart›
+    await navigator.openExternalLink(urlParse('/item/7?back=%2Fcatalog')); // names ‹catalog›: back there, the page on top
+    expect(navigator.getState().section).toBe('/catalog');
+    expect(paths()).toEqual([
+      '/',
+      '/catalog',
+      '/catalog/3',
+      '/item/7',
+    ]);
+    expect(navigator.getState().location.href).toBe('/item/7'); // the backlink taken off the address
+    await navigator.openExternalLink(urlParse('/item/8?back=%2Fsearch%3Fq%3Dtea')); // ‹search›'s first visit — at the backlink
+    expect(navigator.getState().entries.map((entry) => (entry as TPageEntry).location.href)).toEqual([
+      '/',
+      '/search?q=tea',
+      '/item/8',
+    ]);
+    await navigator.openExternalLink(urlParse('/cart'));
+    await navigator.openExternalLink(urlParse('/item/9?back=%2Fsearch%3Fq%3Dcats')); // other parameters: pushed first
+    expect(navigator.getState().entries.map((entry) => (entry as TPageEntry).location.href)).toEqual([
+      '/',
+      '/search?q=tea',
+      '/item/8',
+      '/search?q=cats',
+      '/item/9',
+    ]);
+    await router.pushLocation(urlParse('/search?q=dogs'));
+    await navigator.openExternalLink(urlParse('/item/10?back=%2Fsearch%3Fq%3Ddogs')); // the backlink is on top: not again
+    expect(navigator.getState().entries.slice(-2).map((entry) => (entry as TPageEntry).location.href)).toEqual([
+      '/search',
+      '/item/10',
+    ].map((path, i) => (i ? path : '/search?q=dogs')));
+    await navigator.openExternalLink(urlParse('/item/11?back=%2Fitem%2F1')); // not a root: as no backlink — the shown section
+    expect(navigator.getState().section).toBe('/search');
+  });
+
+  it('`section: \'none\'`: a page in no section — Back returns to the section under it, a tab tap leaves it', async () => {
+    const {
+      router, navigator, paths,
+    } = shop('/cart', 'none');
+    await router.pushLocation({
+      path: '/cart/2',
+    });
+    await navigator.openExternalLink({
+      path: '/place/5',
+    });
+    expect(paths()).toEqual([
+      '/',
+      '/cart',
+      '/cart/2',
+      '/place/5',
+    ]);
+    expect(navigator.getState().section).toBe('/cart'); // the tab under it is marked
+    expect((navigator.getState().page as TPageEntry).section).toBeNull();
+    await router.pushLocation({
+      path: '/',
+    }); // ‹home›
+    await router.pushLocation({
+      path: '/cart',
+    }); // ‹cart› again: as it was, without the place
+    expect(paths()).toEqual([
+      '/',
+      '/cart',
+      '/cart/2',
+    ]);
+  });
+
+  it('the cold start: a page — over the start root; with a backlink — over that section\'s start; with `none` — in no section', () => {
+    expect(shop('/item/7').paths()).toEqual([
+      '/',
+      '/item/7',
+    ]);
+    const named = shop('/item/7?back=%2Fsearch%3Fq%3Dtea');
+    expect(named.navigator.getState().entries.map((entry) => (entry as TPageEntry).location.href)).toEqual([
+      '/',
+      '/search?q=tea',
+      '/item/7',
+    ]);
+    expect(named.navigator.getState().section).toBe('/search');
+    const loose = shop('/item/7', 'none');
+    expect((loose.navigator.getState().page as TPageEntry).section).toBeNull();
+    expect(loose.navigator.getState().section).toBe('/');
+    expect(shop('/catalog').paths()).toEqual(['/']
+      .concat('/catalog')); // a root — its section
+  });
+
+  it('an app that stepped before its host made: not a first visit — the page shown laid out by the sections', async () => {
+    const early = setup({
+      routes: null,
+    }, '/catalog');
+    await early.router.pushLocation({
+      path: '/search',
+    });
+    early.navigator.NavigationHostProvider({
+      routes: SHOP,
+    });
+    expect(early.navigator.getState().section).toBe('/search');
+    expect(early.paths()).toEqual([
+      '/',
+      '/search',
+    ]);
+  });
+
+  it('without sections a link is a push; the option and the link are checked', async () => {
+    const {
+      navigator, paths,
+    } = setup({
+      routes: PLAIN,
+      externalLinks: {
+        backlinkParam: 'back',
+      },
+    }, '/home');
+    await navigator.openExternalLink(urlParse('/item/7?back=%2Fx'));
+    expect(paths()).toEqual([
+      '/home',
+      '/item/7',
+    ]);
+    await expect(navigator.openExternalLink('x' as never)).rejects.toThrow(/openExternalLink: expects a location \(\{ path, query, … \}\), got string "x"/);
+    expect(() => createNavigator({
+      ...freshDeps().deps,
+      externalLinks: {
+        section: 'nowhere',
+      } as never,
+    })).toThrow(/"externalLinks"\."section" expects one of shown, none, got string "nowhere"/);
+  });
+});

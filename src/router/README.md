@@ -201,26 +201,42 @@ A link in a chat, a push notification, a VK link to the mini-app: the user lands
 pages must come first (onboarding, sign-in).
 
 **A deep link lies over the home.** A first visit to a page other than the `fallback` puts the fallback under it (with
-sections — the start section's root): every Back — the app's, the browser's, Android's — goes home, not out of the app.
-The page under it waits dormant (not drawn until reached).
+sections — the start section's root: the link is a page of the start section, whatever its path — D-053): every Back —
+the app's, the browser's, Android's — goes home, not out of the app. The page under it waits dormant (not drawn until
+reached).
 
 ```ts
 createNavigator({ router, …, fallback: { path: '/' } });
 // opened at #/place/5  →  history [ /  ·  /place/5 ← shown ]  →  Back → /
 ```
 
-**An address from outside opens over the shown page** — a typed address, a plain `<a href="#/route/7">` in an
-article's HTML, what a platform reports (VK's `VKWebAppChangeFragment`). A step like any other: Back returns to where
-the user was.
+**An external link opens over the shown page** — a typed address, a plain `<a href="#/route/7">` in an article's HTML,
+and what a platform reports through `nav.openExternalLink(location)` (VK's `VKWebAppChangeFragment`, a push
+notification). Back returns to where the user was.
 
 ```ts
 bridge.subscribe(({ detail }) => {
   if (detail.type === 'VKWebAppChangeFragment' && detail.data?.location) {
-    router.pushLocation(urlParse(detail.data.location));
+    void nav.openExternalLink(urlParse(detail.data.location));
   }
 });
 // [ / · /place/5 ]  — a link to /route/7 arrives  →  [ / · /place/5 · /route/7 ]  →  Back → /place/5
 ```
+
+**External links and sections** (D-053) — `createNavigator({ externalLinks: { backlinkParam: 'back', section: 'shown' } })`.
+A page joins the section shown; a section's root opens that section, pushed on its history unless it is exactly the page
+on top; a **backlink** in the link (`?back=<a section's root>`) names the section — with parameters of its own (and not
+already that section's start or top) it is pushed first, under the page; it is taken off the link's address.
+`section: 'none'` — a link no backlink names is in no section: Back returns to the section under it, a tab tap leaves it
+(the tab bar marks the section under it). A tab tap (`nav.NavLink`) stays a tab tap (D-043).
+
+| The user in ‹cart› at `[ /cart · /cart/2 ]`; a link to | The history after | Tab |
+|----------------------------------------------------------|-------------------|-----|
+| `/item/7` | `[ /cart · /cart/2 · /item/7 ]` | ‹cart› |
+| `/item/7?back=/catalog` | ‹catalog› as it was left, then `/item/7` | ‹catalog› |
+| `/item/7?back=/search?q=tea` (‹search› left at `/search?q=cats`) | `[ /search?q=cats · /search?q=tea · /item/7 ]` | ‹search› |
+| `/search?q=dogs` (a root) | ‹search›, `/search?q=dogs` pushed — unless it is its top | ‹search› |
+| a cold start at `/item/7?back=/catalog` | `[ / · /catalog · /item/7 ]` | ‹catalog› |
 
 **A whole history in one step** — `nav.startOver(location | locations, { quiet })`: every page and window dropped; a
 list is written bottom to top, each read against the one before; only the last is shown, the rest wait dormant. A

@@ -354,6 +354,16 @@ export type TNavigatorDeps = TObservableAdapter & Pick<TViewLibrary,
    * location is held (`state.held`) and shown when the gate opens, over the `fallback`.
    */
   gates?: Record<string, TGate>;
+  /**
+   * Links that come from outside the app (D-053) — the cold start, an address typed in, `nav.openExternalLink`:
+   * `backlinkParam` — the link's query parameter carrying a backlink, an address of the section's root it belongs to;
+   * `section` — where a link goes when no section is named: `'shown'` (default) or `'none'` (in no section: Back
+   * returns to the section shown, a tab tap leaves it).
+   */
+  externalLinks?: {
+    backlinkParam?: string;
+    section?: 'shown' | 'none';
+  };
 };
 
 /** What `nav.NavigationHostProvider` takes. */

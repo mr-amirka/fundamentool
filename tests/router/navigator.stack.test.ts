@@ -208,19 +208,16 @@ describe('createNavigator — the stack', () => {
     await expect(nav.backToDepth(-1)).rejects.toThrow(/backToDepth: expects a depth/);
   });
 
-  it('a deep link lays out over the start section\'s root; its start is the deep page; without sections — the first page', async () => {
+  it('a deep link is a page of the start section, over its root (D-053); without sections — the first page', async () => {
     const deep = setup({}, '/b/7');
     expect(deep.paths()).toEqual([
       '/a',
       '/b/7',
     ]);
-    expect(deep.nav.getState().section).toBe('/b');
-    await expect(deep.nav.backToRoot()).resolves.toBe(true);
-    expect(deep.paths()).toEqual([
-      '/a',
-      '/b/7',
-    ]);
-    await deep.nav.switchSection('b'); // the link to the root replaces the deep start
+    expect(deep.nav.getState().section).toBe('/a');
+    await expect(deep.nav.backToRoot()).resolves.toBe(true); // the start section's start: its root
+    expect(deep.paths()).toEqual(['/a']);
+    await deep.nav.switchSection('b'); // the first visit of ‹b›
     expect(deep.paths()).toEqual([
       '/a',
       '/b',

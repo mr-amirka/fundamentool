@@ -55,6 +55,7 @@ describe('createNavigator — options', () => {
       exitMs: 1,
       fallback: {},
       gates: {},
+      externalLinks: {},
       useState: React.useState, // a member of the view library the navigator accepts but doesn't need
     };
     expect([...NAVIGATOR_DEPS_KEYS].sort()).toEqual(Object.keys(deps).sort());
