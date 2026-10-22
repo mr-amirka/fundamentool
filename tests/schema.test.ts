@@ -125,23 +125,29 @@ describe('schema', () => {
       ROW,
     ]).label((row) => `the row "${row[0]}"`));
     expect(messageOf(routes, 'x')).toBe(`${WHERE}: expects a list, got string "x"`);
-    expect(messageOf(routes, [[
-      '/x',
-      {
-        keep: true,
-        level: 3,
-      },
-    ]])).toBeNull();
-    expect(messageOf(routes, [[
-      '/x',
-      {
-        keep: 1,
-      },
-    ]])).toBe(`${WHERE}: the row "/x": "keep" expects true or false, got number 1`);
-    expect(messageOf(routes, [[
-      5,
-      {},
-    ]])).toBe(`${WHERE}: the row "5": [0] expects a string, got number 5`);
+    expect(messageOf(routes, [
+      [
+        '/x',
+        {
+          keep: true,
+          level: 3,
+        },
+      ],
+    ])).toBeNull();
+    expect(messageOf(routes, [
+      [
+        '/x',
+        {
+          keep: 1,
+        },
+      ],
+    ])).toBe(`${WHERE}: the row "/x": "keep" expects true or false, got number 1`);
+    expect(messageOf(routes, [
+      [
+        5,
+        {},
+      ],
+    ])).toBe(`${WHERE}: the row "5": [0] expects a string, got number 5`);
     expect(messageOf(routes, [5])).toBe(`${WHERE}: the row "undefined": expects a list of 2, got number 5`);
     expect(messageOf(array(string()), [
       'a',
