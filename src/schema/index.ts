@@ -103,6 +103,32 @@ export type TNumberSchema = TSchema<number> & {
   positive(): TNumberSchema;
 };
 
+/** The path one step deeper. */
+const deeper = (
+  path: readonly TStep[], kind: TStep[0], text: string,
+): readonly TStep[] => [
+  ...path,
+  [
+    kind,
+    text,
+  ],
+];
+
+/** The first problem among `parts` — each `[schema, value, path]`; `null` — all fit. */
+function firstProblem(parts: [TSchema<unknown>, unknown, readonly TStep[]][]): TProblem | null {
+  for (const [
+    schema,
+    value,
+    path,
+  ] of parts) {
+    const problem = schema.check(value, path);
+    if (problem) {
+      return problem;
+    }
+  }
+  return null;
+}
+
 /** A problem at `path`: "expects …, got …". */
 const wrong = (
   path: readonly TStep[], expected: string, value: unknown,
@@ -350,27 +376,17 @@ export function union<const S extends readonly TSchema<unknown>[]>(schemas: S): 
  */
 export function array<T>(item: TSchema<T>): TSchema<T[]> {
   return make<T[]>(
-    'array', 'a list', (value, path) => {
-      if (!isArray(value)) {
-        return wrong(
-          path, 'a list', value,
-        );
-      }
-      const length = value.length;
-      for (let i = 0; i < length; i++) {
-        const problem = item.check(value[i], [
-          ...path,
-          [
-            'index',
-            String(i),
-          ],
-        ]);
-        if (problem) {
-          return problem;
-        }
-      }
-      return null;
-    },
+    'array', 'a list', (value, path) => (isArray(value)
+      ? firstProblem(value.map((part, i) => [
+        item,
+        part,
+        deeper(
+          path, 'index', String(i),
+        ),
+      ]))
+      : wrong(
+        path, 'a list', value,
+      )),
   );
 }
 
@@ -378,53 +394,34 @@ export function array<T>(item: TSchema<T>): TSchema<T[]> {
 export function tuple<const S extends readonly TSchema<unknown>[]>(items: S): TSchema<{ [K in keyof S]: TInfer<S[K]> }> {
   const expected = `a list of ${items.length}`;
   return make(
-    'tuple', expected, (value, path) => {
-      if (!isArray(value) || value.length > items.length) {
-        return wrong(
-          path, expected, value,
-        );
-      }
-      const length = items.length;
-      for (let i = 0; i < length; i++) {
-        const problem = items[i].check(value[i], items[i].kind === 'object' ? path : [
-          ...path,
-          [
-            'index',
-            String(i),
-          ],
-        ]);
-        if (problem) {
-          return problem;
-        }
-      }
-      return null;
-    },
+    'tuple', expected, (value, path) => (isArray(value) && value.length <= items.length
+      ? firstProblem(items.map((item, i) => [
+        item,
+        value[i],
+        item.kind === 'object' ? path : deeper(
+          path, 'index', String(i),
+        ),
+      ]))
+      : wrong(
+        path, expected, value,
+      )),
   );
 }
 
 /** An object whose values are all `value` — any keys (`{ [name]: gate }`). */
 export function record<T>(value: TSchema<T>): TSchema<Record<string, T>> {
   return make(
-    'record', 'an object', (given, path) => {
-      if (!isObject(given) || isArray(given)) {
-        return wrong(
-          path, 'an object', given,
-        );
-      }
-      for (const key of Object.keys(given)) {
-        const problem = value.check((given as Record<string, unknown>)[key], [
-          ...path,
-          [
-            'key',
-            key,
-          ],
-        ]);
-        if (problem) {
-          return problem;
-        }
-      }
-      return null;
-    },
+    'record', 'an object', (given, path) => (isObject(given) && !isArray(given)
+      ? firstProblem(Object.keys(given).map((key) => [
+        value,
+        (given as Record<string, unknown>)[key],
+        deeper(
+          path, 'key', key,
+        ),
+      ]))
+      : wrong(
+        path, 'an object', given,
+      )),
   );
 }
 
@@ -459,19 +456,13 @@ export function object<const S extends Record<string, TSchema<unknown>>>(shape: 
             }
           }
         }
-        for (const key of keys) {
-          const problem = shape[key].check(given[key], [
-            ...path,
-            [
-              'key',
-              key,
-            ],
-          ]);
-          if (problem) {
-            return problem;
-          }
-        }
-        return null;
+        return firstProblem(keys.map((key) => [
+          shape[key],
+          given[key],
+          deeper(
+            path, 'key', key,
+          ),
+        ]));
       },
     );
     // A derived schema (a rule, a label, a description) stays an object schema: its keys, `passthrough`
