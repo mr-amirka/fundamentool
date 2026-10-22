@@ -70,3 +70,46 @@ describe('colorRange', () => {
     expect(result[0]).toMatch(/^rgba\(/);
   });
 });
+
+describe('color — every length and form', () => {
+  it('hex of 1–8 digits, with an alpha suffix; env() and var() without a fallback', () => {
+    expect(color('f')).toEqual(['#fff']);
+    expect(color('f.5')).toEqual(['rgba(255,255,255,.5)']);
+    expect(color('f8')).toEqual(['rgba(255,255,255,.53)']);
+    expect(color('f00')).toEqual(['#f00']);
+    expect(color('f008')).toEqual(['rgba(255,0,0,.53)']);
+    expect(color('f0080')).toEqual(['rgba(255,0,0,.5)']);
+    expect(color('ff0000', true)).toEqual(['#f00']);
+    expect(color('ff00007')).toEqual(['rgba(255,0,0,.47)']);
+    expect(color('12345678', true)).toEqual([
+      '#123456',
+      'rgba(18,52,86,.47)',
+    ]);
+    expect(color('000.0')).toEqual(['rgba(0,0,0,0)']);
+    expect(color('--x')).toEqual(['var(--x)']);
+    expect(color('---safe-area,0')).toEqual(['env(--safe-area,0)']);
+  });
+
+  it('normalize without a value; one and double', () => {
+    expect(color.normalize('')).toEqual([
+      0,
+      0,
+      0,
+      1,
+    ]);
+    expect(color.normalize('', '.5')).toEqual([
+      0,
+      0,
+      0,
+      0.5,
+    ]);
+    expect(color.one('f')).toBe(1);
+    expect(color.double('00ff', 2)).toBe(1);
+    expect(color.rgbStringify([
+      17,
+      34,
+      51,
+    ])).toBe('#123');
+  });
+});
+
