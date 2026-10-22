@@ -16,13 +16,14 @@ import {
  *
  * @param mergingSrc - The values to merge.
  * @param dst - The destination object.
- * @param asArray - Whether to treat the mergingSrc as an array.
+ * @param asArray - Read `mergingSrc` as a list even when it isn't an array (an array-like: `arguments`).
  * @returns The merged value.
  * @example
  * merge([1, 2, 3]) // => 3
  * merge([{ a: 1 }, { b: 2 }]) // => { a: 1, b: 2 }
  * merge([{ a: 1 }, { b: 2 }], { c: 3 }) // => { c: 3, a: 1, b: 2 }
- * merge([{ a: 1 }, { b: 2 }], { c: 3 }, true) // => [{ c: 3, a: 1 }, { c: 3, b: 2 }]
+ * merge({ a: 1 }, { c: 3 }) // => { c: 3, a: 1 } — one object: extends the target
+ * merge({ 0: { a: 1 }, 1: { b: 2 }, length: 2 }, undefined, true) // => { a: 1, b: 2 }
  */
 export const merge = (
   mergingSrc: any[] | any, dst?: any, asArray?: boolean,

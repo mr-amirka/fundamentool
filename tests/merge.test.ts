@@ -63,3 +63,52 @@ describe('merge', () => {
   });
 });
 
+
+describe('merge — sources that aren\'t objects', () => {
+  it('a value that isn\'t an object: the target if there is one, else the value; in a list the last value wins over nothing', () => {
+    expect(merge(5 as never, {
+      a: 1,
+    })).toEqual({
+      a: 1,
+    });
+    expect(merge(5 as never)).toBe(5);
+    expect(merge([
+      undefined,
+      3,
+      undefined,
+    ])).toBe(3);
+    expect(merge([], 'kept' as never)).toBe('kept');
+  });
+
+  it('one object extends the target (a new one without it); asArray reads an array-like as a list', () => {
+    const dst = {
+      c: 3,
+    };
+    expect(merge({
+      a: 1,
+    }, dst)).toBe(dst);
+    expect(dst).toEqual({
+      c: 3,
+      a: 1,
+    });
+    expect(merge({
+      a: 1,
+    })).toEqual({
+      a: 1,
+    });
+    expect(merge(
+      {
+        0: {
+          a: 1,
+        },
+        1: {
+          b: 2,
+        },
+        length: 2,
+      }, undefined, true,
+    )).toEqual({
+      a: 1,
+      b: 2,
+    });
+  });
+});

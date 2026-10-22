@@ -73,3 +73,23 @@ describe('readyProvider', () => {
     expect(calls).toEqual([1]);
   });
 });
+
+describe('readyProvider — the rest', () => {
+  test('unsubscribing twice; a state change that isn\'t ready waits; ready twice runs once', () => {
+    const {
+      win, doc, fire,
+    } = makeWindow('loading');
+    const ready = readyProvider(win);
+    const calls: string[] = [];
+    const off = ready(() => calls.push('off')) as () => boolean;
+    ready((x: string) => calls.push(x), ['on']);
+    expect(off()).toBe(true);
+    expect(off()).toBe(true);
+    fire('readystatechange'); // still loading
+    expect(calls).toEqual([]);
+    doc.readyState = 'interactive';
+    fire('readystatechange');
+    fire('load'); // already ready: nothing more
+    expect(calls).toEqual(['on']);
+  });
+});

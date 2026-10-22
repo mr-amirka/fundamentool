@@ -28,3 +28,27 @@ describe('single', () => {
     s.cancel();
   });
 });
+
+describe('single — what the last call left is cancelled', () => {
+  it('a function it returned is called; a promise with cancel() is cancelled; anything else is left', () => {
+    const stop = jest.fn();
+    const cancelled = jest.fn();
+    const results: unknown[] = [
+      stop,
+      Object.assign(Promise.resolve(), {
+        cancel: cancelled,
+      }),
+      Promise.resolve(),
+      'plain',
+    ];
+    const s = single(() => results.shift());
+    s(); // returns stop
+    s(); // the last one's stop called
+    expect(stop).toHaveBeenCalledTimes(1);
+    s(); // the promise with cancel cancelled
+    expect(cancelled).toHaveBeenCalledTimes(1);
+    s(); // a plain promise: nothing to call
+    s.cancel(); // a plain value: nothing
+    s.cancel(); // nothing left
+  });
+});
