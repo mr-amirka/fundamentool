@@ -1,14 +1,15 @@
-export type TFieldType = 'f32' | 'f64' | 'u8' | 'u16' | 'u32' | 'string';
+/** How a field is stored: a float, a whole number, text, or `bool` — one byte, `true` / `false` (D-057). */
+export type TFieldType = 'f32' | 'f64' | 'u8' | 'u16' | 'u32' | 'string' | 'bool';
 
 export interface IFieldDef {
   /** Permanent field ID — never reorder or reuse. */
   id: number;
   /** Path to value: dot-separated string (`'physics.gravity'`) or array (`['physics', 'gravity']`). */
   path: string | string[];
-  /** Value type: f32/f64/u8/u16/u32/string. Determines encoding via ID range. */
+  /** Value type: f32 / f64 / u8 / u16 / u32 / string / bool. */
   type: TFieldType;
-  /** Default value — omitted from encoding when equal. */
-  default: number | string;
+  /** Default value — omitted from encoding when equal; of the field's type and range (checked on creation). */
+  default: number | string | boolean;
 }
 
 export interface ISparseCodecConfig {

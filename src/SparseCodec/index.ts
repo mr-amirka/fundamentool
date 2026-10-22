@@ -16,6 +16,18 @@ import type {
   ISparseCodec,
   ISparseCodecConfig,
 } from './types';
+import {
+  array,
+  boolean,
+  number,
+  object,
+  oneOf,
+  string,
+  union,
+} from '../schema';
+import {
+  describeValue,
+} from '../describeValue';
 
 // ── Type codes & sizes ───────────────────────────────────────────────────────
 
@@ -25,6 +37,7 @@ const T_U8  = 2;
 const T_U16 = 3;
 const T_U32 = 4;
 const T_STR = 5;
+const T_BOOL = 6;
 
 const SZ_STR = 0;
 
@@ -44,7 +57,7 @@ const typeCode = (type: IFieldDef['type']): number => {
   if (type === 'u32') {
     return T_U32;
   }
-  return T_STR;
+  return type === 'bool' ? T_BOOL : T_STR;
 };
 
 const typeSizeByCode = (code: number): number => {
@@ -54,7 +67,7 @@ const typeSizeByCode = (code: number): number => {
   if (code === T_F64) {
     return 8;
   }
-  if (code === T_U8)  {
+  if (code === T_U8 || code === T_BOOL) {
     return 1;
   }
   if (code === T_U16) {
@@ -120,9 +133,127 @@ const fromBase64Url = (encoded: string): Uint8Array | null => {
   }
 };
 
+// ── What a field holds (D-057) ──────────────────────────────────────────────
+
+/** The largest finite `f32`: a number beyond it is written as `Infinity`. */
+const F32_MAX = 3.4028234663852886e38;
+/** A string's length is written in two bytes. */
+const STRING_BYTES_MAX = 0xFFFF;
+/** The largest value of each whole-number type. */
+const UINT_MAX: Record<number, number> = {
+  [T_U8]: 0xFF,
+  [T_U16]: 0xFFFF,
+  [T_U32]: 0xFFFFFFFF,
+};
+/** What a message says each type holds. */
+const EXPECTS: Record<number, string> = {
+  [T_F32]: 'a finite number within ±3.4e38 (f32)',
+  [T_F64]: 'a finite number (f64)',
+  [T_U8]: 'a whole number 0…255 (u8)',
+  [T_U16]: 'a whole number 0…65535 (u16)',
+  [T_U32]: 'a whole number 0…4294967295 (u32)',
+  [T_STR]: 'text of at most 65535 bytes (string)',
+  [T_BOOL]: 'true or false (bool)',
+};
+const TEXT_ENCODER = new TextEncoder();
+
+/**
+ * Whether `value` fits a field of type `code` — what is written is read back as it was: no silent drop, wrap or
+ * truncation. A string's byte length is checked where it is encoded (`encode` encodes it anyway).
+ */
+const fits = (code: number, value: unknown): boolean => {
+  if (code === T_STR) {
+    return typeof value === 'string';
+  }
+  if (code === T_BOOL) {
+    return typeof value === 'boolean';
+  }
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return false;
+  }
+  if (code === T_F32) {
+    return value <= F32_MAX && value >= -F32_MAX;
+  }
+  return code === T_F64 || (Number.isInteger(value) && value >= 0 && value <= UINT_MAX[code]);
+};
+
+/**
+ * The error for a value that doesn't fit its type: a `TypeError` for another type, a `RangeError` for one out of range.
+ * `subject` names it — the field's path (`"physics.gravity"`), or its place in the table.
+ */
+const misfit = (
+  where: string, subject: string, code: number, value: unknown,
+): Error => new (
+  typeof value === (code === T_STR ? 'string' : code === T_BOOL ? 'boolean' : 'number') ? RangeError : TypeError
+)(`${where}: ${subject} expects ${EXPECTS[code]}, got ${describeValue(value)}`);
+
+/** A field's path written as one string: `'physics.gravity'`. */
+const PATH_SEPARATOR = '.';
+
+/** A field's path as its keys. */
+const pathOf = (path: string | string[]): string[] => (typeof path === 'string' ? path.split(PATH_SEPARATOR) : path);
+
+/** How a message names a field: its path. */
+const named = (path: readonly string[]): string => `"${path.join(PATH_SEPARATOR)}"`;
+
+/** A byte: an id, the version. */
+const BYTE = number().int().min(0).refine((value) => value <= 0xFF, (value) => `expects a byte 0…255, got ${describeValue(value)}`);
+
+/** The codec's table, checked once on creation. */
+const CONFIG = object({
+  version: BYTE.optional(),
+  fields: array(object({
+    id: BYTE,
+    path: union([
+      string().refine((path) => path !== '', 'expects a path, got an empty string'),
+      array(string()),
+    ]),
+    type: oneOf([
+      'f32',
+      'f64',
+      'u8',
+      'u16',
+      'u32',
+      'string',
+      'bool',
+    ]),
+    default: union([
+      number(),
+      string(),
+      boolean(),
+    ]),
+  })),
+});
+
+const WHERE = 'createSparseCodec';
+
+/** The table checked: its shape, every `id` once, every `default` fitting its type. */
+const checkConfig = (config: ISparseCodecConfig): void => {
+  CONFIG.parse(config, WHERE);
+  const owners: Record<number, string> = {};
+  const fields = config.fields;
+  const length = fields.length;
+  for (let i = 0; i < length; i++) {
+    const field = fields[i];
+    const path = pathOf(field.path);
+    const name = named(path);
+    if (owners[field.id] !== undefined) {
+      throw new Error(`${WHERE}: "fields"[${i}] (${name}) has the id ${field.id} of ${owners[field.id]} — an id is a field's for good`);
+    }
+    owners[field.id] = name;
+    const code = typeCode(field.type);
+    if (!fits(code, field.default)
+      || (code === T_STR && TEXT_ENCODER.encode(field.default as string).length > STRING_BYTES_MAX)) {
+      throw misfit(
+        WHERE, `"fields"[${i}]."default" (of ${named(path)})`, code, field.default,
+      );
+    }
+  }
+};
+
 // ── Build ID→field map ───────────────────────────────────────────────────────
 
-type TFieldInfo = [path: string[], typeCode: number, def: number | string, size: number];
+type TFieldInfo = [path: string[], typeCode: number, def: number | string | boolean, size: number];
 
 const buildMap = (fields: IFieldDef[]): Record<number, TFieldInfo> => {
   const map: Record<number, TFieldInfo> = {};
@@ -136,7 +267,7 @@ const buildMap = (fields: IFieldDef[]): Record<number, TFieldInfo> => {
     fp = f.path;
     tc = typeCode(f.type);
     map[f.id] = [
-      typeof fp === 'string' ? fp.split('.') : fp,
+      pathOf(fp),
       tc,
       f.default,
       typeSizeByCode(tc),
@@ -172,6 +303,7 @@ const buildMap = (fields: IFieldDef[]): Record<number, TFieldInfo> => {
 export const createSparseCodec = <T extends Record<string, any>>(
   config: ISparseCodecConfig,
 ): ISparseCodec<T> => {
+  checkConfig(config);
   const version = config.version ?? 0x01;
   const fieldMap = buildMap(config.fields);
 
@@ -189,22 +321,23 @@ export const createSparseCodec = <T extends Record<string, any>>(
   const BUF8 = new ArrayBuffer(8);
   const VIEW8 = new DataView(BUF8);
   const U8 = new Uint8Array(BUF8);
-  const TEX = new TextEncoder();
+  const TEX = TEXT_ENCODER;
+  const ENCODE = 'SparseCodec.encode';
 
   const encode = (state: T): string => {
     const bytes: number[] = [version];
     let ei = fieldsLength;
 
-    let val: number | string;
+    let val: number | string | boolean;
     let id: number;
     let info: TFieldInfo;
-    let infoDef: number | string;
+    let infoDef: number | string | boolean;
     let prop: [number, TFieldInfo];
     let strBytes: Uint8Array;
     let strLen: number;
     let ji: number;
     let nval: number;
-    let valType: string;
+    let code: number;
 
     while (ei--) {
       prop = entries[ei];
@@ -216,10 +349,15 @@ export const createSparseCodec = <T extends Record<string, any>>(
 
       id = prop[0];
       infoDef = info[2];
-      valType = typeof val;
+      code = info[1];
+      if (!fits(code, val)) {
+        throw misfit(
+          ENCODE, named(info[0]), code, val,
+        );
+      }
 
-      if (valType === 'number') {
-        switch (info[1]) {
+      if (code !== T_STR) {
+        switch (code) {
           case T_F32:
             if (f32same(val as number, infoDef as number)) {
               continue;
@@ -249,6 +387,12 @@ export const createSparseCodec = <T extends Record<string, any>>(
             nval = val as number;
             bytes.push(id, nval);
             break;
+          case T_BOOL:
+            if (val === infoDef) {
+              continue;
+            }
+            bytes.push(id, val ? 1 : 0);
+            break;
           case T_U16:
             if (val === infoDef) {
               continue;
@@ -258,7 +402,7 @@ export const createSparseCodec = <T extends Record<string, any>>(
               id, (nval >> 8) & 0xFF, nval & 0xFF,
             );
             break;
-          case T_U32:
+          default: // T_U32
             if (val === infoDef) {
               continue;
             }
@@ -271,12 +415,15 @@ export const createSparseCodec = <T extends Record<string, any>>(
               nval & 0xFF,
             );
             break;
-          default:
-            break;
         }
-      } else if (info[1] === T_STR && val !== infoDef && valType === 'string') {
+      } else if (val !== infoDef) {
         strBytes = TEX.encode(val as string);
         strLen = strBytes.length;
+        if (strLen > STRING_BYTES_MAX) {
+          throw misfit(
+            ENCODE, named(info[0]), code, val,
+          );
+        }
         bytes.push(
           id, (strLen >> 8) & 0xFF, strLen & 0xFF,
         );
@@ -315,7 +462,7 @@ export const createSparseCodec = <T extends Record<string, any>>(
 
     let id: number;
     let size: number;
-    let val: number | string;
+    let val: number | string | boolean;
     let info: TFieldInfo | undefined;
     let strLen: number;
 
@@ -352,6 +499,9 @@ export const createSparseCodec = <T extends Record<string, any>>(
             break;
           case T_U8:
             val = bytes[pos];
+            break;
+          case T_BOOL:
+            val = bytes[pos] !== 0;
             break;
           case T_U16:
             val = view.getUint16(pos, false);

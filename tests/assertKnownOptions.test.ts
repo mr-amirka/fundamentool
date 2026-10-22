@@ -140,3 +140,11 @@ describe('nearestKnown', () => {
     expect(nearestKnown('x', [])).toBe('');
   });
 });
+
+describe('describeValue — a long string', () => {
+  it('shows its first 60 characters and its length; a short one whole', () => {
+    expect(describeValue('ab')).toBe('string "ab"');
+    expect(describeValue('x'.repeat(61))).toBe(`string "${'x'.repeat(60)}…" (61 characters)`);
+    expect(describeValue('y'.repeat(60))).toBe(`string "${'y'.repeat(60)}"`);
+  });
+});

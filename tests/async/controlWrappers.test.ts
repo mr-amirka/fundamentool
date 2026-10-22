@@ -125,14 +125,16 @@ describe('control wrappers', () => {
   test('intervalAsync: no delay given — the next call right after the last settles', async () => {
     jest.useRealTimers();
     let calls = 0;
-    const stop = intervalAsync(() => {
-      calls++;
+    // Waits for the second call itself — not a fixed time, which a loaded machine may not give
+    await new Promise<void>((done) => {
+      const stop = intervalAsync(() => {
+        if (++calls === 2) {
+          stop();
+          done();
+        }
+      });
     });
-    await new Promise((resolve) => {
-      setTimeout(resolve, 20);
-    });
-    stop();
-    expect(calls).toBeGreaterThan(1);
+    expect(calls).toBe(2);
   });
 
   test('withLatencyProvider: a failure is thrown after the latency too; the next call still runs', async () => {

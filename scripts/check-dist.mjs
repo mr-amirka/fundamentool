@@ -20,7 +20,9 @@ import {
   fileURLToPath,
 } from 'node:url';
 
-const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+const ENCODING = 'utf8';
+
+const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), ENCODING));
 const require = createRequire(import.meta.url);
 const esmRoot = fileURLToPath(new URL('../dist/esm', import.meta.url));
 const failures = [];
@@ -85,7 +87,7 @@ for (const subpath of subpaths) {
 // so `import('./x')` in a JSDoc example is not taken for code.
 const specifierPattern = /^(?:(?:import|export)\b[^;]*?\bfrom\s*|import\s*|(?!\s*(?:\*|\/\/)).*?\bimport\(\s*)(['"])(\.\.?\/[^'"]*)\1/gm;
 for (const file of listJs(esmRoot)) {
-  for (const match of fs.readFileSync(file, 'utf8').matchAll(specifierPattern)) {
+  for (const match of fs.readFileSync(file, ENCODING).matchAll(specifierPattern)) {
     const target = path.resolve(path.dirname(file), match[2]);
     if (!fs.existsSync(target) || fs.statSync(target).isDirectory()) {
       failures.push(`${path.relative(esmRoot, file)}: '${match[2]}' is not a file`);
@@ -94,7 +96,7 @@ for (const file of listJs(esmRoot)) {
 }
 
 // Bundlers take `sideEffects` from the nearest package.json — the ES modules' own must say what the package says.
-const esmPkg = JSON.parse(fs.readFileSync(path.join(esmRoot, 'package.json'), 'utf8'));
+const esmPkg = JSON.parse(fs.readFileSync(path.join(esmRoot, 'package.json'), ENCODING));
 if (JSON.stringify(esmPkg.sideEffects) !== JSON.stringify(pkg.sideEffects)) {
   failures.push(`dist/esm/package.json: "sideEffects" is ${JSON.stringify(esmPkg.sideEffects)}, the package's is ${JSON.stringify(pkg.sideEffects)}`);
 }

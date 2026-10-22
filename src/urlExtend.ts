@@ -46,6 +46,7 @@ export * from './urlParse';
 const SCHEME = /^[a-z][a-z\d+.-]*:/i;
 /** The origin a base without one is read against — only what follows it is taken back. */
 const LOCAL_ORIGIN = 'http://url-extend.local';
+const SLASH = '/';
 
 /**
  * `ref` read against `base` as a browser reads an `<a href>` (RFC 3986 §5, by the platform's `URL`), for a base with or
@@ -62,8 +63,8 @@ function resolveString(base: string, ref: string): string {
   if (SCHEME.test(ref) || ref.startsWith('//')) {
     return ref; // its own address: no base needed (and none with a scheme to lend)
   }
-  const rooted = !base || base[0] === '/';
-  const url = new URL(ref, LOCAL_ORIGIN + (rooted ? '' : '/') + base);
+  const rooted = !base || base[0] === SLASH;
+  const url = new URL(ref, LOCAL_ORIGIN + (rooted ? '' : SLASH) + base);
   const resolved = url.pathname + url.search + url.hash;
   return rooted ? (base ? resolved : resolved.slice(1)) : resolved.slice(1);
 }
@@ -124,7 +125,7 @@ _src?:
   const extension = __def('extension');
   const alias = __def('alias');
   const filename = alias + (extension ? '.' + extension : '');
-  const dirname = __def('dirname', filename ? '/' : '');
+  const dirname = __def('dirname', filename ? SLASH : '');
   const path = dirname + filename;
   const unalias = unpath + dirname;
   const unextension = unalias + alias,
