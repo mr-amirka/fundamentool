@@ -59,4 +59,30 @@ describe('limitStream', () => {
       error.mockRestore();
     }
   });
+
+  it('an error before any portion is asked for; a read that fails only once \'readable\' came', async () => {
+    const error = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    try {
+      const early = new EventEmitter() as unknown as NodeJS.ReadableStream;
+      const next = limitStream(early);
+      const failure = new Error('gone');
+      early.emit('error', failure); // nobody waits yet
+      await expect(next()).rejects.toBe(failure);
+
+      let reads = 0;
+      const later = Object.assign(new EventEmitter(), {
+        read: () => {
+          if (reads++) {
+            throw new Error('bad read');
+          }
+          return null; // nothing buffered: the portion waits for 'readable'
+        },
+      }) as unknown as NodeJS.ReadableStream;
+      const portion = limitStream(later)();
+      later.emit('readable');
+      await expect(portion).rejects.toThrow('bad read');
+    } finally {
+      error.mockRestore();
+    }
+  });
 });

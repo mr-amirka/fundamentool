@@ -72,3 +72,17 @@ describe('formatTime — every field and edge', () => {
     expect(getRFC3339(evening, true)).toBe('2026-01-02T13:05:00.00Z'); // centiseconds — RFC 3339 allows any fraction
   });
 });
+
+describe('formatTime — an offset west of UTC', () => {
+  it('a zone behind UTC is written with a minus (New York in winter: -05:00)', () => {
+    // The zone is read once per process (TZ can't change mid-run): the offset the date reports, as New York's
+    const offset = jest.spyOn(Date.prototype, 'getTimezoneOffset').mockReturnValue(300);
+    try {
+      expect(formatTime(Date.UTC(
+        2026, 0, 2, 13, 5,
+      ), '{o}')).toBe('-05:00');
+    } finally {
+      offset.mockRestore();
+    }
+  });
+});

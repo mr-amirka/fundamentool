@@ -43,3 +43,11 @@ describe('loopAsync', () => {
   });
 });
 
+describe('loopAsync — a check that throws', () => {
+  it('rejects with it', async () => {
+    const failure = new Error('check');
+    await expect(loopAsync(() => {
+      throw failure;
+    }, () => undefined)).rejects.toBe(failure);
+  });
+});

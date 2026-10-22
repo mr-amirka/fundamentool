@@ -22,3 +22,9 @@ describe('isPlainObjectBase', () => {
     expect(isPlainObjectBase({})).toBe(true);
   });
 });
+
+describe('isPlainObject — no prototype', () => {
+  it('an object made without a prototype is plain', () => {
+    expect(isPlainObject(Object.create(null))).toBe(true);
+  });
+});

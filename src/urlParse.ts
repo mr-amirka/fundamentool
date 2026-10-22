@@ -18,6 +18,8 @@ export type TUrlOptions = {
   protocol: string;
   port: string;
   username: string;
+  /** The path as one string — `urlExtend` splits it into `dirname`, `alias`, `extension` (it wins over them). */
+  path: string;
   dirname: string;
   alias: string;
   query: any;

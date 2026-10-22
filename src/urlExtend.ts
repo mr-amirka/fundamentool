@@ -19,11 +19,25 @@ function normalize(v: Partial<TUrlProps> | string | null | undefined): Partial<T
       case 'string':
         return urlParse(v);
       case 'object':
-        return v;
+        return typeof v.path === 'string' ? withPathParts(v) : v;
     }
   }
 
   return {};
+}
+
+/**
+ * `path` is what callers write (`{ path, query }`); the path is built from `dirname`, `alias`, `extension` — taken from
+ * `path` (it wins over stale parts: `{ ...location, path: '/new' }`). A `path` alone was ignored.
+ */
+function withPathParts(v: Partial<TUrlProps>): Partial<TUrlProps> {
+  const parts = urlParse(v.path as string);
+  return {
+    ...v,
+    dirname: parts.dirname,
+    alias: parts.alias,
+    extension: parts.extension,
+  };
 }
 
 export * from './urlParse';
@@ -68,9 +82,9 @@ _src?:
   const port = __def('port');
   const username = __def('username');
   const password = __def('password');
-  const userpart = username ? username + ':' + password : '';
+  const userpart = username ? username + (password ? ':' + password : '') : ''; // no password — no ':'
   const host = hostname || port ? hostname + (port ? ':' + port : '') : '';
-  const email = username ? username + '@' + host : '';
+  const email = username ? username + '@' + hostname : ''; // an address has no port
   const login = userpart ? userpart + '@' + host : '';
   const unpath = login ? protocol + '://' + login : host ? protocol + '://' + host : '';
   const extension = __def('extension');

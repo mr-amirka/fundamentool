@@ -33,3 +33,10 @@ describe('browser/detectionByWindow', () => {
     expect(result).toBe('');
   });
 });
+
+describe('browser/detectionByWindow — no navigator', () => {
+  it('a window-like without a navigator: no touch, no browser tokens — and no throw', () => {
+    expect(() => detectionByWindow({} as any)).not.toThrow();
+    expect(detectionByWindow({} as any)).not.toContain('multitouch');
+  });
+});

@@ -107,3 +107,11 @@ describe('browser/blob/from', () => {
     await expect(pooled.text()).resolves.toBe('hi');
   });
 });
+
+describe('browser/blob — the index', () => {
+  it('re-exports the reader provider and from', () => {
+    const blob = require('../../../src/browser/blob');
+    expect(blob.provider).toBe(require('../../../src/browser/blob/provider').provider);
+    expect(blob.from).toBe(require('../../../src/browser/blob/from').from);
+  });
+});

@@ -28,3 +28,28 @@ describe('browser/dynamicModule', () => {
     expect(calls).toBe(1);
   });
 });
+
+describe('browser/dynamicModule — a failed init', () => {
+  it('rejects (logged), and is forgotten: the next call runs init again', async () => {
+    const {
+      dynamicModule,
+    } = require('../../src/browser/dynamicModule');
+    const error = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    try {
+      const failure = new Error('init');
+      let calls = 0;
+      const load = dynamicModule(() => {
+        if (!calls++) {
+          throw failure;
+        }
+        return 'ready';
+      });
+      await expect(load()).rejects.toBe(failure);
+      expect(error).toHaveBeenCalledWith(failure);
+      await expect(load()).resolves.toBe('ready');
+      expect(calls).toBe(2);
+    } finally {
+      error.mockRestore();
+    }
+  });
+});

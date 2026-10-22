@@ -189,3 +189,16 @@ describe('Scheduler with store', () => {
     s.stop();
   });
 });
+
+describe('nextScheduleTime — the weekday is today', () => {
+  it('earlier than the time: today; at or past it — in a week', () => {
+    const s: ScheduleTime = {
+      everyWeek: 1,
+      weekDay: 3,
+      hour: 9,
+      minute: 0,
+    };
+    expect(nextScheduleTime(s, new Date('2026-06-10T08:00:00Z')).toISOString()).toBe('2026-06-10T09:00:00.000Z'); // Wednesday
+    expect(nextScheduleTime(s, new Date('2026-06-10T09:00:00Z')).toISOString()).toBe('2026-06-17T09:00:00.000Z');
+  });
+});
