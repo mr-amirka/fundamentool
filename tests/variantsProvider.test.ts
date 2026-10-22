@@ -78,6 +78,7 @@ describe('variantsProvider', () => {
       separator: '|',
       scopeStart: '(',
       scopeEnd: ')',
+      maxDepth: Number.POSITIVE_INFINITY,
     };
     expect(() => variantsProvider({
       ...options,
