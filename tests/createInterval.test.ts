@@ -30,3 +30,20 @@ describe('createInterval', () => {
     expect(fn).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('createInterval — the default delay', () => {
+  it('250 ms', () => {
+    jest.useFakeTimers();
+    try {
+      const fn = jest.fn();
+      const cancel = createInterval(fn);
+      jest.advanceTimersByTime(249);
+      expect(fn).not.toHaveBeenCalled();
+      jest.advanceTimersByTime(1);
+      expect(fn).toHaveBeenCalledTimes(1);
+      cancel();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+});

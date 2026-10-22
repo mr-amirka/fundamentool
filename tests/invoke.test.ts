@@ -53,3 +53,18 @@ describe('invoke', () => {
     )).toBe(100);
   });
 });
+
+describe('invoke — a path as a list', () => {
+  it('a list of keys is taken as it is (no parsing)', () => {
+    expect(invoke(
+      {
+        'a.b': {
+          f: (x: number) => x * 2,
+        },
+      }, [
+        'a.b',
+        'f',
+      ] as never, [5],
+    )).toBe(10);
+  });
+});

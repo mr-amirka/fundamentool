@@ -1,7 +1,7 @@
 const NATIVE_PUSH = ([] as any[]).push;
 
 export interface IColorRange {
-  (colors: Array<[number, number, number, number]>, precision: number): string[];
+  (colors: Array<[number, number, number, number]>, precision?: number): string[];
   base: (input: Array<[number, number, number, number]>, precision: number) => Array<[number, number, number, number]>;
   rgba: (rgbaColor: [number, number, number, number]) => string;
 }
@@ -10,7 +10,7 @@ export interface IColorRange {
  * Converts an array of colors to an array of strings.
  *
  * @param colors - The array of RGBA colors `[r, g, b, a]` (each 0–1).
- * @param precision - Number of interpolation steps between each pair of colors.
+ * @param precision - Number of interpolation steps between each pair of colors (default 0: none).
  * @returns Array of `rgba(...)` strings.
  * @example
  * colorRange([[1, 0, 0, 1], [0, 0, 1, 1]], 1);

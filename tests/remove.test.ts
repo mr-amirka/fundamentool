@@ -30,3 +30,28 @@ describe('remove', () => {
     expect(obj).not.toHaveProperty('x');
   });
 });
+
+describe('remove — the context back, a path through nothing', () => {
+  it('returns the context it changed (it returned undefined); a path through a value — untouched; no context — nothing', () => {
+    const ctx = {
+      a: {
+        b: 1,
+        c: 2,
+      },
+    };
+    expect(remove(ctx, 'a.b')).toBe(ctx);
+    expect(ctx).toEqual({
+      a: {
+        c: 2,
+      },
+    });
+    const scalar = {
+      a: 5,
+    };
+    expect(remove(scalar, 'a.b.c')).toBe(scalar);
+    expect(scalar).toEqual({
+      a: 5,
+    });
+    expect(remove(null, 'a')).toBeNull();
+  });
+});

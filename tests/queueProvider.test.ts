@@ -42,3 +42,27 @@ describe('queueProvider', () => {
     ]);
   });
 });
+
+describe('queueProvider — onStart', () => {
+  it('a promise from onStart is awaited before the callback is queued', async () => {
+    const order: string[] = [];
+    let ready: () => void = () => undefined;
+    const queue = queueProvider({
+      onStart: () => new Promise<void>((resolve) => {
+        order.push('start');
+        ready = resolve;
+      }),
+    });
+    const run = queue(async () => {
+      order.push('run');
+    })();
+    await Promise.resolve();
+    expect(order).toEqual(['start']); // waiting for onStart
+    ready();
+    await run;
+    expect(order).toEqual([
+      'start',
+      'run',
+    ]);
+  });
+});

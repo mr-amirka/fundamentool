@@ -108,3 +108,23 @@ describe('complement — every branch', () => {
     });
   });
 });
+
+describe('complement — the default depth', () => {
+  it('0: a key present is kept as it is (not merged into)', () => {
+    expect(complement({
+      a: {
+        x: 1,
+      },
+    }, {
+      a: {
+        y: 2,
+      },
+      b: 2,
+    })).toEqual({
+      a: {
+        x: 1,
+      },
+      b: 2,
+    });
+  });
+});

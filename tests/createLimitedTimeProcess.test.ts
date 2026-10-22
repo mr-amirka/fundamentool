@@ -302,3 +302,16 @@ describe('createLimitedTimeProcess', () => {
     });
   });
 });
+
+describe('createLimitedTimeProcess — the default clock', () => {
+  it('performance.now() when no clock is given', () => {
+    const visited: number[] = [];
+    createLimitedTimeProcess(
+      2, (index) => visited.push(index), 999,
+    )();
+    expect(visited).toEqual([
+      0,
+      1,
+    ]);
+  });
+});

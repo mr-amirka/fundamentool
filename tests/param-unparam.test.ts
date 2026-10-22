@@ -61,3 +61,11 @@ describe('unparam — no query', () => {
     });
   });
 });
+
+describe('param — not an object', () => {
+  it('a value that isn\'t an object has no params: \'\'', () => {
+    expect(param(5 as never)).toBe('');
+    expect(param(null)).toBe('');
+    expect(param('a=1' as never)).toBe('');
+  });
+});

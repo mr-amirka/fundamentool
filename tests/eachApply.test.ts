@@ -139,3 +139,31 @@ describe('executeTry', () => {
     expect(result).toBe(15);
   });
 });
+
+describe('eachApplyMap, eachTry — no arguments', () => {
+  it('each function is called with none; eachTry goes on past a throw', () => {
+    expect(eachApplyMap([
+      (...args: unknown[]) => args.length,
+      () => 2,
+    ])).toEqual([
+      0,
+      2,
+    ]);
+    const called: number[] = [];
+    eachTry([
+      () => {
+        called.push(1);
+      },
+      () => {
+        throw new Error('x');
+      },
+      (...args: unknown[]) => {
+        called.push(args.length);
+      },
+    ]);
+    expect(called).toEqual([
+      1,
+      0,
+    ]);
+  });
+});

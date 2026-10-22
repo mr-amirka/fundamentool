@@ -90,3 +90,16 @@ describe('cloneDepth', () => {
     expect(cloneDepth('hello', 1)).toBe('hello');
   });
 });
+
+describe('cloneDepth — the default depth', () => {
+  it('0: the top copied, what is under it shared', () => {
+    const src = {
+      a: {
+        b: 1,
+      },
+    };
+    const copy = cloneDepth(src);
+    expect(copy).not.toBe(src);
+    expect(copy.a).toBe(src.a);
+  });
+});

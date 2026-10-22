@@ -132,3 +132,9 @@ describe('removeOf', () => {
     expect(removeOf([], 1)).toBe(0);
   });
 });
+
+describe('removeByIndex — no list', () => {
+  it('nothing to remove from: an empty list', () => {
+    expect(removeByIndex(null as never, 1)).toEqual([]);
+  });
+});

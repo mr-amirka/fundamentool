@@ -114,3 +114,39 @@ describe('everyIn', () => {
     }, (v) => v % 2 === 0)).toBe(false);
   });
 });
+
+describe('some, someIn — by a pattern', () => {
+  it('an object instead of a function: an item matching it', () => {
+    expect(some([
+      {
+        a: 1,
+      },
+      {
+        a: 2,
+      },
+    ], {
+      a: 2,
+    } as never)).toBe(true);
+    expect(some([
+      {
+        a: 1,
+      },
+    ], {
+      a: 3,
+    } as never)).toBe(false);
+    expect(someIn({
+      x: {
+        a: 1,
+      },
+    }, {
+      a: 1,
+    } as never)).toBe(true);
+    expect(someIn({
+      x: {
+        a: 1,
+      },
+    }, {
+      a: 9,
+    } as never)).toBe(false);
+  });
+});

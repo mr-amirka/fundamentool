@@ -51,5 +51,9 @@ const base = remove.base = (ctx: any, path: ArrayLike<string>): any => {
     nested = next;
     i++;
   }
-  delete nested[nextKey];
+  if (nested) {
+    delete nested[nextKey];
+  }
+  // The context, as documented (and as mn-utils' remove did) — this return was lost in the port
+  return ctx;
 };

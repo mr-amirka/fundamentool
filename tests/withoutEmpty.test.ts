@@ -60,3 +60,26 @@ describe('withoutEmpty', () => {
     });
   });
 });
+
+describe('withoutEmpty — depth', () => {
+  it('0 (the default) judges the value itself; 1 — its children too; below 0 — as it is', () => {
+    expect(withoutEmpty({
+      a: 1,
+      c: '',
+    })).toEqual({
+      a: 1,
+      c: '',
+    });
+    expect(withoutEmpty({
+      a: 1,
+      b: null,
+      c: '',
+    }, 1)).toEqual({
+      a: 1,
+    });
+    const value = {
+      b: null,
+    };
+    expect(withoutEmptyBase(value, -1)).toBe(value);
+  });
+});

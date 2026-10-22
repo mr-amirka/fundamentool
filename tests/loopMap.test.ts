@@ -29,3 +29,12 @@ describe('loopMap', () => {
     ]);
   });
 });
+
+describe('loopMap — a value instead of a function', () => {
+  it('every item is that value', () => {
+    expect(loopMap(2, 'x' as never)).toEqual([
+      'x',
+      'x',
+    ]);
+  });
+});

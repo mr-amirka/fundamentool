@@ -68,3 +68,14 @@ describe('bind', () => {
   });
 });
 
+describe('bind — no arguments bound', () => {
+  it('the call\'s own arguments only', () => {
+    const bound = bind(function (this: unknown, ...args: number[]) {
+      return args;
+    } as (...args: number[]) => number[], null);
+    expect(bound(1, 2)).toEqual([
+      1,
+      2,
+    ]);
+  });
+});

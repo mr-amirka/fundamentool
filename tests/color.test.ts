@@ -113,3 +113,24 @@ describe('color — every length and form', () => {
   });
 });
 
+describe('colorRange — the default precision', () => {
+  it('0: the colors themselves, no steps between', () => {
+    expect(colorRange([
+      [
+        0,
+        0,
+        0,
+        1,
+      ],
+      [
+        1,
+        1,
+        1,
+        0.5,
+      ],
+    ])).toEqual([
+      'rgba(0,0,0,1)',
+      'rgba(255,255,255,0.5)',
+    ]);
+  });
+});

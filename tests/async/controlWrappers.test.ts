@@ -122,6 +122,19 @@ describe('control wrappers', () => {
     expect(fn).toHaveBeenCalledTimes(2);
   });
 
+  test('intervalAsync: no delay given — the next call right after the last settles', async () => {
+    jest.useRealTimers();
+    let calls = 0;
+    const stop = intervalAsync(() => {
+      calls++;
+    });
+    await new Promise((resolve) => {
+      setTimeout(resolve, 20);
+    });
+    stop();
+    expect(calls).toBeGreaterThan(1);
+  });
+
   test('withLatencyProvider: a failure is thrown after the latency too; the next call still runs', async () => {
     jest.useRealTimers();
     const run = withLatencyProvider(30);

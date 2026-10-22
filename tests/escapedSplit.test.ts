@@ -83,3 +83,17 @@ describe('escapedHalfProvider', () => {
     expect(prefix).toBe('key\\:name');
   });
 });
+
+describe('escaped providers — a sequence of your own that never splits', () => {
+  it('`escaped` is a literal sequence kept whole (here the doubled separator)', () => {
+    expect(escapedHalfProvider(':', '::')('a::b:c')).toEqual([
+      'a::b',
+      ':c',
+      'c',
+    ]);
+    expect(escapedSplitProvider(',', ',,')('a,,b,c')).toEqual([
+      'a,,b',
+      'c',
+    ]);
+  });
+});

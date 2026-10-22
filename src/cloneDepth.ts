@@ -6,7 +6,7 @@ import {
 } from './is/isObject';
 
 interface ICloneDepth {
-  <T>(src: T, depth: number): T;
+  <T>(src: T, depth?: number): T;
   base: <T>(src: T, depth: number) => T;
 }
 

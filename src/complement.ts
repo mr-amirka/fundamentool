@@ -9,7 +9,7 @@ export type ComplementTarget = Record<string, any> | undefined;
 export type ComplementSource = Record<string, any>;
 
 export interface IComplement {
-  <TDst extends ComplementTarget, TSrc extends ComplementSource>(dst: TDst, src: TSrc, depth: number): TDst | TSrc;
+  <TDst extends ComplementTarget, TSrc extends ComplementSource>(dst: TDst, src: TSrc, depth?: number): TDst | TSrc;
   base: (dst: Record<string, any>, src: Record<string, any>, depth: number) => Record<string, any>;
 }
 
@@ -18,7 +18,7 @@ export interface IComplement {
  *
  * @param dst - The destination object.
  * @param src - The source object.
- * @param depth - The depth of the object.
+ * @param depth - The depth of the object (default 0: a key present is kept as it is).
  * @returns The destination object.
  * @example
  * complement({ a: 1 }, { a: 99, b: 2 }, 0); // => { a: 1, b: 2 }

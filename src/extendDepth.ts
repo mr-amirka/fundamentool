@@ -11,10 +11,10 @@ interface IExtendDepth {
    *
    * @param dst - The destination object.
    * @param src - The source object.
-   * @param depth - The depth to extend to.
+   * @param depth - The depth to extend to (default 0: the keys of `src` replace, nothing merged).
    * @returns The extended object.
    */
-  <T>(dst: T, src: T, depth: number): T;
+  <T>(dst: T, src: T, depth?: number): T;
   /**
    * Deeply extends `dst` with `src` up to `depth` levels.
    *

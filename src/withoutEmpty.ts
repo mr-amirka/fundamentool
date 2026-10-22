@@ -9,7 +9,7 @@ import {
  * @param depth - How many levels deep to recurse (default 0 = shallow).
  * @returns Cleaned value, or `null` if the entire value was empty.
  * @example
- * withoutEmpty({ a: 1, b: null, c: '' }); // => { a: 1 }
+ * withoutEmpty({ a: 1, b: null, c: '' }, 1); // => { a: 1 } — depth 1: the children judged too
  * withoutEmpty({ a: { b: null } }, 1);    // => null
  */
 export const withoutEmpty = (data: any, depth?: number) => withoutEmptyBase(data, depth || 0);

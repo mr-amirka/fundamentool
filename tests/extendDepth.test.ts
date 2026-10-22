@@ -98,3 +98,22 @@ describe('mergeDepth', () => {
     });
   });
 });
+
+describe('extendDepth — the default depth', () => {
+  it('0: a key is replaced, not merged into', () => {
+    const dst = {
+      a: {
+        x: 1,
+      },
+    } as Record<string, any>;
+    expect(extendDepth(dst, {
+      a: {
+        y: 2,
+      },
+    })).toEqual({
+      a: {
+        y: 2,
+      },
+    });
+  });
+});
