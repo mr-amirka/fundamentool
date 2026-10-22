@@ -155,7 +155,12 @@ const EXPECTS: Record<number, string> = {
   [T_STR]: 'text of at most 65535 bytes (string)',
   [T_BOOL]: 'true or false (bool)',
 };
-const TEXT_ENCODER = new TextEncoder();
+/**
+ * The text encoder, made on first use — never on import: importing fundamentool must work where `TextEncoder` isn't a
+ * global (jsdom tests, old runtimes) as long as no codec is made there.
+ */
+let textEncoder: TextEncoder | undefined;
+const encoder = (): TextEncoder => textEncoder || (textEncoder = new TextEncoder());
 
 /**
  * Whether `value` fits a field of type `code` — what is written is read back as it was: no silent drop, wrap or
@@ -243,7 +248,7 @@ const checkConfig = (config: ISparseCodecConfig): void => {
     owners[field.id] = name;
     const code = typeCode(field.type);
     if (!fits(code, field.default)
-      || (code === T_STR && TEXT_ENCODER.encode(field.default as string).length > STRING_BYTES_MAX)) {
+      || (code === T_STR && encoder().encode(field.default as string).length > STRING_BYTES_MAX)) {
       throw misfit(
         WHERE, `"fields"[${i}]."default" (of ${named(path)})`, code, field.default,
       );
@@ -321,7 +326,7 @@ export const createSparseCodec = <T extends Record<string, any>>(
   const BUF8 = new ArrayBuffer(8);
   const VIEW8 = new DataView(BUF8);
   const U8 = new Uint8Array(BUF8);
-  const TEX = TEXT_ENCODER;
+  const TEX = encoder();
   const ENCODE = 'SparseCodec.encode';
 
   const encode = (state: T): string => {
