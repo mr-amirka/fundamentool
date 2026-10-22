@@ -40,6 +40,18 @@ export function limitStream(stream: NodeJS.ReadableStream & { close?: () => void
     stream.close?.();
   }
 
+  /** Up to `limit` items the stream has now. */
+  function take(): any[] {
+    const items: any[] = [];
+    let item: any;
+    let i = 0;
+    while (i < limit && (item = (stream as any).read()) !== null) {
+      items.push(item);
+      i++;
+    }
+    return items;
+  }
+
   function next(): Promise<any[]> {
     return new Promise((resolve, reject) => {
       if (hasError) {
@@ -51,16 +63,20 @@ export function limitStream(stream: NodeJS.ReadableStream & { close?: () => void
         return;
       }
       rejectFn = reject;
+      try {
+        // What is buffered already is taken at once — waiting for a 'readable' that won't come again would hang
+        const ready = take();
+        if (ready.length) {
+          resolve(ready);
+          return;
+        }
+      } catch (e) {
+        onError(e);
+        return;
+      }
       stream.once('readable', () => {
         try {
-          const items: any[] = [];
-          let item: any;
-          let i = 0;
-          while (i < limit && (item = (stream as any).read()) !== null) {
-            items.push(item);
-            i++;
-          }
-          resolve(items);
+          resolve(take());
         } catch (e) {
           onError(e);
         }

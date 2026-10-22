@@ -155,3 +155,41 @@ describe('ProviderOfTransformTo', () => {
     })).rejects.toThrow();
   });
 });
+
+describe('ProviderOfTransformTo — drain', () => {
+  const TransformTo = ProviderOfTransformTo({
+    Transform,
+  } as never) as any;
+
+  it('drain() waits for the stream\'s drain; the same promise source while it waits', async () => {
+    const stream = new TransformTo();
+    let drained = false;
+    const waiting = stream.drain().then(() => {
+      drained = true;
+    });
+    expect(drained).toBe(false);
+    stream.emit('drain');
+    await waiting;
+    expect(drained).toBe(true);
+    const again = stream.drain();
+    stream.emit('drain');
+    await again;
+  });
+
+  it('an error before or while waiting rejects drain(); a value that can\'t be written is the stream\'s error', async () => {
+    const stream = new TransformTo();
+    const waiting = stream.drain();
+    const failure = new Error('broken pipe');
+    stream.emit('error', failure);
+    await expect(waiting).rejects.toBe(failure);
+    await expect(stream.drain()).rejects.toBe(failure); // already failed: at once
+    const circular: Record<string, unknown> = {};
+    circular.self = circular;
+    const other = new TransformTo();
+    const failed = new Promise((resolve) => {
+      other.on('error', resolve);
+    });
+    other.write(circular);
+    await expect(failed).resolves.toBeInstanceOf(TypeError);
+  });
+});
