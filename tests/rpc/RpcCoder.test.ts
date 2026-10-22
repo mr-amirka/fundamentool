@@ -225,3 +225,24 @@ describe('RpcCoder — the remaining kinds', () => {
     expect(coder.decode(coder.encode([promised]))).toHaveLength(1);
   });
 });
+
+describe('RpcCoder — one array twice in a value', () => {
+  it('decoded once: both places hold the same array', () => {
+    const shared = [
+      1,
+      2,
+    ];
+    const {
+      client, server,
+    } = makeLinkedCoders();
+    const decoded = server.decode(client.encode({
+      a: shared,
+      b: shared,
+    }));
+    expect(decoded.a).toEqual([
+      1,
+      2,
+    ]);
+    expect(decoded.b).toBe(decoded.a);
+  });
+});

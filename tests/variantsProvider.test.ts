@@ -73,6 +73,26 @@ describe('variantsProvider', () => {
       })).toThrow(TypeError);
   });
 
+  test('a limit that is an object or text throws at factory; null — no limit', () => {
+    const options = {
+      separator: '|',
+      scopeStart: '(',
+      scopeEnd: ')',
+    };
+    expect(() => variantsProvider({
+      ...options,
+      maxDepth: {} as never,
+    })).toThrow(new TypeError('maxDepth must be a number, got object, value: [object Object]'));
+    expect(() => variantsProvider({
+      ...options,
+      maxOutputCount: '5' as never,
+    })).toThrow(new TypeError('maxOutputCount must be a number, got string, value: 5'));
+    expect(() => variantsProvider({
+      ...options,
+      maxDepth: null as never,
+    })).not.toThrow();
+  });
+
   test('maxDepth 1 allows only one nesting level', () => {
     const shallow = variantsProvider({
       separator: '|',

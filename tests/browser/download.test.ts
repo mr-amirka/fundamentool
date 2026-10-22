@@ -47,4 +47,34 @@ describe('browser/download', () => {
     expect((global as any).document.body.appendChild).toHaveBeenCalled();
     expect((global as any).document.body.removeChild).toHaveBeenCalled();
   });
+
+  test('content: a blob link of it; no file name — the time', async () => {
+    jest.doMock('../../src/browser/ready', () => ({
+      ready: (fn: any) => {
+        fn();
+        return () => true;
+      },
+    }));
+    const createObjectURL = URL.createObjectURL;
+    (URL as any).createObjectURL = () => 'blob:made';
+    try {
+      const link = await new Promise<any>((resolve, reject) => {
+        jest.isolateModules(async () => {
+          try {
+            const {
+              download,
+            } = require('../../src/browser/download');
+            await download('hello', 'text/plain');
+            resolve((global as any).document.body.appendChild.mock.calls.at(-1)[0]);
+          } catch (e) {
+            reject(e);
+          }
+        });
+      });
+      expect(link.href).toBe('blob:made');
+      expect(link.download).toMatch(/^\d+$/);
+    } finally {
+      (URL as any).createObjectURL = createObjectURL;
+    }
+  });
 });
