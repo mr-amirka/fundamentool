@@ -308,3 +308,88 @@ describe('SparseCodec', () => {
     expect(dec).toEqual({});
   });
 });
+
+describe('createSparseCodec — every width, defaults, a cut payload', () => {
+  const wide = createSparseCodec<{ a?: number;
+    b?: number;
+    c?: number;
+    d?: number;
+    s?: string }>({
+    fields: [
+      {
+        id: 1,
+        path: 'a',
+        type: 'u8',
+        default: 0,
+      },
+      {
+        id: 2,
+        path: 'b',
+        type: 'u16',
+        default: 0,
+      },
+      {
+        id: 3,
+        path: 'c',
+        type: 'u32',
+        default: 0,
+      },
+      {
+        id: 4,
+        path: 'd',
+        type: 'f64',
+        default: 0,
+      },
+      {
+        id: 5,
+        path: 's',
+        type: 'string',
+        default: '',
+      },
+    ],
+  });
+  /** Bytes as the codec's string. */
+  const packed = (bytes: number[]) => Buffer.from(bytes).toString('base64url');
+
+  it('u8 / u16 / u32 round-trip; a value equal to its default isn\'t written', () => {
+    const state = {
+      a: 200,
+      b: 0xBEEF,
+      c: 0xDEADBEEF,
+      d: 0.5,
+      s: 'ü',
+    };
+    expect(wide.decode(wide.encode(state))).toEqual(state);
+    expect(wide.encode({
+      a: 0,
+      b: 0,
+      c: 0,
+      d: 0,
+      s: '',
+    })).toBe(packed([1])); // only the version byte
+  });
+
+  it('a payload cut short keeps what was read before the cut', () => {
+    expect(wide.decode(packed([
+      1,
+      1,
+      7,
+      2,
+      0xBE,
+    ]))).toEqual({
+      a: 7,
+    }); // u16 cut
+    expect(wide.decode(packed([
+      1,
+      5,
+      0,
+    ]))).toEqual({}); // a string's length cut
+    expect(wide.decode(packed([
+      1,
+      5,
+      0,
+      9,
+      65,
+    ]))).toEqual({}); // a string's bytes cut
+  });
+});

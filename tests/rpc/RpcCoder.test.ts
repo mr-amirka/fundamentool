@@ -185,3 +185,43 @@ describe('RpcCoder — functions', () => {
     expect(await decoded.fn(5)).toBe(10);
   });
 });
+
+describe('RpcCoder — the remaining kinds', () => {
+  it('Infinity, -Infinity and NaN cross as themselves', () => {
+    const coder = new RpcCoder();
+    expect(coder.decode(coder.encode([
+      Infinity,
+      -Infinity,
+      NaN,
+      undefined,
+    ]))).toEqual([
+      Infinity,
+      -Infinity,
+      NaN,
+      undefined,
+    ]);
+  });
+
+  it('without symbols a symbol is undefined; a symbol from a coder with them is rebuilt by its description', () => {
+    const plain = new RpcCoder(null, {
+      useSymols: false,
+    });
+    expect(plain.decode(plain.encode([Symbol('k')]))).toEqual([undefined]);
+    const rich = new RpcCoder();
+    const decoded = plain.decode(rich.encode(Symbol('key')));
+    expect(typeof decoded).toBe('symbol');
+  });
+
+  it('without a function provider functions and promises are undefined; one promise sent twice is one', async () => {
+    const plain = new RpcCoder();
+    expect(plain.decode(plain.encode([() => 1]))).toEqual([undefined]);
+    const promised = Promise.resolve(5);
+    const coder = new RpcCoder(() => () => undefined);
+    const encoded = coder.encode([
+      promised,
+      promised,
+    ]);
+    expect(JSON.stringify(encoded).length).toBeGreaterThan(0);
+    expect(coder.decode(coder.encode([promised]))).toHaveLength(1);
+  });
+});
