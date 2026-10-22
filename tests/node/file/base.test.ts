@@ -116,3 +116,32 @@ describe('node/file/base — readDir', () => {
     await expect(readDir(join(tmpdir(), 'no-such-dir-xyz'))).rejects.toThrow();
   });
 });
+
+describe('node/file/base — failures reject', () => {
+  test('makeDir and write under a file (ENOTDIR), write onto a folder (EISDIR), read of a missing file; read without an encoding — bytes', async () => {
+    const dir = tmpDir();
+    const file = join(dir, 'a.txt');
+    await write(file, 'x');
+    try {
+      await expect(makeDir(join(file, 'sub'))).rejects.toMatchObject({
+        code: 'ENOTDIR',
+      });
+      await expect(write(join(
+        file, 'sub', 'b.txt',
+      ), 'y')).rejects.toMatchObject({
+        code: 'ENOTDIR',
+      });
+      await expect(write(dir, 'y')).rejects.toMatchObject({
+        code: 'EISDIR',
+      });
+      await expect(read(join(dir, 'missing.txt'))).rejects.toMatchObject({
+        code: 'ENOENT',
+      });
+      await expect(read(file, null)).resolves.toEqual(Buffer.from('x'));
+    } finally {
+      rmSync(dir, {
+        recursive: true,
+      });
+    }
+  });
+});

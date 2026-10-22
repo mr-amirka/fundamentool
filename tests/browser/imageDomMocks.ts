@@ -55,3 +55,17 @@ export function setupImageHelpersDom(): void {
     }
   };
 }
+
+/**
+ * Makes `new Image()` report the given sizes: `natural` — `naturalWidth` / `naturalHeight` (0 when the browser doesn't
+ * know them, an SVG without a viewBox), `plain` — `width` / `height`.
+ */
+export function setImageSize(natural: [number, number], plain: [number, number]): void {
+  const Base = (global as any).Image;
+  (global as any).Image = class SizedImage extends Base {
+    public naturalWidth = natural[0];
+    public naturalHeight = natural[1];
+    public width = plain[0];
+    public height = plain[1];
+  };
+}

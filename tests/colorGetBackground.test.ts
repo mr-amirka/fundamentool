@@ -51,4 +51,16 @@ describe('colorGetBackground', () => {
     expect(colorGetBackground('T')).toEqual(['Transparent']);
     expect(colorGetBackground('CT')).toEqual(['currentColor']);
   });
+
+  it('an angle below zero wraps round; a named radial shape; a stop\'s own position and unit', () => {
+    expect(colorGetBackground('ff0000-0000ff_g-270')).toEqual(['linear-gradient(270deg,#f00 0%,#00f 100%)']);
+    expect(colorGetBackground('ff0000-0000ff_r_ellipse_closestSide'))
+      .toEqual(['radial-gradient(ellipse closest-side,#f00 0%,#00f 100%)']);
+    expect(colorGetBackground('ff0000p20-0000ffp40px')).toEqual(['linear-gradient(180deg,#f00 20%,#00f 40px)']);
+  });
+
+  it('nothing to draw: no gradient; several stops with alpha: the rgba form', () => {
+    expect(colorGetBackground('')).toEqual([]);
+    expect(colorGetBackground('ff0000.5-0000ff')).toEqual(['linear-gradient(180deg,rgba(255,0,0,.5) 0%,#00f 100%)']);
+  });
 });

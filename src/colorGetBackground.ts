@@ -59,8 +59,7 @@ export const colorGetBackground = (input: string, alt?: boolean): string[] => {
     if (matches[3]) {
       radial = joinSpace(splitSuffix(camelToKebabCase(matches[4] || 'circle')));
     } else {
-      i = matches[5] ? parseInt(matches[5], 10) : 0;
-      angle = (angle + i) % 360;
+      angle = (angle + parseInt(matches[5], 10)) % 360;
       if (angle < 0) {
         angle += 360;
       }
@@ -91,10 +90,10 @@ export const colorGetBackground = (input: string, alt?: boolean): string[] => {
     pmatches = (regexpBg.exec((v = vls[i])) || []) as RegExpExecArray;
     suffix =
       ' '
-      + (pmatches[4] || (end ? Math.round((i * 100) / end) : 0))
+      + (pmatches[4] || Math.round((i * 100) / end))
       + (pmatches[5] || '%');
 
-    alts = color(pmatches[1] || v || Math.round((i * 15) / end).toString(16), alt);
+    alts = color(pmatches[1] || v, alt);
 
     if (!i) {
       pushArray(gradient, alts);
@@ -123,8 +122,9 @@ export const colorGetBackground = (input: string, alt?: boolean): string[] => {
     return gradient;
   }
 
+  // Without `alt` a color is one string (rgba when it has alpha): one list
   if (several) {
-    return [joinComma(hasAlpha ? outputRgba : outputRgb) + ')'];
+    return [joinComma(outputRgb) + ')'];
   }
 
   return gradient;

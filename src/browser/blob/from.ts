@@ -14,28 +14,22 @@ import {
 const TYPE_BINARY = 'application/octet-binary';
 
 function normalize(content: any): [
-  content: string | ArrayBuffer,
+  content: BlobPart,
   type: string,
 ] {
-  let buffer: ArrayBuffer | undefined;
   return isDefined(content) ? (
     isObject(content) ? (
-      isArrayBuffer(content)
+      // A view (a typed array, a Node Buffer) as it is: its own bytes, not the whole buffer under it (a pooled Buffer
+      // shares 8 KB with others)
+      isArrayBuffer(content) || ArrayBuffer.isView(content)
         ? [
-          content,
+          content as BlobPart,
           TYPE_BINARY,
         ]
-        : (
-          isArrayBuffer(buffer = (content as any).buffer)
-            ? [
-              buffer,
-              TYPE_BINARY,
-            ]
-            : [
-              JSON.stringify(content),
-              'application/json',
-            ]
-        )
+        : [
+          JSON.stringify(content),
+          'application/json',
+        ]
     ) : [
       '' + content,
       'text/plain',
@@ -51,7 +45,7 @@ function normalize(content: any): [
  *
  * Rules:
  * - Blob: returned as-is
- * - ArrayBuffer/buffer-like: stored as binary (`application/octet-binary`)
+ * - ArrayBuffer, a typed array, a Node Buffer: its bytes as binary (`application/octet-binary`) — a view's own bytes
  * - Plain object: JSON-stringified (`application/json`)
  * - Other defined primitives: stringified as `text/plain`
  *

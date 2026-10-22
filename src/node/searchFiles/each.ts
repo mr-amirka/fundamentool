@@ -33,7 +33,6 @@ export function each(folderPath: string,
   return new Promise((resolve) => {
     const filter = options.filter || defaultFilter;
     const iteratee = options.iteratee || noop;
-    const stop = false;
     let taskCount = 0;
 
     function dec(): void {
@@ -47,9 +46,6 @@ export function each(folderPath: string,
     ): void {
       taskCount++;
       lstat(path, (err: NodeJS.ErrnoException | null, stats: Stats) => {
-        if (stop) {
-          return;
-        }
         if (err) {
           dec();
           return;
@@ -67,9 +63,6 @@ export function each(folderPath: string,
           return;
         }
         readdir(path, (readErr, files) => {
-          if (stop) {
-            return;
-          }
           if (readErr) {
             dec();
             return;

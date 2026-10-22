@@ -5,6 +5,7 @@ import {
   join,
 } from 'path';
 import {
+  chmodSync,
   mkdirSync,
   writeFileSync,
   rmSync,
@@ -97,5 +98,30 @@ describe('node/searchFiles/each', () => {
 
   test('resolves without error for non-existing path', async () => {
     await expect(each(join(tmpdir(), 'no-such-dir-xyz'), {})).resolves.toBeUndefined();
+  });
+
+  test('no options: walks everything; a folder it can\'t read is skipped, the rest still walked', async () => {
+    const root = makeTree();
+    await expect(each(root)).resolves.toBeUndefined();
+    const locked = join(
+      root, 'subdir', 'nested',
+    );
+    chmodSync(locked, 0o000);
+    const found: string[] = [];
+    try {
+      await each(root, {
+        iteratee: (p) => found.push(p),
+      });
+    } finally {
+      chmodSync(locked, 0o755);
+      rmSync(root, {
+        recursive: true,
+      });
+    }
+    expect(found.map((p) => p.slice(root.length)).sort()).toEqual([
+      '/a.txt',
+      '/b.txt',
+      '/subdir/c.ts',
+    ]);
   });
 });

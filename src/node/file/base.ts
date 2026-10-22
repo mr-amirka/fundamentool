@@ -77,14 +77,14 @@ export const write = (
   path: string, data: string | NodeJS.ArrayBufferView, options: WriteFileOptions = {},
 ) => {
   return new Promise<void>((resolve, reject) => {
-    const dirPath = dirname(path);
-    dirPath ? mkdir(
-      dirPath, {
+    // `dirname` is never empty: a bare name gives '.', made at once
+    mkdir(
+      dirname(path), {
         recursive: true,
       }, (error: any) => {
         error ? reject(error) : write();
       },
-    ) : write();
+    );
 
     function write() {
       writeFile(
