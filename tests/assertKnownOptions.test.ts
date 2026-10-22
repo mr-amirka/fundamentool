@@ -117,7 +117,7 @@ describe('describeValue', () => {
     ],
     [
       undefined,
-      'undefined undefined',
+      'undefined',
     ],
     [
       true,

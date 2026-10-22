@@ -2,14 +2,14 @@
  * Short description of a received value for error messages ("what was expected, what came").
  *
  * @param value - Anything a caller passed.
- * @returns `string "p10"`, `number 3`, `null`, `function`, `array`, `object`, `undefined undefined`.
+ * @returns `string "p10"`, `number 3`, `null`, `function`, `array`, `object`, `undefined`.
  * @example
  * describeValue('p10'); // 'string "p10"'
  * describeValue(3);     // 'number 3'
  */
 export function describeValue(value: unknown): string {
-  if (value === null) {
-    return 'null';
+  if (value === null || value === undefined) {
+    return String(value);
   }
   if (typeof value === 'string') {
     return `string "${value}"`;
