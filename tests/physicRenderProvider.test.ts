@@ -78,3 +78,33 @@ describe('physicRenderProvider', () => {
     expect(runner).toHaveBeenCalledWith(expect.any(Function), 100);
   });
 });
+
+describe('physicRenderProvider — the fixed step', () => {
+  it('runs as many steps as the time that passed holds, the rest kept for the next frame', () => {
+    let tick: () => void = () => undefined;
+    const runner = jest.fn((handle: () => void) => {
+      tick = handle;
+      return jest.fn();
+    });
+    const steps: number[] = [];
+    let now = 1000;
+    const clock = jest.spyOn(Date, 'now').mockImplementation(() => now);
+    try {
+      physicRenderProvider(
+        (step) => steps.push(step), 16, runner as never,
+      ).play();
+      now += 50; // three steps (48 ms), 2 ms left
+      tick();
+      expect(steps).toEqual([
+        16,
+        16,
+        16,
+      ]);
+      now += 15; // 17 ms with the rest: one more
+      tick();
+      expect(steps).toHaveLength(4);
+    } finally {
+      clock.mockRestore();
+    }
+  });
+});

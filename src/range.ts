@@ -26,7 +26,8 @@ export function range(
 
   let length = (end - start) / step;
   const sign = length < 0 ? -1 : 1;
-  length *= sign;
+  // A step that doesn't divide the span: the last value is the one before `end` — the length rounded up
+  length = Math.ceil(length * sign);
 
   const output = new Array<number>(length);
   let i = 0;

@@ -37,7 +37,8 @@ export const physicRenderProvider = (
     const difference = currentTime - lastTime;
     lastTime = currentTime;
     balance += difference;
-    for (; balance > timestep; balance -= difference) {
+    // A fixed step: as many steps as the time that passed holds — one `timestep` taken from the balance each
+    for (; balance > timestep; balance -= timestep) {
       fn(timestep);
     }
   }
