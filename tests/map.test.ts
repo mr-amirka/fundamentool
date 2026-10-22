@@ -107,3 +107,24 @@ describe('mapIn', () => {
     });
   });
 });
+
+describe('map — by a key', () => {
+  it('a key name instead of a function: each item\'s value under it, into the output given', () => {
+    const output: number[] = [];
+    expect(map(
+      [
+        {
+          n: 1,
+        },
+        {
+          n: 2,
+        },
+      ], 'n', output,
+    )).toBe(output);
+    expect(output).toEqual([
+      1,
+      2,
+    ]);
+    expect(map(null as unknown as { n: number }[], 'n')).toEqual([]); // no list: an empty one
+  });
+});

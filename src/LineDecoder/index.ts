@@ -57,7 +57,6 @@ export class LineDecoder<T = any> {
       let carry = tail;
       let start = 0;
       let i = 0;
-      let end = 0;
       let line = '';
       let part = '';
 
@@ -66,22 +65,22 @@ export class LineDecoder<T = any> {
           continue;
         }
 
-        end = i;
-        if (end > start && text.charCodeAt(end - 1) === CODE_CR) {
-          end--;
-        }
-
-        line = text.slice(start, end);
+        line = text.slice(start, i);
         start = i + 1;
 
         if (typeof carry !== 'undefined') {
           line = carry + line;
           carry = undefined;
         }
+        // The '\r' of '\r\n' — stripped after the carried part is joined: it may have come at the end of the last chunk
+        if (line.charCodeAt(line.length - 1) === CODE_CR) {
+          line = line.slice(0, -1);
+        }
+        // Every line counts, a skipped empty one too: an error names the line as an editor shows it
+        lineCount++;
         if (!line && skipEmpty) {
           continue;
         }
-        lineCount++;
         try {
           output.push(parse(line) as T);
         } catch (error: any) {

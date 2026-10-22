@@ -82,3 +82,41 @@ describe('onlyByIn', () => {
     expect(result).toBe(3);
   });
 });
+
+describe('onlyBy, onlyByIn — a falsy item, the defaults', () => {
+  it('a falsy best item (0, \'\', null) is kept — it was replaced by the next one', () => {
+    expect(onlyBy([
+      0,
+      5,
+      3,
+    ], (v) => v)).toBe(0);
+    expect(onlyBy(
+      [
+        -1,
+        '',
+        -5,
+      ], (v) => (v === '' ? 9 : v), true,
+    )).toBe('');
+    expect(onlyByIn({
+      a: 0,
+      b: 2,
+    }, (v) => v)).toBe(0);
+    expect(onlyByIn({
+      a: null,
+      b: 2,
+    }, (v) => (v === null ? -1 : v))).toBeNull();
+  });
+
+  it('no iteratee: the items themselves are compared; the smallest by default', () => {
+    expect(onlyBy([
+      4,
+      2,
+      8,
+    ])).toBe(2);
+    expect(onlyByIn({
+      a: 4,
+      b: 2,
+    })).toBe(2);
+    expect(onlyByIn({})).toBeUndefined();
+  });
+});

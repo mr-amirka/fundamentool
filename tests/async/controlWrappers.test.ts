@@ -122,6 +122,21 @@ describe('control wrappers', () => {
     expect(fn).toHaveBeenCalledTimes(2);
   });
 
+  test('withLatencyProvider: a failure is thrown after the latency too; the next call still runs', async () => {
+    jest.useRealTimers();
+    const run = withLatencyProvider(30);
+    const failure = new Error('down');
+    const start = Date.now();
+    await expect(run(() => {
+      throw failure;
+    })).rejects.toBe(failure);
+    expect(Date.now() - start).toBeGreaterThanOrEqual(25);
+    await expect(run((a: number, b: number) => a + b, [
+      2,
+      3,
+    ])).resolves.toBe(5);
+  });
+
   test('withLatencyProvider enforces minimal latency and preserves result', async () => {
     jest.useRealTimers();
     const provider = withLatencyProvider(50);

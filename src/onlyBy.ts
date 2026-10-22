@@ -41,7 +41,8 @@ export const onlyBy = (
     tmpValue = iteratee(
       tmpItem, i, collection,
     );
-    if (!item || _compare(tmpValue, value)) {
+    // The first item is taken as it is — a falsy one (0, '', null) too: it was replaced by the next one
+    if (!i || _compare(tmpValue, value)) {
       item = tmpItem;
       value = tmpValue;
     }
@@ -71,13 +72,15 @@ export const onlyByIn = (
   let tmpItem: any;
   let tmpValue: any;
   let k: string;
+  let first = true;
 
   for (k in collection) {
     tmpItem = collection[k];
     tmpValue = iteratee(
       tmpItem, k, collection,
     );
-    if (!item || _compare(tmpValue, value)) {
+    if (first || _compare(tmpValue, value)) {
+      first = false;
       item = tmpItem;
       value = tmpValue;
     }

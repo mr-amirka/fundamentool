@@ -42,3 +42,21 @@ describe('LineDecoder', () => {
     ]);
   });
 });
+
+describe('LineDecoder — line endings across chunks, the line of an error', () => {
+  it('a \'\\r\\n\' split between two chunks: the \'\\r\' is dropped too', () => {
+    const decoder = LineDecoder.create<string>({});
+    expect(decoder.write('a\r')).toEqual([]);
+    expect(decoder.write('\nb\r\n')).toEqual([
+      'a',
+      'b',
+    ]);
+  });
+
+  it('an error names the line as an editor shows it — skipped empty lines counted', () => {
+    const decoder = new LineDecoder({
+      parse: JSON.parse,
+    });
+    expect(() => decoder.write('{"a":1}\n\n{bad\n')).toThrow(/^Parse error on line 3:/);
+  });
+});

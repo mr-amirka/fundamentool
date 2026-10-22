@@ -46,3 +46,27 @@ describe('browser/getDataLink', () => {
     (URL as any).createObjectURL = createObjectURL;
   });
 });
+
+describe('browser/getDataLink — parts, no type', () => {
+  it('a list is the blob\'s parts; no type — the blob has none', async () => {
+    const {
+      getDataLink,
+    } = require('../../src/browser/getDataLink');
+    const createObjectURL = URL.createObjectURL;
+    const blobs: Blob[] = [];
+    (URL as any).createObjectURL = (blob: Blob) => {
+      blobs.push(blob);
+      return 'blob:TEST';
+    };
+    try {
+      getDataLink([
+        'a',
+        'b',
+      ]);
+      expect(blobs[0].type).toBe('');
+      await expect(blobs[0].text()).resolves.toBe('ab');
+    } finally {
+      (URL as any).createObjectURL = createObjectURL;
+    }
+  });
+});

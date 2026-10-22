@@ -77,3 +77,18 @@ describe('browser/script', () => {
     expect(typeof scriptFn).toBe('function');
   });
 });
+
+describe('browser/script — no document', () => {
+  it('a worker, a server: rejects', async () => {
+    const doc = (global as any).document;
+    delete (global as any).document;
+    try {
+      const {
+        script,
+      } = require('../../src/browser/script');
+      await expect(script('https://cdn.example/lib.js')).rejects.toThrow('Document is not found');
+    } finally {
+      (global as any).document = doc;
+    }
+  });
+});

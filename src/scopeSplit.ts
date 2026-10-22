@@ -51,6 +51,10 @@ export function scopeSplit(
     }
 
     if (closeChar === input.slice(i, i + closeCharLength)) {
+      if (!depth) {
+        // A closer with nothing open — the same syntax error as one left open
+        throw new Error(`Scope syntax error: "${input}", depth: -1`);
+      }
       value = input.slice(offset, i);
       value && level.push(value);
       i = offset = i + closeCharLength;

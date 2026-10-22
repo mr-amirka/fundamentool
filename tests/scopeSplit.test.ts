@@ -73,3 +73,17 @@ describe('scopeSplit', () => {
   });
 });
 
+describe('scopeSplit — a closer with nothing open', () => {
+  it('is a syntax error, before anything is read past it', () => {
+    expect(() => scopeSplit(')x(')).toThrow('Scope syntax error: ")x(", depth: -1');
+    expect(() => scopeSplit('a)')).toThrow('Scope syntax error: "a)", depth: -1');
+  });
+
+  it('the default brackets are ( )', () => {
+    expect(scopeSplit('a(b)c')).toEqual([
+      'a',
+      ['b'],
+      'c',
+    ]);
+  });
+});
