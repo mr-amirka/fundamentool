@@ -358,14 +358,16 @@ export interface IRpcClient extends IEventEmitter<any> {
 export type TRpcConnectOptionsGetConnections = () => IRpcConnect[];
 
 /**
- * Context object injected as `this` into every exported server method.
+ * The context of one call of an exported server method — reached with `useCall()` at the top of the method (D-055);
+ * `this` stays the method's own object. Its members are plain functions: they may be taken apart.
  *
  * @example
  * const connect = new RpcConnect({
  *   exports: {
- *     async heavyTask(this: TRpcTaskContext, data: any) {
- *       await this.interrupt(5000); // pause for up to 5 s
- *       this.dispatch({ progress: 50 });
+ *     async heavyTask(data: any) {
+ *       const call = useCall();         // at the top, before the first await
+ *       await call.interrupt(5000);     // pause for up to 5 s — rejects at once if the client gives up
+ *       call.dispatch({ progress: 50 });
  *     },
  *   },
  *   ...transport,
@@ -376,7 +378,7 @@ export type TRpcTaskContext = {
   getConnections: TRpcConnectOptionsGetConnections,
   /** Abort signal — aborted when the client cancels the call. */
   signal: TRpcEventTarget,
-  /** Pauses execution for up to `time` ms; resolves with `params` or rejects on abort. */
+  /** Pauses for `time` ms and resolves with `params`; rejects at once when the client aborts the call. */
   interrupt: <A = any>(time?: number, params?: A) => Promise<A>,
   /** Sends data to the calling client. */
   dispatch: (data: any) => void,
@@ -417,8 +419,8 @@ export type TRpcConnectOptionsOnMessageCallback = (responseData: MessageEvent<TR
 /** Registers a listener for incoming messages; returns an unsubscribe fn. */
 export type TRpcConnectOptionsOnMessage = (callback: TRpcConnectOptionsOnMessageCallback) => TRpcUnsubscribe;
 
-/** A single exported method on the server side. Receives `TRpcTaskContext` as `this`. */
-export type TRpcConnectOptionsExportFn = (this: TRpcTaskContext, ...args: any[]) => any | Promise<any>;
+/** A single exported method on the server side; its call's context — `useCall()` at its top (D-055). */
+export type TRpcConnectOptionsExportFn = (...args: any[]) => any | Promise<any>;
 
 /** Map of method names to their implementations, passed to `RpcConnect`. */
 export type TRpcConnectOptionsExports = Record<string, TRpcConnectOptionsExportFn>;

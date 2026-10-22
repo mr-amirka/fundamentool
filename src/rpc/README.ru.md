@@ -122,6 +122,47 @@ await client.subscribe('update', (data) => console.log(data));
 
 ---
 
+## Контекст вызова — `useCall()`
+
+Долгий метод видит свой вызов через `useCall()`, вызванный **в начале** — до первого `await` (fundamentool D-055).
+`this` остаётся собственным объектом метода.
+
+```ts
+import { RpcConnect, useCall } from 'fundamentool/rpc';
+
+const connect = new RpcConnect({
+  exports: {
+    async exportReport(month: string) {
+      const call = useCall();                   // в начале: этот вызов
+      for (let page = 1; page <= 30; page++) {
+        await call.interrupt(1000);             // секунда на страницу — сразу отказ, если клиент отменил
+        call.dispatch({ progress: page / 30 }); // вызвавшему клиенту
+      }
+      return `report-${month}.pdf`;
+    },
+    counter: {
+      count: 0,
+      inc() { return ++this.count; },           // `this` — свой объект: 1, 2, 3 …
+    },
+  },
+  ...transport,
+});
+```
+
+| Член | Зачем |
+|------|-------|
+| `signal` | отменяется, когда клиент отказался (его `AbortController`, его таймаут) |
+| `interrupt(ms, value?)` | ждёт `ms` и отдаёт `value` — при отмене сразу отказ |
+| `dispatch(data)` | шлёт этому клиенту что-то до результата |
+| `dispatchToAll(data)` | шлёт всем подключённым клиентам |
+| `getConnections()` | соединения пула |
+
+Вызванный после `await` или вне экспортированного метода, `useCall()` сразу бросает ошибку: к этому моменту может
+выполняться другой вызов, и JavaScript не может сказать, какой из них этот. Сохранённый в переменную, контекст остаётся
+верным после любого `await`.
+
+---
+
 ## RpcCoder — низкоуровневая сериализация
 
 `RpcCoder` сериализует произвольные данные (включая функции, Symbol и Promise) в JSON-совместимый wire-формат. `RpcClient` и `RpcConnect` используют его внутри; напрямую он нужен только при построении собственного транспортного слоя.

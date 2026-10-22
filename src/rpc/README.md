@@ -122,6 +122,46 @@ await client.subscribe('update', (data) => console.log(data));
 
 ---
 
+## The call's context — `useCall()`
+
+A long method sees its own call through `useCall()`, called **at the top** — before its first `await` (fundamentool
+D-055). `this` stays the method's own object.
+
+```ts
+import { RpcConnect, useCall } from 'fundamentool/rpc';
+
+const connect = new RpcConnect({
+  exports: {
+    async exportReport(month: string) {
+      const call = useCall();                   // at the top: this call
+      for (let page = 1; page <= 30; page++) {
+        await call.interrupt(1000);             // a second per page — rejects at once if the client gives up
+        call.dispatch({ progress: page / 30 }); // to the client that called
+      }
+      return `report-${month}.pdf`;
+    },
+    counter: {
+      count: 0,
+      inc() { return ++this.count; },           // `this` — its own object: 1, 2, 3 …
+    },
+  },
+  ...transport,
+});
+```
+
+| Member | What for |
+|--------|----------|
+| `signal` | aborted when the client gives up (its `AbortController`, its timeout) |
+| `interrupt(ms, value?)` | waits `ms` and resolves with `value` — rejects at once on abort |
+| `dispatch(data)` | sends this client something before the result |
+| `dispatchToAll(data)` | sends every connected client |
+| `getConnections()` | the connections of the pool |
+
+Called after an `await` or outside an exported method, `useCall()` throws at once: by then another call may be running,
+and JavaScript can't tell which one is this. Kept in a variable, the context stays right after any `await`.
+
+---
+
 ## RpcCoder — low-level serialization
 
 `RpcCoder` serializes arbitrary data (including functions, Symbols, and Promises) into a JSON-compatible wire format. `RpcClient` and `RpcConnect` use it internally; you only need it directly when building a custom transport layer.

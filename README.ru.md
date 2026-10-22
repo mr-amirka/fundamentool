@@ -45,7 +45,7 @@ npm run docs:api
 | `fundamentool/jsonl` | Сериализация JSON Lines |
 | `fundamentool/browser` | Browser-утилиты (WebSocket, хранилище, роутинг, DI-провайдеры) |
 | `fundamentool/node` | Node.js-утилиты (файловый ввод-вывод, хеш, обход директорий) |
-| `fundamentool/rpc` | RPC-ядро: `RpcClient`, `RpcConnect`, `RpcClientPool`, `RpcCoder` |
+| `fundamentool/rpc` | RPC-ядро: `RpcClient`, `RpcConnect` (метод видит свой вызов через `useCall()`), `RpcClientPool`, `RpcCoder` |
 | `fundamentool/rpc/browser` | Browser-воркеры: `RpcClientWorker`, `RpcConnectWorker`, `RpcClientWorkerPool` |
 | `fundamentool/rpc/node` | Node.js-воркеры: `NodeRpcClientWorker`, `NodeRpcConnectWorker`, `NodeRpcClientWorkerPool` |
 

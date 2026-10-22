@@ -24,11 +24,72 @@ import {
   wait,
 } from '../wait';
 import {
+  createTimeout,
+} from '../createTimeout';
+import {
   RpcCoder,
 } from './RpcCoder';
 import {
   getWithContext,
 } from '../get';
+
+/**
+ * Waits `time` ms and resolves with `params` — or rejects at once when the call's `signal` aborts (the client gave up).
+ */
+function interruptible<A>(
+  signal: any, time?: number, params?: A,
+): Promise<A> {
+  return new Promise<A>((resolve, reject) => {
+    const aborted = () => reject(new Error('[fundamentool] interrupt: the call was aborted by the client'));
+    if (signal.aborted) {
+      aborted();
+      return;
+    }
+    // The timer fires later than this line: `detach` is set by then
+    const cancel = createTimeout(() => {
+      detach();
+      resolve(params as A);
+    }, time);
+    const detach = attachEvent(
+      signal, 'abort', () => {
+        cancel();
+        aborted();
+      },
+    );
+  });
+}
+
+/** The call whose method is starting — set only while `RpcConnect` runs a method's synchronous start (D-055). */
+let currentCall: TRpcTaskContext | null = null;
+
+/**
+ * The context of the call an exported method serves: the client's `signal`, `interrupt`, `dispatch`, `dispatchToAll`
+ * (fundamentool D-055). Called at the top of the method — before its first `await`; kept in a variable, it stays right
+ * after any `await`. Called anywhere else (after an `await`, outside an exported method) — an error at once: another
+ * call may be running by then, and JavaScript can't tell which one is this.
+ *
+ * @returns The call's context.
+ * @example
+ * const connect = new RpcConnect({
+ *   exports: {
+ *     async exportReport(month: string) {
+ *       const call = useCall();                  // at the top: this call
+ *       for (let page = 1; page <= 30; page++) {
+ *         await call.interrupt(1000);            // a second per page — rejects at once if the client gives up
+ *         call.dispatch({ progress: page / 30 }); // to the client that called
+ *       }
+ *       return `report-${month}.pdf`;
+ *     },
+ *   },
+ *   ...transport,
+ * });
+ */
+export function useCall(): TRpcTaskContext {
+  if (!currentCall) {
+    throw new Error('[fundamentool] useCall: call it at the top of an exported method, before its first await');
+  }
+  return currentCall;
+}
 
 /**
  * Server-side RPC connection handler.
@@ -89,7 +150,7 @@ export class RpcConnect {
   private async invokeBase(
     requestId: string,
     encodedArgs: any,
-    middleware: (args: any) => Promise<[isError: number, result: any]> | [isError: number, result: any],
+    middleware: (args: any, context: TRpcTaskContext) => Promise<[isError: number, result: any]> | [isError: number, result: any],
   ) {
     const coder = this.serializable ? new RpcCoder((fnIndex: number) => {
       return (...params) => this.callClientFn(
@@ -99,16 +160,20 @@ export class RpcConnect {
       useSymols: true,
     }) : null;
     const signal: any = new EventTarget();
+    const getConnections = this.getConnections;
+    // Its members are plain functions (`const { dispatch } = useCall()` works): none of them reads `this`
     const context: TRpcTaskContext = {
       signal,
-      interrupt: wait,
-      getConnections: this.getConnections,
+      interrupt: <A>(time?: number, params?: A) => interruptible(
+        signal, time, params,
+      ),
+      getConnections,
       dispatch: (data: any) => {
         this.dispatchEncoded(coder?.encode(data, false) || data);
       },
-      dispatchToAll(data: any) {
+      dispatchToAll: (data: any) => {
         const encodedData = coder?.encode(data, false) || data;
-        for (const connection of this.getConnections()) {
+        for (const connection of getConnections()) {
           connection.dispatchEncoded(encodedData);
         }
       },
@@ -130,7 +195,7 @@ export class RpcConnect {
     const [
       isError,
       result,
-    ] = await middleware(coder?.decode(encodedArgs) || encodedArgs || []);
+    ] = await middleware(coder?.decode(encodedArgs) || encodedArgs || [], context);
 
     this.sendMessage([
       TRpcType.Result,
@@ -148,7 +213,7 @@ export class RpcConnect {
     middleware?: (fn: (args: any) => Promise<any>, args: any) => Promise<any>,
   ) {
     return this.invokeBase(
-      requestId, encodedArgs, async (args) => {
+      requestId, encodedArgs, async (args, context) => {
         let result: any;
         let isError = 0;
 
@@ -159,7 +224,16 @@ export class RpcConnect {
 
         try {
           if (method) {
-            const callback = (args: any) => method.apply(methodCtx?.[0], args);
+            // The method's synchronous start runs with its call current — what `useCall()` captures (D-055)
+            const callback = (args: any) => {
+              const previous = currentCall;
+              currentCall = context;
+              try {
+                return method.apply(methodCtx?.[0], args);
+              } finally {
+                currentCall = previous;
+              }
+            };
             result = await (middleware ? middleware(callback, args) : callback(args));
           } else {
             isError = 1;
