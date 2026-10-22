@@ -1,4 +1,7 @@
 import {
+  collect,
+} from './collect';
+import {
   read as simpleRead,
 } from '../read';
 
@@ -19,14 +22,6 @@ export function read(
   onReadable?: () => void,
 ): Promise<any[]> {
   const stream = simpleRead(path, options);
-  if (onReadable) {
-    stream.on('readable', onReadable);
-  }
-  return new Promise<any[]>((resolve, reject) => {
-    const items: any[] = [];
-    stream.on('data', (item: any) => items.push(item));
-    stream.on('end', () => resolve(items));
-    stream.on('error', reject);
-  });
+  return collect(stream, onReadable);
 }
 

@@ -1,4 +1,7 @@
 import {
+  collect,
+} from './collect';
+import {
   readUnopened as simpleReadUnopened,
 } from '../readUnopened';
 
@@ -19,14 +22,6 @@ export function readUnopened(
   onReadable?: () => void,
 ): Promise<any[]> {
   const stream = simpleReadUnopened(path, options);
-  if (onReadable) {
-    stream.on('readable', onReadable);
-  }
-  return new Promise<any[]>((resolve, reject) => {
-    const items: any[] = [];
-    stream.on('data', (item: any) => items.push(item));
-    stream.on('end', () => resolve(items));
-    stream.on('error', reject);
-  });
+  return collect(stream, onReadable);
 }
 

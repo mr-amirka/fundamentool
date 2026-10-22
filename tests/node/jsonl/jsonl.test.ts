@@ -250,6 +250,27 @@ describe('node/jsonl/promisify — read', () => {
     });
   });
 
+  test('with onReadable it is told when records are ready — and still resolves with them all', async () => {
+    const dir = tmpDir();
+    const path = join(dir, 'told.jsonl');
+    writeFileSync(path, '{"n":1}\n{"n":2}\n');
+    const told = jest.fn();
+    await expect(promisify.read(
+      path, undefined, told,
+    )).resolves.toEqual([
+      {
+        n: 1,
+      },
+      {
+        n: 2,
+      },
+    ]);
+    expect(told).toHaveBeenCalled();
+    rmSync(dir, {
+      recursive: true,
+    });
+  });
+
   test('resolves with empty array for empty file', async () => {
     const dir = tmpDir();
     const path = join(dir, 'empty.jsonl');
