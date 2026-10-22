@@ -99,6 +99,8 @@ export type TNumberSchema = TSchema<number> & {
   int(): TNumberSchema;
   /** Not `Infinity` (zod's `.finite()`). */
   finite(): TNumberSchema;
+  /** Above 0 (zod's `.positive()`). */
+  positive(): TNumberSchema;
 };
 
 /** A problem at `path`: "expects …, got …". */
@@ -241,33 +243,51 @@ export const unknown = (): TSchema<unknown> => make(
  * number().int().min(0).parse(-1, WHERE); // TypeError: …: expects a whole number ≥ 0, got number -1
  */
 export function number(): TNumberSchema {
-  const build = (
-    min: number | null, int: boolean, finite: boolean,
-  ): TNumberSchema => {
-    const expected = (int ? 'a whole number' : finite ? 'a finite number' : 'a number') + (min === null ? '' : ` ≥ ${min}`);
-    const base = make<number>(
-      'number', expected, (value, path) => (typeof value === 'number' && !Number.isNaN(value)
-        && (!int || Number.isInteger(value)) && (!finite || Number.isFinite(value)) && (min === null || value >= min)
-        ? null : wrong(
+  const build = (bounds: { min: number | null;
+    int: boolean;
+    finite: boolean;
+    positive: boolean }): TNumberSchema => {
+    const {
+      min,
+      int,
+      finite,
+      positive,
+    } = bounds;
+    const expected = (int ? 'a whole number' : finite ? 'a finite number' : 'a number')
+      + (positive ? ' > 0' : '') + (min === null ? '' : ` ≥ ${min}`);
+    const fits = (value: unknown): boolean => typeof value === 'number' && !Number.isNaN(value)
+      && (!int || Number.isInteger(value)) && (!finite || Number.isFinite(value)) && (!positive || value > 0)
+      && (min === null || value >= min);
+    return {
+      ...make<number>(
+        'number', expected, (value, path) => (fits(value) ? null : wrong(
           path, expected, value,
         )),
-    );
-    return {
-      ...base,
-      min: (n: number) => build(
-        n, int, finite,
       ),
-      int: () => build(
-        min, true, finite,
-      ),
-      finite: () => build(
-        min, int, true,
-      ),
+      min: (n: number) => build({
+        ...bounds,
+        min: n,
+      }),
+      int: () => build({
+        ...bounds,
+        int: true,
+      }),
+      finite: () => build({
+        ...bounds,
+        finite: true,
+      }),
+      positive: () => build({
+        ...bounds,
+        positive: true,
+      }),
     };
   };
-  return build(
-    null, false, false,
-  );
+  return build({
+    min: null,
+    int: false,
+    finite: false,
+    positive: false,
+  });
 }
 
 /** Exactly `value` (`===`). */

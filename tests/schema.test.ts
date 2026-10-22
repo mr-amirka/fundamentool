@@ -45,6 +45,9 @@ describe('schema', () => {
     expect(messageOf(number().min(0), -1)).toBe(`${WHERE}: expects a number ≥ 0, got number -1`);
     expect(messageOf(number().int().min(0), 1.5)).toBe(`${WHERE}: expects a whole number ≥ 0, got number 1.5`);
     expect(messageOf(number().min(0).int(), 3)).toBeNull();
+    expect(messageOf(number().positive(), 0)).toBe(`${WHERE}: expects a number > 0, got number 0`);
+    expect(messageOf(number().finite().positive(), Infinity)).toBe(`${WHERE}: expects a finite number > 0, got number Infinity`);
+    expect(messageOf(number().finite().positive(), 2)).toBeNull();
     expect(messageOf(literal('page'), 'window')).toBe(`${WHERE}: expects string "page", got string "window"`);
     expect(messageOf(literal(2), 2)).toBeNull();
     expect(messageOf(custom((value) => value instanceof Date, 'a date'), 'today')).toBe(`${WHERE}: expects a date, got string "today"`);
