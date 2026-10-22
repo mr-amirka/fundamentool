@@ -1,21 +1,8 @@
 import {
-  assertKnownOptions,
-} from './assertKnownOptions';
-import {
-  describeValue,
-} from './describeValue';
-import {
-  isDefined,
-} from './is/isDefined';
-import {
-  isFunction,
-} from './is/isFunction';
-import {
-  isNumber,
-} from './is/isNumber';
-import {
-  isObject,
-} from './is/isObject';
+  func,
+  number,
+  object,
+} from './schema';
 import {
   wait,
 } from './wait';
@@ -26,28 +13,21 @@ export type TWithAsyncLockOptions = {
   minMs?: number;
 };
 
+/** {@link withAsyncLock}'s options (D-051). */
+const OPTIONS = object({
+  minMs: number().finite().min(0).optional(),
+});
+
 /** The single list of accepted keys of {@link TWithAsyncLockOptions}. */
-export const WITH_ASYNC_LOCK_OPTION_KEYS = ['minMs'] as const;
+export const WITH_ASYNC_LOCK_OPTION_KEYS = OPTIONS.keys;
 
 const WHERE = '[fundamentool] withAsyncLock';
 
-/** Checks the arguments once, at creation (lab convention `api-input-validation.md`). */
+/** Checks the arguments once, at creation (lab convention `api-input-validation.md`); `null` options — none. */
 function assertArguments(fn: unknown, options: unknown): void {
-  if (!isFunction(fn)) {
-    throw new TypeError(`${WHERE}: expects a function, got ${describeValue(fn)}`);
-  }
-  if (!isDefined(options)) {
-    return;
-  }
-  if (!isObject(options)) {
-    throw new TypeError(`${WHERE}: expects an options object, got ${describeValue(options)}`);
-  }
-  assertKnownOptions(
-    WHERE, options, WITH_ASYNC_LOCK_OPTION_KEYS,
-  );
-  const minMs = (options as TWithAsyncLockOptions).minMs;
-  if (isDefined(minMs) && !(isNumber(minMs) && minMs >= 0 && Number.isFinite(minMs))) {
-    throw new TypeError(`${WHERE}: option "minMs" expects a number ≥ 0, got ${describeValue(minMs)}`);
+  func().parse(fn, WHERE);
+  if (options !== null) {
+    OPTIONS.optional().parse(options, WHERE);
   }
 }
 

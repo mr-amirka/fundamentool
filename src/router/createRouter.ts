@@ -1,7 +1,9 @@
 // A router (fundamentool D-038, D-039): one part of the history — its location, its steps and its `params`.
 import {
-  assertKnownOptions,
-} from '../assertKnownOptions';
+  custom,
+  func,
+  object,
+} from '../schema';
 import {
   describeValue,
 } from '../describeValue';
@@ -41,12 +43,12 @@ import {
   locate,
 } from './location';
 import {
-  assertFlags,
-  BACK_OPTION_KEYS,
-  PARAMS_OPTION_KEYS,
-  STEP_OPTION_KEYS,
+  BACK_OPTIONS,
+  PARAMS_OPTIONS,
+  STEP_OPTIONS,
 } from './options';
 import type {
+  THistoryPrimitive,
   TParamsOptions,
   TRouter,
   TRouterDeps,
@@ -57,11 +59,17 @@ import type {
 const WHERE = '[fundamentool] createRouter';
 
 /** The single list of `createRouter`'s keys. */
-export const ROUTER_DEPS_KEYS = [
-  'historyPrimitive',
-  'createObservable',
-  'createApi',
-] as const;
+/** `createRouter`'s options (D-051): its history part, the observable adapter. */
+const ROUTER_DEPS = object({
+  historyPrimitive: custom<THistoryPrimitive>((value) => isObject(value)
+    && isFunction((value as THistoryPrimitive).push)
+    && isFunction((value as THistoryPrimitive).watch), 'a history primitive (e.g. browserHistoryPrimitivesProvider(window).hash)'),
+  createObservable: func(),
+  createApi: func(),
+});
+
+/** The single list of `createRouter`'s keys. */
+export const ROUTER_DEPS_KEYS = ROUTER_DEPS.keys;
 
 /** An empty query, shared (never changed). */
 const NO_QUERY: TParams = {};
@@ -69,27 +77,6 @@ const NO_QUERY: TParams = {};
 const getPath = (location: TUrlProps): string => location.path || ROOT_PATH;
 const getQuery = (location: TUrlProps): TParams => location.query || NO_QUERY;
 
-/** `createRouter`'s dependencies, checked on creation (api-input-validation.md). */
-function assertRouterDeps(deps: TRouterDeps): void {
-  if (!isObject(deps)) {
-    throw new TypeError(`${WHERE}: expects an options object, got ${describeValue(deps)}`);
-  }
-  assertKnownOptions(
-    WHERE, deps, ROUTER_DEPS_KEYS,
-  );
-  const primitive = deps.historyPrimitive;
-  if (!isObject(primitive) || !isFunction(primitive.push) || !isFunction(primitive.watch)) {
-    throw new TypeError(`${WHERE}: "historyPrimitive" expects a history primitive (e.g. browserHistoryPrimitivesProvider(window).hash), got ${describeValue(primitive)}`);
-  }
-  for (const key of [
-    'createObservable',
-    'createApi',
-  ] as const) {
-    if (!isFunction(deps[key])) {
-      throw new TypeError(`${WHERE}: "${key}" expects a function, got ${describeValue(deps[key])}`);
-    }
-  }
-}
 
 /** A location with the keys of `query` set over its own (`undefined` / `null` — the key removed). */
 function withQuery(query: TParams, values: Record<string, unknown>): TParams {
@@ -120,7 +107,7 @@ function withQuery(query: TParams, values: Record<string, unknown>): TParams {
  * button.onclick = router.backLocationThrottled;
  */
 export function createRouter(deps: TRouterDeps): TRouter {
-  assertRouterDeps(deps);
+  ROUTER_DEPS.parse(deps, WHERE);
   const {
     historyPrimitive,
     createObservable,
@@ -215,18 +202,14 @@ export function createRouter(deps: TRouterDeps): TRouter {
   );
 
   async function pushLocation(change: Partial<TUrlProps>, options?: TStepOptions): Promise<TUrlProps> {
-    assertFlags(
-      `${WHERE} pushLocation`, options, STEP_OPTION_KEYS,
-    );
+    STEP_OPTIONS.parse(options, `${WHERE} pushLocation`);
     return step(
       change, false, options,
     );
   }
 
   async function replaceLocation(change: Partial<TUrlProps>, options?: TStepOptions): Promise<TUrlProps> {
-    assertFlags(
-      `${WHERE} replaceLocation`, options, STEP_OPTION_KEYS,
-    );
+    STEP_OPTIONS.parse(options, `${WHERE} replaceLocation`);
     return step(
       change, true, options,
     );
@@ -249,9 +232,7 @@ export function createRouter(deps: TRouterDeps): TRouter {
     pushLocation,
     replaceLocation,
     async extendLocation(change, options) {
-      assertFlags(
-        `${WHERE} extendLocation`, options, PARAMS_OPTION_KEYS,
-      );
+      PARAMS_OPTIONS.parse(options, `${WHERE} extendLocation`);
       return extend(change, options);
     },
     backLocation,
@@ -259,9 +240,7 @@ export function createRouter(deps: TRouterDeps): TRouter {
       if (!Number.isInteger(count) || count < 1) {
         throw new TypeError(`${WHERE} backRepeat: expects a whole number of steps ≥ 1, got ${describeValue(count)}`);
       }
-      assertFlags(
-        `${WHERE} backRepeat`, options, BACK_OPTION_KEYS,
-      );
+      BACK_OPTIONS.parse(options, `${WHERE} backRepeat`);
       return driver.back(count, options);
     },
     pushLocationThrottled: withAsyncLock(pushLocation, {
@@ -321,9 +300,7 @@ export function createRouter(deps: TRouterDeps): TRouter {
         [key]: value,
       }, options),
       assign(values, options) {
-        assertFlags(
-          `${WHERE} params`, options, PARAMS_OPTION_KEYS,
-        );
+        PARAMS_OPTIONS.parse(options, `${WHERE} params`);
         const next = withQuery(query, values);
         if (!isEqual(next, query)) {
           query = next;
@@ -337,9 +314,7 @@ export function createRouter(deps: TRouterDeps): TRouter {
       }, options),
       getKeys: () => Object.keys(query),
       clear(options) {
-        assertFlags(
-          `${WHERE} params`, options, PARAMS_OPTION_KEYS,
-        );
+        PARAMS_OPTIONS.parse(options, `${WHERE} params`);
         if (Object.keys(query).length) {
           query = NO_QUERY;
           write({}, options);

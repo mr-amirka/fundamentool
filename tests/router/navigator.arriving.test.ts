@@ -529,7 +529,7 @@ describe('createNavigator — arriving by a link (D-050)', () => {
       const stop = navigator.onBeforeEnter(() => 'yes' as never);
       await expect(router.pushLocation({
         path: '/x',
-      })).rejects.toThrow(/onBeforeEnter: a guard answers true, false or a location \(\{ path, … \}\), got string "yes"/);
+      })).rejects.toThrow(/onBeforeEnter: a guard's answer: expects true, false or a location \(\{ path, … \}\), got string "yes"/);
       stop();
       navigator.onBeforeEnter(({
         location,
@@ -908,7 +908,7 @@ describe('createNavigator — arriving by a link (D-050)', () => {
         gates: {
           a: 5,
         } as never,
-      })).toThrow(/the gate "a" expects \{ closed, to \}, got number 5/);
+      })).toThrow(/the gate "a": expects \{ closed, to \}, got number 5/);
       expect(() => createNavigator({
         ...deps(),
         gates: {
@@ -948,7 +948,7 @@ describe('createNavigator — arriving by a link (D-050)', () => {
             to: '/a',
           },
         } as never,
-      })).toThrow(/the gate "a": "to" expects a location \(\{ path, query, … \}\), got string "\/a"/);
+      })).toThrow(/the gate "a": "to" expects its first page \(\{ path, … \}\), got string "\/a"/);
 
       const gated = createNavigator({
         ...deps(),
@@ -964,7 +964,7 @@ describe('createNavigator — arriving by a link (D-050)', () => {
             },
           ],
         ],
-      })).toThrow(/the row "\/onboarding": "gate" expects the name of a gate \(createNavigator\(\{ gates \}\)\), got string "onbording"\. Did you mean "onboarding"\?/);
+      })).toThrow(/the row "\/onboarding": "gate" expects one of onboarding, got string "onbording"\. Did you mean "onboarding"\?/);
       expect(() => gated.NavigationHostProvider({
         routes: [
           [
@@ -975,7 +975,7 @@ describe('createNavigator — arriving by a link (D-050)', () => {
             },
           ],
         ],
-      })).toThrow(/got number 5\. Gates: onboarding/);
+      })).toThrow(/"gate" expects one of onboarding, got number 5/);
       expect(() => gated.NavigationHostProvider({
         routes: [
           [
@@ -996,7 +996,7 @@ describe('createNavigator — arriving by a link (D-050)', () => {
             },
           ],
         ],
-      })).toThrow(/Gates: none/);
+      })).toThrow(/"gate" expects one of none, got string "x"/);
     });
   });
 });

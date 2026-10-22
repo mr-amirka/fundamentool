@@ -1,15 +1,6 @@
 // Links for any router (fundamentool D-049): `Link` — a real `<a href>` that steps through the router;
 // `NavLink` — marked active while its address is shown. A navigator's `nav.Link` / `nav.NavLink` are these.
 import {
-  describeValue,
-} from '../describeValue';
-import {
-  isFunction,
-} from '../is/isFunction';
-import {
-  isObject,
-} from '../is/isObject';
-import {
   locate,
   pathPrefix,
   resolveHref,
@@ -24,8 +15,14 @@ import {
   withAsyncLock,
 } from '../withAsyncLock';
 import {
-  assertViewLibrary,
+  viewLibraryShape,
 } from './library';
+import {
+  object,
+} from '../schema';
+import {
+  ROUTER,
+} from '../router/schemas';
 import type {
   TViewLibrary,
 } from './library';
@@ -34,6 +31,17 @@ import {
 } from './viewHooksProvider';
 
 const WHERE = '[fundamentool] linksProvider';
+
+/** What `linksProvider` takes: the router and the view library's members it uses (the rest may come along). */
+const LINKS_DEPS = object({
+  router: ROUTER,
+  ...viewLibraryShape([
+    'createElement',
+    'forwardRef',
+    'useSyncExternalStore',
+    'useRef',
+  ]),
+}).passthrough();
 
 /** A link's props: where it goes, and the anchor's own. */
 export type TLinkProps = {
@@ -111,21 +119,8 @@ function browserClick(event: TClickEvent, anchor: Record<string, unknown>): bool
  * <NavLink href="/catalog" activeAsParent>Catalog</NavLink>
  */
 export function linksProvider(deps: TLinksDeps) {
-  if (!isObject(deps)) {
-    throw new TypeError(`${WHERE}: expects an options object, got ${describeValue(deps)}`);
-  }
+  LINKS_DEPS.parse(deps, WHERE);
   const router = deps.router;
-  if (!isObject(router) || !isFunction(router.pushLocation) || !isObject(router.historyPrimitive)) {
-    throw new TypeError(`${WHERE}: "router" expects a router (createRouter(…)), got ${describeValue(router)}`);
-  }
-  assertViewLibrary(
-    WHERE, deps, [
-      'createElement',
-      'forwardRef',
-      'useSyncExternalStore',
-      'useRef',
-    ],
-  );
   const {
     createElement: h,
     forwardRef,

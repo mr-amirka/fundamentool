@@ -25,10 +25,13 @@ import {
   memoryHistoryPrimitivesProvider,
 } from '../../src/router';
 import {
-  assertViewLibrary,
   linksProvider,
   VIEW_LIBRARY_KEYS,
+  viewLibraryShape,
 } from '../../src/view';
+import {
+  object,
+} from '../../src/schema';
 import type {
   TLinkProps,
   TViewLibrary,
@@ -363,9 +366,10 @@ describe('linksProvider — a router without a navigator', () => {
       useContext: React.useContext,
     };
     expect([...VIEW_LIBRARY_KEYS].sort()).toEqual(Object.keys(library).sort());
-    expect(() => assertViewLibrary(
-      '[x]', library, VIEW_LIBRARY_KEYS,
-    )).not.toThrow();
+    // The shape: the members needed must be functions, the rest may be left out
+    const shape = object(viewLibraryShape(['useRef']));
+    expect(() => shape.parse(library, '[x]')).not.toThrow();
+    expect(() => shape.parse({}, '[x]')).toThrow('[x]: "useRef" expects the view library\'s function (React\'s, Preact\'s), got undefined');
   });
 
   it('checks what it is given', () => {

@@ -39,6 +39,7 @@ npm run docs:api
 | `fundamentool` | Универсальные утилиты (строки, объекты, массивы, типовые проверки и т.д.) |
 | `fundamentool/async` | Асинхронные итераторы, параллельное выполнение, последовательность |
 | `fundamentool/is` | Предикаты типов (`isString`, `isEqual`, `isMatch` и др.) |
+| `fundamentool/schema` | Схемы опций с именами zod: `object`, `array`, `string`, … — проверка, тип и список ключей из одного описания ([README](src/schema/README.ru.md)) |
 | `fundamentool/join` | Утилиты склейки строк |
 | `fundamentool/split` | Утилиты разбиения строк |
 | `fundamentool/jsonl` | Сериализация JSON Lines |

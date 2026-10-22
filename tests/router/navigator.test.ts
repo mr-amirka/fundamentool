@@ -133,7 +133,7 @@ describe('createNavigator — options', () => {
     } as never)).toThrow(/"routes" expects the route table/);
     expect(() => nav.NavigationHostProvider({
       routes: ['/'],
-    } as never)).toThrow(/a row of "routes" expects \[pattern, \{ … \}\]/);
+    } as never)).toThrow(/a row of "routes": expects \[pattern, \{ … \}\]/);
     expect(() => nav.NavigationHostProvider({
       routes: [
         [

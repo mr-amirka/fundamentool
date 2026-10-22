@@ -66,6 +66,6 @@ flips.
 
 | File | What's in it |
 |------|--------------|
-| `library.ts` | `TViewLibrary`, `VIEW_LIBRARY_KEYS`, `assertViewLibrary` |
+| `library.ts` | `TViewLibrary`, `VIEW_LIBRARY_KEYS`, `viewLibraryShape` (the library as a schema shape, `fundamentool/schema`) |
 | `viewHooksProvider.ts` | `useUnit`, `useStoreMap` |
 | `linksProvider.ts` | `Link`, `NavLink` |

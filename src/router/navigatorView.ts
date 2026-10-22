@@ -2,21 +2,21 @@
 // table, the hooks of the entry a component is rendered in, and `Link` / `NavLink` — built on fundamentool's view
 // bindings (`viewHooksProvider`, `linksProvider`, D-049).
 import {
-  assertKnownOptions,
-  nearestKnown,
-} from '../assertKnownOptions';
-import {
-  describeValue,
-} from '../describeValue';
+  array,
+  boolean,
+  func,
+  object,
+  oneOf,
+  string,
+  tuple,
+  unknown,
+} from '../schema';
 import {
   isArray,
 } from '../is/isArray';
 import {
   isFunction,
 } from '../is/isFunction';
-import {
-  isObject,
-} from '../is/isObject';
 import type {
   Observable,
 } from '../Observable/types';
@@ -53,19 +53,38 @@ import type {
 
 const WHERE = '[fundamentool] createNavigator';
 
-/** The single list of `NavigationHostProvider`'s option keys. */
-export const NAVIGATION_HOST_OPTION_KEYS = [
-  'routes',
-  'render',
-  'renderWindow',
-] as const;
+/** A row's label in a message: its pattern. */
+const rowLabel = (row: unknown): string => (isArray(row) && typeof row[0] === 'string' ? `the row "${row[0]}"` : 'a row of "routes"');
 
-/** The navigator's flags of a row. */
-const ROW_FLAGS = [
-  'keep',
-  'section',
-  'quietQuery',
-] as const;
+/**
+ * `NavigationHostProvider`'s options (D-051): the route table — each row `[pattern, { main, keep, section, quietQuery,
+ * gate, …the app's own }]` — and the drawing functions. `gateNames` — the navigator's gates (a row's `gate` names one).
+ */
+function hostOptions(gateNames: readonly string[]) {
+  const ROW = object({
+    main: unknown(),
+    keep: boolean().optional(),
+    section: boolean().optional(),
+    quietQuery: boolean().optional(),
+    gate: oneOf(gateNames).optional(),
+  }).passthrough();
+  return object({
+    routes: array(tuple([
+      string(),
+      ROW,
+    ]).describe('[pattern, { … }]').label(rowLabel)).describe('the route table ([pattern, row][])'),
+    render: func().optional(),
+    renderWindow: func().optional(),
+  }).refine((options) => options.render !== undefined || options.routes.every(([, row]) => row.main !== undefined),
+    (options) => `${rowLabel(options.routes.find(([, row]) => row.main === undefined))} has no "main" — give it one, or a "render" that draws the row`).refine((options) => {
+    const root = options.routes.find(([, row]) => row.section);
+    return !root || isFixedPattern(root[0]);
+  },
+  (options) => `the start section's root "${options.routes.find(([, row]) => row.section)?.[0]}" is put under deep links — it needs a path without parameters`);
+}
+
+/** The single list of `NavigationHostProvider`'s option keys. */
+export const NAVIGATION_HOST_OPTION_KEYS = hostOptions([]).keys;
 
 /** A page layer: its own scroll container (keeps its scroll under `display: none` — research web-games 02 §6.1). */
 const LAYER = {
@@ -91,54 +110,6 @@ export type TNavigatorCore = {
   gateNames: readonly string[];
 };
 
-function assertHostOptions(options: TNavigationHostOptions, gateNames: readonly string[]): void {
-  if (!isObject(options) || isArray(options)) {
-    throw new TypeError(`${WHERE} NavigationHostProvider: expects an options object, got ${describeValue(options)}`);
-  }
-  assertKnownOptions(
-    `${WHERE} NavigationHostProvider`, options, NAVIGATION_HOST_OPTION_KEYS,
-  );
-  const routes = options.routes;
-  if (!isArray(routes)) {
-    throw new TypeError(`${WHERE} NavigationHostProvider: "routes" expects the route table ([pattern, row][]), got ${describeValue(routes)}`);
-  }
-  let firstRoot = true;
-  for (const row of routes) {
-    if (!isArray(row) || typeof row[0] !== 'string' || !isObject(row[1])) {
-      throw new TypeError(`${WHERE} NavigationHostProvider: a row of "routes" expects [pattern, { … }], got ${describeValue(row)}`);
-    }
-    const pattern = row[0];
-    const fields = row[1] as TRouteRow[1] & { main?: unknown };
-    if (!options.render && fields.main === undefined) {
-      throw new TypeError(`${WHERE} NavigationHostProvider: the row "${pattern}" has no "main" — give it one, or a "render" that draws the row`);
-    }
-    for (const key of ROW_FLAGS) {
-      const value = fields[key];
-      if (value !== undefined && typeof value !== 'boolean') {
-        throw new TypeError(`${WHERE} NavigationHostProvider: the row "${pattern}": "${key}" expects true or false, got ${describeValue(value)}`);
-      }
-    }
-    const gate = fields.gate;
-    if (gate !== undefined && (typeof gate !== 'string' || !gateNames.includes(gate))) {
-      const near = typeof gate === 'string' ? nearestKnown(gate, gateNames) : '';
-      throw new TypeError(`${WHERE} NavigationHostProvider: the row "${pattern}": "gate" expects the name of a gate (createNavigator({ gates })), got ${describeValue(gate)}${near ? `. Did you mean "${near}"?` : `. Gates: ${gateNames.join(', ') || 'none'}`}`);
-    }
-    if (fields.section && firstRoot) {
-      firstRoot = false;
-      if (!isFixedPattern(pattern)) {
-        throw new TypeError(`${WHERE} NavigationHostProvider: the start section's root "${pattern}" is put under deep links — it needs a path without parameters`);
-      }
-    }
-  }
-  for (const key of [
-    'render',
-    'renderWindow',
-  ] as const) {
-    if (options[key] !== undefined && !isFunction(options[key])) {
-      throw new TypeError(`${WHERE} NavigationHostProvider: "${key}" expects a function, got ${describeValue(options[key])}`);
-    }
-  }
-}
 
 /** An entry's facts the fact hooks read (D-047, D-049). */
 type TEntryFact = 'confirmingLeave' | 'leaveGuarded';
@@ -167,6 +138,8 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
     setRoutes,
     rootOf,
   } = core;
+  /** The host's options, with the navigator's gate names (a row's `gate`). */
+  const HOST_OPTIONS = hostOptions(core.gateNames);
   const {
     useUnit,
     useStoreMap,
@@ -248,7 +221,7 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
    * root.render(<NavigationHost />);
    */
   function NavigationHostProvider<R = Record<string, unknown>>(options: TNavigationHostOptions<R>): () => unknown {
-    assertHostOptions(options as TNavigationHostOptions, core.gateNames);
+    HOST_OPTIONS.parse(options, `${WHERE} NavigationHostProvider`);
     // Called for every layer and window at every render: taken from the options once (D-035).
     const {
       routes,

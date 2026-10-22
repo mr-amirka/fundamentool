@@ -43,6 +43,11 @@
       "import": "./dist/esm/is/index.js",
       "default": "./dist/is/index.js"
     },
+    "./schema": {
+      "types": "./dist/schema/index.d.ts",
+      "import": "./dist/esm/schema/index.js",
+      "default": "./dist/schema/index.js"
+    },
     "./join": {
       "types": "./dist/join/index.d.ts",
       "import": "./dist/esm/join/index.js",

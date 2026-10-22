@@ -66,6 +66,18 @@ export function nearestKnown(key: string, known: readonly string[]): string {
 }
 
 /**
+ * The message for an option outside `known`: with the nearest known one ("did you mean"), or the list of them — the
+ * one place it is written (`assertKnownOptions`, `fundamentool/schema`'s objects).
+ *
+ * @example
+ * unknownOptionText('kep', ['keep']); // => 'unknown option "kep". Did you mean "keep"?'
+ */
+export function unknownOptionText(key: string, known: readonly string[]): string {
+  const best = nearestKnown(key, known);
+  return best ? `unknown option "${key}". Did you mean "${best}"?` : `unknown option "${key}". Known options: ${known.join(', ')}`;
+}
+
+/**
  * Throws if `options` has a key outside `known` (`undefined` values are treated as absent).
  *
  * @param where   - prefix for messages, e.g. `[fundamentool] createNavigation`.
@@ -85,9 +97,6 @@ export function assertKnownOptions(
     if (record[key] === undefined || known.includes(key)) {
       continue;
     }
-    const best = nearestKnown(key, known);
-    throw new TypeError(best
-      ? `${where}: unknown option "${key}". Did you mean "${best}"?`
-      : `${where}: unknown option "${key}". Known options: ${known.join(', ')}`);
+    throw new TypeError(`${where}: ${unknownOptionText(key, known)}`);
   }
 }

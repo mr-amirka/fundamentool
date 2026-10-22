@@ -66,6 +66,6 @@ const confirming = useStoreMap({
 
 | Файл | Что в нём |
 |------|-----------|
-| `library.ts` | `TViewLibrary`, `VIEW_LIBRARY_KEYS`, `assertViewLibrary` |
+| `library.ts` | `TViewLibrary`, `VIEW_LIBRARY_KEYS`, `viewLibraryShape` (библиотека как форма схемы, `fundamentool/schema`) |
 | `viewHooksProvider.ts` | `useUnit`, `useStoreMap` |
 | `linksProvider.ts` | `Link`, `NavLink` |

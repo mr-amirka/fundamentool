@@ -2,14 +2,8 @@
 // of the history: every page and every window is an entry, so Back closes the top one; Forward brings back what Back
 // left (D-024); covered pages can stay mounted; tabs keep their own histories; the stack survives a reload.
 import {
-  assertKnownOptions,
-} from '../assertKnownOptions';
-import {
   createTimeout,
 } from '../createTimeout';
-import {
-  describeValue,
-} from '../describeValue';
 import {
   isArray,
 } from '../is/isArray';
@@ -29,9 +23,22 @@ import {
   isStore,
 } from '../Observable';
 import {
-  assertViewLibrary,
-  VIEW_LIBRARY_KEYS,
+  viewLibraryShape,
 } from '../view/library';
+import {
+  array,
+  boolean,
+  custom,
+  func,
+  number,
+  object,
+  record,
+  union,
+} from '../schema';
+import {
+  LOCATION,
+  ROUTER,
+} from './schemas';
 import {
   queueProvider,
 } from '../queueProvider';
@@ -61,9 +68,8 @@ import {
   createNavigatorView,
 } from './navigatorView';
 import {
-  assertFlags,
-  BACK_OPTION_KEYS,
-  STEP_OPTION_KEYS,
+  BACK_OPTIONS,
+  STEP_OPTIONS,
 } from './options';
 import {
   fixedPathOf,
@@ -96,53 +102,66 @@ import type {
 
 const WHERE = '[fundamentool] createNavigator';
 
-/** The observable adapter's members (functions). */
-const ADAPTER_DEPS = [
-  'createObservable',
-  'createApi',
-] as const;
+/** A gate (D-050): its store and its first page. */
+const GATE = object({
+  closed: custom<TStore<boolean>>(isStore, 'a store of true / false (getState + watch)'),
+  to: LOCATION.describe('its first page ({ path, … })'),
+}).describe('{ closed, to }').label((_gate, name) => `the gate "${name}"`);
 
-/** The view library's members the navigator uses (the rest of the library may come along). */
-const VIEW_DEPS = [
-  'createElement',
-  'forwardRef',
-  'useSyncExternalStore',
-  'useEffect',
-  'useRef',
-  'createContext',
-  'useContext',
-] as const;
-
-/** The settings that are numbers ≥ 0. */
-const NUMBER_DEPS = [
-  'keep',
-  'exitMs',
-] as const;
+/** `createNavigator`'s options (D-051): the router, the observable adapter, the view library, the settings. */
+const NAVIGATOR_DEPS = object({
+  router: ROUTER,
+  createObservable: func(),
+  createApi: func(),
+  ...viewLibraryShape([
+    'createElement',
+    'forwardRef',
+    'useSyncExternalStore',
+    'useEffect',
+    'useRef',
+    'createContext',
+    'useContext',
+  ]),
+  keep: number().min(0).optional(),
+  exitMs: number().min(0).optional(),
+  fallback: LOCATION.optional(),
+  gates: record(GATE).describe('{ [name]: { closed, to } }').optional(),
+});
 
 /** The single list of `createNavigator`'s keys. */
-export const NAVIGATOR_DEPS_KEYS = [
-  'router',
-  ...ADAPTER_DEPS,
-  ...VIEW_LIBRARY_KEYS,
-  ...NUMBER_DEPS,
-  'fallback',
-  'gates',
-] as const;
+export const NAVIGATOR_DEPS_KEYS = NAVIGATOR_DEPS.keys;
 
 /** The single list of a gate's keys (D-050). */
-export const GATE_KEYS = [
-  'closed',
-  'to',
-] as const;
+export const GATE_KEYS = GATE.keys;
+
+/** `open`'s options. */
+const OPEN_OPTIONS = object({
+  reopen: boolean().optional(),
+});
+
+/** The single list of `open`'s option keys. */
+export const OPEN_OPTION_KEYS = OPEN_OPTIONS.keys;
+
+/** `startOver`'s argument: a location, or a non-empty list of them. */
+const START_OVER = union([
+  LOCATION,
+  array(LOCATION).refine((list) => list.length > 0, 'an empty list'),
+]).describe('a location ({ path, query, … }) or a non-empty list of them');
+
+/** `backToDepth`'s depth. */
+const DEPTH = number().int().min(0).describe('a depth (a whole number ≥ 0)');
+
+/** What an entry guard answers. */
+const ENTER_ANSWER = union([
+  boolean(),
+  LOCATION,
+]).describe('true, false or a location ({ path, … })');
 
 /** At most this many redirects of the entry guards in a row — more is a loop. */
 const MAX_REDIRECTS = 10;
 
 /** A gate as the navigator keeps it: its name, its store (`true` — closed), its first page. */
 type TGateItem = [name: string, closed: TStore<boolean>, to: Partial<TUrlProps>];
-
-/** The single list of `open`'s option keys. */
-export const OPEN_OPTION_KEYS = ['reopen'] as const;
 
 /** An entry as the history keeps it (to rebuild the stack after a reload): a page's address and tab, a window's place. */
 type TSaved = [kind: typeof PAGE, id: number, href: string, section: string | null, historyIndex: number]
@@ -196,78 +215,6 @@ function isNavData(value: unknown): value is TNavData {
   return isObject(value) && (value as TNavData).nav === NAV_FORMAT && isNumber((value as TNavData).depth);
 }
 
-function assertNavigatorDeps(deps: TNavigatorDeps): void {
-  if (!isObject(deps)) {
-    throw new TypeError(`${WHERE}: expects an options object, got ${describeValue(deps)}`);
-  }
-  assertKnownOptions(
-    WHERE, deps, NAVIGATOR_DEPS_KEYS,
-  );
-  if (!isObject(deps.router) || !isFunction(deps.router.attach)) {
-    throw new TypeError(`${WHERE}: "router" expects a router (createRouter(…)), got ${describeValue(deps.router)}`);
-  }
-  for (const key of ADAPTER_DEPS) {
-    if (!isFunction(deps[key])) {
-      throw new TypeError(`${WHERE}: "${key}" expects a function, got ${describeValue(deps[key])}`);
-    }
-  }
-  assertViewLibrary(
-    WHERE, deps, VIEW_DEPS,
-  );
-  for (const key of NUMBER_DEPS) {
-    const value = deps[key];
-    if (value !== undefined && !(isNumber(value) && value >= 0)) {
-      throw new TypeError(`${WHERE}: "${key}" expects a number ≥ 0, got ${describeValue(value)}`);
-    }
-  }
-  assertLocation(
-    WHERE, 'fallback', deps.fallback,
-  );
-  assertGates(deps.gates);
-}
-
-/** `gates`: left out, or `{ [name]: { closed, to } }` — a store of `true` / `false` and a location (D-050). */
-function assertGates(gates: unknown): void {
-  if (gates === undefined) {
-    return;
-  }
-  if (!isObject(gates) || isArray(gates)) {
-    throw new TypeError(`${WHERE}: "gates" expects { [name]: { closed, to } }, got ${describeValue(gates)}`);
-  }
-  for (const name of Object.keys(gates)) {
-    const gate = (gates as Record<string, unknown>)[name];
-    const where = `${WHERE}: the gate "${name}"`;
-    if (!isObject(gate) || isArray(gate)) {
-      throw new TypeError(`${where} expects { closed, to }, got ${describeValue(gate)}`);
-    }
-    assertKnownOptions(
-      where, gate, GATE_KEYS,
-    );
-    const {
-      closed,
-      to,
-    } = gate as TGate;
-    if (!isStore(closed)) {
-      throw new TypeError(`${where}: "closed" expects a store of true / false (getState + watch), got ${describeValue(closed)}`);
-    }
-    if (to === undefined) {
-      throw new TypeError(`${where}: "to" expects its first page ({ path, … }), got undefined`);
-    }
-    assertLocation(
-      where, 'to', to,
-    );
-  }
-}
-
-/** A location option (`fallback`): left out, or an object (`{ path, query, … }`). */
-function assertLocation(
-  where: string, key: string, value: unknown,
-): void {
-  if (value !== undefined && (!isObject(value) || isArray(value))) {
-    throw new TypeError(`${where}: "${key}" expects a location ({ path, query, … }), got ${describeValue(value)}`);
-  }
-}
-
 /**
  * Pages and windows over a router (fundamentool D-038): the router's steps become pages (`router.pushLocation` opens
  * one, `router.backLocation` closes the top entry asking its leave guards); `open` puts a window over the page. The
@@ -279,7 +226,7 @@ function assertLocation(
  * const answer = await nav.open(ConfirmWindow, { text: 'Quit?' });
  */
 export function createNavigator(deps: TNavigatorDeps) {
-  assertNavigatorDeps(deps);
+  NAVIGATOR_DEPS.parse(deps, WHERE);
   const {
     router,
     createObservable,
@@ -1112,13 +1059,9 @@ export function createNavigator(deps: TNavigatorDeps) {
    * await nav.startOver([{ path: '/' }, { path: '/place/5' }]); // the place shown; Back goes home
    */
   async function startOver(change: Partial<TUrlProps> | readonly Partial<TUrlProps>[], options?: TStepOptions): Promise<void> {
+    START_OVER.parse(change, `${WHERE} startOver`);
     const list = isArray(change) ? change : [change];
-    if (!list.length || list.some((item) => !isObject(item) || isArray(item))) {
-      throw new TypeError(`${WHERE} startOver: expects a location ({ path, query, … }) or a non-empty list of them, got ${describeValue(change)}`);
-    }
-    assertFlags(
-      `${WHERE} startOver`, options, STEP_OPTION_KEYS,
-    );
+    STEP_OPTIONS.parse(options, `${WHERE} startOver`);
     const locations: TUrlProps[] = [];
     let base = topPage(entries).location;
     for (const item of list) {
@@ -1151,14 +1094,7 @@ export function createNavigator(deps: TNavigatorDeps) {
     params?: unknown,
     options?: TOpenOptions,
   ): Promise<R | null> {
-    if (options !== undefined) {
-      if (!isObject(options) || isArray(options)) {
-        throw new TypeError(`${WHERE} open: expects an options object, got ${describeValue(options)}`);
-      }
-      assertKnownOptions(
-        `${WHERE} open`, options, OPEN_OPTION_KEYS,
-      );
-    }
+    OPEN_OPTIONS.optional().parse(options, `${WHERE} open`);
     if (hasForward(WINDOW) && !(await askForward(WINDOW))) {
       return null;
     }
@@ -1238,12 +1174,8 @@ export function createNavigator(deps: TNavigatorDeps) {
    * await nav.open(SignIn);
    */
   async function backToDepth(depth: number, options?: TBackOptions): Promise<boolean> {
-    if (!Number.isInteger(depth) || depth < 0) {
-      throw new TypeError(`${WHERE} backToDepth: expects a depth (a whole number ≥ 0), got ${describeValue(depth)}`);
-    }
-    assertFlags(
-      `${WHERE} backToDepth`, options, BACK_OPTION_KEYS,
-    );
+    DEPTH.parse(depth, `${WHERE} backToDepth`);
+    BACK_OPTIONS.parse(options, `${WHERE} backToDepth`);
     return backTo(
       () => depth, !!options?.force, !!options?.quiet,
     );
@@ -1364,10 +1296,7 @@ export function createNavigator(deps: TNavigatorDeps) {
     for (const item of enterGuards.slice()) {
       const answer = item.guard(target);
       if (answer !== true) {
-        if (answer !== false && (!isObject(answer) || isArray(answer))) {
-          throw new TypeError(`${WHERE} onBeforeEnter: a guard answers true, false or a location ({ path, … }), got ${describeValue(answer)}`);
-        }
-        return answer;
+        return ENTER_ANSWER.parse(answer, `${WHERE} onBeforeEnter: a guard's answer`);
       }
     }
     return true;
@@ -1580,9 +1509,7 @@ export function createNavigator(deps: TNavigatorDeps) {
    * nav.onBeforeEnter(({ location }) => (location.path === '/old-shop' ? { path: '/shop' } : true));      // moved
    */
   function onBeforeEnter(guard: TEnterGuard): () => void {
-    if (!isFunction(guard)) {
-      throw new TypeError(`${WHERE} onBeforeEnter: expects a function, got ${describeValue(guard)}`);
-    }
+    func().parse(guard, `${WHERE} onBeforeEnter`);
     const item = {
       guard,
     };

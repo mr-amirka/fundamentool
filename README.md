@@ -41,6 +41,7 @@ npm run docs:api
 | `fundamentool` | Universal utilities: string, object, array, events, timers, type predicates |
 | `fundamentool/async` | Async iteration, parallel execution, sequencing |
 | `fundamentool/is` | Type predicates: `isString`, `isEqual`, `isMatch`, and 34 more |
+| `fundamentool/schema` | Option schemas with zod's names: `object`, `array`, `string`, … — the check, the type and the key list from one description ([README](src/schema/README.md)) |
 | `fundamentool/join` | String join helpers |
 | `fundamentool/split` | String split helpers |
 | `fundamentool/jsonl` | JSON Lines serialization / deserialization |

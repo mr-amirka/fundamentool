@@ -96,7 +96,7 @@ describe('withAsyncLock', () => {
       () => withAsyncLock(async () => 1, {
         minMs: -1,
       }),
-      /option "minMs" expects a number ≥ 0, got number -1/,
+      /"minMs" expects a finite number ≥ 0, got number -1/,
     ],
   ])('%s → a clear error', (
     _name, call, message,
