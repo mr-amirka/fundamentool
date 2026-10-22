@@ -58,3 +58,63 @@ describe('copyTextToClipboard', () => {
     expect(() => copyTextToClipboard('text', win as any)).not.toThrow();
   });
 });
+
+describe('copyTextToClipboard — the page\'s window, failures', () => {
+  it('no window given: the page\'s own', () => {
+    const writeText = jest.fn(() => Promise.resolve());
+    (globalThis as any).window = {
+      navigator: {
+        clipboard: {
+          writeText,
+        },
+      },
+    };
+    try {
+      copyTextToClipboard('hi');
+    } finally {
+      delete (globalThis as any).window;
+    }
+    expect(writeText).toHaveBeenCalledWith('hi');
+  });
+
+  it('the clipboard refuses, the old copy command throws: logged, nothing thrown; the textarea removed', async () => {
+    const error = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    try {
+      const refused = new Error('denied');
+      copyTextToClipboard('hi', {
+        navigator: {
+          clipboard: {
+            writeText: () => Promise.reject(refused),
+          },
+        },
+      });
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(error).toHaveBeenCalledWith('copyTextToClipboard: Could not copy text: ', refused);
+
+      const failure = new Error('no copy');
+      const textArea = {
+        style: {},
+        focus: jest.fn(),
+        select: jest.fn(),
+      };
+      const body = {
+        appendChild: jest.fn(),
+        removeChild: jest.fn(),
+      };
+      copyTextToClipboard('hi', {
+        document: {
+          createElement: () => textArea,
+          body,
+          execCommand: () => {
+            throw failure;
+          },
+        },
+      });
+      expect(error).toHaveBeenCalledWith('fallbackCopyTextToClipboard: unable to copy', failure);
+      expect(body.removeChild).toHaveBeenCalledWith(textArea);
+    } finally {
+      error.mockRestore();
+    }
+  });
+});

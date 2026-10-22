@@ -59,10 +59,10 @@ export function stylesRenderProvider(doc: TStylesRenderDocument, prefix: string)
   function getNode(id: string): any {
     let node = doc.getElementById(id);
     if (!node) {
-      head = head || doc.head;
       node = doc.createElement('style');
       node.setAttribute('id', id);
-      head && head.appendChild(node);
+      // Called only by the render, which has found the head (or returned)
+      head.appendChild(node);
     }
     return node;
   }

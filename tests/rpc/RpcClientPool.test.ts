@@ -225,3 +225,64 @@ describe('RpcClientPool', () => {
     cleanup();
   });
 });
+
+describe('RpcClientPool — options as a function, on, proxy', () => {
+  it('options may be a function; one worker by default; on() and proxy() go to a worker; getWorkers() — none', async () => {
+    const unsubscribe = () => undefined;
+    const api = {
+      ping: () => undefined,
+    };
+    const subscriptions: unknown[] = [];
+    let made = 0;
+    const pool = new RpcClientPool(() => ({
+      workerProvider: () => {
+        made++;
+        return {
+          call: () => Promise.resolve(),
+          on: (...args: unknown[]) => {
+            subscriptions.push(args);
+            return unsubscribe;
+          },
+          proxy: () => Promise.resolve(api),
+          taskCount: () => 1, // busy: still the only one
+          destroy: () => undefined,
+        } as any;
+      },
+    }));
+    const options = {
+      timeout: 5,
+    };
+    expect(pool.on(
+      'tick', [1], options,
+    )).toBe(unsubscribe);
+    expect(subscriptions).toEqual([
+      [
+        'tick',
+        [1],
+        options,
+      ],
+    ]);
+    await expect(pool.proxy()).resolves.toBe(api);
+    expect(made).toBe(1); // maxWorkers: 1 by default
+    expect(pool.getWorkers()).toEqual([]);
+    pool.destroy();
+  });
+
+  it('an idle worker is reused — not a new one', () => {
+    let made = 0;
+    const pool = new RpcClientPool({
+      maxWorkers: 3,
+      workerProvider: () => {
+        made++;
+        return {
+          call: () => Promise.resolve(),
+          taskCount: () => 0,
+          destroy: () => undefined,
+        } as any;
+      },
+    });
+    expect(pool.getWorker()).toBe(pool.getWorker());
+    expect(made).toBe(1);
+    pool.destroy();
+  });
+});

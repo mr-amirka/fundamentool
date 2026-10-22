@@ -1252,7 +1252,7 @@ export function createNavigator(deps: TNavigatorDeps) {
    */
   function backlinkOf(location: TUrlProps): [link: TUrlProps, back: TUrlProps | null] {
     const param = deps.externalLinks?.backlinkParam;
-    const query = location.query || {};
+    const query = location.query; // always an object: a location is parsed (`locate`)
     if (!param || !(param in query)) {
       return [
         location,

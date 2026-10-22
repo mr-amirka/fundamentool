@@ -1208,4 +1208,41 @@ describe('createNavigator — external links and sections (D-053)', () => {
       } as never,
     })).toThrow(/"externalLinks"\."section" expects one of shown, none, got string "nowhere"/);
   });
+
+  it('a backlink that isn\'t text (`?back=5` — read as a number), or empty: as no backlink', async () => {
+    const {
+      navigator, paths,
+    } = setup({
+      routes: PLAIN,
+      externalLinks: {
+        backlinkParam: 'back',
+      },
+    }, '/home');
+    await navigator.openExternalLink(urlParse('/item/7?back=5'));
+    await navigator.openExternalLink(urlParse('/item/8?back='));
+    expect(paths()).toEqual([
+      '/home',
+      '/item/7',
+      '/item/8',
+    ]);
+  });
+
+  it('a link the moment a gate closes, before its page is shown: held, the gate\'s page shown', async () => {
+    const {
+      $signedOut, gates,
+    } = signIn(false);
+    const {
+      navigator, paths,
+    } = setup({
+      routes: SIGN_IN,
+      gates,
+    }, '/home');
+    $signedOut.setState(true); // signed out: the gate's page is on its way
+    await navigator.openExternalLink({
+      path: '/item/7',
+    });
+    await settle();
+    expect(paths()).toEqual(['/signin']);
+    expect(heldPath(navigator)).toBe('/item/7');
+  });
 });

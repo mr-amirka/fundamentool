@@ -276,8 +276,8 @@ describe.each([
     });
     await expect(result).resolves.toBe('ok');
     await library.act(() => waitFor(() => expect(container.querySelector('[data-window="edit"]')?.getAttribute('data-open')).toBe('false')));
-    // The exit ends on a timer: wait for the state, then let the view render it.
-    await waitFor(() => expect(nav.getState().leaving).toHaveLength(0));
+    // The exit ends on a timer: wait for it inside act — the timer's state update renders the view
+    await library.act(() => waitFor(() => expect(nav.getState().leaving).toHaveLength(0)));
     await library.act(() => settle(1));
     expect(container.querySelector('[data-window]')).toBeNull();
   });

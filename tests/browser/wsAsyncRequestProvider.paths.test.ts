@@ -310,4 +310,36 @@ describe('browser/wsAsyncRequestProvider — every path', () => {
     await next;
     void first;
   });
+
+  it('close() while onReconnect runs: when it returns, nothing reconnects; a sent request waiting for its answer rejects', async () => {
+    let resume: () => void = () => undefined;
+    const request = wsAsyncRequestProvider('ws://x', {
+      onReconnect: () => new Promise<void>((resolve) => {
+        resume = resolve;
+      }),
+    });
+    const waiting = request('a');
+    const socket = last();
+    socket.onopen?.();
+    await flush();
+    expect(sentOf(socket)).toHaveLength(1); // sent: it waits for its answer
+    const answered = request('b');
+    await flush();
+    socket.onclose?.(new Error('lost')); // onReconnect starts
+    await flush();
+    const sockets = FakeWebSocket.instances.length;
+    (request as any).close();
+    await expect(waiting).rejects.toThrow('Connection is closed');
+    await expect(answered).rejects.toThrow('Connection is closed');
+    resume();
+    await flush();
+    expect(FakeWebSocket.instances.length).toBe(sockets); // closed: no new socket
+
+    const open = wsAsyncRequestProvider('ws://x');
+    const inFlight = open('c');
+    last().onopen?.();
+    await flush();
+    (open as any).close(); // sent, no answer yet
+    await expect(inFlight).rejects.toThrow('Connection is closed');
+  });
 });

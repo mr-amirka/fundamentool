@@ -185,4 +185,19 @@ describe('stylesRenderProvider', () => {
       },
     ])).not.toThrow();
   });
+
+  test('an item without content: an empty sheet', () => {
+    const {
+      doc, headChildren,
+    } = makeDoc();
+    const render = stylesRenderProvider(doc, 'app-');
+    render([
+      {
+        name: 'empty',
+        revision: 1,
+      } as never,
+    ]);
+    expect(headChildren).toHaveLength(1);
+    expect(doc.createTextNode).toHaveBeenCalledWith('');
+  });
 });
