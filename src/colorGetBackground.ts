@@ -1,6 +1,8 @@
 import {
   color,
 } from './color';
+
+const CLOSE = ')';
 import {
   push,
 } from './push';
@@ -114,9 +116,9 @@ export const colorGetBackground = (input: string, alt?: boolean): string[] => {
   const several = l > 1;
   if (alt) {
     if (several) {
-      push(gradient, joinComma(outputRgb) + ')');
+      push(gradient, joinComma(outputRgb) + CLOSE);
       if (hasAlpha) {
-        push(gradient, joinComma(outputRgba) + ')');
+        push(gradient, joinComma(outputRgba) + CLOSE);
       }
     }
     return gradient;
@@ -124,7 +126,7 @@ export const colorGetBackground = (input: string, alt?: boolean): string[] => {
 
   // Without `alt` a color is one string (rgba when it has alpha): one list
   if (several) {
-    return [joinComma(outputRgb) + ')'];
+    return [joinComma(outputRgb) + CLOSE];
   }
 
   return gradient;

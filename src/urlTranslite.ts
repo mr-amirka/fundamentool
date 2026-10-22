@@ -1,12 +1,13 @@
 const SPACE = '-';
+const E = 'e';
 const TRANSLITE: Record<string, string> = {
   'а': 'a',
   'б': 'b',
   'в': 'v',
   'г': 'g',
   'д': 'd',
-  'е': 'e',
-  'ё': 'e',
+  'е': E,
+  'ё': E,
   'ж': 'zh',
   'з': 'z',
   'и': 'i',
@@ -28,7 +29,7 @@ const TRANSLITE: Record<string, string> = {
   'ш': 'sh',
   'щ': 'sh',
   'ы': 'y',
-  'э': 'e',
+  'э': E,
   'ю': 'yu',
   'я': 'ya',
 };

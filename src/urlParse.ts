@@ -5,6 +5,10 @@
 import {
   unparam,
 } from './unparam';
+
+const SLASH = '/';
+const AT = '@';
+const SCHEME_END = '://';
 import {
   isDefined,
 } from './is/isDefined';
@@ -65,7 +69,7 @@ export const urlParse = (href: string): TUrlProps => {
   let unsearch = (parts = half(unhash, '?'))[0];
   let search = parts[1];
 
-  if (!search && unsearch.indexOf('/') == -1 && unsearch.indexOf('=') > -1) { // eslint-disable-line
+  if (!search && unsearch.indexOf(SLASH) == -1 && unsearch.indexOf('=') > -1) { // eslint-disable-line
     search = unsearch;
     unsearch = '';
   }
@@ -73,18 +77,18 @@ export const urlParse = (href: string): TUrlProps => {
   const query = unparam(search);
   const child = hash ? urlParse(hash) : null;
   const protocol = (parts = half(
-    unsearch, '://', 1,
+    unsearch, SCHEME_END, 1,
   ))[0];
   const basePath = parts[1];
 
-  parts = protocol ? half(basePath, '/') : [
+  parts = protocol ? half(basePath, SLASH) : [
     '',
     basePath,
   ];
 
-  const path = (parts[2] ? '/' : '') + parts[1];
+  const path = (parts[2] ? SLASH : '') + parts[1];
   const userpart = (parts = half(
-    parts[0], '@', true,
+    parts[0], AT, true,
   ))[0];
   const userParts = half(userpart, ':');
   const username = userParts[0];
@@ -93,14 +97,14 @@ export const urlParse = (href: string): TUrlProps => {
   const hostname = protocol ? (parts = half(host, ':'))[0] : '';
   const port = protocol ? parts[1] : '';
   // An address has no port: `ann@host.io`, not `ann@host.io:8080`
-  const email = username ? username + '@' + hostname : '';
-  const login = userpart ? userpart + '@' + host : '';
-  const unpath = login ? protocol + '://' + login : host ? protocol + '://' + host : '';
+  const email = username ? username + AT + hostname : '';
+  const login = userpart ? userpart + AT + host : '';
+  const unpath = login ? protocol + SCHEME_END + login : host ? protocol + SCHEME_END + host : '';
 
   parts = halfLast(
-    path, '/', true,
+    path, SLASH, true,
   );
-  const dirname = parts[0] + (parts[2] ? '/' : '');
+  const dirname = parts[0] + (parts[2] ? SLASH : '');
   const filename = parts[1];
   const unalias = unpath + dirname;
   const alias = (parts = halfLast(filename, '.'))[0];

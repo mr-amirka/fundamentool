@@ -2,6 +2,9 @@ import {
   lowerFirst,
 } from './lowerFirst';
 
+const COMMA = ',';
+const ZERO = '0';
+
 const regexpTrimZero = /^0+|0+$/g;
 const regexpColor = /^([A-Fa-f0-9]+)(\.[0-9]+)?$/;
 const regexpVar = /^(-)?(--[^;,]+)(,([^;]+))?;?$/;
@@ -45,7 +48,7 @@ export const color: IColor = (v: string, alt?: boolean): string[] => {
   if (m) {
     return [
       (m[1] === '-' ? 'env' : 'var')
-      + '(' + m[2] + (m[4] ? ',' + m[4] : '') + ')',
+      + '(' + m[2] + (m[4] ? COMMA + m[4] : '') + ')',
     ];
   }
 
@@ -82,7 +85,7 @@ const double = color.double = (v: string, start: number): number => parseInt(v.s
  * @returns An array of color values.
  */
 const normalize = color.normalize = (v: string, alpha?: string | null): [number, number, number, number] => {
-  const a = alpha ? parseFloat('0' + alpha) : 1;
+  const a = alpha ? parseFloat(ZERO + alpha) : 1;
   if (!v) {
     return [
       0,
@@ -179,9 +182,9 @@ const base = color.base = (rgbaColor: [number, number, number, number], alt?: bo
   if (alpha < 1) {
     const v =
       'rgba('
-      + tmp.join(',')
-      + ','
-      + (alpha ? alpha.toFixed(2).replace(regexpTrimZero, '') : '0')
+      + tmp.join(COMMA)
+      + COMMA
+      + (alpha ? alpha.toFixed(2).replace(regexpTrimZero, '') : ZERO)
       + ')';
     return alt ? [
       rgbStringify(tmp),
@@ -208,7 +211,7 @@ const rgbStringify = color.rgbStringify = (rgb: number[]): string => {
   while (i--) {
     let v = rgb[i].toString(16);
     if (v.length < 2) {
-      v = '0' + v;
+      v = ZERO + v;
     }
     if (v[0] !== v[1]) {
       oneFlag = 0;

@@ -4,6 +4,8 @@
 import {
   attachEvent,
 } from '../attachEvent';
+
+const HASH = '#';
 import {
   isObject,
 } from '../is/isObject';
@@ -80,7 +82,7 @@ type TPartRule = {
 };
 
 /** The address an entry shows: `url#hash`. */
-const addressOf = (entry: TStoredEntry): string => (entry.hash ? entry.url + '#' + entry.hash : entry.url);
+const addressOf = (entry: TStoredEntry): string => (entry.hash ? entry.url + HASH + entry.hash : entry.url);
 
 const RULES: Record<THistoryPart, TPartRule> = {
   [URL_PART]: {
@@ -99,7 +101,7 @@ const RULES: Record<THistoryPart, TPartRule> = {
       href,
       ROOT_PATH,
     ],
-    show: (href) => '#' + href,
+    show: (href) => HASH + href,
   },
   [STATE_PART]: {
     read: (entry) => entry.state.state,
@@ -349,7 +351,7 @@ export function memoryHistoryPrimitivesProvider(start = ROOT_PATH): TMemoryHisto
   const [
     url,
     hash = '',
-  ] = start.split('#');
+  ] = start.split(HASH);
   const entries: TStoredEntry[] = [
     {
       url: url || ROOT_PATH,

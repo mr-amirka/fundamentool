@@ -6,6 +6,9 @@ import {
   nearestKnown as nearestOf,
   unknownOptionText,
 } from '../assertKnownOptions';
+
+const COLON = ':';
+const INDEX = 'index';
 import {
   describeValue,
 } from '../describeValue';
@@ -145,17 +148,17 @@ function render(problem: TProblem): string {
     text,
   ] of problem.path) {
     if (kind === 'label') {
-      head = text + ':';
-    } else if (kind === 'index') {
-      head += (head.endsWith(':') ? ' ' : '') + `[${text}]`;
+      head = text + COLON;
+    } else if (kind === INDEX) {
+      head += (head.endsWith(COLON) ? ' ' : '') + `[${text}]`;
     } else {
-      head += (head && !head.endsWith(':') ? '.' : head ? ' ' : '') + `"${text}"`;
+      head += (head && !head.endsWith(COLON) ? '.' : head ? ' ' : '') + `"${text}"`;
     }
   }
   if (!head) {
     return problem.text;
   }
-  const labelled = head.endsWith(':');
+  const labelled = head.endsWith(COLON);
   return problem.unknownKey && !labelled ? `${head}: ${problem.text}` : `${head} ${problem.text}`;
 }
 
@@ -381,7 +384,7 @@ export function array<T>(item: TSchema<T>): TSchema<T[]> {
         item,
         part,
         deeper(
-          path, 'index', String(i),
+          path, INDEX, String(i),
         ),
       ]))
       : wrong(
@@ -399,7 +402,7 @@ export function tuple<const S extends readonly TSchema<unknown>[]>(items: S): TS
         item,
         value[i],
         item.kind === 'object' ? path : deeper(
-          path, 'index', String(i),
+          path, INDEX, String(i),
         ),
       ]))
       : wrong(

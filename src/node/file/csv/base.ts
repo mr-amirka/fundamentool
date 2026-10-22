@@ -2,6 +2,9 @@ import {
   write as writeFile,
   read as readFile,
 } from '../base';
+
+const EXTENSION = '.csv';
+const ENCODING = 'utf8';
 import {
   parse,
   parseEachLine,
@@ -20,7 +23,7 @@ import {
  */
 export const write = (path: string, data: any) => {
   return writeFile(
-    path + '.csv', stringify(data), 'utf8',
+    path + EXTENSION, stringify(data), ENCODING,
   );
 };
 
@@ -34,7 +37,7 @@ export const write = (path: string, data: any) => {
  * const rows = await read('/data/report'); // => [[1, 2], [3, 4]]
  */
 export const read = async (path: string, output: any[][] = []) => {
-  return parse(await readFile(path + '.csv', 'utf8'), output);
+  return parse(await readFile(path + EXTENSION, ENCODING), output);
 };
 
 /**
@@ -47,5 +50,5 @@ export const read = async (path: string, output: any[][] = []) => {
  * await readEachLine('/data/report', (row) => console.log(row));
  */
 export const readEachLine = async (path: string, callback: TParseEachLineCallback) => {
-  parseEachLine(await readFile(path + '.csv', 'utf8'), callback);
+  parseEachLine(await readFile(path + EXTENSION, ENCODING), callback);
 };

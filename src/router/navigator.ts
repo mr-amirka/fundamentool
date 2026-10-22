@@ -4,6 +4,9 @@
 import {
   createTimeout,
 } from '../createTimeout';
+
+/** `externalLinks.section`: a link in no section (D-053). */
+const NO_SECTION = 'none';
 import {
   isArray,
 } from '../is/isArray';
@@ -132,7 +135,7 @@ const NAVIGATOR_DEPS = object({
     backlinkParam: string().optional(),
     section: oneOf([
       'shown',
-      'none',
+      NO_SECTION,
     ]).optional(),
   }).optional(),
 });
@@ -1305,7 +1308,7 @@ export function createNavigator(deps: TNavigatorDeps) {
       pushIn(link, named);
       return;
     }
-    pushIn(link, deps.externalLinks?.section === 'none' ? null : shown);
+    pushIn(link, deps.externalLinks?.section === NO_SECTION ? null : shown);
   }
 
   /**
@@ -1640,7 +1643,7 @@ export function createNavigator(deps: TNavigatorDeps) {
     quietStep = true;
     reset(back && named ? back : homeRoot as TUrlProps);
     quietStep = false;
-    pushIn(link, back && named ? named : deps.externalLinks?.section === 'none' ? null : shown);
+    pushIn(link, back && named ? named : deps.externalLinks?.section === NO_SECTION ? null : shown);
   }
 
   /**

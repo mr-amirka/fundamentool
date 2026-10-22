@@ -12,6 +12,8 @@ import {
   TRpcUnsubscribe,
   IRpcClient,
 } from './types';
+
+const ABORT = 'abort';
 import {
   RpcCoder,
 } from './RpcCoder';
@@ -42,7 +44,7 @@ import {
  */
 export class RpcClient extends EventEmitter implements IRpcClient {
   // 'pause' и 'continue' пока не проксируются в события клиента
-  static DEFAULT_EVENTS = ['abort'];
+  static DEFAULT_EVENTS = [ABORT];
 
   private nextCallbackCallIndex = 0;
   private taskMap = new Map<string, TRpcClientTask>();
@@ -186,7 +188,7 @@ export class RpcClient extends EventEmitter implements IRpcClient {
 
         timeout && unsubscriber.add(createTimeout(() => {
           abort('The method execution timeout has been reached');
-          this.sendEvent(requestId, 'abort');
+          this.sendEvent(requestId, ABORT);
         }, timeout));
 
         signal && [
@@ -195,7 +197,7 @@ export class RpcClient extends EventEmitter implements IRpcClient {
         ].forEach((eventName) => {
           unsubscriber.add(attachEvent(
             signal, eventName, (e: Event) => {
-              if (eventName === 'abort') {
+              if (eventName === ABORT) {
                 abort('The method execution was aborted');
               }
               this.sendEvent(
