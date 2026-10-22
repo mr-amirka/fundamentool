@@ -42,17 +42,47 @@ function withPathParts(v: Partial<TUrlProps>): Partial<TUrlProps> {
 
 export * from './urlParse';
 
+/** A scheme at the start of an address: `https:`, `mailto:`, `file:`. */
+const SCHEME = /^[a-z][a-z\d+.-]*:/i;
+/** The origin a base without one is read against — only what follows it is taken back. */
+const LOCAL_ORIGIN = 'http://url-extend.local';
+
 /**
- * Merges two URL descriptors (string or `TUrlProps`) into a single `TUrlProps`.
+ * `ref` read against `base` as a browser reads an `<a href>` (RFC 3986 §5, by the platform's `URL`), for a base with or
+ * without a scheme and a host.
+ */
+function resolveString(base: string, ref: string): string {
+  if (SCHEME.test(base)) {
+    try {
+      return new URL(ref, base).href;
+    } catch {
+      throw new Error(`urlExtend: can't read "${ref}" against "${base}" — the base isn't an address`);
+    }
+  }
+  if (SCHEME.test(ref) || ref.startsWith('//')) {
+    return ref; // its own address: no base needed (and none with a scheme to lend)
+  }
+  const rooted = !base || base[0] === '/';
+  const url = new URL(ref, LOCAL_ORIGIN + (rooted ? '' : '/') + base);
+  const resolved = url.pathname + url.search + url.hash;
+  return rooted ? (base ? resolved : resolved.slice(1)) : resolved.slice(1);
+}
+
+/**
+ * Extends a URL: `_src` over `_first`.
  *
- * Fields from `_src` override fields from `_first`; query objects are deep-merged.
+ * - `_src` an object — its fields over `_first`'s; the queries merged.
+ * - `_src` a string — read against `_first` as a browser reads an `<a href>` (D-056): `'?x=1'` keeps the path and
+ *   replaces the query, `'#/b'` keeps both, `'/c'` keeps the scheme and host, `'c'` / `'../c'` — relative to the
+ *   base's directory, `'https://…'` / `'//host/…'` — itself.
  *
  * @param _first - Base URL or partial URL object.
- * @param _src - Override URL or partial URL object.
- * @returns Merged `TUrlProps` with a fully reconstructed `href`.
+ * @param _src - Override URL object, or an `href` to read against the base.
+ * @returns `TUrlProps` with a fully reconstructed `href`.
  * @example
- * urlExtend('https://example.com/page', { query: { v: 2 } }).href;
- * // => 'https://example.com/page?v=2'
+ * urlExtend('https://example.com/page', { query: { v: 2 } }).href; // => 'https://example.com/page?v=2'
+ * urlExtend('/a?y=2', '?x=1').href;                                  // => '/a?x=1'
+ * urlExtend('https://example.com/docs/guide', '../api').href;        // => 'https://example.com/api'
  */
 export const urlExtend = (_first?:
     | (Partial<TUrlOptions> & {
@@ -68,6 +98,10 @@ _src?:
     | string
     | null
     | undefined): TUrlProps => {
+  if (typeof _src === 'string') {
+    const base = typeof _first === 'string' ? _first : urlExtend(_first, null).href;
+    return urlParse(resolveString(base, _src));
+  }
   const first = normalize(_first);
   const src = normalize(_src);
 

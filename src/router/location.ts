@@ -39,9 +39,6 @@ export function pathPrefix(path: string): string {
   return path.endsWith(SEGMENT_SEPARATOR) ? path : path + SEGMENT_SEPARATOR;
 }
 
-/** The origin a relative `href` is resolved against — any will do: only the path and the query are read back. */
-const RESOLVE_BASE = 'http://router.local';
-
 /**
  * A link's `href` read the way `<a href>` reads it, against the current location of the router's part: `/x` —
  * absolute, `?q=1` — the current path with this query, `42` / `../x` — relative to the current path's folder.
@@ -51,6 +48,7 @@ const RESOLVE_BASE = 'http://router.local';
  * resolveHref('42', urlParse('/catalog/')); // => /catalog/42
  */
 export function resolveHref(href: string, current: TUrlProps): TUrlProps {
-  const url = new URL(href, RESOLVE_BASE + (current.href || ROOT_PATH));
-  return urlParse(url.pathname + url.search);
+  // urlExtend reads a string as `<a href>` does (D-056); the router's part keeps the path and the query
+  const target = urlExtend(current.href || ROOT_PATH, href);
+  return urlParse(target.path + (target.search ? '?' + target.search : ''));
 }

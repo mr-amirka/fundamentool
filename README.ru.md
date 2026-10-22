@@ -89,7 +89,8 @@ MIT
 ### URL, роутинг и HTTP‑окружение
 
 - **urlParse** (`urlParse.ts`): низкоуровневый разбор URL в богатую структуру (`TUrlProps`), включая `query`, `hash`, `child`.
-- **urlExtend** (`urlExtend.ts`): комбинирование base URL и частичных структур URL (`TUrlOptions`), для модификации query/path.
+- **urlExtend** (`urlExtend.ts`): объект поверх base URL (`TUrlOptions`: поля поверх, query сливаются); строка читается
+  относительно base, как `<a href>` (`'/a?y=2'` + `'?x=1'` → `'/a?x=1'`, D-056).
 - **unparam** (`unparam.ts`): разбор query‑строки в объект (в т.ч. вложенные структуры и массивы по скобочной нотации).
 - **routeParseProvider** (`routeParseProvider.ts`): генератор regexp+маппера по route‑шаблону (используется в таблице маршрутов роутера).
 - **regexpMapperProvider** (`regexpMapperProvider.ts`): привязка regexp `exec` к мапперу значений (в том числе для роутинга).
