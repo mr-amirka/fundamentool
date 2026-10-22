@@ -72,11 +72,9 @@ export const ProviderOfTransformFrom = (env: IJsonlTransformFromEnv): IJsonlTran
         let current: string | undefined;
 
         for (; i < length; i++) {
+          // A line ends at '\n'; the '\r' of Windows' '\r\n' is whitespace to JSON.parse
           if (text[i] === '\n') {
             current = text.slice(start, i);
-            if (text[i + 1] === '\r') {
-              i++;
-            }
             start = i + 1;
             if (prev) {
               current = prev + current;
@@ -102,16 +100,16 @@ export const ProviderOfTransformFrom = (env: IJsonlTransformFromEnv): IJsonlTran
       };
 
       self._flush = (done: (err?: any) => void) => {
-        try {
-          prev && self.push(originalParse(prev));
-        } catch (error) {
-          return done(getLineError(error));
+        if (prev) {
+          // The last line, with no '\n' after it — counted like the others
+          lineCount++;
+          try {
+            self.push(originalParse(prev));
+          } catch (error) {
+            return done(getLineError(error));
+          }
         }
         done();
-
-        function getLineError(error: any): Error {
-          return new Error(`Parse error on line ${lineCount}:\n${error.toString()}`);
-        }
       };
     }) as any;
 };

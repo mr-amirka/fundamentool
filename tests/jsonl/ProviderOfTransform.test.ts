@@ -111,6 +111,54 @@ describe('ProviderOfTransformFrom', () => {
   });
 });
 
+describe('ProviderOfTransformFrom — line endings, the line of an error', () => {
+  it('Windows\' \\r\\n lines parse', async () => {
+    const TransformFrom = ProviderOfTransformFrom(env) as any;
+    const stream = new TransformFrom();
+    const result = collectFrom(stream);
+    stream.end('{"a":1}\r\n{"a":2}\r\n');
+    await expect(result).resolves.toEqual([
+      {
+        a: 1,
+      },
+      {
+        a: 2,
+      },
+    ]);
+  });
+
+  it('a line split over three chunks', async () => {
+    const TransformFrom = ProviderOfTransformFrom(env) as any;
+    const stream = new TransformFrom();
+    const result = collectFrom(stream);
+    stream.write('{"a"');
+    stream.write(':');
+    stream.end('1}\n');
+    await expect(result).resolves.toEqual([
+      {
+        a: 1,
+      },
+    ]);
+  });
+
+  it.each([
+    [
+      'the last line, no newline after it',
+      '{"a":1}\n{bad',
+    ],
+    [
+      'a line in the middle',
+      '{"a":1}\n{bad\n{"a":3}\n',
+    ],
+  ])('an error on %s names that line', async (_case, text) => {
+    const TransformFrom = ProviderOfTransformFrom(env) as any;
+    const stream = new TransformFrom();
+    const result = collectFrom(stream);
+    stream.end(text);
+    await expect(result).rejects.toThrow(/^Parse error on line 2:/);
+  });
+});
+
 describe('ProviderOfTransformTo', () => {
   test('stringifies an object to JSONL line', async () => {
     const TransformTo = ProviderOfTransformTo(env) as any;

@@ -99,3 +99,15 @@ describe('cssPropertiesStringifyProvider — the plain forms', () => {
       + 'display:-webkit-box!important;display:flex!important');
   });
 });
+
+describe('cssPropertiesParseSimple — a property given twice', () => {
+  it('each value once, the last declaration first; a line without a name or a value is skipped', () => {
+    expect(cssPropertiesParseSimple('color: red; color: blue; color: red; margin-top: 1px; bad; :x')).toEqual({
+      marginTop: ['1px'],
+      color: [
+        'red',
+        'blue',
+      ],
+    });
+  });
+});

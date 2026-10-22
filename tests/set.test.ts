@@ -116,3 +116,26 @@ describe('set — lists and new items', () => {
     });
   });
 });
+
+describe('set — the root, an array-like\'s length', () => {
+  it('no object to set into: a new object (a list for `[]`); an array-like\'s length follows the item added', () => {
+    expect(setBase(
+      null, ['a'], 1,
+    )).toEqual({
+      a: 1,
+    });
+    expect(setBase(
+      undefined, ['[]'], 1,
+    )).toEqual([1]);
+    const like: Record<string, unknown> = {
+      length: 0,
+    };
+    expect(setBase(
+      like, ['[]'], 'x',
+    )).toBe(like);
+    expect(like).toEqual({
+      0: 'x',
+      length: 1,
+    });
+  });
+});

@@ -15,7 +15,7 @@ let _JSONP_CALLBACK_INDEX = 0;
  *
  * @param url - Base request URL (without `callback` param).
  * @param params - Query params appended to the URL.
- * @returns Promise resolved with the JSONP callback payload.
+ * @returns Promise resolved with the JSONP callback payload; rejected when the script fails to load.
  * @example
  * const data = await jsonpRequest('https://api.example.com/data', { id: 1 });
  */
@@ -36,11 +36,19 @@ export const jsonpRequest = (url: string, params?: Record<string, any>) => {
       },
     }).href;
     // script.src = `https://api.vk.com/method/users.get?user_ids=210700286&fields=bdate&v=5.199&callback=${jsonpCallbakName}`;
-    head.appendChild(script);
-    GLOBAL_CONTEXT[jsonpCallbakName] = (response: any) => {
+    const cleanUp = () => {
       head.removeChild(script);
       delete GLOBAL_CONTEXT[jsonpCallbakName];
+    };
+    GLOBAL_CONTEXT[jsonpCallbakName] = (response: any) => {
+      cleanUp();
       resolve(response);
     };
+    // The script didn't load (404, offline, blocked): the callback would never come — reject, leave nothing behind
+    script.onerror = () => {
+      cleanUp();
+      reject(new Error(`JSONP request failed: ${script.src}`));
+    };
+    head.appendChild(script);
   });
 };

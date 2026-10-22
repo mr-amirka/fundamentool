@@ -44,3 +44,96 @@ describe('urlParse', () => {
     expect(u.hostname).toBe('');
   });
 });
+
+describe('urlParse — a bare query, nothing', () => {
+  it('`a=1&b=2` (no `?`, no `/`) is a query; nothing is an empty address', () => {
+    const bare = urlParse('a=1&b=2');
+    expect([
+      bare.path,
+      bare.query,
+    ]).toEqual([
+      '',
+      {
+        a: 1,
+        b: 2,
+      },
+    ]);
+    const none = urlParse(undefined as never);
+    expect([
+      none.path,
+      none.query,
+      none.href,
+    ]).toEqual([
+      '',
+      {},
+      '',
+    ]);
+  });
+});
+
+describe('urlParse — the parts of a full address', () => {
+  it.each([
+    [
+      'https://ann:pw@host.io:8080/a/b?x=1#/c',
+      {
+        username: 'ann',
+        password: 'pw',
+        host: 'host.io:8080',
+        hostname: 'host.io',
+        port: '8080',
+        login: 'ann:pw@host.io:8080',
+        email: 'ann@host.io',
+        unpath: 'https://ann:pw@host.io:8080',
+        path: '/a/b',
+        dirname: '/a/',
+      },
+    ],
+    [
+      'https://host.io/a',
+      {
+        username: '',
+        password: '',
+        host: 'host.io',
+        hostname: 'host.io',
+        port: '',
+        login: '',
+        email: '',
+        unpath: 'https://host.io',
+        path: '/a',
+        dirname: '/',
+      },
+    ],
+    [
+      'https://ann@host.io',
+      {
+        username: 'ann',
+        password: '',
+        host: 'host.io',
+        hostname: 'host.io',
+        port: '',
+        login: 'ann@host.io',
+        email: 'ann@host.io',
+        unpath: 'https://ann@host.io',
+        path: '',
+        dirname: '',
+      },
+    ],
+    [
+      'file:///etc/hosts',
+      {
+        username: '',
+        password: '',
+        host: '',
+        hostname: '',
+        port: '',
+        login: '',
+        email: '',
+        unpath: '',
+        path: '/etc/hosts',
+        dirname: '/etc/',
+      },
+    ],
+  ])('%s', (href, parts) => {
+    expect(urlParse(href)).toMatchObject(parts);
+  });
+});

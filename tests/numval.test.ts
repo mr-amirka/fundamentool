@@ -48,3 +48,14 @@ describe('floatval', () => {
     expect(floatval(false)).toBe(0);
   });
 });
+
+describe('numval — the bounds must be numbers', () => {
+  it('a bound that isn\'t a number throws, naming it', () => {
+    expect(() => intval(
+      '5', 0, '1' as never,
+    )).toThrow(new TypeError('min value should be number: 1'));
+    expect(() => floatval(
+      '5', 0, undefined, 'x' as never,
+    )).toThrow(new TypeError('max value should be number: x'));
+  });
+});

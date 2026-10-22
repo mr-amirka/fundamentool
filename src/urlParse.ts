@@ -88,9 +88,10 @@ export const urlParse = (href: string): TUrlProps => {
   const username = userParts[0];
   const password = userParts[1];
   const host = protocol ? parts[1] : '';
-  const email = username ? username + '@' + host : '';
   const hostname = protocol ? (parts = half(host, ':'))[0] : '';
   const port = protocol ? parts[1] : '';
+  // An address has no port: `ann@host.io`, not `ann@host.io:8080`
+  const email = username ? username + '@' + hostname : '';
   const login = userpart ? userpart + '@' + host : '';
   const unpath = login ? protocol + '://' + login : host ? protocol + '://' + host : '';
 

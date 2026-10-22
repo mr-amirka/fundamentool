@@ -6,9 +6,13 @@ import {
 } from 'path';
 import {
   mkdirSync,
+  readFileSync,
   writeFileSync,
   rmSync,
 } from 'fs';
+import {
+  finished,
+} from 'stream/promises';
 import {
   TransformFrom,
 } from '../../../src/node/jsonl/TransformFrom';
@@ -189,8 +193,7 @@ describe('node/jsonl — file write', () => {
     });
     records.forEach((r) => out.write(r));
     out.end();
-    // write() pipes async (mkdir callback), so we wait for the file to appear
-    await new Promise<void>((resolve) => setTimeout(resolve, 50));
+    await finished(out); // the stream finishes when the file is written
 
     const items = await collectStream(read(path));
     expect(items).toEqual(records);
@@ -213,7 +216,7 @@ describe('node/jsonl — file write', () => {
       v: 1,
     });
     out.end();
-    await new Promise<void>((resolve) => setTimeout(resolve, 50));
+    await finished(out);
 
     const items = await collectStream(read(path));
     expect(items).toEqual([
@@ -281,5 +284,59 @@ describe('node/jsonl/promisify — read', () => {
     rmSync(dir, {
       recursive: true,
     });
+  });
+});
+
+describe('node/jsonl write — done means written; the file\'s failures are the stream\'s', () => {
+  it('finished() — the file holds every row, its folder made', async () => {
+    const dir = tmpDir();
+    const path = join(
+      dir, 'nested', 'rows.jsonl',
+    );
+    const out = write(path) as any;
+    out.write({
+      i: 0,
+    });
+    out.write({
+      i: 1,
+    });
+    out.end();
+    try {
+      await finished(out);
+      expect(readFileSync(path, 'utf8')).toBe('{"i":0}\n{"i":1}\n');
+    } finally {
+      rmSync(dir, {
+        recursive: true,
+      });
+    }
+  });
+
+  it('a folder where the file goes (EISDIR), a file where the folder goes (EEXIST), a failed flush: the stream errors', async () => {
+    const dir = tmpDir();
+    const file = join(dir, 'a.jsonl');
+    writeFileSync(file, '');
+    try {
+      const onFolder = write(dir) as any;
+      onFolder.end({
+        a: 1,
+      });
+      await expect(finished(onFolder)).rejects.toMatchObject({
+        code: 'EISDIR',
+      });
+      const failing = write(join(dir, 'c.jsonl')) as any;
+      const flushFailure = new Error('flush');
+      failing._flush = (done: (error?: Error) => void) => done(flushFailure);
+      failing.end();
+      await expect(finished(failing)).rejects.toBe(flushFailure); // the rows' own failure, before the file's
+      const underFile = write(join(file, 'b.jsonl')) as any;
+      underFile.end();
+      await expect(finished(underFile)).rejects.toMatchObject({
+        code: 'EEXIST',
+      });
+    } finally {
+      rmSync(dir, {
+        recursive: true,
+      });
+    }
   });
 });

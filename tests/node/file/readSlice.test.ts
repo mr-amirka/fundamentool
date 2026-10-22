@@ -110,6 +110,21 @@ describe('readUnopened', () => {
     }
   });
 
+  it('a read asked for while one is in flight runs after it — the bytes whole, in order', async () => {
+    const file = join(dir, 'asked-twice.txt');
+    writeFileSync(file, 'abcdefghij');
+    const stream = readUnopened(file, {
+      bufferLength: 4,
+    });
+    const chunks: string[] = [];
+    const ended = new Promise<void>((done) => {
+      stream.on('data', (chunk: Buffer) => chunks.push(chunk.toString())).on('end', done);
+    });
+    (stream as any)._read(); // a second ask while the first slice is read
+    await ended;
+    expect(chunks.join('')).toBe('abcdefghij');
+  });
+
   it('the JSON Lines reader gives the items; onReadable hears the stream', async () => {
     const file = join(dir, 'items.jsonl');
     writeFileSync(file, '{"a":1}\n{"a":2}\n');
