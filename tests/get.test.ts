@@ -87,3 +87,42 @@ describe('getWithContext', () => {
     ])).toBeNull();
   });
 });
+
+describe('get — a list\'s last item, a path that stops early', () => {
+  it('`[]` is the last item (an empty list — the first slot); a path through nothing is undefined; getWithContext — null', () => {
+    expect(get({
+      a: [
+        1,
+        2,
+        3,
+      ],
+    }, 'a[]')).toBe(3);
+    expect(get({
+      a: [],
+    }, 'a[]')).toBeUndefined();
+    expect(get({
+      a: null,
+    }, 'a.b')).toBeUndefined();
+    expect(getWithContext({
+      a: 1,
+    }, [
+      'a',
+      'b',
+      'c',
+    ])).toBeNull();
+    const list = [
+      {
+        n: 1,
+      },
+    ];
+    expect(getWithContext({
+      list,
+    }, [
+      'list',
+      '[]',
+    ])).toEqual([
+      list,
+      list[0],
+    ]);
+  });
+});

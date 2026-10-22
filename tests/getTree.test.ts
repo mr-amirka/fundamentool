@@ -60,4 +60,30 @@ describe('getTree', () => {
     );
     expect(dst).toHaveLength(1);
   });
+
+  it('no list: none; an item without an id has no children; the depth cuts the tree (the deepest level as it is)', () => {
+    expect(getTree(null, null)).toEqual([]);
+    const dst = ['kept'];
+    expect(getTree(
+      undefined, null, dst,
+    )).toBe(dst);
+    expect(getTree([
+      {
+        parent: null,
+      },
+    ], null)).toEqual([
+      {
+        parent: null,
+        childs: [],
+      },
+    ]);
+    const [root] = getTree(
+      items, null, [], 2,
+    );
+    const two = root.childs.find((c: any) => c.id === 2);
+    expect(two).toEqual({
+      id: 2,
+      parent: 1,
+    }); // depth 2: the second level without its childs
+  });
 });

@@ -107,4 +107,33 @@ describe('RpcFnCoder', () => {
     expect(index).toBe(0);
     expect(coder.invoke(index, [])).toBe('hi');
   });
+
+  it('a function that came from the other side goes back as [1, its index] — the other side\'s own; the flags refuse the rest', () => {
+    const {
+      provider,
+    } = makeProvider();
+    const coder = new RpcFnCoder(provider);
+    const remote = coder.decode([
+      0,
+      3,
+    ]) as () => unknown;
+    expect(coder.encode(remote)).toEqual([
+      1,
+      3,
+    ]);
+    expect(coder.encode(
+      remote, undefined, false,
+    )).toEqual([
+      1,
+      3,
+    ]); // an external one is sent back even so
+    expect(coder.encode(
+      () => 1, undefined, false,
+    )).toBeUndefined(); // a local one is not
+    expect(coder.decode([
+      0,
+      4,
+    ], false)).toBeUndefined();
+    expect(coder.externals[4]).toBeUndefined(); // nothing made for it
+  });
 });

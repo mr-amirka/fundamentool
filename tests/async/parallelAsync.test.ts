@@ -1,4 +1,5 @@
 import {
+  eachParallel,
   filterInParallel,
   filterParallel,
   findInParallel,
@@ -248,5 +249,76 @@ describe('parallel async helpers', () => {
     );
 
     expect(sum).toBe(6);
+  });
+});
+
+describe('loopParallel, eachParallel — defaults and checks', () => {
+  it('loopParallel: one task by default; a task limit that isn\'t a whole number above 0 throws', async () => {
+    let running = 0;
+    let most = 0;
+    let i = 0;
+    await loopParallel(() => i < 3, async () => {
+      i++;
+      most = Math.max(most, ++running);
+      await Promise.resolve();
+      running--;
+    });
+    expect([
+      i,
+      most,
+    ]).toEqual([
+      3,
+      1,
+    ]);
+    expect(() => loopParallel(
+      () => false, () => undefined, 1.5,
+    )).toThrow('The taskLimit must be a number');
+    expect(() => loopParallel(
+      () => false, () => undefined, 0,
+    )).toThrow('The taskLimit must be greater than 0');
+  });
+
+  it('eachParallel: an array by its indexes, an object by its keys; no check given — runs to the end', async () => {
+    const seen: unknown[] = [];
+    const list = [
+      'a',
+      'b',
+    ];
+    await expect(eachParallel(
+      list, (value, key) => {
+        seen.push([
+          key,
+          value,
+        ]);
+      }, null, 2,
+    )).resolves.toBe(list);
+    const shape = {
+      x: 1,
+      y: 2,
+    };
+    await expect(eachParallel(shape, (value, key) => {
+      seen.push([
+        key,
+        value,
+      ]);
+    })).resolves.toBe(shape);
+    expect(seen).toEqual([
+      [
+        0,
+        'a',
+      ],
+      [
+        1,
+        'b',
+      ],
+      [
+        'x',
+        1,
+      ],
+      [
+        'y',
+        2,
+      ],
+    ]);
   });
 });

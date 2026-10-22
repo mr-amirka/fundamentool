@@ -84,3 +84,18 @@ describe('cssProperties* helpers', () => {
   });
 });
 
+describe('cssPropertiesStringifyProvider — the plain forms', () => {
+  it('no prefixes given; `important`; a custom property keeps its name; a list — one declaration per value', () => {
+    const stringify = cssPropertiesStringifyProvider();
+    expect(stringify({
+      backgroundColor: 'red',
+      '--main-Color': '#000',
+      '-webkit-box': '1',
+      display: [
+        '-webkit-box',
+        'flex',
+      ],
+    }, true)).toBe('background-color:red!important;--main-Color:#000!important;-webkit-box:1!important;'
+      + 'display:-webkit-box!important;display:flex!important');
+  });
+});

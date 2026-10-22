@@ -3,6 +3,7 @@ import {
 } from '../src/param';
 import {
   unparam,
+  unparamBase,
 } from '../src/unparam';
 
 describe('param / unparam', () => {
@@ -44,5 +45,19 @@ describe('param / unparam', () => {
 
     expect(parsed.a).toBe(1);
     expect(parsed.b).toBe('x');
+  });
+});
+
+describe('unparam — no query', () => {
+  it('\'\', \'?\', a part without a key: an empty object, never undefined; given an output — added to it', () => {
+    expect(unparam('')).toEqual({});
+    expect(unparam('?')).toEqual({});
+    expect(unparam('=5')).toEqual({});
+    expect(unparamBase('a=1', {
+      b: 2,
+    })).toEqual({
+      b: 2,
+      a: 1,
+    });
   });
 });

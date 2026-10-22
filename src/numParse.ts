@@ -17,6 +17,8 @@ interface INumParse {
    * @example
    * numParse('42') // => 42
    * numParse('-3.14') // => -3.14
+   * numParse('1 000.5') // => 1000.5 — spaces dropped; the last dot is the fraction's
+   * numParse(0) // => 0;  numParse('abc') // => null
    */
   (num: any): number | null;
 
@@ -40,6 +42,8 @@ interface INumParse {
  * @example
  * numParse('42') // => 42
  * numParse('-3.14') // => -3.14
+ * numParse('1 000.5') // => 1000.5 — spaces dropped; the last dot is the fraction's
+ * numParse(0) // => 0;  numParse('abc') // => null
  */
 export const numParse: INumParse = (num: any): number | null => {
   const parts = base(num);
@@ -47,7 +51,9 @@ export const numParse: INumParse = (num: any): number | null => {
     return null;
   }
   const right = parts[2];
-  return parseFloat(parts[0] + (parts[1] || '0') + (right ? '.' + right : ''));
+  const value = parseFloat(parts[0] + (parts[1] || '0') + (right ? '.' + right : ''));
+  // Not a number at all ('abc', true): null, as the type says — not NaN
+  return value === value ? value : null;
 };
 
 const base = numParse.base = (num: any): [string, string, string] | null => {
@@ -58,7 +64,8 @@ const base = numParse.base = (num: any): [string, string, string] | null => {
   let sign = '';
   let right = '';
   let matched: null | RegExpExecArray = null;
-  num && (val = ('' + num).replace(REXGEXP_SPACE, ''));
+  // Any defined value as text — the number 0 too (it was taken for nothing)
+  val = ('' + num).replace(REXGEXP_SPACE, '');
 
   if ((matched = REXGEXP_SIGN.exec(val))) {
     sign = matched[1];

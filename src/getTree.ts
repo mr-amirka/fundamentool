@@ -13,14 +13,11 @@ import {
  */
 const base = (
   src: Array<{ id?: any;
-    parent?: any }> | null | undefined,
+    parent?: any }>,
   id: any,
   dst: any[],
   depth: number,
 ): any[] => {
-  if (!src) {
-    return dst;
-  }
   const length = src.length;
   let i = 0;
   let item: any;

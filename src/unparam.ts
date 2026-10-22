@@ -17,12 +17,8 @@ export const unparamBase = (query: string, output?: any): TParams => {
     query, '?', 1,
   )[1].split('&');
   const length = parts.length;
-  let result = output;
-
-  if (length < 1) {
-    return result || {};
-  }
-
+  // No query ('', '?') is no params — an empty object, never undefined
+  let result = output || {};
   let halfParts: [string, string, string];
   let value: string;
   let normalizedValue: string;
@@ -50,7 +46,8 @@ export const unparamBase = (query: string, output?: any): TParams => {
  * @param query - Query string, optionally including the leading `?`.
  * @returns Parsed parameters object.
  * @example
- * unparam('?a=1&b=hello'); // => { a: '1', b: 'hello' }
+ * unparam('?a=1&b=hello'); // => { a: 1, b: 'hello' } — a number is read as one ('007' stays text)
  * unparam('x.y=2');        // => { x: { y: 2 } }
+ * unparam('');             // => {}
  */
 export const unparam = (query: string): TParams => unparamBase(query);
