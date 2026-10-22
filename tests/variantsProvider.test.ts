@@ -170,3 +170,65 @@ describe('variantsProvider', () => {
       })).toThrow(TypeError);
   });
 });
+
+describe('variantsProvider — option edges and longer markers', () => {
+  const base = {
+    separator: '|',
+    scopeStart: '(',
+    scopeEnd: ')',
+    maxDepth: 5,
+  };
+
+  it('limits: undefined / null — none; a value of another type is an error; empty or equal markers are errors', () => {
+    expect(variantsProvider({
+      ...base,
+      maxDepth: undefined as never,
+    })('a(b|c)')[0]).toEqual([
+      'ab',
+      'ac',
+    ]);
+    expect(variantsProvider({
+      ...base,
+      maxOutputCount: null as never,
+    })('a(b|c)')[0]).toHaveLength(2);
+    expect(() => variantsProvider({
+      ...base,
+      maxDepth: '2' as never,
+    })).toThrow('maxDepth must be a number, got string, value: 2');
+    expect(() => variantsProvider({
+      ...base,
+      maxDepth: true as never,
+    })).toThrow('maxDepth must be a number, got boolean, value: true');
+    expect(() => variantsProvider({
+      ...base,
+      scopeStart: '',
+    })).toThrow('scopeStart must be a non-empty string');
+    expect(() => variantsProvider({
+      ...base,
+      scopeEnd: '',
+    })).toThrow('scopeEnd must be a non-empty string');
+  });
+
+  it('markers of several characters; the longer one is tried first', () => {
+    const long = variantsProvider({
+      separator: '|',
+      scopeStart: '<<',
+      scopeEnd: '>',
+      maxDepth: 5,
+    });
+    expect(long('a<<b|c>')[0]).toEqual([
+      'ab',
+      'ac',
+    ]);
+    const endLonger = variantsProvider({
+      separator: '|',
+      scopeStart: '[',
+      scopeEnd: ']]',
+      maxDepth: 5,
+    });
+    expect(endLonger('x[y|z]]')[0]).toEqual([
+      'xy',
+      'xz',
+    ]);
+  });
+});
