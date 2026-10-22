@@ -63,10 +63,10 @@ export function setBase(
 
   for (; i < lastIndex; i++) {
     keySlot = nextKeySlot;
-    nextKeySlot = getKeySlot(nested, path[i + 1]);
-
     key = keySlot[0];
     next = nested[key];
+    // The next key is the child's: its slot is read from the child (an array's length for `[]`), not from this one
+    nextKeySlot = getKeySlot(isObjectLike(next) ? next : undefined, path[i + 1]);
 
     if (isObjectLike(next)) {
       nested = next;

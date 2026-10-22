@@ -60,3 +60,59 @@ describe('setBase', () => {
     expect(obj.a.b).toBe(1);
   });
 });
+
+describe('set — lists and new items', () => {
+  it('a list made where there was none; `[]` appends; an index past the end grows the list', () => {
+    expect(set(
+      undefined as never, [
+        '0',
+        'name',
+      ], 'a',
+    )).toEqual([
+      {
+        name: 'a',
+      },
+    ]);
+    const list: any[] = ['x'];
+    set(
+      list, ['[]'], 'y',
+    );
+    expect(list).toEqual([
+      'x',
+      'y',
+    ]);
+    const grown: any[] = [];
+    set(
+      grown, ['3'], 'z',
+    );
+    expect(grown.length).toBe(4);
+    const rows = {
+      rows: ['a'],
+    };
+    set(
+      rows, [
+        'rows',
+        '[]',
+      ], 'b',
+    ); // appended to the existing nested list
+    expect(rows.rows).toEqual([
+      'a',
+      'b',
+    ]);
+    const nested: Record<string, any> = {};
+    set(
+      nested, [
+        'rows',
+        '[]',
+        'id',
+      ], 7,
+    );
+    expect(nested).toEqual({
+      rows: [
+        {
+          id: 7,
+        },
+      ],
+    });
+  });
+});

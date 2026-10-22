@@ -46,3 +46,18 @@ describe('urlExtend', () => {
   });
 });
 
+
+describe('urlExtend — every part of an address', () => {
+  it('user, password, port; a file with an extension; a hash child', () => {
+    const url = urlExtend('https://ann:pw@example.com:8080/docs/guide.html?a=1#/top', {
+      query: {
+        b: 2,
+      },
+    });
+    expect(url.href).toBe('https://ann:pw@example.com:8080/docs/guide.html?a=1&b=2#/top');
+    expect(url.email).toBe('ann@example.com:8080');
+    expect(urlExtend('http://example.com', '/x').href).toBe('/x'); // a string is a whole address: its own (empty) host
+    expect(urlExtend('//host/a', {}).href).toContain('host');
+    expect(urlExtend('/a', null).href).toBe('/a');
+  });
+});
