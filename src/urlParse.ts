@@ -6,9 +6,6 @@ import {
   unparam,
 } from './unparam';
 
-const SLASH = '/';
-const AT = '@';
-const SCHEME_END = '://';
 import {
   isDefined,
 } from './is/isDefined';
@@ -16,6 +13,10 @@ import {
   half,
   halfLast,
 } from './half';
+
+const SLASH = '/';
+const AT = '@';
+const SCHEME_END = '://';
 
 export type TUrlOptions = {
   hostname: string;

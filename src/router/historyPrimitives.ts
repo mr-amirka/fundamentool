@@ -5,7 +5,6 @@ import {
   attachEvent,
 } from '../attachEvent';
 
-const HASH = '#';
 import {
   isObject,
 } from '../is/isObject';
@@ -28,6 +27,8 @@ import type {
   THistoryPrimitives,
   TMemoryHistoryPrimitives,
 } from './types';
+
+const HASH = '#';
 
 /** The parts, outer first: a step in one clears the ones after it. */
 const PARTS: readonly THistoryPart[] = [

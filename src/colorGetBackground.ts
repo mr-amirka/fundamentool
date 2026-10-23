@@ -2,7 +2,6 @@ import {
   color,
 } from './color';
 
-const CLOSE = ')';
 import {
   push,
 } from './push';
@@ -21,6 +20,8 @@ import {
 import {
   joinComma,
 } from './join/joinComma';
+
+const CLOSE = ')';
 
 const regexpBg = /^(---?[^;]+;?|[A-Fa-f0-9]+(\.[0-9]+)?)(p([0-9]+)([a-z%]*))?$/i;
 const regexpAngle = /^(.*)((_r)_?([A-Za-z_]*)|_g(-?[0-9]+))$/i;
@@ -131,4 +132,3 @@ export const colorGetBackground = (input: string, alt?: boolean): string[] => {
 
   return gradient;
 };
-

@@ -13,7 +13,6 @@ import {
   IRpcClient,
 } from './types';
 
-const ABORT = 'abort';
 import {
   RpcCoder,
 } from './RpcCoder';
@@ -32,6 +31,8 @@ import {
 import {
   createTimeout,
 } from '../createTimeout';
+
+const ABORT = 'abort';
 
 /**
  * RPC client that sends typed method calls over a message channel

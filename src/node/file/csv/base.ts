@@ -3,14 +3,15 @@ import {
   read as readFile,
 } from '../base';
 
-const EXTENSION = '.csv';
-const ENCODING = 'utf8';
 import {
   parse,
   parseEachLine,
   stringify,
   TParseEachLineCallback,
 } from '../../../csv';
+
+const EXTENSION = '.csv';
+const ENCODING = 'utf8';
 
 /**
  * Writes a 2D array to a `.csv` file at `path` (`.csv` extension appended automatically).
