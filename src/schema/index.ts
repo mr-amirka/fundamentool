@@ -7,8 +7,6 @@ import {
   unknownOptionText,
 } from '../assertKnownOptions';
 
-const COLON = ':';
-const INDEX = 'index';
 import {
   describeValue,
 } from '../describeValue';
@@ -21,6 +19,9 @@ import {
 import {
   isObject,
 } from '../is/isObject';
+
+const COLON = ':';
+const INDEX = 'index';
 
 /** One step into a value: an object's key, a list's place, or a label that names the part from there on. */
 type TStep = [kind: 'key' | 'index' | 'label', text: string];
@@ -480,4 +481,26 @@ export function object<const S extends Record<string, TSchema<unknown>>>(shape: 
     return extend(base);
   };
   return build(false);
+}
+
+/**
+ * A schema built on first use (lab D-023): its builder runs the first time a check needs it — never when the module
+ * loads. Declared at the top of a module with a pure annotation before the call (`#__PURE__` in a block comment), and
+ * used only by checks behind `typeof process !== 'undefined' && process.env.NODE_ENV !== 'production'`, it leaves a
+ * production build whole — the schema, and this library with it. (esbuild needs the annotation at the call; Rollup /
+ * Vite drop it either way — measured in lab research 13.)
+ *
+ * @param build - Builds the schema.
+ * @returns The schema, built once.
+ * @example
+ * const OPTIONS = lazy(() => object({ quiet: boolean().optional() })); // + the pure annotation before `lazy`
+ * export function step(options?: { quiet?: boolean }) {
+ *   if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+ *     OPTIONS().parse(options, 'step');
+ *   }
+ * }
+ */
+export function lazy<T>(build: () => T): () => T {
+  let value: T | undefined;
+  return () => value || (value = build());
 }

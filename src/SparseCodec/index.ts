@@ -24,6 +24,7 @@ import {
   oneOf,
   string,
   union,
+  lazy,
 } from '../schema';
 import {
   describeValue,
@@ -201,57 +202,60 @@ const pathOf = (path: string | string[]): string[] => (typeof path === 'string' 
 /** How a message names a field: its path. */
 const named = (path: readonly string[]): string => `"${path.join(PATH_SEPARATOR)}"`;
 
-/** A byte: an id, the version. */
-const BYTE = number().int().min(0).refine((value) => value <= 0xFF, (value) => `expects a byte 0…255, got ${describeValue(value)}`);
-
-/** The codec's table, checked once on creation. */
-const CONFIG = object({
-  version: BYTE.optional(),
-  fields: array(object({
-    id: BYTE,
-    path: union([
-      string().refine((path) => path !== '', 'expects a path, got an empty string'),
-      array(string()),
-    ]),
-    type: oneOf([
-      'f32',
-      'f64',
-      'u8',
-      'u16',
-      'u32',
-      'string',
-      'bool',
-    ]),
-    default: union([
-      number(),
-      string(),
-      boolean(),
-    ]),
-  })),
+/** The codec's table — checked once on creation, in development only (D-057, lab D-023): built on first use. */
+const CONFIG = /*#__PURE__*/ lazy(() => {
+  /** A byte: an id, the version. */
+  const byte = number().int().min(0).refine((value) => value <= 0xFF, (value) => `expects a byte 0…255, got ${describeValue(value)}`);
+  return object({
+    version: byte.optional(),
+    fields: array(object({
+      id: byte,
+      path: union([
+        string().refine((path) => path !== '', 'expects a path, got an empty string'),
+        array(string()),
+      ]),
+      type: oneOf([
+        'f32',
+        'f64',
+        'u8',
+        'u16',
+        'u32',
+        'string',
+        'bool',
+      ]),
+      default: union([
+        number(),
+        string(),
+        boolean(),
+      ]),
+    })),
+  });
 });
 
 const WHERE = 'createSparseCodec';
 
-/** The table checked: its shape, every `id` once, every `default` fitting its type. */
+/** The table checked — in development only (lab D-023): its shape, every `id` once, every `default` fitting its type. */
 const checkConfig = (config: ISparseCodecConfig): void => {
-  CONFIG.parse(config, WHERE);
-  const owners: Record<number, string> = {};
-  const fields = config.fields;
-  const length = fields.length;
-  for (let i = 0; i < length; i++) {
-    const field = fields[i];
-    const path = pathOf(field.path);
-    const name = named(path);
-    if (owners[field.id] !== undefined) {
-      throw new Error(`${WHERE}: "fields"[${i}] (${name}) has the id ${field.id} of ${owners[field.id]} — an id is a field's for good`);
-    }
-    owners[field.id] = name;
-    const code = typeCode(field.type);
-    if (!fits(code, field.default)
-      || (code === T_STR && encoder().encode(field.default as string).length > STRING_BYTES_MAX)) {
-      throw misfit(
-        WHERE, `"fields"[${i}]."default" (of ${named(path)})`, code, field.default,
-      );
+  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+    CONFIG().parse(config, WHERE);
+    const owners: Record<number, string> = {};
+    const fields = config.fields;
+    const length = fields.length;
+    for (let i = 0; i < length; i++) {
+      const field = fields[i];
+      const path = pathOf(field.path);
+      const name = named(path);
+      if (owners[field.id] !== undefined) {
+        throw new Error(`${WHERE}: "fields"[${i}] (${name}) has the id ${field.id} of ${owners[field.id]} — an id is a field's for good`);
+      }
+      owners[field.id] = name;
+      const code = typeCode(field.type);
+      if (!fits(code, field.default)
+        || (code === T_STR && encoder().encode(field.default as string).length > STRING_BYTES_MAX)) {
+        throw misfit(
+          WHERE, `"fields"[${i}]."default" (of ${named(path)})`, code, field.default,
+        );
+      }
     }
   }
 };

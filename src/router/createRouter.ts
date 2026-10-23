@@ -3,6 +3,7 @@ import {
   custom,
   func,
   object,
+  lazy,
 } from '../schema';
 import {
   describeValue,
@@ -58,18 +59,14 @@ import type {
 
 const WHERE = '[fundamentool] createRouter';
 
-/** The single list of `createRouter`'s keys. */
-/** `createRouter`'s options (D-051): its history part, the observable adapter. */
-const ROUTER_DEPS = object({
+/** `createRouter`'s options (D-051): its history part, the observable adapter — checked in development (lab D-023). */
+export const ROUTER_DEPS = /*#__PURE__*/ lazy(() => object({
   historyPrimitive: custom<THistoryPrimitive>((value) => isObject(value)
     && isFunction((value as THistoryPrimitive).push)
     && isFunction((value as THistoryPrimitive).watch), 'a history primitive (e.g. browserHistoryPrimitivesProvider(window).hash)'),
   createObservable: func(),
   createApi: func(),
-});
-
-/** The single list of `createRouter`'s keys. */
-export const ROUTER_DEPS_KEYS = ROUTER_DEPS.keys;
+}));
 
 /** An empty query, shared (never changed). */
 const NO_QUERY: TParams = {};
@@ -107,7 +104,9 @@ function withQuery(query: TParams, values: Record<string, unknown>): TParams {
  * button.onclick = router.backLocationThrottled;
  */
 export function createRouter(deps: TRouterDeps): TRouter {
-  ROUTER_DEPS.parse(deps, WHERE);
+  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+    ROUTER_DEPS().parse(deps, WHERE);
+  }
   const {
     historyPrimitive,
     createObservable,
@@ -202,14 +201,18 @@ export function createRouter(deps: TRouterDeps): TRouter {
   );
 
   async function pushLocation(change: Partial<TUrlProps>, options?: TStepOptions): Promise<TUrlProps> {
-    STEP_OPTIONS.parse(options, `${WHERE} pushLocation`);
+    if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+      STEP_OPTIONS().optional().parse(options, `${WHERE} pushLocation`);
+    }
     return step(
       change, false, options,
     );
   }
 
   async function replaceLocation(change: Partial<TUrlProps>, options?: TStepOptions): Promise<TUrlProps> {
-    STEP_OPTIONS.parse(options, `${WHERE} replaceLocation`);
+    if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+      STEP_OPTIONS().optional().parse(options, `${WHERE} replaceLocation`);
+    }
     return step(
       change, true, options,
     );
@@ -232,7 +235,9 @@ export function createRouter(deps: TRouterDeps): TRouter {
     pushLocation,
     replaceLocation,
     async extendLocation(change, options) {
-      PARAMS_OPTIONS.parse(options, `${WHERE} extendLocation`);
+      if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+        PARAMS_OPTIONS().optional().parse(options, `${WHERE} extendLocation`);
+      }
       return extend(change, options);
     },
     backLocation,
@@ -240,7 +245,9 @@ export function createRouter(deps: TRouterDeps): TRouter {
       if (!Number.isInteger(count) || count < 1) {
         throw new TypeError(`${WHERE} backRepeat: expects a whole number of steps ≥ 1, got ${describeValue(count)}`);
       }
-      BACK_OPTIONS.parse(options, `${WHERE} backRepeat`);
+      if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+        BACK_OPTIONS().optional().parse(options, `${WHERE} backRepeat`);
+      }
       return driver.back(count, options);
     },
     pushLocationThrottled: withAsyncLock(pushLocation, {
@@ -300,7 +307,9 @@ export function createRouter(deps: TRouterDeps): TRouter {
         [key]: value,
       }, options),
       assign(values, options) {
-        PARAMS_OPTIONS.parse(options, `${WHERE} params`);
+        if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+          PARAMS_OPTIONS().optional().parse(options, `${WHERE} params`);
+        }
         const next = withQuery(query, values);
         if (!isEqual(next, query)) {
           query = next;
@@ -314,7 +323,9 @@ export function createRouter(deps: TRouterDeps): TRouter {
       }, options),
       getKeys: () => Object.keys(query),
       clear(options) {
-        PARAMS_OPTIONS.parse(options, `${WHERE} params`);
+        if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+          PARAMS_OPTIONS().optional().parse(options, `${WHERE} params`);
+        }
         if (Object.keys(query).length) {
           query = NO_QUERY;
           write({}, options);

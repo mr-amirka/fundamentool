@@ -18,6 +18,7 @@ import {
 } from './library';
 import {
   object,
+  lazy,
 } from '../schema';
 import type {
   TViewLibrary,
@@ -26,10 +27,10 @@ import type {
 const WHERE = '[fundamentool] viewHooksProvider';
 
 /** The view library's members the hooks use; the rest of the library may come along. */
-const LIBRARY = object(viewLibraryShape([
+const LIBRARY = /*#__PURE__*/ lazy(() => object(viewLibraryShape([
   'useSyncExternalStore',
   'useRef',
-])).passthrough();
+])).passthrough());
 
 /** What `useUnit` takes: a store, an event (any function), or a list / a shape of them. */
 type TUnitShape = TStore | ((...args: any[]) => any) | readonly unknown[] | Record<string, unknown>;
@@ -97,7 +98,9 @@ function subscribeTo(store: TStore): (onChange: () => void) => () => void {
  * const section = useStoreMap(nav.$state, (state) => state.section);   // only when the section changes
  */
 export function viewHooksProvider(library: Pick<TViewLibrary, 'useSyncExternalStore' | 'useRef'> & Partial<TViewLibrary>) {
-  LIBRARY.parse(library, WHERE);
+  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+    LIBRARY().parse(library, WHERE);
+  }
   const {
     useSyncExternalStore,
     useRef,

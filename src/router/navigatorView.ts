@@ -60,7 +60,7 @@ const rowLabel = (row: unknown): string => (isArray(row) && typeof row[0] === 's
  * `NavigationHostProvider`'s options (D-051): the route table — each row `[pattern, { main, keep, section, quietQuery,
  * gate, …the app's own }]` — and the drawing functions. `gateNames` — the navigator's gates (a row's `gate` names one).
  */
-function hostOptions(gateNames: readonly string[]) {
+export function hostOptions(gateNames: readonly string[]) {
   const ROW = object({
     main: unknown(),
     keep: boolean().optional(),
@@ -82,9 +82,6 @@ function hostOptions(gateNames: readonly string[]) {
   },
   (options) => `the start section's root "${options.routes.find(([, row]) => row.section)?.[0]}" is put under deep links — it needs a path without parameters`);
 }
-
-/** The single list of `NavigationHostProvider`'s option keys. */
-export const NAVIGATION_HOST_OPTION_KEYS = hostOptions([]).keys;
 
 /** A page layer: its own scroll container (keeps its scroll under `display: none` — research web-games 02 §6.1). */
 const LAYER = {
@@ -138,8 +135,6 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
     setRoutes,
     rootOf,
   } = core;
-  /** The host's options, with the navigator's gate names (a row's `gate`). */
-  const HOST_OPTIONS = hostOptions(core.gateNames);
   const {
     useUnit,
     useStoreMap,
@@ -221,7 +216,10 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
    * root.render(<NavigationHost />);
    */
   function NavigationHostProvider<R = Record<string, unknown>>(options: TNavigationHostOptions<R>): () => unknown {
-    HOST_OPTIONS.parse(options, `${WHERE} NavigationHostProvider`);
+    if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+      // The host's options, with the navigator's gate names (a row's `gate`) — built only to check (lab D-023)
+      hostOptions(core.gateNames).parse(options, `${WHERE} NavigationHostProvider`);
+    }
     // Called for every layer and window at every render: taken from the options once (D-035).
     const {
       routes,

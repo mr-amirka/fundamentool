@@ -37,7 +37,7 @@ export const VIEW_LIBRARY_KEYS = [
  * functions, the rest may come along. Spread into an entry point's options schema.
  *
  * @example
- * object({ router: ROUTER, ...viewLibraryShape(['createElement', 'useRef']) }).passthrough().parse(deps, WHERE);
+ * object({ router: ROUTER(), ...viewLibraryShape(['createElement', 'useRef']) }).passthrough().parse(deps, WHERE);
  * // TypeError: …: "useRef" expects the view library's function (React's, Preact's), got undefined
  */
 export function viewLibraryShape(needed: readonly (keyof TViewLibrary)[]): Record<keyof TViewLibrary, TSchema<unknown>> {

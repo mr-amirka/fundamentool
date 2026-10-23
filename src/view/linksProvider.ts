@@ -18,6 +18,7 @@ import {
   viewLibraryShape,
 } from './library';
 import {
+  lazy,
   object,
 } from '../schema';
 import {
@@ -33,15 +34,15 @@ import {
 const WHERE = '[fundamentool] linksProvider';
 
 /** What `linksProvider` takes: the router and the view library's members it uses (the rest may come along). */
-const LINKS_DEPS = object({
-  router: ROUTER,
+export const LINKS_DEPS = /*#__PURE__*/ lazy(() => object({
+  router: ROUTER(),
   ...viewLibraryShape([
     'createElement',
     'forwardRef',
     'useSyncExternalStore',
     'useRef',
   ]),
-}).passthrough();
+}).passthrough());
 
 /** A link's props: where it goes, and the anchor's own. */
 export type TLinkProps = {
@@ -119,7 +120,9 @@ function browserClick(event: TClickEvent, anchor: Record<string, unknown>): bool
  * <NavLink href="/catalog" activeAsParent>Catalog</NavLink>
  */
 export function linksProvider(deps: TLinksDeps) {
-  LINKS_DEPS.parse(deps, WHERE);
+  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+    LINKS_DEPS().parse(deps, WHERE);
+  }
   const router = deps.router;
   const {
     createElement: h,

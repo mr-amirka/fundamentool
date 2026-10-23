@@ -18,11 +18,15 @@ import {
 } from '../../src/Observable';
 import {
   createNavigator,
-  GATE_KEYS,
-  NAVIGATION_HOST_OPTION_KEYS,
-  NAVIGATOR_DEPS_KEYS,
-  OPEN_OPTION_KEYS,
 } from '../../src/router';
+import {
+  GATE,
+  NAVIGATOR_DEPS,
+  OPEN_OPTIONS,
+} from '../../src/router/navigator';
+import {
+  hostOptions,
+} from '../../src/router/navigatorView';
 import type {
   TGate,
   TNavigationHostOptions,
@@ -58,22 +62,22 @@ describe('createNavigator — options', () => {
       externalLinks: {},
       useState: React.useState, // a member of the view library the navigator accepts but doesn't need
     };
-    expect([...NAVIGATOR_DEPS_KEYS].sort()).toEqual(Object.keys(deps).sort());
+    expect([...NAVIGATOR_DEPS().keys].sort()).toEqual(Object.keys(deps).sort());
     const gate: Required<TGate> = {
       closed: createObservable(false),
       to: {},
     };
-    expect([...GATE_KEYS]).toEqual(Object.keys(gate));
+    expect([...GATE().keys]).toEqual(Object.keys(gate));
     const open: Required<TOpenOptions> = {
       reopen: true,
     };
-    expect([...OPEN_OPTION_KEYS]).toEqual(Object.keys(open));
+    expect([...OPEN_OPTIONS().keys]).toEqual(Object.keys(open));
     const host: Required<TNavigationHostOptions> = {
       routes: [],
       render: () => null,
       renderWindow: () => null,
     };
-    expect([...NAVIGATION_HOST_OPTION_KEYS]).toEqual(Object.keys(host));
+    expect([...hostOptions([]).keys]).toEqual(Object.keys(host));
   });
 
   it('checks its dependencies', () => {

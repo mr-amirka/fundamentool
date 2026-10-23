@@ -5,8 +5,6 @@ import {
   createTimeout,
 } from '../createTimeout';
 
-/** `externalLinks.section`: a link in no section (D-053). */
-const NO_SECTION = 'none';
 import {
   isArray,
 } from '../is/isArray';
@@ -39,6 +37,7 @@ import {
   record,
   string,
   union,
+  lazy,
 } from '../schema';
 import {
   LOCATION,
@@ -105,17 +104,20 @@ import type {
   TWindowEntry,
 } from './types';
 
+/** `externalLinks.section`: a link in no section (D-053). */
+const NO_SECTION = 'none';
+
 const WHERE = '[fundamentool] createNavigator';
 
 /** A gate (D-050): its store and its first page. */
-const GATE = object({
+export const GATE = /*#__PURE__*/ lazy(() => object({
   closed: custom<TStore<boolean>>(isStore, 'a store of true / false (getState + watch)'),
-  to: LOCATION.describe('its first page ({ path, … })'),
-}).describe('{ closed, to }').label((_gate, name) => `the gate "${name}"`);
+  to: LOCATION().describe('its first page ({ path, … })'),
+}).describe('{ closed, to }').label((_gate, name) => `the gate "${name}"`));
 
 /** `createNavigator`'s options (D-051): the router, the observable adapter, the view library, the settings. */
-const NAVIGATOR_DEPS = object({
-  router: ROUTER,
+export const NAVIGATOR_DEPS = /*#__PURE__*/ lazy(() => object({
+  router: ROUTER(),
   createObservable: func(),
   createApi: func(),
   ...viewLibraryShape([
@@ -129,8 +131,8 @@ const NAVIGATOR_DEPS = object({
   ]),
   keep: number().min(0).optional(),
   exitMs: number().min(0).optional(),
-  fallback: LOCATION.optional(),
-  gates: record(GATE).describe('{ [name]: { closed, to } }').optional(),
+  fallback: LOCATION().optional(),
+  gates: record(GATE()).describe('{ [name]: { closed, to } }').optional(),
   externalLinks: object({
     backlinkParam: string().optional(),
     section: oneOf([
@@ -138,36 +140,27 @@ const NAVIGATOR_DEPS = object({
       NO_SECTION,
     ]).optional(),
   }).optional(),
-});
-
-/** The single list of `createNavigator`'s keys. */
-export const NAVIGATOR_DEPS_KEYS = NAVIGATOR_DEPS.keys;
-
-/** The single list of a gate's keys (D-050). */
-export const GATE_KEYS = GATE.keys;
+}));
 
 /** `open`'s options. */
-const OPEN_OPTIONS = object({
+export const OPEN_OPTIONS = /*#__PURE__*/ lazy(() => object({
   reopen: boolean().optional(),
-});
-
-/** The single list of `open`'s option keys. */
-export const OPEN_OPTION_KEYS = OPEN_OPTIONS.keys;
+}));
 
 /** `startOver`'s argument: a location, or a non-empty list of them. */
-const START_OVER = union([
-  LOCATION,
-  array(LOCATION).refine((list) => list.length > 0, 'an empty list'),
-]).describe('a location ({ path, query, … }) or a non-empty list of them');
+const START_OVER = /*#__PURE__*/ lazy(() => union([
+  LOCATION(),
+  array(LOCATION()).refine((list) => list.length > 0, 'an empty list'),
+]).describe('a location ({ path, query, … }) or a non-empty list of them'));
 
 /** `backToDepth`'s depth. */
-const DEPTH = number().int().min(0).describe('a depth (a whole number ≥ 0)');
+const DEPTH = /*#__PURE__*/ lazy(() => number().int().min(0).describe('a depth (a whole number ≥ 0)'));
 
 /** What an entry guard answers. */
-const ENTER_ANSWER = union([
+const ENTER_ANSWER = /*#__PURE__*/ lazy(() => union([
   boolean(),
-  LOCATION,
-]).describe('true, false or a location ({ path, … })');
+  LOCATION(),
+]).describe('true, false or a location ({ path, … })'));
 
 /** At most this many redirects of the entry guards in a row — more is a loop. */
 const MAX_REDIRECTS = 10;
@@ -238,7 +231,9 @@ function isNavData(value: unknown): value is TNavData {
  * const answer = await nav.open(ConfirmWindow, { text: 'Quit?' });
  */
 export function createNavigator(deps: TNavigatorDeps) {
-  NAVIGATOR_DEPS.parse(deps, WHERE);
+  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+    NAVIGATOR_DEPS().parse(deps, WHERE);
+  }
   const {
     router,
     createObservable,
@@ -1074,9 +1069,13 @@ export function createNavigator(deps: TNavigatorDeps) {
    * await nav.startOver([{ path: '/' }, { path: '/place/5' }]); // the place shown; Back goes home
    */
   async function startOver(change: Partial<TUrlProps> | readonly Partial<TUrlProps>[], options?: TStepOptions): Promise<void> {
-    START_OVER.parse(change, `${WHERE} startOver`);
+    if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+      START_OVER().parse(change, `${WHERE} startOver`);
+    }
     const list = isArray(change) ? change : [change];
-    STEP_OPTIONS.parse(options, `${WHERE} startOver`);
+    if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+      STEP_OPTIONS().optional().parse(options, `${WHERE} startOver`);
+    }
     const locations: TUrlProps[] = [];
     let base = topPage(entries).location;
     for (const item of list) {
@@ -1109,7 +1108,9 @@ export function createNavigator(deps: TNavigatorDeps) {
     params?: unknown,
     options?: TOpenOptions,
   ): Promise<R | null> {
-    OPEN_OPTIONS.optional().parse(options, `${WHERE} open`);
+    if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+      OPEN_OPTIONS().optional().parse(options, `${WHERE} open`);
+    }
     if (hasForward(WINDOW) && !(await askForward(WINDOW))) {
       return null;
     }
@@ -1189,8 +1190,12 @@ export function createNavigator(deps: TNavigatorDeps) {
    * await nav.open(SignIn);
    */
   async function backToDepth(depth: number, options?: TBackOptions): Promise<boolean> {
-    DEPTH.parse(depth, `${WHERE} backToDepth`);
-    BACK_OPTIONS.parse(options, `${WHERE} backToDepth`);
+    if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+      DEPTH().parse(depth, `${WHERE} backToDepth`);
+    }
+    if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+      BACK_OPTIONS().optional().parse(options, `${WHERE} backToDepth`);
+    }
     return backTo(
       () => depth, !!options?.force, !!options?.quiet,
     );
@@ -1324,7 +1329,9 @@ export function createNavigator(deps: TNavigatorDeps) {
    * });
    */
   async function openExternalLink(change: Partial<TUrlProps>): Promise<void> {
-    LOCATION.parse(change, `${WHERE} openExternalLink`);
+    if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+      LOCATION().parse(change, `${WHERE} openExternalLink`);
+    }
     const [
       link,
       back,
@@ -1415,7 +1422,10 @@ export function createNavigator(deps: TNavigatorDeps) {
     for (const item of enterGuards.slice()) {
       const answer = item.guard(target);
       if (answer !== true) {
-        return ENTER_ANSWER.parse(answer, `${WHERE} onBeforeEnter: a guard's answer`);
+        if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+          ENTER_ANSWER().parse(answer, `${WHERE} onBeforeEnter: a guard's answer`);
+        }
+        return answer;
       }
     }
     return true;
@@ -1658,7 +1668,9 @@ export function createNavigator(deps: TNavigatorDeps) {
    * nav.onBeforeEnter(({ location }) => (location.path === '/old-shop' ? { path: '/shop' } : true));      // moved
    */
   function onBeforeEnter(guard: TEnterGuard): () => void {
-    func().parse(guard, `${WHERE} onBeforeEnter`);
+    if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+      func().parse(guard, `${WHERE} onBeforeEnter`);
+    }
     const item = {
       guard,
     };

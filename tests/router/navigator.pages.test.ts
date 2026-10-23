@@ -18,12 +18,14 @@ import {
   createObservable,
 } from '../../src/Observable';
 import {
-  BACK_OPTION_KEYS,
   createRouter,
   memoryHistoryPrimitivesProvider,
-  PARAMS_OPTION_KEYS,
-  STEP_OPTION_KEYS,
 } from '../../src/router';
+import {
+  BACK_OPTIONS,
+  PARAMS_OPTIONS,
+  STEP_OPTIONS,
+} from '../../src/router/options';
 import type {
   TBackOptions,
   TPageRoute,
@@ -552,9 +554,9 @@ describe('quiet steps (D-042)', () => {
       replace: true,
       quiet: true,
     };
-    expect([...STEP_OPTION_KEYS].sort()).toEqual(Object.keys(step).sort());
-    expect([...BACK_OPTION_KEYS].sort()).toEqual(Object.keys(back).sort());
-    expect([...PARAMS_OPTION_KEYS].sort()).toEqual(Object.keys(params).sort());
+    expect([...STEP_OPTIONS().keys].sort()).toEqual(Object.keys(step).sort());
+    expect([...BACK_OPTIONS().keys].sort()).toEqual(Object.keys(back).sort());
+    expect([...PARAMS_OPTIONS().keys].sort()).toEqual(Object.keys(params).sort());
   });
 
   /** A navigator over home and a wizard, its host made. */

@@ -3,28 +3,38 @@
 [Русская версия](./README.ru.md)
 
 `fundamentool/schema` (fundamentool D-051): a factory's options as a schema — the check, the type (`TInfer`) and the
-key list come from it. **zod's names and behaviour**, with the lab's rules (`api-input-validation.md`): an unknown key is
-an error with "did you mean" (zod strips it — the one difference, on purpose); messages "… expects …, got …".
+key list come from it. **A check of options runs only in development** (lab D-023): a production build drops it, the
+schema and this library — see "Only in development" below.
+
+**zod's names and behaviour**, with the lab's rules (`api-input-validation.md`): an unknown key is an error with "did
+you mean" (zod strips it — the one difference, on purpose); messages "… expects …, got …".
 
 ```ts
-import { object, array, tuple, string, boolean, func, unknown, type TInfer } from 'fundamentool/schema';
+import { lazy, object, array, tuple, string, boolean, func, unknown, type TInfer } from 'fundamentool/schema';
 // or: import * as schema from 'fundamentool/schema'; schema.object(…) — the same, and as small in a bundle
 
-const ROW = object({
-  main: unknown(),
-  keep: boolean().optional(),
-}).passthrough();                                         // the app's own fields allowed
+// Built on first use — the pure annotation lets a production build drop it whole
+export const HOST_OPTIONS = /*#__PURE__*/ lazy(() => {
+  const row = object({
+    main: unknown(),
+    keep: boolean().optional(),
+  }).passthrough();                                       // the app's own fields allowed
+  return object({
+    routes: array(tuple([string(), row]).label((r) => `the row "${r[0]}"`)),
+    render: func().optional(),
+  }).refine((options) => options.render !== undefined || options.routes.every(([, r]) => r.main !== undefined),
+    'a row without "main" needs a "render"');
+});
 
-export const HOST_OPTIONS = object({
-  routes: array(tuple([string(), ROW]).label((row) => `the row "${row[0]}"`)),
-  render: func().optional(),
-}).refine((options) => options.render !== undefined || options.routes.every(([, row]) => row.main !== undefined),
-  'a row without "main" needs a "render"');
+export type THostOptions = TInfer<ReturnType<typeof HOST_OPTIONS>>; // the type — from the schema
+// the key list — from the schema, where a test compares it with the type: HOST_OPTIONS().keys
 
-export type THostOptions = TInfer<typeof HOST_OPTIONS>;   // the type — from the schema
-export const HOST_OPTION_KEYS = HOST_OPTIONS.keys;        // the key list — from the schema
-
-HOST_OPTIONS.parse(options, '[app] createHost');
+export function createHost(options: THostOptions) {
+  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+    HOST_OPTIONS().parse(options, '[app] createHost');
+  }
+  // …
+}
 ```
 
 What a developer sees:
@@ -48,3 +58,27 @@ Don't destructure a namespace object (`const { object } = schema`) — a bundler
 | `object(shape)` + `.passthrough()`, `.keys` | an options object |
 | `.optional()`, `.refine(rule, message)`, `.describe(expected)`, `.label(name)` | on any schema |
 | `.parse(value, where)`, `.safeParse(value)`, `TInfer<typeof S>` | the check, without throwing, the type |
+| `lazy(() => schema)` | a schema built on first use (lab D-023) |
+
+## Only in development (lab D-023)
+
+A check of what a developer writes in code — an entry point's options, a call's arguments — is written behind the build
+mode, its schema built on first use:
+
+```ts
+const OPTIONS = /*#__PURE__*/ lazy(() => object({ quiet: boolean().optional() }));
+
+if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  OPTIONS().parse(options, WHERE);
+}
+```
+
+An app's production build (Vite, webpack, Next.js, esbuild with `--minify`) writes `"production"` in: the branch, the
+schema and this library leave the bundle — in the app's code and in every dependency, with no setting. Development and
+tests run the checks as before; a page with no bundler (no `process`) skips them. Both parts are needed, measured in lab
+research 13: a schema built at the top of a module stays even when nothing uses it, and esbuild drops a `lazy(…)` only
+with the pure annotation. The lint rule `lab/dev-only-checks` (eslint-config-lab) reports a check outside the branch and
+a schema built when the module loads.
+
+A check of **data that arrives at run time** — an address, storage, the network, what a user typed — is not a mistake
+in the code: it stays always, and says so: `// eslint-disable-next-line lab/dev-only-checks -- <the data it checks>`.

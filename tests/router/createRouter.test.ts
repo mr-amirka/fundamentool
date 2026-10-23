@@ -12,9 +12,11 @@ import {
 import {
   createRouter,
   memoryHistoryPrimitivesProvider,
-  ROUTER_DEPS_KEYS,
   routeTableMatcher,
 } from '../../src/router';
+import {
+  ROUTER_DEPS,
+} from '../../src/router/createRouter';
 import type {
   TRouterDeps,
 } from '../../src/router';
@@ -179,7 +181,7 @@ describe('createRouter', () => {
       createObservable,
       createApi,
     };
-    expect(ROUTER_DEPS_KEYS).toEqual(Object.keys(deps));
+    expect(ROUTER_DEPS().keys).toEqual(Object.keys(deps));
     expect(() => createRouter(null as never)).toThrow(/createRouter: expects an options object, got null/);
     expect(() => createRouter({
       ...deps,

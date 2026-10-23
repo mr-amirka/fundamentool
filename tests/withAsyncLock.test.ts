@@ -1,5 +1,5 @@
 import {
-  WITH_ASYNC_LOCK_OPTION_KEYS,
+  WITH_ASYNC_LOCK_OPTIONS,
   withAsyncLock,
 } from '../src/withAsyncLock';
 import type {
@@ -108,6 +108,6 @@ describe('withAsyncLock', () => {
     const all: Record<keyof TWithAsyncLockOptions, true> = {
       minMs: true,
     };
-    expect([...WITH_ASYNC_LOCK_OPTION_KEYS]).toEqual(Object.keys(all));
+    expect([...WITH_ASYNC_LOCK_OPTIONS().keys]).toEqual(Object.keys(all));
   });
 });

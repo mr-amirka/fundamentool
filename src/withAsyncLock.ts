@@ -2,6 +2,7 @@ import {
   func,
   number,
   object,
+  lazy,
 } from './schema';
 import {
   wait,
@@ -13,21 +14,23 @@ export type TWithAsyncLockOptions = {
   minMs?: number;
 };
 
-/** {@link withAsyncLock}'s options (D-051). */
-const OPTIONS = object({
+/** {@link withAsyncLock}'s options (D-051): the single list of its keys — `WITH_ASYNC_LOCK_OPTIONS().keys`. */
+export const WITH_ASYNC_LOCK_OPTIONS = /*#__PURE__*/ lazy(() => object({
   minMs: number().finite().min(0).optional(),
-});
-
-/** The single list of accepted keys of {@link TWithAsyncLockOptions}. */
-export const WITH_ASYNC_LOCK_OPTION_KEYS = OPTIONS.keys;
+}));
 
 const WHERE = '[fundamentool] withAsyncLock';
 
-/** Checks the arguments once, at creation (lab convention `api-input-validation.md`); `null` options — none. */
+/**
+ * Checks the arguments once, at creation, in development only (`api-input-validation.md`, lab D-023); `null` options —
+ * none.
+ */
 function assertArguments(fn: unknown, options: unknown): void {
-  func().parse(fn, WHERE);
-  if (options !== null) {
-    OPTIONS.optional().parse(options, WHERE);
+  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+    func().parse(fn, WHERE);
+    if (options !== null) {
+      WITH_ASYNC_LOCK_OPTIONS().optional().parse(options, WHERE);
+    }
   }
 }
 
