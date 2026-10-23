@@ -67,8 +67,12 @@ jobs:
 
       # Trusted publishing needs npm >= 11.5.1. prepublishOnly runs build and
       # test:dist (scripts/check-dist.mjs) before anything is uploaded.
+      # A failed GitHub ↔ npm exchange makes npm upload without a login, and the
+      # registry answers "E404 Not Found - PUT" — the reason is only in npm's
+      # verbose "oidc" lines, hence --loglevel verbose.
       - name: Publish
         if: steps.version.outputs.publish == 'true'
         run: |
           npm install -g npm@^11.5.1
-          npm publish
+          npm --version
+          npm publish --loglevel verbose
