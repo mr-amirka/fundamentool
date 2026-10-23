@@ -1,6 +1,6 @@
 {
   "name": "fundamentool",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "TypeScript utility library — strings, objects, arrays, async, type predicates, RPC, JSONL, Node.js and browser utilities",
   "main": "dist/index.js",
   "module": "dist/esm/index.js",
