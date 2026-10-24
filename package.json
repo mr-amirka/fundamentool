@@ -48,6 +48,21 @@
       "import": "./dist/esm/schema/index.js",
       "default": "./dist/schema/index.js"
     },
+    "./i18n": {
+      "types": "./dist/i18n/index.d.ts",
+      "import": "./dist/esm/i18n/index.js",
+      "default": "./dist/i18n/index.js"
+    },
+    "./i18n/vite": {
+      "types": "./dist/i18n/vite/index.d.ts",
+      "import": "./dist/esm/i18n/vite/index.js",
+      "default": "./dist/i18n/vite/index.js"
+    },
+    "./i18n/testing": {
+      "types": "./dist/i18n/testing/index.d.ts",
+      "import": "./dist/esm/i18n/testing/index.js",
+      "default": "./dist/i18n/testing/index.js"
+    },
     "./join": {
       "types": "./dist/join/index.d.ts",
       "import": "./dist/esm/join/index.js",

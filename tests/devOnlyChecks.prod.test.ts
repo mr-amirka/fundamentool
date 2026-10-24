@@ -18,8 +18,10 @@ import { createRouter, createNavigator, memoryHistoryPrimitivesProvider } from '
 import { linksProvider, viewHooksProvider } from './src/view';
 import { withAsyncLock } from './src/withAsyncLock';
 import { createSparseCodec } from './src/SparseCodec';
+import { createLocale, createMessages, createI18n } from './src/i18n';
+import { localeViewProvider } from './src/view';
 console.log(createRouter, createNavigator, memoryHistoryPrimitivesProvider, linksProvider, viewHooksProvider,
-  withAsyncLock, createSparseCodec);
+  withAsyncLock, createSparseCodec, createLocale, createMessages, createI18n, localeViewProvider);
 `;
 
 /** Texts only the schema library and the option checks hold. */

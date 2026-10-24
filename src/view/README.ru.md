@@ -62,6 +62,12 @@ const confirming = useStoreMap({
 `Link` перерисовывается, только когда меняется его цель (у абсолютного `href` — никогда); `NavLink` — только когда
 меняется отметка.
 
+## `useT`, `LocaleProvider`, `<Text>` — привязки локали
+
+`localeViewProvider(React)` — см. [`fundamentool/i18n`](../i18n/README.ru.md#react--fundamentoolview): `useT(set)`
+перерисовывает компонент при смене его локали — и только тогда; `LocaleProvider` задаёт локаль части дерева; `<Text>`
+рисует теги сообщения рендерерами приложения или сообщение, переданное данными.
+
 ## Файлы
 
 | Файл | Что в нём |
@@ -69,3 +75,4 @@ const confirming = useStoreMap({
 | `library.ts` | `TViewLibrary`, `VIEW_LIBRARY_KEYS`, `viewLibraryShape` (библиотека как форма схемы, `fundamentool/schema`) |
 | `viewHooksProvider.ts` | `useUnit`, `useStoreMap` |
 | `linksProvider.ts` | `Link`, `NavLink` |
+| `localeViewProvider.ts` | `useT`, `useLocale`, `LocaleProvider`, `Text` — привязки локали (`fundamentool/i18n`) |
