@@ -76,6 +76,7 @@ export * from './flattenDeep';
 export * from './forEach';
 export * from './forIn';
 export * from './forInOwn';
+export * from './formatDuration';
 export * from './formatTime';
 export * from './fromPairs';
 export * from './get';

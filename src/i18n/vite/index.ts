@@ -1,5 +1,5 @@
 // The Vite plugin of fundamentool/i18n (D-065): builds every set of an app into the compact format — the keys once,
-// each locale's values by position — as `virtual:lexicons`; the `inline` locales inside it, the rest as their own
+// each locale's values by position — as `virtual:lexicons` (`import { source } from 'virtual:lexicons'`); the `inline` locales inside it, the rest as their own
 // chunks loaded on demand. The sources stay TypeScript (`<set folder>/<locale>.ts`); a translation whose keys or
 // variables differ from its base fails the build. Runs in Node (the build, the dev server).
 import {
@@ -278,7 +278,7 @@ async function build(options: TLexiconsOptions, root: string): Promise<TBuilt> {
  * // vite.config.ts
  * plugins: [lexicons({ locales: LOCALES, sets: { game: { from: './src/i18n' } }, inline: 'all' })]
  * // app/i18n.ts
- * import source from 'virtual:lexicons';
+ * import { source } from 'virtual:lexicons';
  * export const locale = createLocale({ source, locales: LOCALES });
  */
 export function lexicons(options: TLexiconsOptions): TVitePlugin {
@@ -334,16 +334,16 @@ export function lexicons(options: TLexiconsOptions): TVitePlugin {
         const loaders = locales.filter((locale) => !inline.has(locale)).map((locale) =>
           `${JSON.stringify(locale)}: () => import(${JSON.stringify(`${VIRTUAL}/${locale}`)})`);
         return `const loaders = {${loaders.join(LIST)}};
-export default {
+export const source = {
   hash: ${JSON.stringify(hash)},
   keys: ${JSON.stringify(keys)},
   values: ${JSON.stringify(inlined)},
-  load: (locale) => loaders[locale] ? loaders[locale]().then((m) => m.default) : Promise.reject(new Error('no locale ' + locale)),
+  load: (locale) => loaders[locale] ? loaders[locale]().then((m) => m.chunk) : Promise.reject(new Error('no locale ' + locale)),
 };
 `;
       }
       const locale = id.slice(RESOLVED.length + 1);
-      return `export default { hash: ${JSON.stringify(hash)}, values: ${JSON.stringify(values[locale] ?? [])} };\n`;
+      return `export const chunk = { hash: ${JSON.stringify(hash)}, values: ${JSON.stringify(values[locale] ?? [])} };\n`;
     },
     handleHotUpdate({
       file,

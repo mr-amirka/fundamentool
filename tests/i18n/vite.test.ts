@@ -172,7 +172,7 @@ describe('lexicons — the compact source', () => {
     expect(main).toContain('"de": () => import("virtual:lexicons/de")');
     expect(main).not.toContain('"ru": () => import(');
     const hash = field(main as string, 'hash');
-    expect(german).toBe(`export default { hash: ${JSON.stringify(hash)}, values: ${JSON.stringify([
+    expect(german).toBe(`export const chunk = { hash: ${JSON.stringify(hash)}, values: ${JSON.stringify([
       'Töne',
       'Hilfe',
       'Spielen',
@@ -226,8 +226,8 @@ describe('lexicons — the compact source', () => {
     const {
       code: [main],
     } = await run(OPTIONS, ['virtual:lexicons']);
-    const body = (main as string).replace(/import\("virtual:lexicons\/de"\)/, 'Promise.resolve({ default: "de" })')
-      .replace('export default', 'return');
+    const body = (main as string).replace(/import\("virtual:lexicons\/de"\)/, 'Promise.resolve({ chunk: "de" })')
+      .replace('export const source =', 'return');
     const source = new Function(body)() as { load(locale: string): Promise<unknown> };
     await expect(source.load('de')).resolves.toBe('de');
     await expect(source.load('xx')).rejects.toThrow('no locale xx');

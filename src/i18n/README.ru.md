@@ -13,7 +13,7 @@ virtual:lexicons                       ключи один раз + значен
    ↓
 createLocale → createMessages          текущая локаль (Observable), переключение; t / parts / list … набора
    ↓
-fundamentool/view: localeViewProvider  useT, useLocale, LocaleProvider, <Text>
+fundamentool (view): localeViewProvider  useT, useLocale, LocaleProvider, <Text>
 ```
 
 ## Сообщения
@@ -64,15 +64,14 @@ plugins: [lexicons({
 Один раз объявить модуль для TypeScript в приложении:
 ```ts
 declare module 'virtual:lexicons' {
-  const source: import('fundamentool/i18n').TLexiconSource;
-  export default source;
+  export const source: import('fundamentool/i18n').TLexiconSource;
 }
 ```
 
 ## Во время работы
 
 ```ts
-import source from 'virtual:lexicons';
+import { source } from 'virtual:lexicons';
 import { createLocale, createMessages } from 'fundamentool/i18n';
 import type { en } from './i18n/en';                         // тип — тексты приходят из source, а не второй раз
 
@@ -104,7 +103,7 @@ locale.pick({ en: 'Forest', ru: 'Лес' });  // контент со своим�
 `createI18n({ source, locales })` — `createLocale` + единственный набор, для приложения с одним набором текстов.
 `sourceOf({ game: { en, ru } }, 'en')` — тот же source в памяти: тесты, Node, приложение, собранное без Vite.
 
-## React — `fundamentool/view`
+## React — `fundamentool` (его привязки view)
 
 ```tsx
 const { useT, useLocale, LocaleProvider, Text } = localeViewProvider(React);

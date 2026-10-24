@@ -104,6 +104,13 @@ export type TKeys<R, T = R, P extends string = ''> = {
 /** A text key of a set. */
 export type TTextKey<T> = TMessageKey<T, TTextPath<T>>;
 
+/**
+ * A text key whose message has no variables — what a prop can hold and a child shows with `t(key)` alone (a window's
+ * title). A key needing variables is passed with them as data instead (`TMessage`).
+ */
+export type TPlainKey<T> = { [P in TTextPath<T>]: [TVarNames<TAt<T, P>>] extends [never] ? TMessageKey<T, P> : never }[
+  TTextPath<T>];
+
 /** A key and its variables as data — passed to a child that calls `t(...message)` (D-064). */
 export type TMessage<T> = { [P in TTextPath<T>]: [TVarNames<TAt<T, P>>] extends [never] ?
   readonly [key: TMessageKey<T, P>] : readonly [key: TMessageKey<T, P>, vars: Record<TVarNames<TAt<T, P>>, TVarValue>] }[
@@ -709,7 +716,7 @@ TLexiconSource {
  * The app's locale (D-060, D-061): the current one as an `Observable`, switching (the last choice wins), detection.
  *
  * @example
- * import source from 'virtual:lexicons';
+ * import { source } from 'virtual:lexicons';
  * const locale = createLocale({ source, locales: ['en', 'ru', 'de'] });
  * await locale.select(locale.detect([saved, ...navigator.languages]));
  * locale.$locale.getState(); // 'de'

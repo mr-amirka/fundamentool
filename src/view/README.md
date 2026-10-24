@@ -64,7 +64,7 @@ flips.
 
 ## `useT`, `LocaleProvider`, `<Text>` — the locale's bindings
 
-`localeViewProvider(React)` — see [`fundamentool/i18n`](../i18n/README.md#react--fundamentoolview): `useT(set)` re-renders a
+`localeViewProvider(React)` — see [`fundamentool/i18n`](../i18n/README.md#react--fundamentool-its-view-bindings): `useT(set)` re-renders a
 component when its locale changes, and only then; `LocaleProvider` sets the locale of a part of the tree; `<Text>`
 renders a message's tags by the app's renderers, or a message passed as data.
 

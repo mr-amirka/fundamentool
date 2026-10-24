@@ -14,6 +14,7 @@ import {
 import type {
   TLexiconSource,
   TLocaleValues,
+  TPlainKey,
 } from '../../src/i18n';
 
 const en = {
@@ -948,6 +949,21 @@ describe('the locale: switching, loading, detection', () => {
       locale,
     } = setup();
     expect(() => createMessages(locale, 'nope')).toThrow('no set "nope" in the source');
+  });
+});
+
+describe('types of keys', () => {
+  it('TPlainKey: a key without variables shows with t(key) alone; one needing variables isn\'t one', () => {
+    const {
+      text, K,
+    } = setup();
+    const title: TPlainKey<typeof en> = K.menu.play;
+    expect(text.t(title)).toBe('Play');
+    // @ts-expect-error — `hud.moves` needs `count`: not a plain key
+    const moves: TPlainKey<typeof en> = K.hud.moves;
+    expect(moves).toBe('hud.moves');
+    // @ts-expect-error — a bare string isn't a key (D-066)
+    text.t('menu.play');
   });
 });
 

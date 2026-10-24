@@ -13,7 +13,7 @@ virtual:lexicons                      the keys once + each locale's values by po
    ↓
 createLocale → createMessages         the current locale (an Observable), switching; a set's t / parts / list …
    ↓
-fundamentool/view: localeViewProvider useT, useLocale, LocaleProvider, <Text>
+fundamentool (view): localeViewProvider useT, useLocale, LocaleProvider, <Text>
 ```
 
 ## The messages
@@ -63,15 +63,14 @@ other variables, a plural without `other`. Needs Node 24+ (it reads the TypeScri
 Declare the module for TypeScript once in the app:
 ```ts
 declare module 'virtual:lexicons' {
-  const source: import('fundamentool/i18n').TLexiconSource;
-  export default source;
+  export const source: import('fundamentool/i18n').TLexiconSource;
 }
 ```
 
 ## The runtime
 
 ```ts
-import source from 'virtual:lexicons';
+import { source } from 'virtual:lexicons';
 import { createLocale, createMessages } from 'fundamentool/i18n';
 import type { en } from './i18n/en';                         // a type — the texts come from the source, not twice
 
@@ -102,7 +101,7 @@ A translation missing a text shows the base's (development warns once per locale
 `createI18n({ source, locales })` — `createLocale` + the only set, for an app with one set of texts.
 `sourceOf({ game: { en, ru } }, 'en')` — the same source in memory: tests, Node, an app built without Vite.
 
-## React — `fundamentool/view`
+## React — `fundamentool` (its view bindings)
 
 ```tsx
 const { useT, useLocale, LocaleProvider, Text } = localeViewProvider(React);

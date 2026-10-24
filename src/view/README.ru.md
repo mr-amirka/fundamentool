@@ -64,7 +64,7 @@ const confirming = useStoreMap({
 
 ## `useT`, `LocaleProvider`, `<Text>` — привязки локали
 
-`localeViewProvider(React)` — см. [`fundamentool/i18n`](../i18n/README.ru.md#react--fundamentoolview): `useT(set)`
+`localeViewProvider(React)` — см. [`fundamentool/i18n`](../i18n/README.ru.md#react--fundamentool-его-привязки-view): `useT(set)`
 перерисовывает компонент при смене его локали — и только тогда; `LocaleProvider` задаёт локаль части дерева; `<Text>`
 рисует теги сообщения рендерерами приложения или сообщение, переданное данными.
 
