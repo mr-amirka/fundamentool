@@ -56,6 +56,7 @@ export * from './escapedSplitProvider';
 export * from './every';
 export * from './everyIn';
 export * from './executeTry';
+export * from './dynamicModule';
 export * from './extend';
 export * from './extendByPathsMap';
 export * from './extendDepth';

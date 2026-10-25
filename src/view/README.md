@@ -68,22 +68,25 @@ flips.
 component when its locale changes, and only then; `LocaleProvider` sets the locale of a part of the tree; `<Text>`
 renders a message's tags by the app's renderers, or a message passed as data.
 
-## `createDynamicComponents` — components in files of their own, declared where they're used
+## `createDynamicComponents` — parts in files of their own, declared where they're used
 
 `dynamicComponentsProvider(React)` gives `createDynamicComponents(options)`: an app makes one instance, with its look for
-a module on its way (`renderLoading`) and a failed one (`renderFailed({ error, retry })` — its message and Retry). A
-module is declared in the file that uses it; its exports read as components, fetched (once, by `dynamicModule`) when
-first rendered. Every declaration joins the instance's registry: `$state` — `{ total, loaded, failed }`, the total
-readiness; `preload()` — every module declared, for a boot step.
+a part on its way (`renderLoading`) and a failed one (`renderFailed({ error, retry })` — its message and Retry, in its own
+texts). `module(load)` declares a module where it's used — lazy, nothing fetched yet; `component(module, (m) => m.X)`
+picks a component out of it, fetched (once, by `dynamicModule`) when first shown. The instance's registry: `$state` —
+`{ total, loaded, failed }` (`failed` — the modules that failed), `preload()` — every module, for a boot step,
+`retry()` — the failed ones again.
 
 ```tsx
-export const wgDynamicComponents = createDynamicComponents({ renderFailed: ({ retry }) => <PartFailed onRetry={retry} /> });
+const dynamic = createDynamicComponents({ renderFailed: ({ retry }) => <PartFailed onRetry={retry} /> });
+export const wgDynamicModule = dynamic.module;
+export const wgDynamicComponent = dynamic.component;
 // openWindowShop/index.tsx
-const dynamicComponents = wgDynamicComponents(() => import('./ShopContent'));
-openWindowOverlay({ title, content: dynamicComponents.ShopContent });
-// boot
-wgDynamicComponents.$state.watch(({ total, loaded }) => report(total ? loaded / total : 1));
-await wgDynamicComponents.preload();
+const shopModule = wgDynamicModule(() => import('./ShopContent'));
+const ShopContent = wgDynamicComponent(shopModule, (m) => m.ShopContent);
+// boot: the total readiness as the progress; what failed — retried
+dynamic.$state.watch(({ total, loaded }) => report(total ? loaded / total : 1));
+await dynamic.preload().catch(() => dynamic.retry());
 ```
 
 ## Files
@@ -94,4 +97,4 @@ await wgDynamicComponents.preload();
 | `viewHooksProvider.ts` | `useUnit`, `useStoreMap` |
 | `linksProvider.ts` | `Link`, `NavLink` |
 | `localeViewProvider.ts` | `useT`, `useLocale`, `LocaleProvider`, `Text` — the locale's bindings (`fundamentool/i18n`) |
-| `dynamicComponentsProvider.ts` | `createDynamicComponents` — components in files of their own, a registry of them (web-games D-098) |
+| `dynamicComponentsProvider.ts` | `createDynamicComponents` — parts in files of their own: `module`, `component`, the registry (web-games D-100) |

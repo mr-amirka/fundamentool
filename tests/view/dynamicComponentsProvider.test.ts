@@ -3,9 +3,9 @@
  * @jest-environment-options {"customExportConditions": ["require", "node", "default"]}
  */
 /**
- * Components in files of their own, declared where they're used (web-games D-097, D-098): the shop's content loads when
- * the shop opens; the boot fetches every declared module with the total readiness as its progress; a module that can't
- * come shows the app's message and Retry.
+ * Parts in files of their own (web-games D-100): the shop's module is declared where it's used and its content picked
+ * out of it; the boot fetches every declared module with the total readiness as its progress; a module that can't come
+ * is listed among the failed, shows the app's message and Retry, and `retry()` fetches the failed ones again.
  */
 
 // React 19 warns on every `act()` unless the environment declares itself an act environment.
@@ -23,9 +23,6 @@ import type {
 import {
   dynamicComponentsProvider,
 } from '../../src/view';
-import type {
-  TDynamicState,
-} from '../../src/view';
 
 const h = React.createElement;
 const {
@@ -36,7 +33,7 @@ const {
 function file() {
   const calls: Array<{ arrive: () => void;
     fail: () => void }> = [];
-  const module = {
+  const value = {
     ShopContent: (props: { title?: string }) => h(
       'b', {
         'data-shop': '',
@@ -48,9 +45,9 @@ function file() {
       }, 'footer',
     ),
   };
-  const load = () => new Promise<typeof module>((resolve, reject) => {
+  const load = () => new Promise<typeof value>((resolve, reject) => {
     calls.push({
-      arrive: () => resolve(module),
+      arrive: () => resolve(value),
       fail: () => reject(new Error('offline')),
     });
   });
@@ -82,23 +79,24 @@ const settle = () => act(async () => {
 });
 
 describe('dynamicComponentsProvider', () => {
-  it('declared — registered, not fetched; rendered — fetched once, every export of it shown; the registry counts it', async () => {
-    const instance = createDynamicComponents();
+  it('a module is declared — registered, not fetched; a component picked out of it fetches it once when shown', async () => {
+    const dynamic = createDynamicComponents();
     const shop = file();
-    const states: TDynamicState[] = [];
-    instance.$state.watch((state) => states.push(state));
-    const dynamicComponents = instance(shop.load);
+    const shopModule = dynamic.module(shop.load);
+    const ShopContent = dynamic.component(shopModule, (m) => m.ShopContent);
+    const ShopFooter = dynamic.component(shopModule, (m) => m.ShopFooter);
     expect(shop.calls).toHaveLength(0);
-    expect(instance.$state.getState()).toEqual({
+    expect(shopModule.status).toBe('idle');
+    expect(dynamic.$state.getState()).toEqual({
       total: 1,
       loaded: 0,
-      failed: 0,
+      failed: [],
     });
 
     render(h(
-      'div', null, h(dynamicComponents.ShopContent, {
+      'div', null, h(ShopContent, {
         title: 'Shop',
-      }), h(dynamicComponents.ShopFooter),
+      }), h(ShopFooter),
     ));
     expect(container.textContent).toBe('');
     await settle();
@@ -107,17 +105,12 @@ describe('dynamicComponentsProvider', () => {
     await settle();
     expect(container.querySelector('[data-shop]')?.textContent).toBe('Shop');
     expect(container.querySelector('[data-footer]')).not.toBeNull();
-    expect(instance.$state.getState()).toEqual({
-      total: 1,
-      loaded: 1,
-      failed: 0,
-    });
-    // The same export is the same component
-    expect(dynamicComponents.ShopContent).toBe(dynamicComponents.ShopContent);
+    expect(shopModule.status).toBe('loaded');
+    expect(dynamic.$state.getState().loaded).toBe(1);
   });
 
-  it('on its way — the app\'s loading look; failed — its message with Retry, which fetches again', async () => {
-    const instance = createDynamicComponents({
+  it('on its way — the app\'s loading look; failed — listed, its message and Retry, which fetches again', async () => {
+    const dynamic = createDynamicComponents({
       renderLoading: () => h('span', {
         'data-loading': '',
       }),
@@ -126,91 +119,83 @@ describe('dynamicComponentsProvider', () => {
       }) => h(
         'button', {
           'data-failed': String((error as Error).message),
-          onClick: retry,
+          'onClick': retry,
         }, 'Retry',
       ),
     });
     const shop = file();
-    const dynamicComponents = instance(shop.load);
-    render(h(dynamicComponents.ShopContent));
+    const shopModule = dynamic.module(shop.load);
+    render(h(dynamic.component(shopModule, (m) => m.ShopContent)));
     expect(container.querySelector('[data-loading]')).not.toBeNull();
     await settle();
     shop.calls[0].fail();
     await settle();
-    const retry = container.querySelector('[data-failed]') as HTMLButtonElement;
-    expect(retry.getAttribute('data-failed')).toBe('offline');
-    expect(instance.$state.getState()).toEqual({
-      total: 1,
-      loaded: 0,
-      failed: 1,
-    });
-    act(() => retry.click());
+    expect(dynamic.$state.getState().failed).toEqual([shopModule]);
+    expect((shopModule.error as Error).message).toBe('offline');
+    act(() => (container.querySelector('[data-failed]') as HTMLButtonElement).click());
     await settle();
-    expect(shop.calls).toHaveLength(2);
     expect(container.querySelector('[data-loading]')).not.toBeNull();
     // Still offline: failed again — Retry stays
     shop.calls[1].fail();
     await settle();
     act(() => (container.querySelector('[data-failed]') as HTMLButtonElement).click());
     await settle();
-    expect(shop.calls).toHaveLength(3);
     shop.calls[2].arrive();
     await settle();
     expect(container.querySelector('[data-shop]')).not.toBeNull();
-    expect(instance.$state.getState()).toEqual({
-      total: 1,
-      loaded: 1,
-      failed: 0,
-    });
+    expect(dynamic.$state.getState().failed).toEqual([]);
   });
 
   it('without a look for loading and failure: nothing shown', async () => {
-    const instance = createDynamicComponents();
+    const dynamic = createDynamicComponents();
     const shop = file();
-    render(h(instance(shop.load).ShopContent));
+    render(h(dynamic.component(dynamic.module(shop.load), (m) => m.ShopContent)));
     await settle();
     shop.calls[0].fail();
     await settle();
     expect(container.innerHTML).toBe('');
   });
 
-  it('preload: every module declared, the total readiness as it goes; rejects with a failure, resolves when all are in', async () => {
-    const instance = createDynamicComponents();
+  it('preload — every module; retry — only the failed ones; load() — one module by hand', async () => {
+    const dynamic = createDynamicComponents();
     const shop = file();
     const chats = file();
-    instance(shop.load);
-    const chatsComponents = instance(chats.load);
-    const loadedCounts: number[] = [];
-    instance.$state.watch((state) => loadedCounts.push(state.loaded));
-    const first = instance.preload();
+    dynamic.module(shop.load);
+    const chatsModule = dynamic.module(chats.load);
+    const first = dynamic.preload();
     await settle();
     shop.calls[0].arrive();
     chats.calls[0].fail();
     await expect(first).rejects.toThrow('offline');
-    expect(instance.$state.getState()).toEqual({
+    expect(dynamic.$state.getState()).toEqual({
       total: 2,
       loaded: 1,
-      failed: 1,
+      failed: [chatsModule],
     });
-    const second = instance.preload();
+    const again = dynamic.retry();
     await settle();
+    expect(shop.calls).toHaveLength(1);
     chats.calls[1].arrive();
-    await second;
-    expect(instance.$state.getState()).toEqual({
+    await again;
+    expect(dynamic.$state.getState()).toEqual({
       total: 2,
       loaded: 2,
-      failed: 0,
+      failed: [],
     });
-    expect(loadedCounts.at(-1)).toBe(2);
-    // Preloaded: shown at once
-    render(h(chatsComponents.ShopContent));
+    // Everything in: a preload resolves at once
+    await expect(dynamic.preload()).resolves.toBeUndefined();
+    await expect(chatsModule.load()).resolves.toHaveProperty('ShopContent');
+    // Fetched ahead: shown at once
+    render(h(dynamic.component(chatsModule, (m) => m.ShopContent)));
     expect(container.querySelector('[data-shop]')).not.toBeNull();
   });
 
-  it('options and the view library are checked', () => {
+  it('options, the view library and a module of another instance are checked', () => {
     expect(() => createDynamicComponents({
       renderFailed: 'Retry' as never,
     })).toThrow(/renderFailed/);
     expect(() => dynamicComponentsProvider({} as never)).toThrow(/createElement/);
+    const other = createDynamicComponents().module(file().load);
+    expect(() => createDynamicComponents().component(other, (m) => m.ShopContent)).toThrow(/wasn't declared by this instance/);
   });
 });

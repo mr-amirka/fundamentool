@@ -56,6 +56,7 @@ MIT
 
 ## Основные модули
 
+- **Модули**: `dynamicModule` — асинхронная инициализация, выполняемая один раз (повторно — после неудачи); `import()` части, загружаемой по требованию
 - **URL**: `urlParse`, `urlExtend`, `unparam`, `param` — разбор и расширение URL, query-строки
 - **Время**: `formatTime`, `normalizeDate`, `getData` — форматирование и нормализация дат
 - **События**: `attachEvent`, `EventEmitter`, `subscribe`, `Unsubscriber`, `keyedRegistry`

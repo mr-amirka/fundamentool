@@ -7,7 +7,6 @@ export * from './detection';
 export * from './detectionByWindow';
 export * from './download';
 export * from './dynamic';
-export * from './dynamicModule';
 export * from './getBase64Image';
 export * from './getDataLink';
 export * from './getImageByUrl';

@@ -38,7 +38,6 @@ import { wsConnect, cookieStorageProvider } from 'fundamentool/browser';
 | Функция | Описание |
 |---------|----------|
 | `script(url)` | Загружает `<script>` по URL, возвращает Promise |
-| `dynamicModule(factory)` | Ленивая и кэширующая инициализация модуля |
 | `dynamic(url)` | Загружает внешний скрипт с кэшем по URL |
 
 ---

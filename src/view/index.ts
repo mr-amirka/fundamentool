@@ -37,7 +37,8 @@ export type {
   TDynamicComponents,
   TDynamicComponentsDeps,
   TDynamicComponentsOptions,
-  TDynamicExports,
   TDynamicFailure,
+  TDynamicModule,
   TDynamicState,
+  TDynamicStatus,
 } from './dynamicComponentsProvider';

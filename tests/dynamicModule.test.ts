@@ -1,10 +1,10 @@
 import {
   extractExportedFn,
-} from './testUtils';
+} from './browser/testUtils';
 
-describe('browser/dynamicModule', () => {
+describe('dynamicModule', () => {
   test('runs init only once and caches result', async () => {
-    const dynamicModuleImport = require('../../src/browser/dynamicModule');
+    const dynamicModuleImport = require('../src/dynamicModule');
     const dynamicModule = extractExportedFn(dynamicModuleImport);
 
     let calls = 0;
@@ -29,11 +29,11 @@ describe('browser/dynamicModule', () => {
   });
 });
 
-describe('browser/dynamicModule — a failed init', () => {
+describe('dynamicModule — a failed init', () => {
   it('rejects (logged), and is forgotten: the next call runs init again', async () => {
     const {
       dynamicModule,
-    } = require('../../src/browser/dynamicModule');
+    } = require('../src/dynamicModule');
     const error = jest.spyOn(console, 'error').mockImplementation(() => undefined);
     try {
       const failure = new Error('init');

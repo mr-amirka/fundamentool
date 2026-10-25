@@ -68,22 +68,25 @@ const confirming = useStoreMap({
 перерисовывает компонент при смене его локали — и только тогда; `LocaleProvider` задаёт локаль части дерева; `<Text>`
 рисует теги сообщения рендерерами приложения или сообщение, переданное данными.
 
-## `createDynamicComponents` — компоненты в отдельных файлах, объявленные там, где используются
+## `createDynamicComponents` — части в отдельных файлах, объявленные там, где используются
 
 `dynamicComponentsProvider(React)` даёт `createDynamicComponents(options)`: приложение создаёт один экземпляр со своим
-видом для модуля в пути (`renderLoading`) и для неудачи (`renderFailed({ error, retry })` — своё сообщение и «Повторить»).
-Модуль объявляется в файле, который его использует; его экспорты читаются как компоненты и загружаются (один раз,
-через `dynamicModule`) при первой отрисовке. Каждое объявление попадает в реестр экземпляра: `$state` —
-`{ total, loaded, failed }`, суммарная готовность; `preload()` — все объявленные модули, для шага загрузки.
+видом для части в пути (`renderLoading`) и для неудачи (`renderFailed({ error, retry })` — своё сообщение и «Повторить»,
+своими текстами). `module(load)` объявляет модуль там, где он используется — лениво, ничего не загружается;
+`component(module, (m) => m.X)` берёт из него компонент, который загружается (один раз, через `dynamicModule`) при
+первом показе. Реестр экземпляра: `$state` — `{ total, loaded, failed }` (`failed` — модули, которые не загрузились),
+`preload()` — все модули, для шага загрузки, `retry()` — повторно неудавшиеся.
 
 ```tsx
-export const wgDynamicComponents = createDynamicComponents({ renderFailed: ({ retry }) => <PartFailed onRetry={retry} /> });
+const dynamic = createDynamicComponents({ renderFailed: ({ retry }) => <PartFailed onRetry={retry} /> });
+export const wgDynamicModule = dynamic.module;
+export const wgDynamicComponent = dynamic.component;
 // openWindowShop/index.tsx
-const dynamicComponents = wgDynamicComponents(() => import('./ShopContent'));
-openWindowOverlay({ title, content: dynamicComponents.ShopContent });
-// загрузка
-wgDynamicComponents.$state.watch(({ total, loaded }) => report(total ? loaded / total : 1));
-await wgDynamicComponents.preload();
+const shopModule = wgDynamicModule(() => import('./ShopContent'));
+const ShopContent = wgDynamicComponent(shopModule, (m) => m.ShopContent);
+// загрузка: суммарная готовность как прогресс; что не загрузилось — повторно
+dynamic.$state.watch(({ total, loaded }) => report(total ? loaded / total : 1));
+await dynamic.preload().catch(() => dynamic.retry());
 ```
 
 ## Файлы
@@ -94,4 +97,4 @@ await wgDynamicComponents.preload();
 | `viewHooksProvider.ts` | `useUnit`, `useStoreMap` |
 | `linksProvider.ts` | `Link`, `NavLink` |
 | `localeViewProvider.ts` | `useT`, `useLocale`, `LocaleProvider`, `Text` — привязки локали (`fundamentool/i18n`) |
-| `dynamicComponentsProvider.ts` | `createDynamicComponents` — компоненты в отдельных файлах и их реестр (web-games D-098) |
+| `dynamicComponentsProvider.ts` | `createDynamicComponents` — части в отдельных файлах: `module`, `component`, реестр (web-games D-100) |
