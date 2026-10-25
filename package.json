@@ -5,6 +5,55 @@
   "main": "dist/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "async": [
+        "dist/async/index.d.ts"
+      ],
+      "is": [
+        "dist/is/index.d.ts"
+      ],
+      "schema": [
+        "dist/schema/index.d.ts"
+      ],
+      "i18n": [
+        "dist/i18n/index.d.ts"
+      ],
+      "i18n/vite": [
+        "dist/i18n/vite/index.d.ts"
+      ],
+      "i18n/testing": [
+        "dist/i18n/testing/index.d.ts"
+      ],
+      "join": [
+        "dist/join/index.d.ts"
+      ],
+      "split": [
+        "dist/split/index.d.ts"
+      ],
+      "jsonl": [
+        "dist/jsonl/index.d.ts"
+      ],
+      "scheduler": [
+        "dist/scheduler/index.d.ts"
+      ],
+      "rpc": [
+        "dist/rpc/index.d.ts"
+      ],
+      "browser": [
+        "dist/browser/index.d.ts"
+      ],
+      "node": [
+        "dist/node/index.d.ts"
+      ],
+      "rpc/browser": [
+        "dist/rpc/browser/index.d.ts"
+      ],
+      "rpc/node": [
+        "dist/rpc/node/index.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "README.md",

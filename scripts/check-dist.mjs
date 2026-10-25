@@ -7,7 +7,8 @@
  * expose the same, non-empty set of names. Browser-only entries touch `window`
  * and `document` at load time, so they run last, against a minimal stub.
  * Then every relative specifier in `dist/esm` is checked to point at an
- * existing file — this also covers files no entry point reaches.
+ * existing file — this also covers files no entry point reaches — and every
+ * subpath's `typesVersions` entry to name the same types file as `exports`.
  *
  * Usage: `node scripts/check-dist.mjs` (after `node scripts/build.mjs`)
  */
@@ -99,6 +100,19 @@ for (const file of listJs(esmRoot)) {
 const esmPkg = JSON.parse(fs.readFileSync(path.join(esmRoot, 'package.json'), ENCODING));
 if (JSON.stringify(esmPkg.sideEffects) !== JSON.stringify(pkg.sideEffects)) {
   failures.push(`dist/esm/package.json: "sideEffects" is ${JSON.stringify(esmPkg.sideEffects)}, the package's is ${JSON.stringify(pkg.sideEffects)}`);
+}
+
+// TypeScript's older resolution (`moduleResolution: node10` — every Jest config compiling to CommonJS) ignores `exports`:
+// it finds a subpath's types only through `typesVersions`, which must name the same file as `exports`.
+const typesVersions = pkg.typesVersions?.['*'] ?? {};
+for (const subpath of Object.keys(pkg.exports).filter((key) => key !== '.')) {
+  const types = pkg.exports[subpath].types.replace(/^\.\//, '');
+  const listed = typesVersions[subpath.slice(2)];
+  if (JSON.stringify(listed) !== JSON.stringify([types])) {
+    failures.push(`typesVersions["${subpath.slice(2)}"] is ${JSON.stringify(listed)}, exports' types are ${JSON.stringify([types])}`);
+  } else if (!fs.existsSync(new URL(`../${types}`, import.meta.url))) {
+    failures.push(`${types}: no such file (typesVersions["${subpath.slice(2)}"])`);
+  }
 }
 
 if (failures.length) {
