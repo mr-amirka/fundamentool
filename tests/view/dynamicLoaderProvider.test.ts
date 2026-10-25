@@ -21,13 +21,14 @@ import type {
   Root,
 } from 'react-dom/client';
 import {
-  dynamicComponentsProvider,
+  dynamicLoaderProvider,
+} from '../../src/view';
+import type {
+  TDynamicLoaderOptions,
 } from '../../src/view';
 
 const h = React.createElement;
-const {
-  createDynamicComponents,
-} = dynamicComponentsProvider(React);
+const createLoader = (options?: TDynamicLoaderOptions) => dynamicLoaderProvider(React, options);
 
 /** A module whose file arrives when `arrive()` is called, or fails with `fail()`. */
 function file() {
@@ -78,9 +79,9 @@ const settle = () => act(async () => {
   await Promise.resolve();
 });
 
-describe('dynamicComponentsProvider', () => {
+describe('dynamicLoaderProvider', () => {
   it('a module is declared — registered, not fetched; a component picked out of it fetches it once when shown', async () => {
-    const dynamic = createDynamicComponents();
+    const dynamic = createLoader();
     const shop = file();
     const shopModule = dynamic.module(shop.load);
     const ShopContent = dynamic.component(shopModule, (m) => m.ShopContent);
@@ -110,7 +111,7 @@ describe('dynamicComponentsProvider', () => {
   });
 
   it('on its way — the app\'s loading look; failed — listed, its message and Retry, which fetches again', async () => {
-    const dynamic = createDynamicComponents({
+    const dynamic = createLoader({
       renderLoading: () => h('span', {
         'data-loading': '',
       }),
@@ -147,7 +148,7 @@ describe('dynamicComponentsProvider', () => {
   });
 
   it('without a look for loading and failure: nothing shown', async () => {
-    const dynamic = createDynamicComponents();
+    const dynamic = createLoader();
     const shop = file();
     render(h(dynamic.component(dynamic.module(shop.load), (m) => m.ShopContent)));
     await settle();
@@ -157,7 +158,7 @@ describe('dynamicComponentsProvider', () => {
   });
 
   it('preload — every module; retry — only the failed ones; load() — one module by hand', async () => {
-    const dynamic = createDynamicComponents();
+    const dynamic = createLoader();
     const shop = file();
     const chats = file();
     dynamic.module(shop.load);
@@ -190,12 +191,12 @@ describe('dynamicComponentsProvider', () => {
     expect(container.querySelector('[data-shop]')).not.toBeNull();
   });
 
-  it('options, the view library and a module of another instance are checked', () => {
-    expect(() => createDynamicComponents({
+  it('options, the view library and a module of another loader are checked', () => {
+    expect(() => createLoader({
       renderFailed: 'Retry' as never,
     })).toThrow(/renderFailed/);
-    expect(() => dynamicComponentsProvider({} as never)).toThrow(/createElement/);
-    const other = createDynamicComponents().module(file().load);
-    expect(() => createDynamicComponents().component(other, (m) => m.ShopContent)).toThrow(/wasn't declared by this instance/);
+    expect(() => dynamicLoaderProvider({} as never)).toThrow(/createElement/);
+    const other = createLoader().module(file().load);
+    expect(() => createLoader().component(other, (m) => m.ShopContent)).toThrow(/wasn't declared by this loader/);
   });
 });
