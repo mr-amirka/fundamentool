@@ -68,6 +68,24 @@ const confirming = useStoreMap({
 перерисовывает компонент при смене его локали — и только тогда; `LocaleProvider` задаёт локаль части дерева; `<Text>`
 рисует теги сообщения рендерерами приложения или сообщение, переданное данными.
 
+## `createDynamicComponents` — компоненты в отдельных файлах, объявленные там, где используются
+
+`dynamicComponentsProvider(React)` даёт `createDynamicComponents(options)`: приложение создаёт один экземпляр со своим
+видом для модуля в пути (`renderLoading`) и для неудачи (`renderFailed({ error, retry })` — своё сообщение и «Повторить»).
+Модуль объявляется в файле, который его использует; его экспорты читаются как компоненты и загружаются (один раз,
+через `dynamicModule`) при первой отрисовке. Каждое объявление попадает в реестр экземпляра: `$state` —
+`{ total, loaded, failed }`, суммарная готовность; `preload()` — все объявленные модули, для шага загрузки.
+
+```tsx
+export const wgDynamicComponents = createDynamicComponents({ renderFailed: ({ retry }) => <PartFailed onRetry={retry} /> });
+// openWindowShop/index.tsx
+const dynamicComponents = wgDynamicComponents(() => import('./ShopContent'));
+openWindowOverlay({ title, content: dynamicComponents.ShopContent });
+// загрузка
+wgDynamicComponents.$state.watch(({ total, loaded }) => report(total ? loaded / total : 1));
+await wgDynamicComponents.preload();
+```
+
 ## Файлы
 
 | Файл | Что в нём |
@@ -76,3 +94,4 @@ const confirming = useStoreMap({
 | `viewHooksProvider.ts` | `useUnit`, `useStoreMap` |
 | `linksProvider.ts` | `Link`, `NavLink` |
 | `localeViewProvider.ts` | `useT`, `useLocale`, `LocaleProvider`, `Text` — привязки локали (`fundamentool/i18n`) |
+| `dynamicComponentsProvider.ts` | `createDynamicComponents` — компоненты в отдельных файлах и их реестр (web-games D-098) |

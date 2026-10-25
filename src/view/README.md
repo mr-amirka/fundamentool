@@ -68,6 +68,24 @@ flips.
 component when its locale changes, and only then; `LocaleProvider` sets the locale of a part of the tree; `<Text>`
 renders a message's tags by the app's renderers, or a message passed as data.
 
+## `createDynamicComponents` — components in files of their own, declared where they're used
+
+`dynamicComponentsProvider(React)` gives `createDynamicComponents(options)`: an app makes one instance, with its look for
+a module on its way (`renderLoading`) and a failed one (`renderFailed({ error, retry })` — its message and Retry). A
+module is declared in the file that uses it; its exports read as components, fetched (once, by `dynamicModule`) when
+first rendered. Every declaration joins the instance's registry: `$state` — `{ total, loaded, failed }`, the total
+readiness; `preload()` — every module declared, for a boot step.
+
+```tsx
+export const wgDynamicComponents = createDynamicComponents({ renderFailed: ({ retry }) => <PartFailed onRetry={retry} /> });
+// openWindowShop/index.tsx
+const dynamicComponents = wgDynamicComponents(() => import('./ShopContent'));
+openWindowOverlay({ title, content: dynamicComponents.ShopContent });
+// boot
+wgDynamicComponents.$state.watch(({ total, loaded }) => report(total ? loaded / total : 1));
+await wgDynamicComponents.preload();
+```
+
 ## Files
 
 | File | What's in it |
@@ -76,3 +94,4 @@ renders a message's tags by the app's renderers, or a message passed as data.
 | `viewHooksProvider.ts` | `useUnit`, `useStoreMap` |
 | `linksProvider.ts` | `Link`, `NavLink` |
 | `localeViewProvider.ts` | `useT`, `useLocale`, `LocaleProvider`, `Text` — the locale's bindings (`fundamentool/i18n`) |
+| `dynamicComponentsProvider.ts` | `createDynamicComponents` — components in files of their own, a registry of them (web-games D-098) |
