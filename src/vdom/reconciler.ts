@@ -17,6 +17,9 @@ import {
   isArray,
 } from '../is/isArray';
 import {
+  isPromise,
+} from '../is/isPromise';
+import {
   diffProps,
   SVG,
 } from './dom';
@@ -957,4 +960,55 @@ export function createRoot(container: Element | DocumentFragment): TRoot {
       });
     },
   };
+}
+
+/** Whether a render or a passive effect is waiting. */
+function pending(): boolean {
+  return queue.length > 0 || passiveQueue.length > 0;
+}
+
+/** Renders what is queued and runs the passive effects waiting — again while they queue more. */
+function flushAll(): void {
+  let passes = 0;
+  while (pending()) {
+    if (++passes > 50) {
+      queue.length = 0;
+      throw new Error('Maximum update depth exceeded: an effect sets state on every render.');
+    }
+    run(drain);
+    flushPassive();
+  }
+}
+
+/** Flushes, waits a task and looks again, while work keeps coming (what the flushed work started may queue more). */
+function settle<T>(value: T): Promise<T> {
+  if (!pending()) {
+    return Promise.resolve(value);
+  }
+  flushAll();
+  return new Promise((resolve) => {
+    createTimeout(resolve);
+  }).then(() => settle(value));
+}
+
+/**
+ * Runs `work`, then every update it caused — renders, layout effects, passive effects — before it returns: React's
+ * `act`, for tests. When `work` returns a promise, then once it resolves the updates are flushed, a task waited and
+ * the updates flushed again, until none comes (as React does): a module loaded by an effect is rendered inside it.
+ *
+ * @param work - What changes state: a render, an event, a store's update.
+ * @returns A promise of what `work` returned; a test that doesn't await it gets the updates done anyway.
+ * @example
+ * act(() => root.render(<Counter />));
+ * act(() => button.click());
+ * expect(container.textContent).toBe('1');
+ * await act(async () => store.load());
+ */
+export function act<T>(work: () => T | Promise<T>): Promise<T> {
+  const result = work();
+  if (isPromise(result)) {
+    return result.then(settle);
+  }
+  flushAll();
+  return Promise.resolve(result);
 }

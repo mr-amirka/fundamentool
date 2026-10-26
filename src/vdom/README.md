@@ -22,27 +22,31 @@ createRoot(document.getElementById('root')!).render(h(Counter));
 
 ## In an app instead of React
 
-One entry replaces four of React's. The bundler points them all here; the app's code and its libraries stay as they
-are:
+`fundamentool/vdom/react` stands in for React's five entries. The bundler and the test runner point them all there;
+the app's code and its libraries stay as they are. It is the whole of `fundamentool/vdom` plus a default export, for
+libraries that do `import React from 'react'` (MUI, emotion):
 
 ```ts
-// vite.config.ts
-const VDOM = 'fundamentool/vdom';
+// vite.config.ts — an array of regular expressions: a key `react` would also catch `react/jsx-runtime`
+const REACT_ENTRIES = [/^react$/, /^react-dom$/, /^react-dom\/client$/, /^react\/jsx-runtime$/, /^react\/jsx-dev-runtime$/];
 export default defineConfig({
   resolve: {
-    alias: [
-      { find: /^react-dom\/client$/, replacement: VDOM },
-      { find: /^react-dom$/, replacement: VDOM },
-      { find: /^react\/jsx(-dev)?-runtime$/, replacement: VDOM },
-      { find: /^react$/, replacement: VDOM },
-    ],
+    alias: REACT_ENTRIES.map((find) => ({ find, replacement: 'fundamentool/vdom/react' })),
   },
 });
 ```
 
-A library that does `import React from 'react'` needs a default export. The module has none, because the lab's lint
-forbids default exports. A two-line shim gives one:
-`import * as React from 'fundamentool/vdom'; export * from 'fundamentool/vdom'; export default React;`.
+```js
+// jest.config.cjs
+module.exports = {
+  moduleNameMapper: {
+    '^react(-dom)?(/client|/jsx-runtime|/jsx-dev-runtime)?$': 'fundamentool/vdom/react',
+  },
+};
+```
+
+`@vitejs/plugin-react` isn't used: its Fast Refresh needs React itself. JSX is compiled by esbuild (`"jsx":
+"react-jsx"` in `tsconfig.json`), and an edit reloads the page. Types stay `@types/react`.
 
 ## What's in it
 
@@ -56,6 +60,7 @@ forbids default exports. A two-line shim gives one:
 | `useState`, `useReducer`, `useRef`, `useMemo`, `useCallback`, `useId` | setting an equal value (`Object.is`) renders nothing |
 | `useEffect`, `useLayoutEffect`, `useInsertionEffect`, `useImperativeHandle` | `useEffect` runs in the next task, or before the next render, whichever comes first |
 | `useSyncExternalStore`, `useEffectEvent`, `useDebugValue` | `useDebugValue` does nothing (there are no developer tools) |
+| `act` | for tests: renders what is queued and runs the effects; with async work, waits until no more work comes (it flushes, waits a task, looks again) |
 
 ## How it updates
 

@@ -26,6 +26,7 @@ export type {
   TRef,
 } from './element';
 export {
+  act,
   createRoot,
   useContext,
 } from './reconciler';

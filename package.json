@@ -54,6 +54,9 @@
       ],
       "vdom": [
         "dist/vdom/index.d.ts"
+      ],
+      "vdom/react": [
+        "dist/vdom/react.d.ts"
       ]
     }
   },
@@ -82,88 +85,111 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "module": "./dist/esm/index.js",
       "import": "./dist/esm/index.js",
       "default": "./dist/index.js"
     },
     "./async": {
       "types": "./dist/async/index.d.ts",
+      "module": "./dist/esm/async/index.js",
       "import": "./dist/esm/async/index.js",
       "default": "./dist/async/index.js"
     },
     "./is": {
       "types": "./dist/is/index.d.ts",
+      "module": "./dist/esm/is/index.js",
       "import": "./dist/esm/is/index.js",
       "default": "./dist/is/index.js"
     },
     "./schema": {
       "types": "./dist/schema/index.d.ts",
+      "module": "./dist/esm/schema/index.js",
       "import": "./dist/esm/schema/index.js",
       "default": "./dist/schema/index.js"
     },
     "./i18n": {
       "types": "./dist/i18n/index.d.ts",
+      "module": "./dist/esm/i18n/index.js",
       "import": "./dist/esm/i18n/index.js",
       "default": "./dist/i18n/index.js"
     },
     "./i18n/vite": {
       "types": "./dist/i18n/vite/index.d.ts",
+      "module": "./dist/esm/i18n/vite/index.js",
       "import": "./dist/esm/i18n/vite/index.js",
       "default": "./dist/i18n/vite/index.js"
     },
     "./i18n/testing": {
       "types": "./dist/i18n/testing/index.d.ts",
+      "module": "./dist/esm/i18n/testing/index.js",
       "import": "./dist/esm/i18n/testing/index.js",
       "default": "./dist/i18n/testing/index.js"
     },
     "./join": {
       "types": "./dist/join/index.d.ts",
+      "module": "./dist/esm/join/index.js",
       "import": "./dist/esm/join/index.js",
       "default": "./dist/join/index.js"
     },
     "./split": {
       "types": "./dist/split/index.d.ts",
+      "module": "./dist/esm/split/index.js",
       "import": "./dist/esm/split/index.js",
       "default": "./dist/split/index.js"
     },
     "./jsonl": {
       "types": "./dist/jsonl/index.d.ts",
+      "module": "./dist/esm/jsonl/index.js",
       "import": "./dist/esm/jsonl/index.js",
       "default": "./dist/jsonl/index.js"
     },
     "./scheduler": {
       "types": "./dist/scheduler/index.d.ts",
+      "module": "./dist/esm/scheduler/index.js",
       "import": "./dist/esm/scheduler/index.js",
       "default": "./dist/scheduler/index.js"
     },
     "./rpc": {
       "types": "./dist/rpc/index.d.ts",
+      "module": "./dist/esm/rpc/index.js",
       "import": "./dist/esm/rpc/index.js",
       "default": "./dist/rpc/index.js"
     },
     "./browser": {
       "types": "./dist/browser/index.d.ts",
+      "module": "./dist/esm/browser/index.js",
       "import": "./dist/esm/browser/index.js",
       "default": "./dist/browser/index.js"
     },
     "./node": {
       "types": "./dist/node/index.d.ts",
+      "module": "./dist/esm/node/index.js",
       "import": "./dist/esm/node/index.js",
       "default": "./dist/node/index.js"
     },
     "./rpc/browser": {
       "types": "./dist/rpc/browser/index.d.ts",
+      "module": "./dist/esm/rpc/browser/index.js",
       "import": "./dist/esm/rpc/browser/index.js",
       "default": "./dist/rpc/browser/index.js"
     },
     "./rpc/node": {
       "types": "./dist/rpc/node/index.d.ts",
+      "module": "./dist/esm/rpc/node/index.js",
       "import": "./dist/esm/rpc/node/index.js",
       "default": "./dist/rpc/node/index.js"
     },
     "./vdom": {
       "types": "./dist/vdom/index.d.ts",
+      "module": "./dist/esm/vdom/index.js",
       "import": "./dist/esm/vdom/index.js",
       "default": "./dist/vdom/index.js"
+    },
+    "./vdom/react": {
+      "types": "./dist/vdom/react.d.ts",
+      "module": "./dist/esm/vdom/react.js",
+      "import": "./dist/esm/vdom/react.js",
+      "default": "./dist/vdom/react.js"
     }
   },
   "keywords": [

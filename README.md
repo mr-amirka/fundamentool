@@ -43,7 +43,7 @@ npm run docs:api
 | `fundamentool/is` | Type predicates: `isString`, `isEqual`, `isMatch`, and 34 more |
 | `fundamentool/schema` | Option schemas with zod's names: `object`, `array`, `string`, … — the check, the type and the key list from one description ([README](src/schema/README.md)) |
 | `fundamentool/i18n` | Localization: one locale per app, a set of messages per package, read by key constants — `t(K.hud.moves, { count })`; plurals and formats in the message; the Vite plugin `fundamentool/i18n/vite` (a compact build, locales inline or on demand), `fundamentool/i18n/testing` (`checkSet`) ([README](src/i18n/README.md)) |
-| `fundamentool/vdom` | ⚠️ A trial (D-072): its own view library with React's API — elements, function components, hooks, contexts, portals, `createRoot` — 5.6 KB gzip; MUI and emotion run on it through a bundler alias ([README](src/vdom/README.md)) |
+| `fundamentool/vdom` | ⚠️ A trial (D-072): its own view library with React's API — elements, function components, hooks, contexts, portals, `createRoot` — 5.6 KB gzip; MUI and emotion run on it through bundler aliases to `fundamentool/vdom/react` (D-073); `act` for tests ([README](src/vdom/README.md)) |
 | `fundamentool/join` | String join helpers |
 | `fundamentool/split` | String split helpers |
 | `fundamentool/jsonl` | JSON Lines serialization / deserialization |

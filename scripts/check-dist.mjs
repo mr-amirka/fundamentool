@@ -7,8 +7,9 @@
  * expose the same, non-empty set of names. Browser-only entries touch `window`
  * and `document` at load time, so they run last, against a minimal stub.
  * Then every relative specifier in `dist/esm` is checked to point at an
- * existing file — this also covers files no entry point reaches — and every
- * subpath's `typesVersions` entry to name the same types file as `exports`.
+ * existing file — this also covers files no entry point reaches — every
+ * subpath's `typesVersions` entry to name the same types file as `exports`, and
+ * every entry's `module` condition (bundlers) to name its `import` file.
  *
  * Usage: `node scripts/check-dist.mjs` (after `node scripts/build.mjs`)
  */
@@ -112,6 +113,16 @@ for (const subpath of Object.keys(pkg.exports).filter((key) => key !== '.')) {
     failures.push(`typesVersions["${subpath.slice(2)}"] is ${JSON.stringify(listed)}, exports' types are ${JSON.stringify([types])}`);
   } else if (!fs.existsSync(new URL(`../${types}`, import.meta.url))) {
     failures.push(`${types}: no such file (typesVersions["${subpath.slice(2)}"])`);
+  }
+}
+
+// Bundlers read the `module` condition and Node doesn't: a bundler gets the ES modules for `require` too (a CommonJS
+// library's `require('react')`, aliased to `fundamentool/vdom/react`, fundamentool D-073) — one copy in a bundle, and
+// no CommonJS file outside `node_modules`, which Vite doesn't convert. Each entry's `module` names its `import` file.
+for (const subpath of Object.keys(pkg.exports)) {
+  const entry = pkg.exports[subpath];
+  if (entry.module !== entry.import) {
+    failures.push(`exports["${subpath}"].module is ${JSON.stringify(entry.module)}, its import is ${JSON.stringify(entry.import)}`);
   }
 }
 

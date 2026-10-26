@@ -22,26 +22,31 @@ createRoot(document.getElementById('root')!).render(h(Counter));
 
 ## В приложении вместо React
 
-Один вход заменяет четыре входа React: сборщик направляет их все сюда. Код приложения и его библиотеки не меняются:
+`fundamentool/vdom/react` заменяет пять входов React. Сборщик и запускатель тестов направляют их все туда; код
+приложения и его библиотеки не меняются. Это весь `fundamentool/vdom` плюс экспорт по умолчанию — для библиотек с
+`import React from 'react'` (MUI, emotion):
 
 ```ts
-// vite.config.ts
-const VDOM = 'fundamentool/vdom';
+// vite.config.ts — массив регулярных выражений: ключ `react` поймал бы и `react/jsx-runtime`
+const REACT_ENTRIES = [/^react$/, /^react-dom$/, /^react-dom\/client$/, /^react\/jsx-runtime$/, /^react\/jsx-dev-runtime$/];
 export default defineConfig({
   resolve: {
-    alias: [
-      { find: /^react-dom\/client$/, replacement: VDOM },
-      { find: /^react-dom$/, replacement: VDOM },
-      { find: /^react\/jsx(-dev)?-runtime$/, replacement: VDOM },
-      { find: /^react$/, replacement: VDOM },
-    ],
+    alias: REACT_ENTRIES.map((find) => ({ find, replacement: 'fundamentool/vdom/react' })),
   },
 });
 ```
 
-Библиотеке с `import React from 'react'` нужен экспорт по умолчанию. У модуля его нет — линт лаборатории запрещает
-экспорты по умолчанию. Его даёт прокладка в две строки:
-`import * as React from 'fundamentool/vdom'; export * from 'fundamentool/vdom'; export default React;`.
+```js
+// jest.config.cjs
+module.exports = {
+  moduleNameMapper: {
+    '^react(-dom)?(/client|/jsx-runtime|/jsx-dev-runtime)?$': 'fundamentool/vdom/react',
+  },
+};
+```
+
+`@vitejs/plugin-react` не нужен: его Fast Refresh требует самого React. JSX компилирует esbuild (`"jsx": "react-jsx"`
+в `tsconfig.json`), правка перезагружает страницу. Типы остаются от `@types/react`.
 
 ## Что в ней есть
 
@@ -55,6 +60,7 @@ export default defineConfig({
 | `useState`, `useReducer`, `useRef`, `useMemo`, `useCallback`, `useId` | равное значение (`Object.is`) не рендерит заново |
 | `useEffect`, `useLayoutEffect`, `useInsertionEffect`, `useImperativeHandle` | `useEffect` выполняется в следующей задаче или перед следующим рендером — что наступит раньше |
 | `useSyncExternalStore`, `useEffectEvent`, `useDebugValue` | `useDebugValue` ничего не делает (инструментов разработчика нет) |
+| `act` | для тестов: рендерит очередь и выполняет эффекты; с асинхронной работой ждёт, пока работа не перестанет появляться (сброс, задача ожидания, снова проверка) |
 
 ## Как идёт обновление
 
