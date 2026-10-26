@@ -9,6 +9,7 @@ export * from './asAsync';
 export * from './assertKnownOptions';
 export * from './attachEvent';
 export * from './describeValue';
+export * from './editDistance';
 export * from './bind';
 export * from './bindMethods';
 export * from './camelToDelimiterCase';

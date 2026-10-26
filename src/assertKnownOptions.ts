@@ -5,42 +5,9 @@
  * web-games `@wg/options` (2026-10-18), which now re-exports it.
  */
 
-/** Levenshtein distance, early-exit above `limit` (only small distances matter for "did you mean"). */
-function editDistance(
-  a: string, b: string, limit: number,
-): number {
-  const lengthA = a.length;
-  const lengthB = b.length;
-  if (Math.abs(lengthA - lengthB) > limit) {
-    return limit + 1;
-  }
-  let previous: number[] = [];
-  let current: number[] = [];
-  let j = 0;
-  for (; j <= lengthB; j++) {
-    previous.push(j);
-  }
-  let i = 1;
-  for (; i <= lengthA; i++) {
-    current = [i];
-    let rowMin = i;
-    for (j = 1; j <= lengthB; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      const value = Math.min(
-        previous[j] + 1, current[j - 1] + 1, previous[j - 1] + cost,
-      );
-      current.push(value);
-      if (value < rowMin) {
-        rowMin = value;
-      }
-    }
-    if (rowMin > limit) {
-      return limit + 1;
-    }
-    previous = current;
-  }
-  return previous[lengthB];
-}
+import {
+  editDistance,
+} from './editDistance';
 
 /**
  * The name of `known` nearest to `key` (case aside, at most two edits away) — the "did you mean" of an error; `''` —
