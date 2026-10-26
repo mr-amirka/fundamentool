@@ -41,6 +41,7 @@ npm run docs:api
 | `fundamentool/is` | Предикаты типов (`isString`, `isEqual`, `isMatch` и др.) |
 | `fundamentool/schema` | Схемы опций с именами zod: `object`, `array`, `string`, … — проверка, тип и список ключей из одного описания ([README](src/schema/README.ru.md)) |
 | `fundamentool/i18n` | Локализация: одна локаль на приложение, свой набор сообщений у каждого пакета, чтение по константам ключей — `t(K.hud.moves, { count })`; множественное число и форматы в сообщении; Vite-плагин `fundamentool/i18n/vite` (компактная сборка, локали в бандле или по запросу), `fundamentool/i18n/testing` (`checkSet`) ([README](src/i18n/README.ru.md)) |
+| `fundamentool/vdom` | ⚠️ Проба (D-072): своя библиотека отображения с API React — элементы, функциональные компоненты, хуки, контексты, порталы, `createRoot` — 5,6 КБ gzip; MUI и emotion работают на ней через алиас сборщика ([README](src/vdom/README.ru.md)) |
 | `fundamentool/join` | Утилиты склейки строк |
 | `fundamentool/split` | Утилиты разбиения строк |
 | `fundamentool/jsonl` | Сериализация JSON Lines |

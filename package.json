@@ -51,6 +51,9 @@
       ],
       "rpc/node": [
         "dist/rpc/node/index.d.ts"
+      ],
+      "vdom": [
+        "dist/vdom/index.d.ts"
       ]
     }
   },
@@ -156,6 +159,11 @@
       "types": "./dist/rpc/node/index.d.ts",
       "import": "./dist/esm/rpc/node/index.js",
       "default": "./dist/rpc/node/index.js"
+    },
+    "./vdom": {
+      "types": "./dist/vdom/index.d.ts",
+      "import": "./dist/esm/vdom/index.js",
+      "default": "./dist/vdom/index.js"
     }
   },
   "keywords": [
