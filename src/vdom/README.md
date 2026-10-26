@@ -48,6 +48,9 @@ module.exports = {
 `@vitejs/plugin-react` isn't used: its Fast Refresh needs React itself. JSX is compiled by esbuild (`"jsx":
 "react-jsx"` in `tsconfig.json`), and an edit reloads the page. Types stay `@types/react`.
 
+What only this library has (`ErrorBoundary`) is imported from `fundamentool/vdom` — the same module the stand-in is
+made of. Such components are generic over the node type, so they type-check with `@types/react` as they are.
+
 ## What's in it
 
 | Member | As in React |
@@ -60,6 +63,7 @@ module.exports = {
 | `useState`, `useReducer`, `useRef`, `useMemo`, `useCallback`, `useId` | setting an equal value (`Object.is`) renders nothing |
 | `useEffect`, `useLayoutEffect`, `useInsertionEffect`, `useImperativeHandle` | `useEffect` runs in the next task, or before the next render, whichever comes first |
 | `useSyncExternalStore`, `useEffectEvent`, `useDebugValue` | `useDebugValue` does nothing (there are no developer tools) |
+| `ErrorBoundary` | React has none built in: there it's a class with `getDerivedStateFromError` / `componentDidCatch` — see [Errors](#errors) |
 | `act` | for tests: renders what is queued and runs the effects; with async work, waits until no more work comes (it flushes, waits a task, looks again) |
 
 ## How it updates
@@ -69,6 +73,26 @@ module.exports = {
 - **Commit.** Layout effects and refs run after the DOM changes, children before parents. A state set inside a layout
   effect renders again before the browser paints.
 - **Passive effects.** `useEffect` runs in a later task, every cleanup before every effect.
+
+## Errors
+
+What a component throws as it renders, or an effect of it (or its cleanup) as it runs, goes to the nearest
+`ErrorBoundary` above it. The boundary shows `fallback(error, reset)` instead of its children in the same update;
+`onError(error)` is called after the DOM changes. `reset` renders the children anew.
+
+```tsx
+import { ErrorBoundary } from 'fundamentool/vdom';
+
+<ErrorBoundary fallback={(error, reset) => <Failed onRetry={reset} />} onError={(error) => console.error(error)}>
+  <App />
+</ErrorBoundary>
+```
+
+- Errors of event handlers and of async code aren't caught (as in React): they never break a render.
+- An error of the fallback goes to the next boundary up. Several errors in one update: the fallback once, `onError`
+  for each.
+- A cleanup that throws as its component leaves (the fallback replaces it) is reported to the boundary's `onError`.
+- With no boundary above, the error is thrown on, from `render` or from the task that rendered.
 
 ## How it handles the DOM
 

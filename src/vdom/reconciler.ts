@@ -10,6 +10,10 @@
 // fibers first (a parent's render renders its dirty children on the way). Then the commit: layout effects and refs,
 // children before parents. Passive effects (`useEffect`) run in a later task — or before the next render, whichever
 // comes first.
+//
+// Errors: what a component throws as it renders, or an effect of it as it runs, goes to the nearest `ErrorBoundary`
+// above it — the boundary renders its fallback instead of its children. With no boundary above, it is thrown on, as
+// before boundaries existed.
 import {
   createTimeout,
 } from '../createTimeout';
@@ -202,10 +206,23 @@ function fire(hook: THook): void {
   const cleanup = hook.cleanup;
   if (cleanup) {
     hook.cleanup = undefined;
-    cleanup();
+    try {
+      cleanup();
+    } catch (error) {
+      // the effect still runs, as after a passive cleanup that fails (and as in React)
+      toBoundary(
+        hook.fiber.parent, error, false,
+      );
+    }
   }
-  const result = hook.create();
-  hook.cleanup = typeof result === 'function' ? result : undefined;
+  try {
+    const result = hook.create();
+    hook.cleanup = typeof result === 'function' ? result : undefined;
+  } catch (error) {
+    toBoundary(
+      hook.fiber.parent, error, false,
+    );
+  }
 }
 
 /** Runs the passive effects waiting: every cleanup first, then every effect (as React does). */
@@ -228,7 +245,13 @@ export function flushPassive(): void {
     cleanup = hook.cleanup;
     if (cleanup) {
       hook.cleanup = undefined;
-      cleanup();
+      try {
+        cleanup();
+      } catch (error) {
+        toBoundary(
+          hook.fiber.parent, error, false,
+        );
+      }
     }
   }
   for (i = 0; i < length; i++) {
@@ -727,6 +750,8 @@ function renderComponent(
   const previousIndex = hookIndex;
   let out: TNode;
   let passes = 0;
+  let failed = false;
+  let error: unknown;
   current = f;
   try {
     do {
@@ -737,15 +762,132 @@ function renderComponent(
       hookIndex = 0;
       out = typeof type === 'function' ? type(props) : renderObject(type, props);
     } while (f.dirty);
+  } catch (thrown) {
+    failed = true;
+    error = thrown;
   } finally {
     current = previous;
     hookIndex = previousIndex;
   }
-  const changed = diffChildren(
-    f, out, host,
-  );
+  if (failed) {
+    // its own render failed: a boundary above it takes the error (a boundary's fallback failing goes past it)
+    toBoundary(
+      f.parent, error, false,
+    );
+    return false;
+  }
+  let changed: boolean;
+  try {
+    changed = diffChildren(
+      f, out, host,
+    );
+  } catch (thrown) {
+    // a child it rendered is invalid (a component below catches its own): this boundary, if it is one, takes it
+    toBoundary(
+      f, thrown, false,
+    );
+    return false;
+  }
   queueEffects(f);
   return changed;
+}
+
+/** `ErrorBoundary`'s hook: what it caught, whether its fallback is rendered yet, how it starts over. */
+type TBoundaryHook = THook & {
+  /** A component below failed: the fallback is (or is about to be) in place of the children. */
+  failed: boolean;
+  /** The first error caught. */
+  error: unknown;
+  /** The fallback is rendered — an error from below now comes from it, not from the children it replaced. */
+  shown: boolean;
+  reset: () => void;
+};
+
+/**
+ * Hands an error to the nearest mounted `ErrorBoundary` from `f` up: one showing its children renders its fallback in
+ * the update under way; `onError` is called after the DOM changes. A boundary that has failed already only reports
+ * the error — while its old children are still there (two of them failed), or when it comes from a cleanup as they
+ * leave (`unmounting`); an error of its rendered fallback goes on up. No boundary takes it: the error is thrown.
+ */
+function toBoundary(
+  f: TFiber | null, error: unknown, unmounting: boolean,
+): void {
+  let hook: TBoundaryHook;
+  for (; f; f = f.parent) {
+    if (f.type === ErrorBoundary && !f.dead) {
+      hook = f.hooks[0] as TBoundaryHook;
+      if (!hook.failed) {
+        hook.failed = true;
+        hook.error = error;
+        report(f, error);
+        schedule(f);
+        return;
+      }
+      if (!hook.shown || unmounting) {
+        report(f, error);
+        return;
+      }
+    }
+  }
+  throw error;
+}
+
+/** Calls a boundary's `onError` after the DOM changes. */
+function report(f: TFiber, error: unknown): void {
+  const onError: ((error: unknown) => void) | undefined = f.el.props.onError;
+  if (onError) {
+    commitQueue.push(() => onError(error));
+  }
+}
+
+/**
+ * `ErrorBoundary`'s props. `C`, `F` — the node types of the children and of the fallback: this library's `TNode`,
+ * or React's in an app typed by `@types/react` (they are inferred from the props).
+ */
+export type TErrorBoundaryProps<C = TNode, F = TNode> = {
+  /** What it shows while nothing below has failed. */
+  children?: C;
+  /**
+   * What it shows instead, once a component below failed — as it rendered or in an effect: the error, and `reset`,
+   * which renders the children anew (a Retry button).
+   */
+  fallback: (error: unknown, reset: () => void) => F;
+  /** Told of each error it catches, after the fallback is in the DOM (a log, a report). */
+  onError?: (error: unknown) => void;
+};
+
+/**
+ * Catches what the components below it throw — as they render, or in their effects — and shows `fallback` instead of
+ * them; React does it with a class's `getDerivedStateFromError` / `componentDidCatch`, which this library hasn't got.
+ * Errors of event handlers and of async code aren't caught (as in React): they never break a render. An error of
+ * the fallback goes to the next boundary up.
+ *
+ * Generic over the node types, as the components only this library has are: an app typed by `@types/react` (the
+ * stand-in's way, see the README) uses it as it is — its elements are React's to the type checker. What the types
+ * can't check there, a fallback that returns no node, the render throws — to the next boundary up.
+ *
+ * @param props - `fallback`, `onError`, the children.
+ * @returns The children, or the fallback.
+ * @example
+ * <ErrorBoundary fallback={(error, reset) => <Failed onRetry={reset} />} onError={(error) => log.push(error)}>
+ *   <App />
+ * </ErrorBoundary>
+ */
+export function ErrorBoundary<C = TNode, F = TNode>(props: TErrorBoundaryProps<C, F>): C | F {
+  const hook = nextHook() as TBoundaryHook;
+  if (!hook.reset) {
+    hook.failed = false;
+    hook.shown = false;
+    hook.reset = () => {
+      if (hook.failed) {
+        hook.failed = false;
+        hook.error = undefined;
+        schedule(hook.fiber);
+      }
+    };
+  }
+  hook.shown = hook.failed;
+  return hook.failed ? props.fallback(hook.error, hook.reset) : props.children;
 }
 
 /** Renders a queued component again and places its nodes. */
@@ -864,7 +1006,13 @@ function unmount(f: TFiber, remove: boolean): void {
       cleanup = hook.cleanup;
       if (cleanup) {
         hook.cleanup = undefined;
-        cleanup();
+        try {
+          cleanup();
+        } catch (error) {
+          toBoundary(
+            f.parent, error, true,
+          );
+        }
       }
       if (hook.provider) {
         hook.provider.subs.delete(f);

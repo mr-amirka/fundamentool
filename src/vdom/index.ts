@@ -28,9 +28,11 @@ export type {
 export {
   act,
   createRoot,
+  ErrorBoundary,
   useContext,
 } from './reconciler';
 export type {
+  TErrorBoundaryProps,
   TRoot,
 } from './reconciler';
 export {
