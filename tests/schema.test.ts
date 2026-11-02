@@ -245,6 +245,40 @@ describe('schema', () => {
     expect(wide.parse(options, WHERE)).toBe(options);
   });
 
+  it('pick and omit: a part of the shape, as a plain object schema', () => {
+    const base = object({
+      minify: boolean().optional(),
+      prefix: string().optional(),
+      out: string(),
+    }).refine(() => false, 'the whole only');
+    const picked = base.pick({
+      prefix: true,
+      out: true,
+    });
+    const rest = base.omit({
+      out: true,
+    });
+    expect(picked.keys).toEqual([
+      'prefix',
+      'out',
+    ]);
+    expect(rest.keys).toEqual([
+      'minify',
+      'prefix',
+    ]);
+    expect(rest.shape.prefix).toBe(base.shape.prefix);
+    expect(messageOf(picked, {
+      out: 'a.css',
+    })).toBeNull(); // the rule stays with the whole
+    expect(messageOf(rest, {
+      out: 'a.css',
+    })).toBe(`${WHERE}: unknown option "out". Known options: minify, prefix`);
+    const left: TInfer<typeof rest> = {
+      minify: true,
+    };
+    expect(rest.parse(left, WHERE)).toBe(left);
+  });
+
   it('safeParse doesn\'t throw; parse returns the value', () => {
     const flag = boolean();
     expect(flag.safeParse(true)).toEqual({

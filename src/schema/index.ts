@@ -92,6 +92,13 @@ export type TObjectSchema<S extends Record<string, TSchema<unknown>>, T = TObjec
   readonly keys: readonly (keyof S & string)[];
   /** Keys outside the shape are allowed (the app's own fields of a row). */
   passthrough(): TObjectSchema<S, T & Record<string, unknown>>;
+  /**
+   * A schema of only the keys `mask` names (zod's `.pick`): `CORE.pick({ notationMode: true })`. A plain object
+   * schema — its rules (`refine`), its description and its label stay with the whole.
+   */
+  pick<const M extends { [K in keyof S]?: true }>(mask: M): TObjectSchema<Pick<S, Extract<keyof M, keyof S>>>;
+  /** A schema of all the keys but those `mask` names (zod's `.omit`): `CORE.omit({ isolateClass: true })`. */
+  omit<const M extends { [K in keyof S]?: true }>(mask: M): TObjectSchema<Omit<S, keyof M>>;
   /** As `TSchema.refine` — still an object schema. */
   refine(rule: (value: T) => boolean, message: string | ((value: T) => string)): TObjectSchema<S, T>;
   /** As `TSchema.describe` — still an object schema. */
@@ -455,6 +462,7 @@ export function record<T>(value: TSchema<T>): TSchema<Record<string, T>> {
  * HOST.parse({ routes: [], rendr: draw }, '[fundamentool] NavigationHostProvider');
  * // TypeError: [fundamentool] NavigationHostProvider: unknown option "rendr". Did you mean "render"?
  * const PAGE_HOST = object({ ...HOST.shape, title: string() }); // HOST's options and one more
+ * HOST.pick({ routes: true }); HOST.omit({ render: true });      // a part of them
  */
 export function object<const S extends Record<string, TSchema<unknown>>>(shape: S): TObjectSchema<S> {
   const keys = Object.keys(shape) as (keyof S & string)[];
@@ -493,6 +501,14 @@ export function object<const S extends Record<string, TSchema<unknown>>>(shape: 
       shape,
       keys,
       passthrough: () => build(true),
+      pick: (mask) => object(Object.fromEntries(keys.filter((key) => mask[key]).map((key) => [
+        key,
+        shape[key],
+      ]))) as any,
+      omit: (mask) => object(Object.fromEntries(keys.filter((key) => !mask[key]).map((key) => [
+        key,
+        shape[key],
+      ]))) as any,
       refine: (rule, message) => extend(schema.refine(rule, message)),
       describe: (text) => extend(schema.describe(text)),
       label: (name) => extend(schema.label(name)),
