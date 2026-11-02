@@ -14,10 +14,6 @@ import type {
   TPresetObject,
 } from './types';
 
-// Moved from minotation's `packages/core/src/core/presetOrder.ts` (minotation D-045) — fundamentool D-087. Until
-// minotation calls this one, its copy stays: the switch is the entry of 2026-10-31 in
-// `LABARATORY/PROJECTS_CONTEXT/minotation/TASKS/main/INBOX.md` (`no-parallel-legacy.md`).
-
 /** Being visited now (to find a cycle) / already in the result. */
 const VISITING = 0;
 const PLACED = 1;
