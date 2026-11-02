@@ -43,6 +43,63 @@ describe('escapeCss', () => {
   test('does not modify plain alphanumeric strings', () => {
     expect(escapeCss('hello123')).toBe('hello123');
   });
+
+  test.each([
+    [
+      'w{1+2}',
+      'w\\{1\\+2\\}',
+    ],
+    [
+      'bg&x?',
+      'bg\\&x\\?',
+    ],
+    [
+      '2xl:p-4',
+      '\\32 xl\\:p-4',
+    ],
+    [
+      '-2a',
+      '-\\32 a',
+    ],
+    [
+      '-',
+      '\\-',
+    ],
+    [
+      '--a',
+      '--a',
+    ],
+    [
+      '-_a',
+      '-_a',
+    ],
+    [
+      '_a',
+      '_a',
+    ],
+    [
+      'a\u0000b',
+      'a\uFFFDb',
+    ],
+    [
+      'a\u0001b\u007f',
+      'a\\1 b\\7f ',
+    ],
+    [
+      'цвет·é',
+      'цвет·é',
+    ],
+    [
+      'a b\\c',
+      'a\\ b\\\\c',
+    ],
+    [
+      '',
+      '',
+    ],
+  ])('as CSS.escape (CSSOM): %j → %j', (value, escaped) => {
+    expect(escapeCss(value)).toBe(escaped);
+  });
 });
 
 describe('escapeQuote', () => {

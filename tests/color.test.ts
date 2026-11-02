@@ -28,8 +28,8 @@ describe('color', () => {
     expect(color('T')).toEqual(['Transparent']);
   });
 
-  test('resolves CSS variable', () => {
-    expect(color('--my-color,red;')).toEqual(['var(--my-color,red)']);
+  test('a "--name" is not read as a variable — as is', () => {
+    expect(color('--my-color')).toEqual(['--my-color']);
   });
 
   test('passes through unknown values lowercased', () => {
@@ -72,7 +72,7 @@ describe('colorRange', () => {
 });
 
 describe('color — every length and form', () => {
-  it('hex of 1–8 digits, with an alpha suffix; env() and var() without a fallback', () => {
+  it('hex of 1–8 digits, with an alpha suffix', () => {
     expect(color('f')).toEqual(['#fff']);
     expect(color('f.5')).toEqual(['rgba(255,255,255,.5)']);
     expect(color('f8')).toEqual(['rgba(255,255,255,.53)']);
@@ -86,8 +86,6 @@ describe('color — every length and form', () => {
       'rgba(18,52,86,.47)',
     ]);
     expect(color('000.0')).toEqual(['rgba(0,0,0,0)']);
-    expect(color('--x')).toEqual(['var(--x)']);
-    expect(color('---safe-area,0')).toEqual(['env(--safe-area,0)']);
   });
 
   it('normalize without a value; one and double', () => {

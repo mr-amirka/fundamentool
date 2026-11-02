@@ -7,7 +7,6 @@ const ZERO = '0';
 
 const regexpTrimZero = /^0+|0+$/g;
 const regexpColor = /^([A-Fa-f0-9]+)(\.[0-9]+)?$/;
-const regexpVar = /^(-)?(--[^;,]+)(,([^;]+))?;?$/;
 
 const MULTIPLIER = 1.0 / 255;
 const MULTIPLIER_ONE = 1.0 / 15;
@@ -44,15 +43,7 @@ export const color: IColor = (v: string, alt?: boolean): string[] => {
     return [synonym];
   }
 
-  let m = regexpVar.exec(v);
-  if (m) {
-    return [
-      (m[1] === '-' ? 'env' : 'var')
-      + '(' + m[2] + (m[4] ? COMMA + m[4] : '') + ')',
-    ];
-  }
-
-  m = regexpColor.exec(v) as RegExpExecArray | null;
+  const m = regexpColor.exec(v);
   if (m) {
     return base(normalize(m[1], m[2]), alt);
   }

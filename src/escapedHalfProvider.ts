@@ -1,86 +1,81 @@
 import {
-  regexpNormalizeText,
-} from './regexpNormalizeText';
-import {
   unslash,
 } from './unslash';
 import {
   map,
 } from './map';
+import {
+  escapedSplitReader,
+} from './escapedSplitProvider';
+import type {
+  TEscapedSplitOptions,
+} from './escapedSplitProvider';
 
-interface IEscapedHalf {
+/** Splits a string at its first separator (outside escapes and, when given, brackets). */
+export interface IEscapedHalf {
   /**
-   * Splits the input string into `[prefix, suffix, value]`
-   * where `suffix` starts with the separator and `value` is the tail.
-   * Escaped fragments are preserved and unescaped via `unslash`.
+   * Splits the input into `[prefix, suffix, value]`, each unescaped (`unslash`): `suffix` starts with the separator,
+   * `value` is what follows it. No separator — `[input, '', '']`.
    *
    * @param input - The input string to split.
-   * @returns The array of `[prefix, suffix, value]`.
+   * @returns `[prefix, suffix, value]`.
    */
   (input: string): [string, string, string];
 
   /**
-   * Splits the input string into `[prefix, suffix, value]` without escaped fragments.
-   * where `suffix` starts with the separator and `value` is the tail.
+   * The same, as written — escapes kept.
    *
    * @param input - The input string to split.
-   * @returns The array of `[prefix, suffix, value]` without escaped fragments.
+   * @returns `[prefix, suffix, value]`.
    */
   base: (input: string) => [string, string, string];
 }
 
 /**
- * Creates a helper that splits string into `[prefix, suffix, value]`
- * where `suffix` starts with the separator and `value` is the tail.
- * Escaped fragments are preserved and unescaped via `unslash`.
+ * Creates a helper that splits a string at its first separator into `[prefix, suffix, value]`: `suffix` starts with
+ * the separator, `value` is the tail. The options are {@link escapedSplitProvider}'s.
  *
- * @param separator - The separator to use.
- * @param escaped - The escaped string.
- * @returns The function to split the string.
+ * @param options - The separator, the escape, the brackets.
+ * @returns The helper: the parts unescaped, or as written with `.base`.
  * @example
- * const half = escapedHalfProvider(':');
+ * const half = escapedHalfProvider({ separator: ':' });
  * half('key:value');        // => ['key', ':value', 'value']
  * half('key\\:name:value'); // => ['key:name', ':value', 'value']
+ * escapedHalfProvider({ separator: ':', brackets: '[]' }).base('a[b:c]:d'); // => ['a[b:c]', ':d', 'd']
  */
-export const escapedHalfProvider = (separator: string,
-  escaped?: string): IEscapedHalf => {
-  const sep = regexpNormalizeText(separator);
-  const esc = escaped ? regexpNormalizeText(escaped) : '\\\\.';
-  const regexp = new RegExp('(' + esc + ')|(' + sep + '(.*)$)', 'g');
+export function escapedHalfProvider(options: TEscapedSplitOptions): IEscapedHalf {
+  const [
+    regexp,
+    openings,
+  ] = escapedSplitReader(options, 'escapedHalfProvider');
 
   function instance(input: string): [string, string, string] {
     return map(base(input), unslash) as [string, string, string];
   }
 
-  /**
-   * Splits the input string into `[prefix, suffix, value]`
-   * where `suffix` starts with the separator and `value` is the tail.
-   * Escaped fragments are preserved and unescaped via `unslash`.
-   *
-   * @param input - The input string to split.
-   * @returns The split string.
-   */
   const base = instance.base = (input: string): [string, string, string] => {
-    let prefix = input;
-    let value = '';
-    let suffix = '';
-    input.replace(regexp, (
-      _all, escapedMatch, _suffix, _value, offset,
-    ) => {
-      if (!escapedMatch) {
-        suffix = _suffix;
-        value = _value;
-        prefix = input.slice(0, offset);
+    let depth = 0;
+    let m: RegExpExecArray | null;
+    regexp.lastIndex = 0;
+    while ((m = regexp.exec(input))) {
+      if (!m[0]) {
+        regexp.lastIndex++;
+      } else if (m[2]) {
+        depth += openings.indexOf(m[2]) > -1 ? 1 : -1;
+      } else if (m[3] !== undefined && !depth) {
+        return [
+          input.slice(0, m.index),
+          input.slice(m.index),
+          input.slice(m.index + m[0].length),
+        ];
       }
-      return '';
-    });
+    }
     return [
-      prefix,
-      suffix,
-      value,
+      input,
+      '',
+      '',
     ];
   };
 
   return instance;
-};
-
+}

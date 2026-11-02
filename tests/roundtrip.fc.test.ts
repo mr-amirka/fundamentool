@@ -71,7 +71,9 @@ describe('scopeSplit ↔ scopeJoin — round-trip', () => {
 
 describe('escapedSplitProvider — инварианты', () => {
   test('fast-check: unslash(base[i]) === main[i] для любого входа', () => {
-    const split = escapedSplitProvider(',');
+    const split = escapedSplitProvider({
+      separator: ',',
+    });
     fc.assert(fc.property(fc.string(), (input: string) => {
       const baseResult = split.base(input);
       const mainResult = split(input);
@@ -84,7 +86,9 @@ describe('escapedSplitProvider — инварианты', () => {
   });
 
   test('fast-check: split не падает на любом входе', () => {
-    const split = escapedSplitProvider('|');
+    const split = escapedSplitProvider({
+      separator: '|',
+    });
     fc.assert(fc.property(fc.string(), (input: string) => {
       expect(() => split(input)).not.toThrow();
     }));
@@ -92,10 +96,11 @@ describe('escapedSplitProvider — инварианты', () => {
 });
 
 describe('escape → unslash — частичный round-trip', () => {
-  test('fast-check: unslash(escapeCss(s)) для строк без спецсимволов', () => {
+  test('fast-check: unslash(escapeCss(s)) для строк без спецсимволов, начинающихся с буквы', () => {
     const simple = stringFromChars('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789');
     fc.assert(fc.property(simple, (input: string) => {
-      expect(unslash(escapeCss(input))).toBe(input);
+      // цифра в начале пишется кодом (`\31 `), unslash её не восстанавливает
+      expect(unslash(escapeCss('a' + input))).toBe('a' + input);
     }));
   });
 

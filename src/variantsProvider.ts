@@ -118,7 +118,9 @@ export function variantsProvider(options: IVariantsProviderOptions): TVariants {
     throw new TypeError('scopeStart and scopeEnd must differ');
   }
 
-  const splitBySep = escapedSplitProvider(options.separator).base;
+  const splitBySep = escapedSplitProvider({
+    separator: options.separator,
+  }).base;
 
   const maxDepthLimit = maxLimitNormalize(options.maxDepth, 'maxDepth');
   const maxOutputCountLimit = maxLimitNormalize(options.maxOutputCount, 'maxOutputCount');
