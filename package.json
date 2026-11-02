@@ -25,6 +25,9 @@
       "hooks": [
         "dist/hooks/index.d.ts"
       ],
+      "sql": [
+        "dist/sql/index.d.ts"
+      ],
       "i18n": [
         "dist/i18n/index.d.ts"
       ],
@@ -133,6 +136,12 @@
       "module": "./dist/esm/hooks/index.js",
       "import": "./dist/esm/hooks/index.js",
       "default": "./dist/hooks/index.js"
+    },
+    "./sql": {
+      "types": "./dist/sql/index.d.ts",
+      "module": "./dist/esm/sql/index.js",
+      "import": "./dist/esm/sql/index.js",
+      "default": "./dist/sql/index.js"
     },
     "./i18n": {
       "types": "./dist/i18n/index.d.ts",
@@ -246,11 +255,13 @@
     "node": ">=18"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/jest": "^29.5.14",
     "@types/jsdom": "^20.0.1",
     "@types/node": "^20.11.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.7",
+    "better-sqlite3": "^12.11.1",
     "esbuild": "^0.28.2",
     "eslint": "^10.9.1",
     "eslint-config-lab": "github:mr-amirka/eslint-config-lab#9238feb561678405da80afe8ce7dfc379a7160b5",
