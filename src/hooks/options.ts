@@ -38,7 +38,7 @@ const ORDER_OPTIONS = /*#__PURE__*/ lazy(() => object({
  * @throws {TypeError} an unknown option ("did you mean"), a name that isn't a string.
  */
 export function checkHookOptions(options: unknown, where: string): void {
-  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production') {
     HOOK_OPTIONS().parse(options || {}, where);
   }
 }
@@ -54,7 +54,7 @@ export function checkHookOptions(options: unknown, where: string): void {
 export function checkAdd(
   handler: unknown, options: unknown, where: string,
 ): void {
-  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production') {
     FUNCTION().parse(handler, `${where}: the handler`);
     ADD_OPTIONS().parse(options || {}, where);
   }
@@ -68,7 +68,7 @@ export function checkAdd(
  * @throws {TypeError} not a function.
  */
 export function checkFunction(value: unknown, where: string): void {
-  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production') {
     FUNCTION().parse(value, where);
   }
 }
@@ -81,7 +81,7 @@ export function checkFunction(value: unknown, where: string): void {
  * @throws {TypeError} an unknown option ("did you mean"), a wrong value.
  */
 export function checkOrderOptions(options: unknown, where: string): void {
-  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production') {
     ORDER_OPTIONS().parse(options || {}, where);
   }
 }

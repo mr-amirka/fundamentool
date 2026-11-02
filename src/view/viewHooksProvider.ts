@@ -98,7 +98,7 @@ function subscribeTo(store: TStore): (onChange: () => void) => () => void {
  * const section = useStoreMap(nav.$state, (state) => state.section);   // only when the section changes
  */
 export function viewHooksProvider(library: Pick<TViewLibrary, 'useSyncExternalStore' | 'useRef'> & Partial<TViewLibrary>) {
-  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production') {
     LIBRARY().parse(library, WHERE);
   }
   const {

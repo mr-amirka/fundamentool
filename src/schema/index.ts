@@ -521,7 +521,7 @@ export function object<const S extends Record<string, TSchema<unknown>>>(shape: 
 /**
  * A schema built on first use (lab D-023): its builder runs the first time a check needs it — never when the module
  * loads. Declared at the top of a module with a pure annotation before the call (`#__PURE__` in a block comment), and
- * used only by checks behind `typeof process !== 'undefined' && process.env.NODE_ENV !== 'production'`, it leaves a
+ * used only by checks behind `process.env.NODE_ENV !== 'production'`, it leaves a
  * production build whole — the schema, and this library with it. (esbuild needs the annotation at the call; Rollup /
  * Vite drop it either way — measured in lab research 13.)
  *
@@ -530,7 +530,7 @@ export function object<const S extends Record<string, TSchema<unknown>>>(shape: 
  * @example
  * const OPTIONS = lazy(() => object({ quiet: boolean().optional() })); // + the pure annotation before `lazy`
  * export function step(options?: { quiet?: boolean }) {
- *   if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+ *   if (process.env.NODE_ENV !== 'production') {
  *     OPTIONS().parse(options, 'step');
  *   }
  * }

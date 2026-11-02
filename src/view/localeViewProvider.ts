@@ -67,7 +67,7 @@ const NEVER = () => () => undefined;
 export function localeViewProvider<D extends TLocaleViewDeps>(deps: D) {
   /** An element of the app's view library — React's `ReactElement` when React is passed in. */
   type TElement = ReturnType<D['createElement']>;
-  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production') {
     LIBRARY().parse(deps, WHERE);
   }
   const {

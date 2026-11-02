@@ -46,7 +46,7 @@ const OPTIONS = /*#__PURE__*/ lazy(() => object({
  * @throws {TypeError} an unknown option ("did you mean"), an operator that isn't one, a name without `$`.
  */
 export function operatorsOf(options: unknown, where: string): TMatchOperators {
-  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production') {
     OPTIONS().parse(options || {}, where);
   }
   return (options as TMatchOptions | undefined)?.operators || STANDARD_OPERATORS;

@@ -120,7 +120,7 @@ function browserClick(event: TClickEvent, anchor: Record<string, unknown>): bool
  * <NavLink href="/catalog" activeAsParent>Catalog</NavLink>
  */
 export function linksProvider(deps: TLinksDeps) {
-  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production') {
     LINKS_DEPS().parse(deps, WHERE);
   }
   const router = deps.router;

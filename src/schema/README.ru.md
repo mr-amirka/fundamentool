@@ -29,7 +29,7 @@ export type THostOptions = TInfer<ReturnType<typeof HOST_OPTIONS>>; // тип �
 // список ключей — из схемы, там, где тест сверяет его с типом: HOST_OPTIONS().keys
 
 export function createHost(options: THostOptions) {
-  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production') {
     HOST_OPTIONS().parse(options, '[app] createHost');
   }
   // …
@@ -67,14 +67,16 @@ export function createHost(options: THostOptions) {
 ```ts
 const OPTIONS = /*#__PURE__*/ lazy(() => object({ quiet: boolean().optional() }));
 
-if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== 'production') {
   OPTIONS().parse(options, WHERE);
 }
 ```
 
 Продакшен-сборка приложения (Vite, webpack, Next.js, esbuild с `--minify`) подставляет `"production"`: ветка, схема и эта
 библиотека уходят из бандла — в коде приложения и во всех зависимостях, без настроек. В разработке и тестах проверки
-работают как прежде; страница без сборщика (нет `process`) их пропускает. Нужны обе части, замерено в lab research 13:
+работают как прежде — и в Node, и в браузере. Условие читает только `process.env.NODE_ENV`, без `typeof process` (lab
+D-051): сборщик оставляет `typeof process` как есть, и в браузере проверка пропускалась бы и в разработке; коду, который
+грузится совсем без сборщика, нужен заданный `process.env.NODE_ENV`. Нужны обе части, замерено в lab research 13:
 схема, построенная в начале модуля, остаётся, даже когда её никто не использует, а esbuild выбрасывает `lazy(…)` только с
 pure-аннотацией. Правило линтера `lab/dev-only-checks` (eslint-config-lab) сообщает о проверке вне ветки и о схеме,
 построенной при загрузке модуля.

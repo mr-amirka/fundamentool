@@ -303,7 +303,7 @@ const warned = new Set<string>();
  * once; in production the value as it is, and one warning.
  */
 function complain(text: string, shown: string): string {
-  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production') {
     throw new TypeError('[i18n] ' + text);
   }
   if (!warned.has(text)) {
@@ -722,7 +722,7 @@ TLexiconSource {
  * locale.$locale.getState(); // 'de'
  */
 export function createLocale<const L extends string>(options: TLocaleOptions<L>): TLocale<L> {
-  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production') {
     LOCALE_OPTIONS().parse(options, WHERE_LOCALE);
     if (!options.locales.length || !options.source.values[options.locales[0]]) {
       throw new TypeError(`${WHERE_LOCALE}: the base locale "${options.locales[0]}" has no texts in the source`);
@@ -782,7 +782,7 @@ export function createLocale<const L extends string>(options: TLocaleOptions<L>)
 
   function select(locale: L): Promise<boolean> {
     if (!isLocale(locale)) {
-      if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+      if (process.env.NODE_ENV !== 'production') {
         throw new TypeError(`${WHERE_LOCALE}: select: ${describeValue(locale)} is not one of ${locales.join(', ')}`);
       }
       return Promise.resolve(false);
@@ -937,7 +937,7 @@ TMessagesSet<T, L> {
       compiled[at] = typeof value === 'string' ? compileTemplate(value, parse) :
         value.map((item) => compileTemplate(item, parse));
     }
-    if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' && missing.length) {
+    if (process.env.NODE_ENV !== 'production' && missing.length) {
       console.warn(`[i18n] ${name}: "${tag}" has no ${missing.join(', ')} — showing "${base}"`);
     }
     compiledByLocale.set(tag, compiled);

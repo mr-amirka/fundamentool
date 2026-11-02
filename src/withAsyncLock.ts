@@ -26,7 +26,7 @@ const WHERE = '[fundamentool] withAsyncLock';
  * none.
  */
 function assertArguments(fn: unknown, options: unknown): void {
-  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production') {
     func().parse(fn, WHERE);
     if (options !== null) {
       WITH_ASYNC_LOCK_OPTIONS().optional().parse(options, WHERE);

@@ -216,7 +216,7 @@ export function createNavigatorView(deps: TNavigatorDeps, core: TNavigatorCore) 
    * root.render(<NavigationHost />);
    */
   function NavigationHostProvider<R = Record<string, unknown>>(options: TNavigationHostOptions<R>): () => unknown {
-    if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== 'production') {
       // The host's options, with the navigator's gate names (a row's `gate`) — built only to check (lab D-023)
       hostOptions(core.gateNames).parse(options, `${WHERE} NavigationHostProvider`);
     }

@@ -80,7 +80,7 @@ export const ESCAPED_SPLIT_OPTIONS = /*#__PURE__*/ lazy(() => {
  * @internal
  */
 export function escapedSplitReader(options: TEscapedSplitOptions, where: string): [RegExp, string] {
-  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production') {
     ESCAPED_SPLIT_OPTIONS().parse(options, '[fundamentool] ' + where);
   }
   const brackets = options.brackets || '';

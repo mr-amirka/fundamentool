@@ -100,7 +100,7 @@ const SCHEMAS = {
  * @throws {TypeError} `[fundamentool/sql] selectFrom: unknown option "were". Did you mean "where"?`.
  */
 export function checkOptions(member: keyof typeof SCHEMAS, options: unknown): void {
-  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production') {
     SCHEMAS[member]().parse(options === undefined ? {} : options, `${WHERE} ${member}`);
   }
 }

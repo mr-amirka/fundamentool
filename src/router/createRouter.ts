@@ -104,7 +104,7 @@ function withQuery(query: TParams, values: Record<string, unknown>): TParams {
  * button.onclick = router.backLocationThrottled;
  */
 export function createRouter(deps: TRouterDeps): TRouter {
-  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production') {
     ROUTER_DEPS().parse(deps, WHERE);
   }
   const {
@@ -201,7 +201,7 @@ export function createRouter(deps: TRouterDeps): TRouter {
   );
 
   async function pushLocation(change: Partial<TUrlProps>, options?: TStepOptions): Promise<TUrlProps> {
-    if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== 'production') {
       STEP_OPTIONS().optional().parse(options, `${WHERE} pushLocation`);
     }
     return step(
@@ -210,7 +210,7 @@ export function createRouter(deps: TRouterDeps): TRouter {
   }
 
   async function replaceLocation(change: Partial<TUrlProps>, options?: TStepOptions): Promise<TUrlProps> {
-    if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== 'production') {
       STEP_OPTIONS().optional().parse(options, `${WHERE} replaceLocation`);
     }
     return step(
@@ -235,7 +235,7 @@ export function createRouter(deps: TRouterDeps): TRouter {
     pushLocation,
     replaceLocation,
     async extendLocation(change, options) {
-      if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+      if (process.env.NODE_ENV !== 'production') {
         PARAMS_OPTIONS().optional().parse(options, `${WHERE} extendLocation`);
       }
       return extend(change, options);
@@ -245,7 +245,7 @@ export function createRouter(deps: TRouterDeps): TRouter {
       if (!Number.isInteger(count) || count < 1) {
         throw new TypeError(`${WHERE} backRepeat: expects a whole number of steps ≥ 1, got ${describeValue(count)}`);
       }
-      if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+      if (process.env.NODE_ENV !== 'production') {
         BACK_OPTIONS().optional().parse(options, `${WHERE} backRepeat`);
       }
       return driver.back(count, options);
@@ -307,7 +307,7 @@ export function createRouter(deps: TRouterDeps): TRouter {
         [key]: value,
       }, options),
       assign(values, options) {
-        if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+        if (process.env.NODE_ENV !== 'production') {
           PARAMS_OPTIONS().optional().parse(options, `${WHERE} params`);
         }
         const next = withQuery(query, values);
@@ -323,7 +323,7 @@ export function createRouter(deps: TRouterDeps): TRouter {
       }, options),
       getKeys: () => Object.keys(query),
       clear(options) {
-        if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+        if (process.env.NODE_ENV !== 'production') {
           PARAMS_OPTIONS().optional().parse(options, `${WHERE} params`);
         }
         if (Object.keys(query).length) {

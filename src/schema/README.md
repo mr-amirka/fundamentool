@@ -30,7 +30,7 @@ export type THostOptions = TInfer<ReturnType<typeof HOST_OPTIONS>>; // the type 
 // the key list — from the schema, where a test compares it with the type: HOST_OPTIONS().keys
 
 export function createHost(options: THostOptions) {
-  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production') {
     HOST_OPTIONS().parse(options, '[app] createHost');
   }
   // …
@@ -68,14 +68,16 @@ mode, its schema built on first use:
 ```ts
 const OPTIONS = /*#__PURE__*/ lazy(() => object({ quiet: boolean().optional() }));
 
-if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== 'production') {
   OPTIONS().parse(options, WHERE);
 }
 ```
 
 An app's production build (Vite, webpack, Next.js, esbuild with `--minify`) writes `"production"` in: the branch, the
 schema and this library leave the bundle — in the app's code and in every dependency, with no setting. Development and
-tests run the checks as before; a page with no bundler (no `process`) skips them. Both parts are needed, measured in lab
+tests run the checks as before — in Node and in a browser alike. The guard reads `process.env.NODE_ENV` alone, with no
+`typeof process` (lab D-051): a bundler leaves `typeof process` in, and in a browser it would skip the check in
+development too; code loaded with no bundler at all needs `process.env.NODE_ENV` set. Both parts are needed, measured in lab
 research 13: a schema built at the top of a module stays even when nothing uses it, and esbuild drops a `lazy(…)` only
 with the pure annotation. The lint rule `lab/dev-only-checks` (eslint-config-lab) reports a check outside the branch and
 a schema built when the module loads.

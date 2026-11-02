@@ -147,7 +147,7 @@ const OPTIONS = /*#__PURE__*/ lazy(() => object({
  */
 export function dynamicLoaderProvider<D extends TDynamicLoaderDeps>(deps: D, options: TDynamicLoaderOptions = {})
   : TDynamicLoader<ReturnType<D['createElement']>> {
-  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production') {
     LIBRARY().parse(deps, WHERE);
     OPTIONS().parse(options, WHERE);
   }

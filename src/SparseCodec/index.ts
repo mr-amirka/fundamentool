@@ -236,7 +236,7 @@ const WHERE = 'createSparseCodec';
 
 /** The table checked — in development only (lab D-023): its shape, every `id` once, every `default` fitting its type. */
 const checkConfig = (config: ISparseCodecConfig): void => {
-  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production') {
     CONFIG().parse(config, WHERE);
     const owners: Record<number, string> = {};
     const fields = config.fields;
