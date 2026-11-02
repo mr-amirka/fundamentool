@@ -75,4 +75,66 @@ describe('isEqual', () => {
       a: 1,
     })).toBe(false);
   });
+
+  test.each<[string, unknown, unknown, boolean]>([
+    [
+      'NaN equals NaN (D-086)',
+      NaN,
+      NaN,
+      true,
+    ],
+    [
+      'Dates by time',
+      new Date(1),
+      new Date(1),
+      true,
+    ],
+    [
+      'different Dates',
+      new Date(1),
+      new Date(2),
+      false,
+    ],
+    [
+      'a Date and an object',
+      new Date(1),
+      {},
+      false,
+    ],
+    [
+      'RegExps by source and flags',
+      /a/i,
+      /a/i,
+      true,
+    ],
+    [
+      'different RegExps',
+      /a/i,
+      /a/g,
+      false,
+    ],
+    [
+      'a RegExp and an object',
+      {},
+      /a/,
+      false,
+    ],
+  ])('%s', (
+    _, a, b, expected,
+  ) => {
+    expect(isEqual(a, b)).toBe(expected);
+  });
+
+  test('a Date compares by time at any depth: it is a value, not a container', () => {
+    expect(isEqual({
+      d: new Date(1),
+    }, {
+      d: new Date(1),
+    })).toBe(true);
+    expect(isEqual({
+      d: new Date(1),
+    }, {
+      d: new Date(2),
+    })).toBe(false);
+  });
 });

@@ -1,10 +1,18 @@
 import {
-  isMatch,
-} from './is/isMatch';
+  isEqual,
+} from './is/isEqual';
+
+/**
+ * The default comparator: equal to ten levels deep — as far as `isMatch` went when it was the default (fundamentool
+ * D-086); a cap, since the items may hold cycles.
+ */
+const EQUAL_DEEP = (a: unknown, b: unknown): boolean => isEqual(
+  a, b, 10,
+);
 
 /**
  * Returns unique items from input using a custom comparator.
- * Default comparator is isMatch (deep equality).
+ * Default comparator: deep equality (`isEqual` to ten levels), so the result doesn't depend on the order.
  *
  * @param input - The input array to filter.
  * @param comparator - The comparator function to use.
@@ -20,7 +28,7 @@ export function uniqWith<T>(
   output?: T[],
 ): T[] {
   const result = output || [];
-  const cmp = comparator || isMatch;
+  const cmp = comparator || EQUAL_DEEP;
   const includes: T[] = [];
   let includesLength = 0;
   const length = input?.length || 0;

@@ -1,42 +1,38 @@
+import {
+  matchProvider,
+  type TMatchPredicate,
+} from '../match/matchProvider';
+import type {
+  TMatch,
+} from '../match/types';
+
+/** A pattern object compiled once: `isMatch(x, PATTERN)` in a loop compiles on the first call. */
+const COMPILED = new WeakMap<object, TMatchPredicate>();
+
 /**
- * Checks whether `src` matches the structure of `matchs` up to `depth` levels (default: 10).
- * Unlike `isEqual`, only the keys present in `matchs` are compared.
+ * Whether `value` matches `pattern` — `matchProvider`'s one-shot form (fundamentool D-086), the same grammar: only the
+ * pattern's keys are compared, a list means any of its items, a RegExp finds in a string, `Date`s compare by time,
+ * `null` matches only `null`. An object or list pattern is compiled once and kept — a pattern changed after its first
+ * use is a new object, not the same one edited.
  *
- * @param src - The value to test.
- * @param matchs - The pattern to match against.
- * @param depth - Maximum recursion depth (default: 10).
- * @returns `true` if all keys in `matchs` are present in `src` with equal values.
+ * @param value - The value to test.
+ * @param pattern - The pattern (`TMatch`).
+ * @returns `true` if `value` matches.
+ * @throws {TypeError} a bad pattern (an unknown operator, a wrong argument) — as `matchProvider`.
  * @example
  * isMatch({ a: 1, b: 2 }, { a: 1 }); // => true
  * isMatch({ a: 1 }, { a: 2 });        // => false
- * isMatch({ a: 1 }, { b: 1 });        // => false
+ * isMatch({ tags: ['x', 'y'] }, { tags: 'y' }); // => true
+ * isMatch(new Date(1), new Date(2)); // => false
  */
-export const isMatch = (
-  src: any, matchs: any, depth?: number,
-) => {
-  return !isNotMatch(
-    src, matchs, depth || 10,
-  );
-};
-
-function isNotMatch(
-  src: any, matchs: any, depth: number,
-) {
-  if (src === matchs || depth < 0) {
-    return;
+export function isMatch(value: unknown, pattern: TMatch): boolean {
+  if (pattern === null || typeof pattern !== 'object') {
+    return matchProvider(pattern)(value);
   }
-  let k: string;
-  const t1 = typeof src;
-  const t2 = typeof matchs;
-  if (t1 !== t2 || t1 !== 'object' || !src) {
-    return true;
+  let predicate = COMPILED.get(pattern);
+  if (!predicate) {
+    predicate = matchProvider(pattern);
+    COMPILED.set(pattern, predicate);
   }
-  depth--;
-  for (k in matchs) {
-    if (isNotMatch(
-      src[k], matchs[k], depth,
-    )) {
-      return true;
-    }
-  }
+  return predicate(value);
 }

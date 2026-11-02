@@ -3,15 +3,15 @@ import {
   isFunction,
 } from './is/isFunction';
 import {
-  isMatch,
-} from './is/isMatch';
+  matchProvider,
+} from './match/matchProvider';
 import {
   findIn,
 } from './findIn';
 
 /**
  * Checks if at least one property in the collection matches the identity.
- * Identity can be a function or an object for isMatch.
+ * Identity can be a function or a pattern of `fundamentool/match`, compiled once before the loop.
  *
  * @param collection - The collection to search in.
  * @param identity - The identity to search for.
@@ -22,4 +22,4 @@ import {
 export const someIn = <T extends Record<string, any>>(
   collection: T,
   identity?: any,
-): boolean => findIn(collection, isFunction(identity) ? identity : (v: T[keyof T]) => isMatch(v, identity)) !== undefined;
+): boolean => findIn(collection, isFunction(identity) ? identity : matchProvider(identity)) !== undefined;

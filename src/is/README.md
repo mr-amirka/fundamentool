@@ -58,12 +58,14 @@ import { isString, isEqual, isMatch } from 'fundamentool/is';
 
 | Function | Description |
 |----------|-------------|
-| `isEqual(a, b, depth?)` | Deep equality up to `depth` levels (default: full depth) |
-| `isMatch(src, pattern, depth?)` | Checks if `src` structurally matches `pattern` (only keys present in `pattern` are checked) |
+| `isEqual(a, b, depth?)` | Deep equality up to `depth` levels of nesting (default `0`: nested objects by reference); `NaN` equals `NaN`, `Date`s compare by time and `RegExp`s by source and flags at any depth |
+| `isMatch(value, pattern)` | Whether `value` matches a pattern of [`fundamentool/match`](../match/README.md): only the pattern's keys are compared, a list means any of its items, a RegExp finds in a string |
 
 ```ts
-isEqual({ a: 1, b: { c: 2 } }, { a: 1, b: { c: 2 } }); // true
-isMatch({ a: 1, b: 2, c: 3 }, { a: 1 }); // true — extra keys are ignored
+isEqual({ a: 1, b: { c: 2 } }, { a: 1, b: { c: 2 } });    // false — depth 0, `b` by reference
+isEqual({ a: 1, b: { c: 2 } }, { a: 1, b: { c: 2 } }, 1); // true
+isMatch({ a: 1, b: 2, c: 3 }, { a: 1 });                  // true — extra keys are ignored
+isMatch({ tags: ['x', 'y'] }, { tags: 'y' });             // true — the array holds it
 ```
 
 ---

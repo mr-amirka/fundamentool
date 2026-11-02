@@ -42,6 +42,7 @@ npm run docs:api
 | `fundamentool/async` | Async iteration, parallel execution, sequencing |
 | `fundamentool/is` | Type predicates: `isString`, `isEqual`, `isMatch`, and 34 more |
 | `fundamentool/schema` | Option schemas with zod's names: `object`, `array`, `string`, … — the check, the type and the key list from one description ([README](src/schema/README.md)) |
+| `fundamentool/match` | A filter as data: a pattern compiled once into a predicate (`matchProvider`), the same pattern as a tree for SQL (`normalizeMatch`), operators a project extends (`STANDARD_OPERATORS`) ([README](src/match/README.md)) |
 | `fundamentool/i18n` | Localization: one locale per app, a set of messages per package, read by key constants — `t(K.hud.moves, { count })`; plurals and formats in the message; the Vite plugin `fundamentool/i18n/vite` (a compact build, locales inline or on demand), `fundamentool/i18n/testing` (`checkSet`) ([README](src/i18n/README.md)) |
 | `fundamentool/vdom` | ⚠️ A trial (D-072): its own view library with React's API — elements, function components, hooks, contexts, portals, `createRoot` — 5.6 KB gzip; MUI and emotion run on it through bundler aliases to `fundamentool/vdom/react` (D-073); `act` for tests ([README](src/vdom/README.md)) |
 | `fundamentool/join` | String join helpers |

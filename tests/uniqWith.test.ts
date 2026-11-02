@@ -59,4 +59,43 @@ describe('uniqWith', () => {
       2,
     ]);
   });
+
+  test('the default comparator is deep equality, so the order doesn\'t matter (D-086)', () => {
+    expect(uniqWith([
+      {
+        a: 1,
+      },
+      {
+        a: 1,
+        b: 1,
+      },
+    ])).toHaveLength(2);
+    expect(uniqWith([
+      {
+        a: 1,
+        b: 1,
+      },
+      {
+        a: 1,
+      },
+    ])).toHaveLength(2);
+    expect(uniqWith([
+      {
+        a: {
+          b: [1],
+        },
+      },
+      {
+        a: {
+          b: [1],
+        },
+      },
+    ])).toEqual([
+      {
+        a: {
+          b: [1],
+        },
+      },
+    ]);
+  });
 });

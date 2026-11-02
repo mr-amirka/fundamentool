@@ -58,12 +58,14 @@ import { isString, isEqual, isMatch } from 'fundamentool/is';
 
 | Функция | Описание |
 |---------|----------|
-| `isEqual(a, b, depth?)` | Глубокое равенство до `depth` уровней вложенности |
-| `isMatch(src, pattern, depth?)` | Проверяет, соответствует ли `src` структуре `pattern` (проверяются только ключи из `pattern`) |
+| `isEqual(a, b, depth?)` | Глубокое равенство до `depth` уровней вложенности (по умолчанию `0`: вложенные объекты — по ссылке); `NaN` равен `NaN`, `Date` сравниваются по времени, `RegExp` — по исходнику и флагам, на любой глубине |
+| `isMatch(value, pattern)` | Подходит ли `value` под шаблон [`fundamentool/match`](../match/README.ru.md): сравниваются только ключи шаблона, список значит «любой из», RegExp ищет в строке |
 
 ```ts
-isEqual({ a: 1, b: { c: 2 } }, { a: 1, b: { c: 2 } }); // true
-isMatch({ a: 1, b: 2, c: 3 }, { a: 1 }); // true — лишние ключи игнорируются
+isEqual({ a: 1, b: { c: 2 } }, { a: 1, b: { c: 2 } });    // false — глубина 0, `b` по ссылке
+isEqual({ a: 1, b: { c: 2 } }, { a: 1, b: { c: 2 } }, 1); // true
+isMatch({ a: 1, b: 2, c: 3 }, { a: 1 });                  // true — лишние ключи игнорируются
+isMatch({ tags: ['x', 'y'] }, { tags: 'y' });             // true — массив его содержит
 ```
 
 ---
