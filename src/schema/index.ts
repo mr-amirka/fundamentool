@@ -81,8 +81,13 @@ type TOptionalKeys<S> = { [K in keyof S]: undefined extends TInfer<S[K]> ? K : n
 /** An object of a shape: the keys that may be undefined become optional. */
 type TObjectOf<S> = { [K in Exclude<keyof S, TOptionalKeys<S>>]: TInfer<S[K]> } & { [K in TOptionalKeys<S>]?: TInfer<S[K]> };
 
-/** An object schema: also its keys and `passthrough`. */
+/** An object schema: also its shape, its keys and `passthrough`. */
 export type TObjectSchema<S extends Record<string, TSchema<unknown>>, T = TObjectOf<S>> = Omit<TSchema<T>, 'refine' | 'describe' | 'label'> & {
+  /**
+   * The shape as given (zod's `.shape`): a schema of more options is built from it —
+   * `object({ ...CORE.shape, out: string() })`; one key's schema is `CORE.shape.minify`.
+   */
+  readonly shape: S;
   /** The shape's keys — the single list an entry point's `*_KEYS` constant comes from. */
   readonly keys: readonly (keyof S & string)[];
   /** Keys outside the shape are allowed (the app's own fields of a row). */
@@ -431,12 +436,13 @@ export function record<T>(value: TSchema<T>): TSchema<Record<string, T>> {
 
 /**
  * An options object of `shape`: a key outside it is an error with "did you mean" (`passthrough()` allows them); a key
- * left `undefined` is absent. `.keys` — the shape's keys.
+ * left `undefined` is absent. `.shape` — the shape as given (another object schema spreads it), `.keys` — its keys.
  *
  * @example
  * const HOST = object({ routes: array(ROW), render: func().optional() });
  * HOST.parse({ routes: [], rendr: draw }, '[fundamentool] NavigationHostProvider');
  * // TypeError: [fundamentool] NavigationHostProvider: unknown option "rendr". Did you mean "render"?
+ * const PAGE_HOST = object({ ...HOST.shape, title: string() }); // HOST's options and one more
  */
 export function object<const S extends Record<string, TSchema<unknown>>>(shape: S): TObjectSchema<S> {
   const keys = Object.keys(shape) as (keyof S & string)[];
@@ -469,9 +475,10 @@ export function object<const S extends Record<string, TSchema<unknown>>>(shape: 
         ]));
       },
     );
-    // A derived schema (a rule, a label, a description) stays an object schema: its keys, `passthrough`
+    // A derived schema (a rule, a label, a description) stays an object schema: its shape, keys, `passthrough`
     const extend = (schema: TSchema<any>): TObjectSchema<S, any> => ({
       ...schema,
+      shape,
       keys,
       passthrough: () => build(true),
       refine: (rule, message) => extend(schema.refine(rule, message)),

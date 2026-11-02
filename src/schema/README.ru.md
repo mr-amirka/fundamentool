@@ -54,7 +54,7 @@ export function createHost(options: THostOptions) {
 | `custom(check, expected)` | что примет проверка (`isStore`) |
 | `union([a, b])` | первое подходящее |
 | `array(item)`, `tuple([a, b])`, `record(value)` | список, фиксированные места, `{ [имя]: значение }` |
-| `object(shape)` + `.passthrough()`, `.keys` | объект опций |
+| `object(shape)` + `.passthrough()`, `.shape`, `.keys` | объект опций; `object({ ...BASE.shape, out: string() })` — более широкий |
 | `.optional()`, `.refine(rule, message)`, `.describe(expected)`, `.label(name)` | у любой схемы |
 | `.parse(value, where)`, `.safeParse(value)`, `TInfer<typeof S>` | проверка, без исключения, тип |
 | `lazy(() => schema)` | схема, построенная при первом использовании (lab D-023) |

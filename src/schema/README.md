@@ -55,7 +55,7 @@ Don't destructure a namespace object (`const { object } = schema`) — a bundler
 | `custom(check, expected)` | anything a check accepts (`isStore`) |
 | `union([a, b])` | the first that fits |
 | `array(item)`, `tuple([a, b])`, `record(value)` | a list, fixed places, `{ [name]: value }` |
-| `object(shape)` + `.passthrough()`, `.keys` | an options object |
+| `object(shape)` + `.passthrough()`, `.shape`, `.keys` | an options object; `object({ ...BASE.shape, out: string() })` — a wider one |
 | `.optional()`, `.refine(rule, message)`, `.describe(expected)`, `.label(name)` | on any schema |
 | `.parse(value, where)`, `.safeParse(value)`, `TInfer<typeof S>` | the check, without throwing, the type |
 | `lazy(() => schema)` | a schema built on first use (lab D-023) |

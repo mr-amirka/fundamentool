@@ -211,6 +211,36 @@ describe('schema', () => {
     expect(messageOf(string().refine((text) => text.startsWith('/'), 'a path starts with "/"'), 'x')).toBe(`${WHERE}: a path starts with "/"`);
   });
 
+  it('shape: the shape as given, through refine and passthrough — a wider schema is built from it', () => {
+    const base = object({
+      minify: boolean().optional(),
+      prefix: string().optional(),
+    });
+    const wide = object({
+      ...base.refine(() => true, 'never').passthrough().shape,
+      out: string(),
+    });
+    expect(wide.shape.minify).toBe(base.shape.minify);
+    expect(wide.keys).toEqual([
+      'minify',
+      'prefix',
+      'out',
+    ]);
+    expect(wide.shape.prefix).toBe(base.shape.prefix);
+    expect(messageOf(wide, {
+      out: 'a.css',
+      minify: 1,
+    })).toBe(`${WHERE}: "minify" expects true or false, got number 1`);
+    expect(messageOf(wide, {
+      out: 'a.css',
+      prefx: 'mn-',
+    })).toBe(`${WHERE}: unknown option "prefx". Did you mean "prefix"?`);
+    const options: TInfer<typeof wide> = {
+      out: 'a.css',
+    }; // the base's keys stay optional
+    expect(wide.parse(options, WHERE)).toBe(options);
+  });
+
   it('safeParse doesn\'t throw; parse returns the value', () => {
     const flag = boolean();
     expect(flag.safeParse(true)).toEqual({
