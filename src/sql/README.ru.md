@@ -2,13 +2,15 @@
 
 [English version](./README.md)
 
-В `fundamentool/sql` (fundamentool D-088, lab D-042) четыре части:
+В `fundamentool/sql` (fundamentool D-088, D-093, lab D-042, D-046) четыре части:
 - построители, возвращающие простые узлы;
 - `matchWhere` — превращает шаблон `fundamentool/match` в условие, дающее те же строки;
 - компилятор, у которого каждый вид узла — цепочка `fundamentool/hooks`, поэтому диалект — это пресет;
-- `sqliteAdapter` — одна форма поверх better-sqlite3 и `node:sqlite`.
+- `sqliteAdapter` — одна асинхронная форма поверх better-sqlite3 и `node:sqlite`.
 
-Каждое значение — параметр, каждое имя — в кавычках.
+Каждое значение — параметр, каждое имя — в кавычках. Построители, `matchWhere` и компилятор синхронны — это чистая
+работа; адаптер асинхронный, поэтому под него встаёт драйвер, который ждёт (Worker, PostgreSQL), и ни один вызов не
+меняется (lab D-046).
 
 ```ts
 import Database from 'better-sqlite3';
@@ -16,8 +18,8 @@ import { selectFrom, insertInto, deleteFrom, col, param, eq, and, asc, jsonGet, 
   sqliteAdapter, sqliteFts5 } from 'fundamentool/sql';
 
 const db = sqliteAdapter(new Database(file), { presets: [sqliteFts5] });  // или new DatabaseSync(file)
-db.pragma('journal_mode', 'wal');               // => 'wal' — значение, прочитанное обратно
-db.migrate([
+await db.pragma('journal_mode', 'wal');         // => 'wal' — значение, прочитанное обратно
+await db.migrate([
   { version: 1, up: (m) => m.exec('CREATE TABLE nodes (id INTEGER PRIMARY KEY, file TEXT, type TEXT, attrs TEXT)') },
 ]);
 
@@ -25,7 +27,7 @@ const ofFile = db.prepare<TNode>(selectFrom('nodes', {
   where: eq(col('file'), param('file')),        // именованный параметр: компилируется раз, связывается на каждый вызов
   orderBy: [asc('id')],
 }));
-ofFile.all({ file: 'PLAN.md' });                // TNode[]
+await ofFile.all({ file: 'PLAN.md' });          // TNode[]
 
 const open = db.prepare(selectFrom('nodes', {
   where: and(eq(col('type'), 'decision'), matchWhere(
@@ -34,8 +36,9 @@ const open = db.prepare(selectFrom('nodes', {
   )),
 }));
 
-db.transaction(() => {                          // BEGIN … COMMIT; исключение — откат; вложенная — точка сохранения
-  db.prepare(deleteFrom('nodes', { where: eq(col('file'), param('file')) })).run({ file });
+await db.transaction(async (tx) => {            // BEGIN … COMMIT; отказ — откат; вложенная — точка сохранения
+  await tx.prepare(deleteFrom('nodes', { where: eq(col('file'), param('file')) })).run({ file });
+  return tx.prepare(ofFile).all({ file });      // запрос, подготовленный на db, выполняется в транзакции
 }, { immediate: true });
 ```
 
@@ -54,7 +57,7 @@ db.transaction(() => {                          // BEGIN … COMMIT; исклю�
 | `sqlCompiler({ presets })` | `compile(node)` → `{ text, params, names }`, `bind(compiled, values)`, `ident(name)`, `functions` |
 | `sqlDialect({ name, requires?, setup(d) })` | Диалект или пресет над ним, с проверкой |
 | `sqlite`, `sqliteFts5`, `textMatch`, `fts5Query` | Диалект SQLite, `MATCH` из FTS5 над ним, текст запроса FTS5 из слов |
-| `sqliteAdapter(instance, { presets })` | `prepare`, `exec`, `transaction`, `migrate`, `pragma`, `tableColumns`, `compiler`, `instance` |
+| `sqliteAdapter(instance, { presets })` | `prepare` (синхронно) → `all` / `get` / `run` / `iterate`; `exec`, `transaction`, `migrate`, `pragma`, `tableColumns` — каждый промис; `compiler`, `instance` |
 | `sqliteErrorCode(error)` | `SQLITE_BUSY`, `SQLITE_CONSTRAINT_PRIMARYKEY`, … — от любого из драйверов |
 
 ## Значение — это параметр
@@ -138,9 +141,24 @@ const postgres = sqlDialect({ name: 'postgres', setup(d) {
 
 ## Адаптер
 
+- **По одной.** Соединение выполняет операции в порядке вызова. Пока идёт транзакция, запросы другого кода ждут её
+  `COMMIT` и никогда не попадают внутрь неё:
+
+  ```ts
+  const refresh = db.transaction(async (tx) => { await tx.prepare(forgetFile).run({ file }); await parseAgain(file); … });
+  const found = db.prepare(find).all({ query });  // ждёт: выполнится после COMMIT refresh и увидит новые строки
+  ```
 - **Транзакции.** Адаптер пишет их сам для обоих драйверов (`BEGIN [IMMEDIATE]`, `SAVEPOINT` для вложенных), поэтому
-  они ведут себя одинаково. Функция, вернувшая промис, отклоняется с откатом: её `await` выполнились бы после `COMMIT`.
-- **Миграции.** Версии — целые числа от 1, по возрастанию. Каждая выполняется в своей транзакции, а `PRAGMA
+  они ведут себя одинаково. Функция может быть синхронной или асинхронной; она получает сессию транзакции `tx` и
+  выполняет запросы через неё — `tx.prepare(statement)` берёт запрос, подготовленный на `db`, ничего не компилируя и не
+  готовя заново. `COMMIT` ждёт того, что функция оставила выполняться на `tx`; отказ или неудачный `COMMIT` откатывает
+  и пробрасывается. `tx` после завершения функции — ошибка: *"this transaction is over"*.
+- **Единственная ловушка:** запрос на `db` внутри функции ждёт транзакцию, а транзакция ждёт его — она не завершится
+  никогда. Внутри — всегда `tx` (как `trx` у Kysely и Knex).
+- **`iterate`** ждёт своей очереди, чтобы начать, а затем отдаёт строки, не занимая соединение: better-sqlite3 не даёт
+  выполнить на нём другой запрос, пока цикл не закончится (*"busy executing a query"*); `node:sqlite` выполняет.
+- **Миграции.** Версии — целые числа от 1, по возрастанию. Каждая `up(m)` выполняется в своей транзакции (`m` — её
+  сессия; `up` может быть асинхронной), а `PRAGMA
   user_version` хранит последнюю. Сбой откатывает эту версию и пробрасывается с её номером. База новее списка —
   ошибка.
 - **`pragma(name, value?)`** читает прагму или устанавливает её и читает обратно. Имя — слово, значение — число,
@@ -151,7 +169,7 @@ const postgres = sqlDialect({ name: 'postgres', setup(d) {
 
 ## Чего здесь нет
 
-- Асинхронного порта (`pg`, `sqlite3`): потребителя пока нет.
+- Адаптера для драйвера, который ждёт (`pg`, Worker): порт к нему готов; потребителя пока нет.
 - Отображения строк в сущности: это слой выше модуля.
 - DDL как дерева: схема — текст SQL через `exec`, а её изменения — миграции.
 

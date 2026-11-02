@@ -20,11 +20,12 @@ import {
 import type {
   TBindValues,
   TCompiled,
-  TMigration,
   TSqlNode,
   TSqliteAdapter,
   TSqliteAdapterOptions,
   TSqliteDatabasePort,
+  TSqliteSession,
+  TSqliteStatementPort,
   TStatement,
   TTransactionOptions,
 } from './types';
@@ -42,14 +43,73 @@ const isCompiled = (query: unknown): query is TCompiled => query !== null && typ
   && typeof (query as TCompiled).text === 'string' && isArray((query as TCompiled).params)
   && isArray((query as TCompiled).names);
 
-const isPromise = (value: unknown): boolean => value !== null && (typeof value === 'object' || typeof value === 'function')
-  && typeof (value as { then?: unknown }).then === 'function';
+/** A session's queue: its operations run one at a time, in the order they were called. */
+type TQueue = {
+  /** Settles when the last operation called has settled; never rejects. */
+  tail: Promise<unknown>;
+  /** Operations called and not yet settled. */
+  pending: number;
+  /** The transaction's function has settled: the session takes nothing more. */
+  over: boolean;
+  /** 0 — the connection; n — a transaction n deep. */
+  depth: number;
+};
+
+/** What the adapter keeps of a statement it prepared, for another session to run it. */
+type TPrepared = {
+  compiled: TCompiled;
+  statement: TSqliteStatementPort;
+};
+
+const queueOf = (depth: number): TQueue => ({
+  tail: Promise.resolve(),
+  pending: 0,
+  over: false,
+  depth,
+});
+
+const OVER = `${WHERE} transaction: this transaction is over — its function had settled; run the statement on the session the transaction was opened on`;
 
 /**
- * A SQLite database behind one shape (fundamentool D-088, card §4.4), better-sqlite3's `Database` or `node:sqlite`'s
- * `DatabaseSync`: `prepare(query)` → `all` / `get` / `run` / `iterate` with named values; transactions written by the
- * adapter for both (nested — savepoints); migrations over `PRAGMA user_version`; `pragma` read back; `tableColumns`.
- * The dialect's functions (`fundamentool_lower`, `fundamentool_regexp`) are installed on the instance.
+ * Runs `operation` in its turn on `queue`: at once when nothing is pending, else after the last one called has settled.
+ *
+ * @param queue - The session's queue.
+ * @param operation - The work; its throw is the promise's rejection.
+ * @returns What it returned.
+ */
+function turn<T>(queue: TQueue, operation: () => T | Promise<T>): Promise<T> {
+  const run = (): T | Promise<T> => {
+    if (queue.over) {
+      throw new Error(OVER);
+    }
+    return operation();
+  };
+  const result = queue.pending === 0 ? new Promise<T>((resolve) => resolve(run())) : queue.tail.then(run);
+  queue.pending++;
+  const settled = (): void => {
+    queue.pending--;
+  };
+  queue.tail = result.then(settled, settled);
+  return result;
+}
+
+/** Waits until nothing called on `queue` is pending — what a transaction's function left running, before COMMIT. */
+async function drain(queue: TQueue): Promise<void> {
+  while (queue.pending > 0) {
+    await queue.tail;
+  }
+}
+
+/**
+ * A SQLite database behind one async shape (fundamentool D-088, D-093; lab D-046), better-sqlite3's `Database` or
+ * `node:sqlite`'s `DatabaseSync`: `prepare(query)` → `all` / `get` / `run` / `iterate` with named values, each a
+ * promise; transactions written by the adapter for both, with a session of their own (nested — savepoints); migrations
+ * over `PRAGMA user_version`; `pragma` read back; `tableColumns`. The dialect's functions (`fundamentool_lower`,
+ * `fundamentool_regexp`) are installed on the instance.
+ *
+ * The port is async though both drivers are sync, so a driver that waits (a Worker, PostgreSQL) fits under it with no
+ * caller changed. The connection runs its operations one at a time: while a transaction is running, other code's
+ * statements wait for its COMMIT and never land inside it.
  *
  * A `bigint` above 2⁵³ is rounded by better-sqlite3 without its `safeIntegers` and refused by `node:sqlite` — a driver's
  * setting, not a query's. `node:sqlite`'s rows have a `null` prototype: `in`, spread and `JSON.stringify` work,
@@ -61,10 +121,13 @@ const isPromise = (value: unknown): boolean => value !== null && (typeof value =
  * @throws {TypeError} not a SQLite database; in development, an unknown option.
  * @example
  * const db = sqliteAdapter(new Database(file), { presets: [sqliteFts5] });
- * db.pragma('journal_mode', 'wal'); // => 'wal'
+ * await db.pragma('journal_mode', 'wal'); // => 'wal'
  * const ofFile = db.prepare<TNodeRow>(selectFrom('nodes', { where: eq(col('file'), param('file')) }));
- * ofFile.all({ file: 'PLAN.md' });
- * db.transaction(() => db.prepare(forgetFile).run({ file }), { immediate: true });
+ * await ofFile.all({ file: 'PLAN.md' });
+ * await db.transaction(async (tx) => {
+ *   await tx.prepare(forgetFile).run({ file });
+ *   return tx.prepare(ofFile).all({ file }); // the statement prepared on db, run in the transaction
+ * }, { immediate: true });
  */
 export function sqliteAdapter<I extends TSqliteDatabasePort>(instance: I, options?: TSqliteAdapterOptions): TSqliteAdapter<I> {
   if (instance === null || typeof instance !== 'object' || typeof instance.prepare !== 'function'
@@ -85,68 +148,139 @@ export function sqliteAdapter<I extends TSqliteDatabasePort>(instance: I, option
       }, compiler.functions[name],
     );
   }
-  let depth = 0;
+  const prepared = new WeakMap<object, TPrepared>();
 
-  const adapter: TSqliteAdapter<I> = {
-    prepare<R>(query: TSqlNode | TCompiled): TStatement<R> {
-      let compiled: TCompiled;
-      if (isCompiled(query)) {
-        compiled = query;
-      } else if (isSqlNode(query)) {
-        compiled = compiler.compile(query);
+  const readPragma = (name: string, value: unknown): unknown => {
+    if (typeof name !== 'string' || !PRAGMA_NAME.test(name)) {
+      throw new TypeError(`${WHERE} pragma: expects a pragma's name — a lower-case word — got ${describeValue(name)}`);
+    }
+    if (value !== undefined) {
+      let text: string;
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        text = String(value);
+      } else if (typeof value === 'boolean') {
+        text = value ? '1' : '0';
+      } else if (typeof value === 'string' && PRAGMA_WORD.test(value)) {
+        text = value;
       } else {
-        throw new TypeError(`${WHERE} prepare: expects a query node or a compiled query { text, params, names }, got ${describeValue(query)}`);
+        throw new TypeError(`${WHERE} pragma: "${name}" expects a number, a boolean or a word, got ${describeValue(value)}`);
       }
-      const statement = instance.prepare(compiled.text);
-      const bind = (values: TBindValues | undefined): unknown[] => compiler.bind(compiled, values);
-      return {
-        all: (values) => statement.all.apply(statement, bind(values)) as R[],
-        get: (values) => statement.get.apply(statement, bind(values)) as R | undefined,
-        run: (values) => statement.run.apply(statement, bind(values)),
-        iterate: (values) => statement.iterate.apply(statement, bind(values)) as IterableIterator<R>,
-        text: compiled.text,
-      };
-    },
-    exec(text) {
-      if (typeof text !== 'string') {
-        throw new TypeError(`${WHERE} exec: expects SQL text, got ${describeValue(text)}`);
-      }
-      instance.exec(text);
-    },
-    transaction<T>(fn: () => T, transactionOptions?: TTransactionOptions): T {
-      checkOptions('transaction', transactionOptions);
-      if (typeof fn !== 'function') {
-        throw new TypeError(`${WHERE} transaction: expects a function, got ${describeValue(fn)}`);
-      }
-      const savepoint = `fundamentool_${depth}`;
-      const outermost = depth === 0;
-      instance.exec(outermost ? transactionOptions?.immediate ? 'BEGIN IMMEDIATE' : 'BEGIN' : `SAVEPOINT ${savepoint}`);
-      depth++;
-      const rollback = (): void => {
-        try {
-          instance.exec(outermost ? ROLLBACK : `ROLLBACK TO ${savepoint}; RELEASE ${savepoint}`);
-        } catch {
-          // SQLite rolled it back itself (a full disk, an interrupt): the error that did it is the one to see.
-        }
-      };
-      let result: T;
+      instance.exec(`PRAGMA ${name} = ${text}`);
+    }
+    const row = instance.prepare(`PRAGMA ${name}`).get() as Record<string, unknown> | undefined;
+    return row === undefined ? undefined : row[Object.keys(row)[0]];
+  };
+
+  /** A transaction on `queue`'s session, in that session's turn: BEGIN or SAVEPOINT, `fn`, COMMIT or ROLLBACK. */
+  const runTransaction = async <T>(queue: TQueue, fn: (tx: TSqliteSession<I>) => T | Promise<T>): Promise<T> => {
+    const outermost = queue.depth === 0;
+    const savepoint = `fundamentool_${queue.depth}`;
+    const inner = queueOf(queue.depth + 1);
+    const rollback = (): void => {
       try {
-        result = fn();
-      } catch (error) {
-        depth--;
-        rollback();
-        throw error;
+        instance.exec(outermost ? ROLLBACK : `ROLLBACK TO ${savepoint}; RELEASE ${savepoint}`);
+      } catch {
+        // SQLite rolled it back itself (a full disk, an interrupt): the error that did it is the one to see.
       }
-      if (isPromise(result)) {
-        depth--;
-        rollback();
-        throw new TypeError(`${WHERE} transaction: the function returned a promise; a transaction's function must be synchronous — its awaits would run after COMMIT`);
-      }
-      depth--;
+    };
+    let result: T;
+    try {
+      result = await fn(sessionOf(inner));
+      await drain(inner);
+    } catch (error) {
+      await drain(inner);
+      inner.over = true;
+      rollback();
+      throw error;
+    }
+    inner.over = true;
+    try {
       instance.exec(outermost ? 'COMMIT' : `RELEASE ${savepoint}`);
-      return result;
-    },
-    migrate(migrations: readonly TMigration<I>[]) {
+    } catch (error) {
+      rollback();
+      throw error;
+    }
+    return result;
+  };
+
+  const begin = (queue: TQueue, transactionOptions: TTransactionOptions | undefined): void => {
+    instance.exec(queue.depth > 0 ? `SAVEPOINT fundamentool_${queue.depth}` : transactionOptions?.immediate ? 'BEGIN IMMEDIATE' : 'BEGIN');
+  };
+
+  /** The session that runs on `queue`: the connection's, or a transaction's. */
+  function sessionOf(queue: TQueue): TSqliteSession<I> {
+    return {
+      prepare<R>(query: TSqlNode | TCompiled | TStatement<R>): TStatement<R> {
+        let entry = prepared.get(query);
+        if (entry === undefined) {
+          let compiled: TCompiled;
+          if (isCompiled(query)) {
+            compiled = query;
+          } else if (isSqlNode(query)) {
+            compiled = compiler.compile(query);
+          } else {
+            throw new TypeError(`${WHERE} prepare: expects a query node, a compiled query { text, params, names } or a statement of this adapter, got ${describeValue(query)}`);
+          }
+          entry = {
+            compiled,
+            statement: instance.prepare(compiled.text),
+          };
+        }
+        const {
+          compiled,
+          statement,
+        } = entry;
+        const bind = (values: TBindValues | undefined): unknown[] => compiler.bind(compiled, values);
+        const result: TStatement<R> = {
+          all: (values) => turn(queue, () => statement.all.apply(statement, bind(values)) as R[]),
+          get: (values) => turn(queue, () => statement.get.apply(statement, bind(values)) as R | undefined),
+          run: (values) => turn(queue, () => statement.run.apply(statement, bind(values))),
+          async* iterate(values) {
+            yield* await turn(queue, () => statement.iterate.apply(statement, bind(values)) as IterableIterator<R>);
+          },
+          text: compiled.text,
+        };
+        prepared.set(result, entry);
+        return result;
+      },
+      exec: (text) => turn(queue, () => {
+        if (typeof text !== 'string') {
+          throw new TypeError(`${WHERE} exec: expects SQL text, got ${describeValue(text)}`);
+        }
+        instance.exec(text);
+      }),
+      transaction(fn, transactionOptions) {
+        try {
+          checkOptions('transaction', transactionOptions);
+          if (typeof fn !== 'function') {
+            throw new TypeError(`${WHERE} transaction: expects a function, got ${describeValue(fn)}`);
+          }
+        } catch (error) {
+          return Promise.reject(error);
+        }
+        return turn(queue, () => {
+          begin(queue, transactionOptions);
+          return runTransaction(queue, fn);
+        });
+      },
+      pragma: (name, value) => turn(queue, () => readPragma(name, value)),
+      tableColumns: (name) => turn(queue, () => {
+        if (typeof name !== 'string' || name === '') {
+          throw new TypeError(`${WHERE} tableColumns: expects a table's name, got ${describeValue(name)}`);
+        }
+        return (instance.prepare('SELECT name FROM pragma_table_info(?) ORDER BY cid').all(name) as {
+          name: string;
+        }[]).map((row) => row.name);
+      }),
+      compiler,
+      instance,
+    };
+  }
+
+  const connection = queueOf(0);
+  return {
+    ...sessionOf(connection),
+    migrate: (migrations) => turn(connection, async () => {
       if (!isArray(migrations)) {
         throw new TypeError(`${WHERE} migrate: expects a list of { version, up }, got ${describeValue(migrations)}`);
       }
@@ -158,18 +292,19 @@ export function sqliteAdapter<I extends TSqliteDatabasePort>(instance: I, option
         }
         last = version;
       }
-      const from = Number(adapter.pragma('user_version'));
+      const from = Number(readPragma('user_version', undefined));
       if (from > last) {
         throw new Error(`${WHERE} migrate: the database is at version ${from}; this code knows up to ${last}`);
       }
       for (const migration of migrations) {
         if (migration.version > from) {
           try {
-            adapter.transaction(() => {
-              migration.up(adapter);
-              instance.exec(`PRAGMA user_version = ${migration.version}`);
-            }, {
+            begin(connection, {
               immediate: true,
+            });
+            await runTransaction(connection, async (m) => {
+              await migration.up(m);
+              await m.exec(`PRAGMA user_version = ${migration.version}`);
             });
           } catch (error) {
             throw new Error(`${WHERE} migrate: version ${migration.version} failed, rolled back: ${error instanceof Error ? error.message : String(error)}`, {
@@ -182,39 +317,8 @@ export function sqliteAdapter<I extends TSqliteDatabasePort>(instance: I, option
         from,
         to: last,
       };
-    },
-    pragma(name, value) {
-      if (typeof name !== 'string' || !PRAGMA_NAME.test(name)) {
-        throw new TypeError(`${WHERE} pragma: expects a pragma's name — a lower-case word — got ${describeValue(name)}`);
-      }
-      if (value !== undefined) {
-        let text: string;
-        if (typeof value === 'number' && Number.isFinite(value)) {
-          text = String(value);
-        } else if (typeof value === 'boolean') {
-          text = value ? '1' : '0';
-        } else if (typeof value === 'string' && PRAGMA_WORD.test(value)) {
-          text = value;
-        } else {
-          throw new TypeError(`${WHERE} pragma: "${name}" expects a number, a boolean or a word, got ${describeValue(value)}`);
-        }
-        instance.exec(`PRAGMA ${name} = ${text}`);
-      }
-      const row = instance.prepare(`PRAGMA ${name}`).get() as Record<string, unknown> | undefined;
-      return row === undefined ? undefined : row[Object.keys(row)[0]];
-    },
-    tableColumns(name) {
-      if (typeof name !== 'string' || name === '') {
-        throw new TypeError(`${WHERE} tableColumns: expects a table's name, got ${describeValue(name)}`);
-      }
-      return (instance.prepare('SELECT name FROM pragma_table_info(?) ORDER BY cid').all(name) as {
-        name: string;
-      }[]).map((row) => row.name);
-    },
-    compiler,
-    instance,
+    }),
   };
-  return adapter;
 }
 
 /** SQLite's result codes by number: the primary ones, then each primary's extended ones (`primary | n << 8`, n from 1). */

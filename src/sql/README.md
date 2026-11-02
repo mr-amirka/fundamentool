@@ -2,13 +2,14 @@
 
 [Русская версия](./README.ru.md)
 
-`fundamentool/sql` (fundamentool D-088, lab D-042) has four parts:
+`fundamentool/sql` (fundamentool D-088, D-093, lab D-042, D-046) has four parts:
 - builders that return plain nodes;
 - `matchWhere`, which turns a `fundamentool/match` pattern into a condition that gives the same rows;
 - a compiler whose node kinds are `fundamentool/hooks` chains, so a dialect is a preset;
-- `sqliteAdapter`, one shape over better-sqlite3 and `node:sqlite`.
+- `sqliteAdapter`, one async shape over better-sqlite3 and `node:sqlite`.
 
-Every value is a parameter and every name is quoted.
+Every value is a parameter and every name is quoted. The builders, `matchWhere` and the compiler are sync — pure work;
+the adapter is async, so a driver that waits (a Worker, PostgreSQL) fits under it with no caller changed (lab D-046).
 
 ```ts
 import Database from 'better-sqlite3';
@@ -16,8 +17,8 @@ import { selectFrom, insertInto, deleteFrom, col, param, eq, and, asc, jsonGet, 
   sqliteAdapter, sqliteFts5 } from 'fundamentool/sql';
 
 const db = sqliteAdapter(new Database(file), { presets: [sqliteFts5] });  // or new DatabaseSync(file)
-db.pragma('journal_mode', 'wal');               // => 'wal' — the value read back
-db.migrate([
+await db.pragma('journal_mode', 'wal');         // => 'wal' — the value read back
+await db.migrate([
   { version: 1, up: (m) => m.exec('CREATE TABLE nodes (id INTEGER PRIMARY KEY, file TEXT, type TEXT, attrs TEXT)') },
 ]);
 
@@ -25,7 +26,7 @@ const ofFile = db.prepare<TNode>(selectFrom('nodes', {
   where: eq(col('file'), param('file')),        // a named parameter: compiled once, bound per call
   orderBy: [asc('id')],
 }));
-ofFile.all({ file: 'PLAN.md' });                // TNode[]
+await ofFile.all({ file: 'PLAN.md' });          // TNode[]
 
 const open = db.prepare(selectFrom('nodes', {
   where: and(eq(col('type'), 'decision'), matchWhere(
@@ -34,8 +35,9 @@ const open = db.prepare(selectFrom('nodes', {
   )),
 }));
 
-db.transaction(() => {                          // BEGIN … COMMIT; a throw rolls back; nested — a savepoint
-  db.prepare(deleteFrom('nodes', { where: eq(col('file'), param('file')) })).run({ file });
+await db.transaction(async (tx) => {            // BEGIN … COMMIT; a rejection rolls back; nested — a savepoint
+  await tx.prepare(deleteFrom('nodes', { where: eq(col('file'), param('file')) })).run({ file });
+  return tx.prepare(ofFile).all({ file });      // a statement prepared on db, run in the transaction
 }, { immediate: true });
 ```
 
@@ -54,7 +56,7 @@ db.transaction(() => {                          // BEGIN … COMMIT; a throw rol
 | `sqlCompiler({ presets })` | `compile(node)` → `{ text, params, names }`, `bind(compiled, values)`, `ident(name)`, `functions` |
 | `sqlDialect({ name, requires?, setup(d) })` | A dialect or a preset over one, checked |
 | `sqlite`, `sqliteFts5`, `textMatch`, `fts5Query` | The SQLite dialect, FTS5's `MATCH` over it, FTS5's query text from words |
-| `sqliteAdapter(instance, { presets })` | `prepare`, `exec`, `transaction`, `migrate`, `pragma`, `tableColumns`, `compiler`, `instance` |
+| `sqliteAdapter(instance, { presets })` | `prepare` (sync) → `all` / `get` / `run` / `iterate`; `exec`, `transaction`, `migrate`, `pragma`, `tableColumns` — each a promise; `compiler`, `instance` |
 | `sqliteErrorCode(error)` | `SQLITE_BUSY`, `SQLITE_CONSTRAINT_PRIMARYKEY`, … — from either driver |
 
 ## A value is a parameter
@@ -137,10 +139,24 @@ The base writes the forms SQLite and PostgreSQL share: `LIMIT`, `ON CONFLICT`, `
 
 ## The adapter
 
-- **Transactions.** The adapter writes the transactions itself for both drivers (`BEGIN [IMMEDIATE]`, `SAVEPOINT` when
-  nested), so they behave alike. A function that returns a promise is refused and rolled back, because its awaits would
-  run after `COMMIT`.
-- **Migrations.** Versions are whole numbers from 1, ascending. Each runs in its own transaction, and `PRAGMA
+- **One at a time.** The connection runs its operations in the order they were called. While a transaction runs, other
+  code's statements wait for its `COMMIT`, so they never land inside it:
+
+  ```ts
+  const refresh = db.transaction(async (tx) => { await tx.prepare(forgetFile).run({ file }); await parseAgain(file); … });
+  const found = db.prepare(find).all({ query });  // waits: runs after refresh's COMMIT, sees the new rows
+  ```
+- **Transactions.** The adapter writes them itself for both drivers (`BEGIN [IMMEDIATE]`, `SAVEPOINT` when nested), so
+  they behave alike. The function may be sync or async; it gets the transaction's session `tx` and runs its statements
+  through it — `tx.prepare(statement)` takes one prepared on `db`, with nothing compiled or prepared again. `COMMIT`
+  waits for what the function left running on `tx`; a rejection or a failed `COMMIT` rolls back and is passed on. `tx`
+  after its function settled is an error: *"this transaction is over"*.
+- **The one trap:** a statement run on `db` inside the function waits for the transaction, and the transaction waits
+  for it — it never settles. Inside, it is always `tx` (as with Kysely's and Knex's `trx`).
+- **`iterate`** waits for its turn to start, then streams without holding the connection: better-sqlite3 refuses
+  another statement on it until the loop ends (*"busy executing a query"*); `node:sqlite` runs it.
+- **Migrations.** Versions are whole numbers from 1, ascending. Each `up(m)` runs in its own transaction (`m` is its
+  session; `up` may be async), and `PRAGMA
   user_version` keeps the last one. A failure rolls back that version and is rethrown with its number. A database newer
   than the list is an error.
 - **`pragma(name, value?)`** reads the pragma, or sets it and reads it back. A name is a word, and a value is a number,
@@ -151,7 +167,7 @@ The base writes the forms SQLite and PostgreSQL share: `LIMIT`, `ON CONFLICT`, `
 
 ## Not here
 
-- An async port (`pg`, `sqlite3`): no consumer yet.
+- An adapter for a driver that waits (`pg`, a Worker): the port is ready for one; no consumer yet.
 - A row mapper: an entity layer above this module.
 - DDL as a tree: a schema is SQL text through `exec`, and its changes are migrations.
 

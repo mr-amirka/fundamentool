@@ -367,25 +367,27 @@ const idsOf = (rows: unknown[]): number[] => rows.map((row) => (row as { id: num
 
 describe.each(DRIVERS)('matchWhere gives the rows matchProvider gives — JSON, %s (B12)', (_name, open) => {
   const db = adapterOf(open);
-  db.exec('CREATE TABLE docs (id INTEGER PRIMARY KEY, doc TEXT)');
-  const insert = db.prepare({
-    text: 'INSERT INTO docs (id, doc) VALUES (?, ?)',
-    params: [
-      undefined,
-      undefined,
-    ],
-    names: [
-      'id',
-      'doc',
-    ],
-  });
-  for (const row of ROWS) {
-    insert.run({
-      id: row.id,
-      doc: JSON.stringify(row),
+  beforeAll(async () => {
+    await db.exec('CREATE TABLE docs (id INTEGER PRIMARY KEY, doc TEXT)');
+    const insert = db.prepare({
+      text: 'INSERT INTO docs (id, doc) VALUES (?, ?)',
+      params: [
+        undefined,
+        undefined,
+      ],
+      names: [
+        'id',
+        'doc',
+      ],
     });
-  }
-  const sqlIds = (pattern: TMatch): number[] => idsOf(db.prepare(selectFrom('docs', {
+    for (const row of ROWS) {
+      await insert.run({
+        id: row.id,
+        doc: JSON.stringify(row),
+      });
+    }
+  });
+  const sqlIds = async (pattern: TMatch): Promise<number[]> => idsOf(await db.prepare(selectFrom('docs', {
     columns: ['id'],
     where: matchWhere(pattern, {
       field,
@@ -396,10 +398,10 @@ describe.each(DRIVERS)('matchWhere gives the rows matchProvider gives — JSON, 
   test.each(PATTERNS.map((pattern) => [
     JSON.stringify(pattern, (_key, value) => (value instanceof RegExp ? String(value) : value === undefined ? '(undefined)' : value)),
     pattern,
-  ]))('%s and its $not', (_text, pattern) => {
+  ]))('%s and its $not', async (_text, pattern) => {
     const predicate = matchProvider(pattern);
-    expect(sqlIds(pattern)).toEqual(idsOf(ROWS.filter(predicate)));
-    expect(sqlIds({
+    expect(await sqlIds(pattern)).toEqual(idsOf(ROWS.filter(predicate)));
+    expect(await sqlIds({
       $not: pattern,
     })).toEqual(idsOf(ROWS.filter((row) => !predicate(row))));
   });
@@ -408,13 +410,16 @@ describe.each(DRIVERS)('matchWhere gives the rows matchProvider gives — JSON, 
 /** Rows of columns as the drivers read them: no booleans, NULL for null, a blob as a Uint8Array. */
 describe.each(DRIVERS)('matchWhere on columns, %s', (_name, open) => {
   const db = adapterOf(open);
-  db.exec('CREATE TABLE cols (id INTEGER PRIMARY KEY, kind TEXT, n)');
-  db.exec(`INSERT INTO cols (id, kind, n) VALUES (1, 'a', 5), (2, 'A', '5'), (3, NULL, 2.5), (4, 'Минута', NULL),
-    (5, 'b', x'01')`);
-  const rows = db.prepare(selectFrom('cols', {
-    orderBy: ['id'],
-  })).all();
-  const sqlIds = (pattern: TMatch): number[] => idsOf(db.prepare(selectFrom('cols', {
+  let rows: unknown[] = [];
+  beforeAll(async () => {
+    await db.exec('CREATE TABLE cols (id INTEGER PRIMARY KEY, kind TEXT, n)');
+    await db.exec(`INSERT INTO cols (id, kind, n) VALUES (1, 'a', 5), (2, 'A', '5'), (3, NULL, 2.5), (4, 'Минута', NULL),
+      (5, 'b', x'01')`);
+    rows = await db.prepare(selectFrom('cols', {
+      orderBy: ['id'],
+    })).all();
+  });
+  const sqlIds = async (pattern: TMatch): Promise<number[]> => idsOf(await db.prepare(selectFrom('cols', {
     columns: ['id'],
     where: matchWhere(pattern, {
       field: (path) => col(path[0]),
@@ -498,16 +503,16 @@ describe.each(DRIVERS)('matchWhere on columns, %s', (_name, open) => {
         },
       },
     ],
-  ])('%s and its $not', (_text, pattern) => {
+  ])('%s and its $not', async (_text, pattern) => {
     const predicate = matchProvider(pattern);
-    expect(sqlIds(pattern)).toEqual(idsOf(rows.filter(predicate)));
-    expect(sqlIds({
+    expect(await sqlIds(pattern)).toEqual(idsOf(rows.filter(predicate)));
+    expect(await sqlIds({
       $not: pattern,
     })).toEqual(idsOf(rows.filter((row) => !predicate(row))));
   });
 
-  test('a column can\'t tell null from absent: $exists means "not NULL", undefined means NULL (documented)', () => {
-    expect(sqlIds({
+  test('a column can\'t tell null from absent: $exists means "not NULL", undefined means NULL (documented)', async () => {
+    expect(await sqlIds({
       kind: {
         $exists: true,
       },
@@ -517,10 +522,10 @@ describe.each(DRIVERS)('matchWhere on columns, %s', (_name, open) => {
       4,
       5,
     ]);
-    expect(sqlIds({
+    expect(await sqlIds({
       kind: undefined,
     })).toEqual([3]);
-    expect(sqlIds({
+    expect(await sqlIds({
       kind: {
         $type: 'undefined',
       },
@@ -753,15 +758,17 @@ describe('what can\'t agree is refused, never approximated', () => {
 
 describe.each(DRIVERS)('the known gaps, %s (documented: SQL reads one level of an array)', (_name, open) => {
   const db = adapterOf(open);
-  db.exec('CREATE TABLE docs (id INTEGER PRIMARY KEY, doc TEXT)');
-  db.exec('INSERT INTO docs VALUES (1, \'{"tags":[["x"]],"items":[{"id":1}]}\')');
-  const count = (pattern: TMatch): number => db.prepare(selectFrom('docs', {
+  beforeAll(async () => {
+    await db.exec('CREATE TABLE docs (id INTEGER PRIMARY KEY, doc TEXT)');
+    await db.exec('INSERT INTO docs VALUES (1, \'{"tags":[["x"]],"items":[{"id":1}]}\')');
+  });
+  const count = async (pattern: TMatch): Promise<number> => (await db.prepare(selectFrom('docs', {
     where: matchWhere(pattern, {
       field,
     }),
-  })).all().length;
+  })).all()).length;
 
-  test('$has in a nested array: matchProvider finds it, SQL doesn\'t', () => {
+  test('$has in a nested array: matchProvider finds it, SQL doesn\'t', async () => {
     expect(matchProvider({
       tags: {
         $has: 'x',
@@ -769,14 +776,14 @@ describe.each(DRIVERS)('the known gaps, %s (documented: SQL reads one level of a
     })({
       tags: [['x']],
     })).toBe(true);
-    expect(count({
+    expect(await count({
       tags: {
         $has: 'x',
       },
     })).toBe(0);
   });
 
-  test('a path through an array of objects: matchProvider reaches each, SQL doesn\'t', () => {
+  test('a path through an array of objects: matchProvider reaches each, SQL doesn\'t', async () => {
     expect(matchProvider({
       items: {
         id: 1,
@@ -788,7 +795,7 @@ describe.each(DRIVERS)('the known gaps, %s (documented: SQL reads one level of a
         },
       ],
     })).toBe(true);
-    expect(count({
+    expect(await count({
       items: {
         id: 1,
       },

@@ -363,16 +363,22 @@ export type TSqliteDatabasePort = {
 /** The values of a statement's named parameters: `{ file }` for `param('file')`. */
 export type TBindValues = Readonly<Record<string, unknown>>;
 
-/** A prepared statement: compiled and prepared once, run with named values. */
+/**
+ * A prepared statement: compiled and prepared once, run with named values. Each run takes its turn on the session that
+ * prepared it (fundamentool D-093): it waits while a transaction opened there is running.
+ */
 export type TStatement<R> = {
   /** Every row. */
-  all(values?: TBindValues): R[];
+  all(values?: TBindValues): Promise<R[]>;
   /** The first row; `undefined` — none. */
-  get(values?: TBindValues): R | undefined;
+  get(values?: TBindValues): Promise<R | undefined>;
   /** Runs a writing statement. */
-  run(values?: TBindValues): TRunResult;
-  /** The rows one by one. */
-  iterate(values?: TBindValues): IterableIterator<R>;
+  run(values?: TBindValues): Promise<TRunResult>;
+  /**
+   * The rows one by one. It waits for its turn to start, then streams without holding the session: better-sqlite3
+   * refuses another statement on the connection until the loop ends; `node:sqlite` runs it.
+   */
+  iterate(values?: TBindValues): AsyncIterableIterator<R>;
   /** The SQL text. */
   readonly text: string;
 };
@@ -387,8 +393,8 @@ export type TTransactionOptions = {
 export type TMigration<I = unknown> = {
   /** A whole number from 1, ascending in the list. */
   version: number;
-  /** The change, in its own transaction. */
-  up(db: TSqliteAdapter<I>): void;
+  /** The change, in its own transaction: `m` is that transaction's session. */
+  up(m: TSqliteSession<I>): void | Promise<void>;
 };
 
 /** `sqliteAdapter`'s options. */
@@ -397,23 +403,37 @@ export type TSqliteAdapterOptions = {
   presets?: readonly TSqlPreset[];
 };
 
-/** A SQLite database behind one shape, whichever the driver. */
-export type TSqliteAdapter<I = unknown> = {
-  /** Compiles a query (a node, or an already compiled one) and prepares it — once. */
-  prepare<R = Record<string, unknown>>(query: TSqlNode | TCompiled): TStatement<R>;
+/**
+ * Where statements run: the connection itself, or a transaction opened on it (fundamentool D-093). A session runs its
+ * operations one at a time, in the order they were called; while a transaction opened on it is running, they wait.
+ */
+export type TSqliteSession<I = unknown> = {
+  /**
+   * Compiles a query (a node, or an already compiled one) and prepares it — once; or takes a statement this adapter
+   * prepared on another session and runs it on this one, with nothing compiled or prepared again.
+   */
+  prepare<R = Record<string, unknown>>(query: TSqlNode | TCompiled | TStatement<R>): TStatement<R>;
   /** Runs SQL text: a schema, statements with no parameters. */
-  exec(text: string): void;
-  /** Runs `fn` in a transaction: committed when it returns, rolled back when it throws; nested — a savepoint. */
-  transaction<T>(fn: () => T, options?: TTransactionOptions): T;
-  /** Brings the schema up to the last version, each in its own transaction; the version kept in `PRAGMA user_version`. */
-  migrate(migrations: readonly TMigration<I>[]): { from: number;
-    to: number; };
+  exec(text: string): Promise<void>;
+  /**
+   * Runs `fn` in a transaction: committed when it settles, rolled back when it rejects or throws; nested — a savepoint.
+   * `fn` gets the transaction's session and runs its statements through it: a statement run on the outer session
+   * waits for the transaction to end, and the transaction waits for it — so it never settles.
+   */
+  transaction<T>(fn: (tx: TSqliteSession<I>) => T | Promise<T>, options?: TTransactionOptions): Promise<T>;
   /** Reads a pragma, or sets it and reads it back. */
-  pragma(name: string, value?: number | boolean | string): unknown;
+  pragma(name: string, value?: number | boolean | string): Promise<unknown>;
   /** A table's columns in order; `[]` — no such table. */
-  tableColumns(table: string): string[];
+  tableColumns(table: string): Promise<string[]>;
   /** The compiler the adapter compiles with: `compile`, `bind`, `ident`. */
   readonly compiler: TSqlCompiler;
   /** The driver's own object. */
   readonly instance: I;
+};
+
+/** A SQLite database behind one shape, whichever the driver: its connection's session, and migrations. */
+export type TSqliteAdapter<I = unknown> = TSqliteSession<I> & {
+  /** Brings the schema up to the last version, each in its own transaction; the version kept in `PRAGMA user_version`. */
+  migrate(migrations: readonly TMigration<I>[]): Promise<{ from: number;
+    to: number; }>;
 };

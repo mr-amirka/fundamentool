@@ -25,6 +25,7 @@ import {
   sqliteErrorCode,
   sqliteFts5,
   textMatch,
+  type TSqliteSession,
 } from '../../src/sql';
 import {
   DRIVERS,
@@ -36,18 +37,20 @@ type TAgent = {
   mode: string;
 };
 
-const agents = (db: ReturnType<typeof adapterOf>): string[] => db.prepare<TAgent>(selectFrom('agents', {
+const agents = async (db: TSqliteSession): Promise<string[]> => (await db.prepare<TAgent>(selectFrom('agents', {
   orderBy: ['id'],
-})).all().map((row) => row.id);
+})).all()).map((row) => row.id);
+
+const insertAgent = (id: string): string => `INSERT INTO agents (id) VALUES ('${id}')`;
 
 describe.each(DRIVERS)('sqliteAdapter over %s (S9–S12)', (_name, open) => {
   let db: ReturnType<typeof adapterOf>;
-  beforeEach(() => {
+  beforeEach(async () => {
     db = adapterOf(open);
-    db.exec('CREATE TABLE agents (id TEXT PRIMARY KEY, mode TEXT NOT NULL DEFAULT \'passive\')');
+    await db.exec('CREATE TABLE agents (id TEXT PRIMARY KEY, mode TEXT NOT NULL DEFAULT \'passive\')');
   });
 
-  test('prepare once, run with named values: run, all, get, iterate', () => {
+  test('prepare once, run with named values: run, all, get, iterate — each a promise', async () => {
     const add = db.prepare(insertInto('agents', {
       values: {
         id: param('id'),
@@ -55,13 +58,13 @@ describe.each(DRIVERS)('sqliteAdapter over %s (S9–S12)', (_name, open) => {
       },
     }));
     expect(add.text).toBe('INSERT INTO "agents" ("id", "mode") VALUES (?, ?)');
-    expect(add.run({
+    await expect(add.run({
       id: 'a',
       mode: 'active',
-    })).toMatchObject({
+    })).resolves.toMatchObject({
       changes: 1,
     });
-    add.run({
+    await add.run({
       id: 'b',
       mode: 'passive',
     });
@@ -69,41 +72,70 @@ describe.each(DRIVERS)('sqliteAdapter over %s (S9–S12)', (_name, open) => {
       where: eq(col('mode'), param('mode')),
       orderBy: [desc('id')],
     }));
-    expect(ofMode.all({
+    expect((await ofMode.all({
       mode: 'passive',
-    }).map((row) => row.id)).toEqual(['b']);
-    expect(ofMode.get({
+    })).map((row) => row.id)).toEqual(['b']);
+    expect((await ofMode.get({
       mode: 'active',
-    })?.id).toBe('a');
-    expect(ofMode.get({
+    }))?.id).toBe('a');
+    await expect(ofMode.get({
       mode: 'none',
-    })).toBeUndefined();
-    expect([
-      ...ofMode.iterate({
-        mode: 'active',
-      }),
-    ].map((row) => row.id)).toEqual(['a']);
-    expect(db.prepare<{ n: number }>(selectFrom('agents', {
+    })).resolves.toBeUndefined();
+    const ids: string[] = [];
+    for await (const row of db.prepare<TAgent>(selectFrom('agents', {
+      orderBy: ['id'],
+    })).iterate()) {
+      ids.push(row.id);
+    }
+    expect(ids).toEqual([
+      'a',
+      'b',
+    ]);
+    expect((await db.prepare<{ n: number }>(selectFrom('agents', {
       columns: [alias(fn('count', raw('*')), 'n')],
-    })).get()?.n).toBe(2);
+    })).get())?.n).toBe(2);
   });
 
-  test('an already compiled query; a bad one', () => {
+  test('iterate: a loop left early releases the statement', async () => {
+    await db.exec(`${insertAgent('a')}; ${insertAgent('b')}`);
+    const all = db.prepare<TAgent>(selectFrom('agents'));
+    for await (const row of all.iterate()) {
+      expect(row.id).toBe('a');
+      break;
+    }
+    await db.exec(insertAgent('c'));
+    expect(await agents(db)).toEqual([
+      'a',
+      'b',
+      'c',
+    ]);
+  });
+
+  test('an already compiled query; a bad one; a bad value is a rejection', async () => {
     const compiled = db.compiler.compile(selectFrom('agents', {
       where: eq(col('id'), 'x'),
     }));
-    expect(db.prepare(compiled).all()).toEqual([]);
-    expect(() => db.prepare('SELECT 1' as never)).toThrow('[fundamentool/sql] prepare: expects a query node or a compiled query');
-    expect(() => db.exec(1 as never)).toThrow('[fundamentool/sql] exec: expects SQL text');
+    await expect(db.prepare(compiled).all()).resolves.toEqual([]);
+    expect(() => db.prepare('SELECT 1' as never)).toThrow('[fundamentool/sql] prepare: expects a query node, a compiled query { text, params, names } or a statement of this adapter');
+    expect(() => db.prepare({
+      text: 'SELECT 1',
+    } as never)).toThrow('or a statement of this adapter');
+    await expect(db.exec(1 as never)).rejects.toThrow('[fundamentool/sql] exec: expects SQL text');
+    const byId = db.prepare(selectFrom('agents', {
+      where: eq(col('id'), param('id')),
+    }));
+    await expect(byId.all({
+      id: new Date(0),
+    })).rejects.toThrow('[fundamentool/sql] value:');
   });
 
-  test('RETURNING through all', () => {
-    expect(db.prepare<TAgent>(insertInto('agents', {
+  test('RETURNING through all', async () => {
+    await expect(db.prepare<TAgent>(insertInto('agents', {
       values: {
         id: 'r',
       },
       returning: ['*'],
-    })).all()).toEqual([
+    })).all()).resolves.toEqual([
       expect.objectContaining({
         id: 'r',
         mode: 'passive',
@@ -111,117 +143,229 @@ describe.each(DRIVERS)('sqliteAdapter over %s (S9–S12)', (_name, open) => {
     ]);
   });
 
-  test('a transaction commits what its function did and returns its result', () => {
-    const result = db.transaction(() => {
-      db.exec('INSERT INTO agents (id) VALUES (\'t\')');
+  test('a transaction commits what its function did and resolves to its result; a sync function too', async () => {
+    await expect(db.transaction(async (tx) => {
+      await tx.exec(insertAgent('t'));
       return 42;
     }, {
       immediate: true,
-    });
-    expect(result).toBe(42);
-    expect(agents(db)).toEqual(['t']);
+    })).resolves.toBe(42);
+    await expect(db.transaction((tx) => {
+      void tx.exec(insertAgent('s'));
+      return 'sync';
+    })).resolves.toBe('sync');
+    expect(await agents(db)).toEqual([
+      's',
+      't',
+    ]);
   });
 
-  test('a throw rolls back and is rethrown as it was', () => {
+  test('a rejection or a throw rolls back and is passed on as it was', async () => {
     const error = new Error('stop');
-    expect(() => db.transaction(() => {
-      db.exec('INSERT INTO agents (id) VALUES (\'x\')');
+    await expect(db.transaction(async (tx) => {
+      await tx.exec(insertAgent('x'));
       throw error;
-    })).toThrow(error);
-    expect(agents(db)).toEqual([]);
+    })).rejects.toBe(error);
+    await expect(db.transaction(() => {
+      throw error;
+    })).rejects.toBe(error);
+    expect(await agents(db)).toEqual([]);
   });
 
-  test('nested: a savepoint; an inner throw caught inside the outer one rolls back the inner part only', () => {
-    db.transaction(() => {
-      db.exec('INSERT INTO agents (id) VALUES (\'outer\')');
-      expect(() => db.transaction(() => {
-        db.exec('INSERT INTO agents (id) VALUES (\'inner\')');
+  test('nested: a savepoint; an inner rejection caught inside the outer one rolls back the inner part only', async () => {
+    await db.transaction(async (tx) => {
+      await tx.exec(insertAgent('outer'));
+      await expect(tx.transaction(async (inner) => {
+        await inner.exec(insertAgent('inner'));
         throw new Error('inner');
-      })).toThrow('inner');
-      db.transaction(() => db.exec('INSERT INTO agents (id) VALUES (\'kept\')'), {
+      })).rejects.toThrow('inner');
+      await tx.transaction((inner) => inner.transaction((deeper) => deeper.exec(insertAgent('kept'))), {
         immediate: true,
       });
     });
-    expect(agents(db)).toEqual([
+    expect(await agents(db)).toEqual([
       'kept',
       'outer',
     ]);
   });
 
-  test('a function returning a promise is refused, and its work rolled back', () => {
-    expect(() => db.transaction(() => {
-      db.exec('INSERT INTO agents (id) VALUES (\'p\')');
-      return Promise.resolve();
-    })).toThrow('[fundamentool/sql] transaction: the function returned a promise; a transaction\'s function must be synchronous — its awaits would run after COMMIT');
-    expect(agents(db)).toEqual([]);
-    expect(() => db.transaction(() => db.transaction(async () => 1))).toThrow('returned a promise');
-    expect(() => db.transaction(1 as never)).toThrow('[fundamentool/sql] transaction: expects a function');
-    expect(() => db.transaction(() => 1, {
+  test('the connection waits while a transaction runs: other code\'s statements land after its COMMIT', async () => {
+    const order: string[] = [];
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const writer = db.transaction(async (tx) => {
+      await tx.exec(insertAgent('in'));
+      order.push('in');
+      await gate;
+      throw new Error('rolled back');
+    });
+    const other = db.exec(insertAgent('other')).then(() => order.push('other'));
+    const read = agents(db);
+    await Promise.resolve();
+    release();
+    await expect(writer).rejects.toThrow('rolled back');
+    await other;
+    expect(order).toEqual([
+      'in',
+      'other',
+    ]);
+    expect(await read).toEqual(['other']);
+  });
+
+  test('statements in one transaction run in the order called; COMMIT waits for those left running', async () => {
+    await db.transaction((tx) => {
+      void tx.exec(insertAgent('b'));
+      void tx.exec(insertAgent('a'));
+    });
+    expect(await agents(db)).toEqual([
+      'a',
+      'b',
+    ]);
+    const both = db.transaction((tx) => Promise.all([
+      tx.exec(insertAgent('c')),
+      tx.exec(insertAgent('c')),
+    ]));
+    await expect(both).rejects.toThrow();
+    expect(await agents(db)).toEqual([
+      'a',
+      'b',
+    ]);
+  });
+
+  test('a statement prepared on the connection runs in a transaction through tx.prepare, prepared once', async () => {
+    const add = db.prepare(insertInto('agents', {
+      values: {
+        id: param('id'),
+      },
+    }));
+    await db.transaction(async (tx) => {
+      const inTx = tx.prepare(add);
+      expect(inTx.text).toBe(add.text);
+      await inTx.run({
+        id: 'tx',
+      });
+      throw new Error('undo');
+    }).catch(() => undefined);
+    await add.run({
+      id: 'db',
+    });
+    expect(await agents(db)).toEqual(['db']);
+  });
+
+  test('a transaction\'s session is over when its function settled', async () => {
+    let kept: TSqliteSession | undefined;
+    await db.transaction((tx) => {
+      kept = tx;
+    });
+    await expect(kept!.exec(insertAgent('late'))).rejects.toThrow('[fundamentool/sql] transaction: this transaction is over — its function had settled; run the statement on the session the transaction was opened on');
+    await expect(kept!.transaction(() => 1)).rejects.toThrow('this transaction is over');
+    expect(await agents(db)).toEqual([]);
+  });
+
+  test('a transaction\'s own checks are rejections', async () => {
+    await expect(db.transaction(1 as never)).rejects.toThrow('[fundamentool/sql] transaction: expects a function');
+    await expect(db.transaction(() => 1, {
       immediat: true,
-    } as never)).toThrow('[fundamentool/sql] transaction: unknown option "immediat". Did you mean "immediate"?');
+    } as never)).rejects.toThrow('[fundamentool/sql] transaction: unknown option "immediat". Did you mean "immediate"?');
   });
 
-  test('a rollback SQLite already did itself: the error that did it is the one seen', () => {
-    expect(() => db.transaction(() => {
-      db.exec('ROLLBACK');
+  test('a rollback SQLite already did itself: the error that did it is the one seen', async () => {
+    await expect(db.transaction(async (tx) => {
+      await tx.exec('ROLLBACK');
       throw new Error('after');
-    })).toThrow('after');
-    db.exec('INSERT INTO agents (id) VALUES (\'still works\')');
-    expect(agents(db)).toEqual(['still works']);
+    })).rejects.toThrow('after');
+    await expect(db.transaction((tx) => tx.exec('ROLLBACK'))).rejects.toThrow(/no transaction is active/);
+    await db.exec(insertAgent('still works'));
+    expect(await agents(db)).toEqual(['still works']);
   });
 
-  test('migrate: each version in its own transaction, kept in user_version', () => {
+  test('a failed COMMIT rolls back and is passed on', async () => {
+    await db.exec('PRAGMA foreign_keys = ON; CREATE TABLE owners (id TEXT PRIMARY KEY); CREATE TABLE pets (owner TEXT REFERENCES owners (id) DEFERRABLE INITIALLY DEFERRED)');
+    await expect(db.transaction((tx) => tx.exec('INSERT INTO pets VALUES (\'nobody\')'))).rejects.toThrow(/FOREIGN KEY constraint failed/);
+    await expect(db.prepare(selectFrom('pets')).all()).resolves.toEqual([]);
+    await db.transaction((tx) => tx.exec(insertAgent('next')));
+    expect(await agents(db)).toEqual(['next']);
+  });
+
+  test('migrate: each version in its own transaction, kept in user_version; up may wait', async () => {
     const fresh = adapterOf(open);
     const migrations = [
       {
         version: 1,
-        up: (m: typeof fresh) => m.exec('CREATE TABLE a (id TEXT PRIMARY KEY)'),
+        up: (m: TSqliteSession) => m.exec('CREATE TABLE a (id TEXT PRIMARY KEY)'),
       },
       {
         version: 2,
-        up: (m: typeof fresh) => m.exec('ALTER TABLE a ADD COLUMN mode TEXT NOT NULL DEFAULT \'passive\''),
+        up: async (m: TSqliteSession) => {
+          await m.exec('ALTER TABLE a ADD COLUMN mode TEXT NOT NULL DEFAULT \'passive\'');
+        },
       },
     ];
-    expect(fresh.migrate(migrations)).toEqual({
+    await expect(fresh.migrate(migrations)).resolves.toEqual({
       from: 0,
       to: 2,
     });
-    expect(fresh.tableColumns('a')).toEqual([
+    await expect(fresh.tableColumns('a')).resolves.toEqual([
       'id',
       'mode',
     ]);
-    expect(fresh.migrate(migrations)).toEqual({
+    await expect(fresh.migrate(migrations)).resolves.toEqual({
       from: 2,
       to: 2,
     });
-    expect(() => fresh.migrate(migrations.concat([
+    await expect(fresh.migrate(migrations.concat([
       {
         version: 3,
-        up: (m) => {
-          m.exec('CREATE TABLE b (id TEXT)');
+        up: async (m) => {
+          await m.exec('CREATE TABLE b (id TEXT)');
           throw new Error('broken');
         },
       },
-    ]))).toThrow('[fundamentool/sql] migrate: version 3 failed, rolled back: broken');
-    expect(fresh.pragma('user_version')).toBe(2);
-    expect(fresh.tableColumns('b')).toEqual([]);
-    expect(() => fresh.migrate(migrations.slice(0, 1))).toThrow('[fundamentool/sql] migrate: the database is at version 2; this code knows up to 1');
+    ]))).rejects.toThrow('[fundamentool/sql] migrate: version 3 failed, rolled back: broken');
+    await expect(fresh.pragma('user_version')).resolves.toBe(2);
+    await expect(fresh.tableColumns('b')).resolves.toEqual([]);
+    await expect(fresh.migrate(migrations.slice(0, 1))).rejects.toThrow('[fundamentool/sql] migrate: the database is at version 2; this code knows up to 1');
     const other = adapterOf(open);
-    expect(() => other.migrate([
+    await expect(other.migrate([
       {
         version: 1,
         up: () => {
           throw 'text';
         },
       },
-    ])).toThrow('[fundamentool/sql] migrate: version 1 failed, rolled back: text');
-    expect(other.migrate([])).toEqual({
+    ])).rejects.toThrow('[fundamentool/sql] migrate: version 1 failed, rolled back: text');
+    await expect(other.migrate([])).resolves.toEqual({
       from: 0,
       to: 0,
     });
   });
 
-  test('migrate refuses a list that isn\'t ascending, unique and whole', () => {
+  test('two migrate calls at once: the second waits and finds the work done', async () => {
+    const fresh = adapterOf(open);
+    const migrations = [
+      {
+        version: 1,
+        up: (m: TSqliteSession) => m.exec('CREATE TABLE a (id TEXT PRIMARY KEY)'),
+      },
+    ];
+    await expect(Promise.all([
+      fresh.migrate(migrations),
+      fresh.migrate(migrations),
+    ])).resolves.toEqual([
+      {
+        from: 0,
+        to: 1,
+      },
+      {
+        from: 1,
+        to: 1,
+      },
+    ]);
+  });
+
+  test('migrate refuses a list that isn\'t ascending, unique and whole', async () => {
     const fresh = adapterOf(open);
     for (const bad of [
       [
@@ -253,42 +397,42 @@ describe.each(DRIVERS)('sqliteAdapter over %s (S9–S12)', (_name, open) => {
       ],
       [null],
     ]) {
-      expect(() => fresh.migrate(bad as never)).toThrow('[fundamentool/sql] migrate: expects { version, up } with whole versions from 1, ascending and unique');
+      await expect(fresh.migrate(bad as never)).rejects.toThrow('[fundamentool/sql] migrate: expects { version, up } with whole versions from 1, ascending and unique');
     }
-    expect(() => fresh.migrate('x' as never)).toThrow('[fundamentool/sql] migrate: expects a list of { version, up }');
+    await expect(fresh.migrate('x' as never)).rejects.toThrow('[fundamentool/sql] migrate: expects a list of { version, up }');
   });
 
-  test('pragma: read, set and read back; only words and numbers', () => {
-    expect(db.pragma('journal_mode', 'wal')).toBe('memory');
-    expect(db.pragma('busy_timeout', 5000)).toBe(5000);
-    expect(db.pragma('foreign_keys', true)).toBe(1);
-    expect(db.pragma('foreign_keys', false)).toBe(0);
-    expect(db.pragma('optimize')).toBeUndefined();
-    expect(() => db.pragma('user_version; DROP TABLE agents')).toThrow('[fundamentool/sql] pragma: expects a pragma\'s name — a lower-case word');
-    expect(() => db.pragma('user_version', '1; DROP TABLE agents')).toThrow('[fundamentool/sql] pragma: "user_version" expects a number, a boolean or a word');
-    expect(() => db.pragma('user_version', NaN)).toThrow('expects a number, a boolean or a word');
+  test('pragma: read, set and read back; only words and numbers', async () => {
+    await expect(db.pragma('journal_mode', 'wal')).resolves.toBe('memory');
+    await expect(db.pragma('busy_timeout', 5000)).resolves.toBe(5000);
+    await expect(db.pragma('foreign_keys', true)).resolves.toBe(1);
+    await expect(db.pragma('foreign_keys', false)).resolves.toBe(0);
+    await expect(db.pragma('optimize')).resolves.toBeUndefined();
+    await expect(db.pragma('user_version; DROP TABLE agents')).rejects.toThrow('[fundamentool/sql] pragma: expects a pragma\'s name — a lower-case word');
+    await expect(db.pragma('user_version', '1; DROP TABLE agents')).rejects.toThrow('[fundamentool/sql] pragma: "user_version" expects a number, a boolean or a word');
+    await expect(db.pragma('user_version', NaN)).rejects.toThrow('expects a number, a boolean or a word');
   });
 
-  test('tableColumns', () => {
-    expect(db.tableColumns('agents')).toEqual([
+  test('tableColumns', async () => {
+    await expect(db.tableColumns('agents')).resolves.toEqual([
       'id',
       'mode',
     ]);
-    expect(db.tableColumns('nothing')).toEqual([]);
-    expect(() => db.tableColumns('')).toThrow('[fundamentool/sql] tableColumns: expects a table\'s name');
+    await expect(db.tableColumns('nothing')).resolves.toEqual([]);
+    await expect(db.tableColumns('')).rejects.toThrow('[fundamentool/sql] tableColumns: expects a table\'s name');
   });
 
-  test('the dialect\'s functions are installed', () => {
-    expect(db.prepare<{ v: string }>({
+  test('the dialect\'s functions are installed', async () => {
+    expect((await db.prepare<{ v: string }>({
       text: 'SELECT fundamentool_lower(\'МИНУТ\') AS v',
       params: [],
       names: [],
-    }).get()?.v).toBe('минут');
-    expect(db.prepare<{ v: number }>({
+    }).get())?.v).toBe('минут');
+    await expect(db.prepare<{ v: number }>({
       text: 'SELECT fundamentool_regexp(\'abc\', \'B\', \'i\') AS v, fundamentool_regexp(3, \'3\', \'\') AS w',
       params: [],
       names: [],
-    }).get()).toMatchObject({
+    }).get()).resolves.toMatchObject({
       v: 1,
       w: 0,
     });
@@ -299,41 +443,35 @@ describe.each(DRIVERS)('sqliteAdapter over %s (S9–S12)', (_name, open) => {
     expect(sqliteAdapter(instance).instance).toBe(instance);
   });
 
-  test('error codes from the driver (S13)', () => {
-    db.exec('INSERT INTO agents (id) VALUES (\'a\')');
+  test('error codes from the driver (S13)', async () => {
+    await db.exec(insertAgent('a'));
     let caught: unknown;
-    try {
-      db.exec('INSERT INTO agents (id) VALUES (\'a\')');
-    } catch (error) {
+    await db.exec(insertAgent('a')).catch((error: unknown) => {
       caught = error;
-    }
+    });
     expect(sqliteErrorCode(caught)).toBe('SQLITE_CONSTRAINT_PRIMARYKEY');
-    try {
-      db.exec('SELEC 1');
-    } catch (error) {
+    await db.exec('SELEC 1').catch((error: unknown) => {
       caught = error;
-    }
+    });
     expect(sqliteErrorCode(caught)).toBe('SQLITE_ERROR');
   });
 
-  test('busy: a second writer on the same file', () => {
+  test('busy: a second writer on the same file', async () => {
     const folder = mkdtempSync(joinPath(tmpdir(), 'fundamentool-sql-'));
     try {
       const file = joinPath(folder, 'busy.db');
       const first = sqliteAdapter(open(file));
       const second = sqliteAdapter(open(file));
-      first.exec('CREATE TABLE t (a)');
-      second.pragma('busy_timeout', 0);
+      await first.exec('CREATE TABLE t (a)');
+      await second.pragma('busy_timeout', 0);
       let caught: unknown;
-      first.transaction(() => {
-        first.exec('INSERT INTO t VALUES (1)');
-        try {
-          second.transaction(() => second.exec('INSERT INTO t VALUES (2)'), {
-            immediate: true,
-          });
-        } catch (error) {
+      await first.transaction(async (tx) => {
+        await tx.exec('INSERT INTO t VALUES (1)');
+        await second.transaction((other) => other.exec('INSERT INTO t VALUES (2)'), {
+          immediate: true,
+        }).catch((error: unknown) => {
           caught = error;
-        }
+        });
       }, {
         immediate: true,
       });
@@ -348,22 +486,22 @@ describe.each(DRIVERS)('sqliteAdapter over %s (S9–S12)', (_name, open) => {
     }
   });
 
-  test('FTS5: textMatch and fts5Query, with bm25', () => {
+  test('FTS5: textMatch and fts5Query, with bm25', async () => {
     const fts = adapterOf(open, {
       presets: [sqliteFts5],
     });
-    fts.exec('CREATE VIRTUAL TABLE docs USING fts5(name, body)');
+    await fts.exec('CREATE VIRTUAL TABLE docs USING fts5(name, body)');
     const add = fts.prepare(insertInto('docs', {
       values: {
         name: param('name'),
         body: param('body'),
       },
     }));
-    add.run({
+    await add.run({
       name: 'editDistance',
       body: 'edit distance of two strings',
     });
-    add.run({
+    await add.run({
       name: 'editor',
       body: 'an editor',
     });
@@ -372,24 +510,24 @@ describe.each(DRIVERS)('sqliteAdapter over %s (S9–S12)', (_name, open) => {
       where: textMatch('docs', param('query')),
       orderBy: [fn('bm25', col('docs'))],
     }));
-    expect(find.all({
+    expect((await find.all({
       query: fts5Query(['edit'], {
         prefix: 'both',
       }),
-    }).map((row) => row.name)).toEqual([
+    })).map((row) => row.name)).toEqual([
       'editDistance',
       'editor',
     ]);
-    expect(find.all({
+    expect((await find.all({
       query: fts5Query(['edit']),
-    }).map((row) => row.name)).toEqual(['editDistance']);
-    expect(find.all({
+    })).map((row) => row.name)).toEqual(['editDistance']);
+    await expect(find.all({
       query: fts5Query([
         'dist"ance',
         'nothing',
       ]),
-    })).toEqual([]);
-    expect(fts.prepare(deleteFrom('docs')).run()).toMatchObject({
+    })).resolves.toEqual([]);
+    await expect(fts.prepare(deleteFrom('docs')).run()).resolves.toMatchObject({
       changes: 2,
     });
   });
