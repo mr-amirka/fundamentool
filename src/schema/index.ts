@@ -104,6 +104,8 @@ export type TObjectSchema<S extends Record<string, TSchema<unknown>>, T = TObjec
 export type TNumberSchema = TSchema<number> & {
   /** At least `n`. */
   min(n: number): TNumberSchema;
+  /** At most `n`. */
+  max(n: number): TNumberSchema;
   /** A whole number. */
   int(): TNumberSchema;
   /** Not `Infinity` (zod's `.finite()`). */
@@ -272,27 +274,32 @@ export const unknown = (): TSchema<unknown> => make(
 );
 
 /**
- * A number (not `NaN`); `.min(n)`, `.int()` narrow it.
+ * A number (not `NaN`); `.min(n)`, `.max(n)`, `.int()` narrow it.
  *
  * @example
- * number().int().min(0).parse(-1, WHERE); // TypeError: …: expects a whole number ≥ 0, got number -1
+ * number().int().min(0).parse(-1, WHERE);        // TypeError: …: expects a whole number ≥ 0, got number -1
+ * number().int().min(1).max(4).parse(5, WHERE);  // TypeError: …: expects a whole number from 1 to 4, got number 5
  */
 export function number(): TNumberSchema {
   const build = (bounds: { min: number | null;
+    max: number | null;
     int: boolean;
     finite: boolean;
     positive: boolean }): TNumberSchema => {
     const {
       min,
+      max,
       int,
       finite,
       positive,
     } = bounds;
+    const range = min !== null && max !== null ? ` from ${min} to ${max}`
+      : (min === null ? '' : ` ≥ ${min}`) + (max === null ? '' : ` ≤ ${max}`);
     const expected = (int ? 'a whole number' : finite ? 'a finite number' : 'a number')
-      + (positive ? ' > 0' : '') + (min === null ? '' : ` ≥ ${min}`);
+      + (positive ? ' > 0' : '') + range;
     const fits = (value: unknown): boolean => typeof value === 'number' && !Number.isNaN(value)
       && (!int || Number.isInteger(value)) && (!finite || Number.isFinite(value)) && (!positive || value > 0)
-      && (min === null || value >= min);
+      && (min === null || value >= min) && (max === null || value <= max);
     return {
       ...make<number>(
         'number', expected, (value, path) => (fits(value) ? null : wrong(
@@ -302,6 +309,10 @@ export function number(): TNumberSchema {
       min: (n: number) => build({
         ...bounds,
         min: n,
+      }),
+      max: (n: number) => build({
+        ...bounds,
+        max: n,
       }),
       int: () => build({
         ...bounds,
@@ -319,6 +330,7 @@ export function number(): TNumberSchema {
   };
   return build({
     min: null,
+    max: null,
     int: false,
     finite: false,
     positive: false,

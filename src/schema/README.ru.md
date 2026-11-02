@@ -49,7 +49,7 @@ export function createHost(options: THostOptions) {
 | Член | Что принимает |
 |------|---------------|
 | `string()`, `boolean()`, `func()`, `unknown()` | вид одного значения |
-| `number()` + `.min(n)`, `.int()`, `.finite()` | число (не `NaN`) |
+| `number()` + `.min(n)`, `.max(n)`, `.int()`, `.finite()` | число (не `NaN`) |
 | `literal(value)`, `oneOf(values \| () => values)` | ровно значение; одну из строк (близкая — «did you mean») |
 | `custom(check, expected)` | что примет проверка (`isStore`) |
 | `union([a, b])` | первое подходящее |

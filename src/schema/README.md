@@ -50,7 +50,7 @@ Don't destructure a namespace object (`const { object } = schema`) — a bundler
 | Member | What it accepts |
 |--------|-----------------|
 | `string()`, `boolean()`, `func()`, `unknown()` | one value's kind |
-| `number()` + `.min(n)`, `.int()`, `.finite()` | a number (not `NaN`) |
+| `number()` + `.min(n)`, `.max(n)`, `.int()`, `.finite()` | a number (not `NaN`) |
 | `literal(value)`, `oneOf(values \| () => values)` | exactly a value; one of strings (a near one — "did you mean") |
 | `custom(check, expected)` | anything a check accepts (`isStore`) |
 | `union([a, b])` | the first that fits |

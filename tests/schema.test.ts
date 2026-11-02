@@ -45,6 +45,10 @@ describe('schema', () => {
     expect(messageOf(number().min(0), -1)).toBe(`${WHERE}: expects a number ≥ 0, got number -1`);
     expect(messageOf(number().int().min(0), 1.5)).toBe(`${WHERE}: expects a whole number ≥ 0, got number 1.5`);
     expect(messageOf(number().min(0).int(), 3)).toBeNull();
+    expect(messageOf(number().int().min(1).max(4), 5)).toBe(`${WHERE}: expects a whole number from 1 to 4, got number 5`);
+    expect(messageOf(number().int().min(1).max(4), 0)).toBe(`${WHERE}: expects a whole number from 1 to 4, got number 0`);
+    expect(messageOf(number().max(10), 11)).toBe(`${WHERE}: expects a number ≤ 10, got number 11`);
+    expect(messageOf(number().max(10), 10)).toBeNull();
     expect(messageOf(number().positive(), 0)).toBe(`${WHERE}: expects a number > 0, got number 0`);
     expect(messageOf(number().finite().positive(), Infinity)).toBe(`${WHERE}: expects a finite number > 0, got number Infinity`);
     expect(messageOf(number().finite().positive(), 2)).toBeNull();
