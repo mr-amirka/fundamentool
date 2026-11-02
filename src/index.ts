@@ -13,6 +13,7 @@ export * from './describeValue';
 export * from './editDistance';
 export * from './bind';
 export * from './bindMethods';
+export * from './bracketPairs';
 export * from './camelToDelimiterCase';
 export * from './camelToKebabCase';
 export * from './camelToSnakeCase';

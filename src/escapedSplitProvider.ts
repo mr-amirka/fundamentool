@@ -2,9 +2,6 @@ import {
   regexpNormalizeText,
 } from './regexpNormalizeText';
 import {
-  escapeRegExp,
-} from './escapeRegExp';
-import {
   unslash,
 } from './unslash';
 import {
@@ -20,6 +17,9 @@ import {
   string,
   union,
 } from './schema';
+import type {
+  TBrackets,
+} from './bracketPairs';
 
 /** Options of {@link escapedSplitProvider} and `escapedHalfProvider`. */
 export type TEscapedSplitOptions = {
@@ -28,11 +28,11 @@ export type TEscapedSplitOptions = {
   /** What is never a separator and stays in the part as is: default — a backslash and the character after it. */
   escape?: string | RegExp;
   /**
-   * Bracket pairs, each an opening and a closing character: `'()[]{}'`. A separator inside a pair is part of the
-   * value: with `'()'`, `a(1,2),b` splits at the second comma only. A closing bracket with no opening one counts down
-   * all the same, so what follows it is inside until an opening bracket evens it out.
+   * Brackets, from `bracketPairs`: a separator inside an open pair is part of the value — with
+   * `bracketPairs([['(', ')']])`, `a(1,2),b` splits at the second comma only. A splitter without them carries no
+   * bracket code.
    */
-  brackets?: string;
+  brackets?: TBrackets;
 };
 
 /** A splitter that respects escaped separators (and brackets, when given). */
@@ -65,37 +65,42 @@ export const ESCAPED_SPLIT_OPTIONS = /*#__PURE__*/ lazy(() => {
   return object({
     separator: pattern,
     escape: pattern.optional(),
-    brackets: string().refine((value) => value.length % 2 === 0, 'expects pairs of an opening and a closing character, as "()[]"')
-      .optional(),
+    brackets: custom<TBrackets>(isBrackets, 'brackets from bracketPairs(…)').optional(),
   });
 });
 
+/** Is `value` what `bracketPairs` returns. */
+function isBrackets(value: unknown): boolean {
+  const brackets = value as TBrackets;
+  return !!brackets && typeof brackets.source === 'string' && typeof brackets.meet === 'function'
+    && typeof brackets.end === 'function';
+}
+
+/**
+ * No brackets: the source never matches, so `meet` and `end` are never called.
+ */
+const NO_BRACKETS = {
+  source: '(?!)',
+} as TBrackets;
+
 /**
  * The reader both splitters share: one regular expression over escapes, brackets and the separator, and the
- * brackets' openings (any other bracket matched is a closing one). Cold path — once per splitter.
+ * brackets. Cold path — once per splitter.
  *
  * @param options - The splitter's options.
  * @param where - The splitter's name, for an error.
- * @returns `[regexp, openings]`: groups 1 — an escape, 2 — a bracket, 3 — a separator.
+ * @returns `[regexp, brackets]`: the groups are 1 — an escape, 2 — a bracket, 3 — a separator.
  * @internal
  */
-export function escapedSplitReader(options: TEscapedSplitOptions, where: string): [RegExp, string] {
+export function escapedSplitReader(options: TEscapedSplitOptions, where: string): [RegExp, TBrackets] {
   if (process.env.NODE_ENV !== 'production') {
     ESCAPED_SPLIT_OPTIONS().parse(options, '[fundamentool] ' + where);
   }
-  const brackets = options.brackets || '';
-  let openings = '';
-  let bracketSource = '';
-  const l = brackets.length;
-  for (let i = 0; i < l; i += 2) {
-    openings += brackets[i];
-    bracketSource += (bracketSource ? '|' : '') + escapeRegExp(brackets[i]) + '|' + escapeRegExp(brackets[i + 1]);
-  }
+  const brackets = options.brackets || NO_BRACKETS;
   const escape = options.escape ? regexpNormalizeText(options.escape) : '\\\\.';
   return [
-    new RegExp('(' + escape + ')|(' + (bracketSource || '(?!)') + ')|(' + regexpNormalizeText(options.separator)
-      + ')', 'g'),
-    openings,
+    new RegExp('(' + escape + ')|(' + brackets.source + ')|(' + regexpNormalizeText(options.separator) + ')', 'g'),
+    brackets,
   ];
 }
 
@@ -108,13 +113,17 @@ export function escapedSplitReader(options: TEscapedSplitOptions, where: string)
  * const split = escapedSplitProvider({ separator: ',' });
  * split('a,b,c');                  // => ['a', 'b', 'c']
  * split('a\\,b,c');                // => ['a,b', 'c']
- * escapedSplitProvider({ separator: ',', brackets: '(){}' }).base('a(1,2),$b{3,4}'); // => ['a(1,2)', '$b{3,4}']
+ * escapedSplitProvider({ separator: ',', brackets: bracketPairs([['(', ')'], ['{', '}']]) }).base('a(1,2),$b{3,4}');
+ * // => ['a(1,2)', '$b{3,4}']
  * escapedSplitProvider({ separator: /[<>]/ }).base('a<b>c');                          // => ['a', 'b', 'c']
  */
 export function escapedSplitProvider(options: TEscapedSplitOptions): IEscapedSplit {
   const [
     regexp,
-    openings,
+    {
+      meet,
+      end,
+    },
   ] = escapedSplitReader(options, 'escapedSplitProvider');
 
   function escapedSplit(input: string, dstSeparators?: string[]): string[] {
@@ -125,19 +134,23 @@ export function escapedSplitProvider(options: TEscapedSplitOptions): IEscapedSpl
     const output: string[] = [];
     let from = 0;
     let depth = 0;
+    let stack: number[] | undefined;
     let m: RegExpExecArray | null;
     regexp.lastIndex = 0;
     while ((m = regexp.exec(input))) {
       if (!m[0]) {
         regexp.lastIndex++;
       } else if (m[2]) {
-        depth += openings.indexOf(m[2]) > -1 ? 1 : -1;
+        depth = meet(
+          stack || (stack = []), m[2], m.index, input,
+        );
       } else if (m[3] !== undefined && !depth) {
         dstSeparators && dstSeparators.push(m[3]);
         output.push(input.slice(from, m.index));
         from = m.index + m[0].length;
       }
     }
+    depth && end(stack as number[], input);
     output.push(input.slice(from));
     return output;
   };

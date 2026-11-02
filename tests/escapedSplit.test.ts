@@ -4,6 +4,9 @@ import {
 import {
   escapedHalfProvider,
 } from '../src/escapedHalfProvider';
+import {
+  bracketPairs,
+} from '../src/bracketPairs';
 
 describe('escapedSplitProvider', () => {
   const split = escapedSplitProvider({
@@ -111,7 +114,16 @@ describe('escaped providers — a sequence of your own that never splits', () =>
 describe('escaped providers — brackets', () => {
   const splitArgs = escapedSplitProvider({
     separator: ',',
-    brackets: '(){}',
+    brackets: bracketPairs([
+      [
+        '(',
+        ')',
+      ],
+      [
+        '{',
+        '}',
+      ],
+    ]),
   });
 
   test.each([
@@ -138,7 +150,18 @@ describe('escaped providers — brackets', () => {
     ],
     [
       'a),b,c',
-      ['a),b,c'],
+      [
+        'a)',
+        'b',
+        'c',
+      ],
+    ],
+    [
+      'a(1},2),b',
+      [
+        'a(1},2)',
+        'b',
+      ],
     ],
     [
       '',
@@ -152,7 +175,12 @@ describe('escaped providers — brackets', () => {
     const separators: string[] = [];
     escapedSplitProvider({
       separator: /[<>]/,
-      brackets: '[]',
+      brackets: bracketPairs([
+        [
+          '[',
+          ']',
+        ],
+      ]),
     }).base('a<b[>c]>d', separators);
     expect(separators).toEqual([
       '<',
@@ -188,7 +216,12 @@ describe('escaped providers — brackets', () => {
   ])('half %j → %j', (input, parts) => {
     expect(escapedHalfProvider({
       separator: ':',
-      brackets: '[]',
+      brackets: bracketPairs([
+        [
+          '[',
+          ']',
+        ],
+      ]),
     }).base(input)).toEqual(parts);
   });
 });
@@ -232,9 +265,9 @@ describe('escaped providers — the options are checked', () => {
     [
       {
         separator: ',',
-        brackets: '(',
+        brackets: '()',
       },
-      '"brackets" expects pairs of an opening and a closing character',
+      '"brackets" expects brackets from bracketPairs(…), got string "()"',
     ],
   ])('%j', (options, message) => {
     expect(() => escapedSplitProvider(options as never)).toThrow(message);
