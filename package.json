@@ -10,6 +10,9 @@
       "async": [
         "dist/async/index.d.ts"
       ],
+      "async/hooks": [
+        "dist/async/hooks/index.d.ts"
+      ],
       "is": [
         "dist/is/index.d.ts"
       ],
@@ -18,6 +21,9 @@
       ],
       "match": [
         "dist/match/index.d.ts"
+      ],
+      "hooks": [
+        "dist/hooks/index.d.ts"
       ],
       "i18n": [
         "dist/i18n/index.d.ts"
@@ -98,6 +104,12 @@
       "import": "./dist/esm/async/index.js",
       "default": "./dist/async/index.js"
     },
+    "./async/hooks": {
+      "types": "./dist/async/hooks/index.d.ts",
+      "module": "./dist/esm/async/hooks/index.js",
+      "import": "./dist/esm/async/hooks/index.js",
+      "default": "./dist/async/hooks/index.js"
+    },
     "./is": {
       "types": "./dist/is/index.d.ts",
       "module": "./dist/esm/is/index.js",
@@ -115,6 +127,12 @@
       "module": "./dist/esm/match/index.js",
       "import": "./dist/esm/match/index.js",
       "default": "./dist/match/index.js"
+    },
+    "./hooks": {
+      "types": "./dist/hooks/index.d.ts",
+      "module": "./dist/esm/hooks/index.js",
+      "import": "./dist/esm/hooks/index.js",
+      "default": "./dist/hooks/index.js"
     },
     "./i18n": {
       "types": "./dist/i18n/index.d.ts",

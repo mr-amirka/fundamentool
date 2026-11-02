@@ -9,6 +9,10 @@ import * as async from 'fundamentool/async';
 import { mapAsync, sequence, intervalAsync } from 'fundamentool/async';
 ```
 
+> The async hooks — the same kinds as `fundamentool/hooks`, for handlers that may wait — are a module of their own:
+> [`fundamentool/async/hooks`](hooks/README.md). `fundamentool/async` doesn't re-export them: their names are the sync
+> module's.
+
 ---
 
 ## Primitives

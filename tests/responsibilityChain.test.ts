@@ -98,4 +98,36 @@ describe('responsibilityChain', () => {
       3,
     ]);
   });
+
+  test('without onError, a handler error reaches the caller — never lost', () => {
+    const err = new Error('oops');
+    const log: number[] = [];
+    expect(() => responsibilityChain(
+      [
+        () => {
+          throw err;
+        },
+        (req, next) => {
+          log.push(2);
+          return next(req);
+        },
+      ],
+      null,
+      () => log.push(3),
+    )).toThrow(err);
+    expect(log).toEqual([]);
+  });
+
+  test('next() keeps the request; next(null) passes null', () => {
+    expect(responsibilityChain(
+      [(_req, next) => next()],
+      'same',
+      (r) => r,
+    )).toBe('same');
+    expect(responsibilityChain<string | null>(
+      [(_req, next) => next(null)],
+      'replaced',
+      (r) => r,
+    )).toBeNull();
+  });
 });

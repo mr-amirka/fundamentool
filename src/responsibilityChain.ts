@@ -6,16 +6,18 @@ export type TChainHandler<TReq = any> = (
 export type TChainErrorHandler<TReq = any> = (error: unknown, req: TReq) => void;
 
 /**
- * Runs a chain of handlers; each calls next(req) to continue.
+ * Runs a chain of handlers; each calls `next(req)` to continue — `next()` (or `next(undefined)`) with the same `req`.
  *
- * If a handler throws, the error is passed to `onError` (if provided) and
- * the chain **continues** with the next handler — the error does not stop execution.
+ * A handler that throws: with `onError`, the error is passed to it and the chain **continues** with the next handler;
+ * without it, the error reaches the caller (fundamentool D-087 — before, it was lost). `fundamentool/hooks`'
+ * `chainHook` runs on it.
  *
  * @param chain - The chain of handlers.
  * @param req - The request object.
  * @param end - Called when the chain is exhausted.
- * @param onError - Optional callback invoked when a handler throws.
+ * @param onError - Called when a handler throws; the chain then goes on.
  * @returns The result of the chain.
+ * @throws a handler's error, when there is no `onError`.
  * @example
  * responsibilityChain([(req, next) => next(req + 1)], 0, (req) => req); // => 1
  * @example
@@ -38,10 +40,14 @@ export function responsibilityChain<TReq = any>(
       return end(_req);
     }
     const ni = i + 1;
+    const onward = (r?: TReq): any => next(r === undefined ? _req : r, ni);
+    if (!onError) {
+      return handler(_req, onward);
+    }
     try {
-      return handler(_req, (r?: TReq) => next(r ?? _req, ni));
+      return handler(_req, onward);
     } catch (ex) {
-      onError?.(ex, _req);
+      onError(ex, _req);
       return next(_req, ni);
     }
   }

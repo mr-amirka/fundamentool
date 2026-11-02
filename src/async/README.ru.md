@@ -9,6 +9,10 @@ import * as async from 'fundamentool/async';
 import { mapAsync, sequence, intervalAsync } from 'fundamentool/async';
 ```
 
+> Асинхронные хуки — те же виды, что в `fundamentool/hooks`, для обработчиков, которые могут ждать, — отдельный модуль:
+> [`fundamentool/async/hooks`](hooks/README.ru.md). `fundamentool/async` их не переэкспортирует: их имена — имена
+> синхронного модуля.
+
 ---
 
 ## Базовые примитивы
