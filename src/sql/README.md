@@ -165,6 +165,8 @@ The base writes the forms SQLite and PostgreSQL share: `LIMIT`, `ON CONFLICT`, `
   code's statements still wait, as above: the adapter tells them apart by Node's `AsyncLocalStorage` (the call chain
   the function was started in). Once the function settled, what it left behind (a timer) may use `db`. Where
   `AsyncLocalStorage` can't be reached (Node before 22.3, a browser), the check is off and such a call waits forever.
+  Code that runs there has its tests run in Node, where the check is on, so a test that runs the call finds the
+  mistake.
 - **`iterate`** waits for its turn to start, then streams without holding the connection: better-sqlite3 refuses
   another statement on it until the loop ends (*"busy executing a query"*); `node:sqlite` runs it.
 - **Migrations.** Versions are whole numbers from 1, ascending. Each `up(m)` runs in its own transaction (`m` is its
