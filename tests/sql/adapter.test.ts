@@ -264,6 +264,61 @@ describe.each(DRIVERS)('sqliteAdapter over %s (S9–S12)', (_name, open) => {
     expect(await agents(db)).toEqual([]);
   });
 
+  test('an outer session called from inside a transaction\'s function is a rejection at once, not a wait forever', async () => {
+    const all = db.prepare(selectFrom('agents'));
+    const outer = /an operation on an outer session \(db, or an outer transaction's tx\) called from inside a transaction's function .* run it on the transaction's own session: tx\.prepare\(statement\), tx\.exec, tx\.transaction/;
+    await expect(db.transaction(async (tx) => {
+      await tx.exec(insertAgent('undone'));
+      return all.all();
+    })).rejects.toThrow(outer);
+    expect(await agents(db)).toEqual([]);
+    const caught = await db.transaction(async (tx) => {
+      await tx.exec(insertAgent('kept'));
+      const tries = await Promise.allSettled([
+        db.exec(insertAgent('db')),
+        db.transaction(() => 1),
+        db.pragma('user_version'),
+        db.tableColumns('agents'),
+        tx.transaction(async () => {
+          await expect(tx.exec(insertAgent('outer tx'))).rejects.toThrow(outer);
+          await expect(db.exec(insertAgent('db, two deep'))).rejects.toThrow(outer);
+        }),
+      ]);
+      return tries.map((one) => one.status);
+    });
+    expect(caught).toEqual([
+      'rejected',
+      'rejected',
+      'rejected',
+      'rejected',
+      'fulfilled',
+    ]);
+    expect(await agents(db)).toEqual(['kept']);
+  });
+
+  test('inside a migration\'s up too; once the function settled, what it left behind may use db', async () => {
+    await expect(db.migrate([
+      {
+        version: 1,
+        up: () => db.exec(insertAgent('m')),
+      },
+    ])).rejects.toThrow(/version 1 failed, rolled back: .*an operation on an outer session/);
+    let after!: Promise<void>;
+    await db.transaction((tx) => {
+      void tx.exec(insertAgent('in'));
+      after = new Promise<void>((done) => {
+        setTimeout(() => {
+          void db.exec(insertAgent('after')).then(done);
+        }, 0);
+      });
+    });
+    await after;
+    expect(await agents(db)).toEqual([
+      'after',
+      'in',
+    ]);
+  });
+
   test('a transaction\'s own checks are rejections', async () => {
     await expect(db.transaction(1 as never)).rejects.toThrow('[fundamentool/sql] transaction: expects a function');
     await expect(db.transaction(() => 1, {

@@ -53,6 +53,8 @@ type TQueue = {
   over: boolean;
   /** 0 — the connection; n — a transaction n deep. */
   depth: number;
+  /** The session the transaction was opened on; `undefined` — the connection. */
+  parent: TQueue | undefined;
 };
 
 /** What the adapter keeps of a statement it prepared, for another session to run it. */
@@ -61,35 +63,86 @@ type TPrepared = {
   statement: TSqliteStatementPort;
 };
 
-const queueOf = (depth: number): TQueue => ({
+const queueOf = (parent: TQueue | undefined): TQueue => ({
   tail: Promise.resolve(),
   pending: 0,
   over: false,
-  depth,
+  depth: parent === undefined ? 0 : parent.depth + 1,
+  parent,
 });
 
-const OVER = `${WHERE} transaction: this transaction is over — its function had settled; run the statement on the session the transaction was opened on`;
+/** The part of `AsyncLocalStorage` the adapter uses. */
+type TContext = {
+  getStore(): TQueue | undefined;
+  run<T>(store: TQueue, fn: () => T): T;
+};
 
+/**
+ * Where the caller is: the session of the transaction whose function it was called from (fundamentool D-094). Node's
+ * `AsyncLocalStorage`, reached without an import so the module stays free of the platform; where there is none (Node
+ * before 22.3, a browser), `undefined` — and a statement on an outer session inside a transaction waits forever, as
+ * the README warns.
+ */
+const context: TContext | undefined = (() => {
+  const getBuiltinModule = (globalThis as {
+    process?: { getBuiltinModule?: (id: string) => unknown };
+  }).process?.getBuiltinModule;
+  const hooks = typeof getBuiltinModule === 'function' ? getBuiltinModule('node:async_hooks') as {
+    AsyncLocalStorage?: new () => TContext;
+  } | undefined : undefined;
+  return hooks?.AsyncLocalStorage ? new hooks.AsyncLocalStorage() : undefined;
+})();
+
+const OVER = `${WHERE} transaction: this transaction is over — its function had settled; run the statement on the session the transaction was opened on`;
+const OUTER = `${WHERE} transaction: an operation on an outer session (db, or an outer transaction's tx) called from inside a transaction's function waits for that transaction to end, and the transaction waits for the function — it would never settle; run it on the transaction's own session: tx.prepare(statement), tx.exec, tx.transaction`;
+
+/**
+ * Whether an operation on `queue` would wait for the transaction its caller runs in: called from inside a transaction's
+ * function that hasn't settled, on a session that transaction was opened on, directly or through others.
+ */
+function waitsForItself(queue: TQueue): boolean {
+  const inside = context?.getStore();
+  if (inside === undefined || inside.over) {
+    return false;
+  }
+  for (let outer = inside.parent; outer !== undefined; outer = outer.parent) {
+    if (outer === queue) {
+      return true;
+    }
+  }
+  return false;
+}
 /**
  * Runs `operation` in its turn on `queue`: at once when nothing is pending, else after the last one called has settled.
  *
  * @param queue - The session's queue.
  * @param operation - The work; its throw is the promise's rejection.
- * @returns What it returned.
+ * @returns What it returned; a rejection, at once, when it would wait for the caller's own transaction.
  */
 function turn<T>(queue: TQueue, operation: () => T | Promise<T>): Promise<T> {
+  if (waitsForItself(queue)) {
+    return Promise.reject(new Error(OUTER));
+  }
   const run = (): T | Promise<T> => {
     if (queue.over) {
       throw new Error(OVER);
     }
     return operation();
   };
-  const result = queue.pending === 0 ? new Promise<T>((resolve) => resolve(run())) : queue.tail.then(run);
+  // The queue holds this operation before it starts: what it calls synchronously lines up after it, never inside it.
+  const idle = queue.pending === 0;
+  const previous = queue.tail;
+  let settle!: () => void;
+  queue.tail = new Promise<void>((resolve) => {
+    settle = resolve;
+  });
   queue.pending++;
+  const result = idle ? new Promise<T>((resolve) => resolve(run())) : previous.then(run);
   const settled = (): void => {
     queue.pending--;
+    settle();
   };
-  queue.tail = result.then(settled, settled);
+  result.then(settled, settled);
   return result;
 }
 
@@ -109,7 +162,9 @@ async function drain(queue: TQueue): Promise<void> {
  *
  * The port is async though both drivers are sync, so a driver that waits (a Worker, PostgreSQL) fits under it with no
  * caller changed. The connection runs its operations one at a time: while a transaction is running, other code's
- * statements wait for its COMMIT and never land inside it.
+ * statements wait for its COMMIT and never land inside it. The transaction's own function runs its statements on `tx`;
+ * one on `db` from inside it would wait for itself, so it is a rejection at once, naming `tx` (where Node's
+ * `AsyncLocalStorage` is reachable).
  *
  * A `bigint` above 2⁵³ is rounded by better-sqlite3 without its `safeIntegers` and refused by `node:sqlite` — a driver's
  * setting, not a query's. `node:sqlite`'s rows have a `null` prototype: `in`, spread and `JSON.stringify` work,
@@ -175,7 +230,8 @@ export function sqliteAdapter<I extends TSqliteDatabasePort>(instance: I, option
   const runTransaction = async <T>(queue: TQueue, fn: (tx: TSqliteSession<I>) => T | Promise<T>): Promise<T> => {
     const outermost = queue.depth === 0;
     const savepoint = `fundamentool_${queue.depth}`;
-    const inner = queueOf(queue.depth + 1);
+    const inner = queueOf(queue);
+    const session = sessionOf(inner);
     const rollback = (): void => {
       try {
         instance.exec(outermost ? ROLLBACK : `ROLLBACK TO ${savepoint}; RELEASE ${savepoint}`);
@@ -185,7 +241,7 @@ export function sqliteAdapter<I extends TSqliteDatabasePort>(instance: I, option
     };
     let result: T;
     try {
-      result = await fn(sessionOf(inner));
+      result = await (context === undefined ? fn(session) : context.run(inner, () => fn(session)));
       await drain(inner);
     } catch (error) {
       await drain(inner);
@@ -277,7 +333,7 @@ export function sqliteAdapter<I extends TSqliteDatabasePort>(instance: I, option
     };
   }
 
-  const connection = queueOf(0);
+  const connection = queueOf(undefined);
   return {
     ...sessionOf(connection),
     migrate: (migrations) => turn(connection, async () => {

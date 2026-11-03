@@ -151,8 +151,20 @@ The base writes the forms SQLite and PostgreSQL share: `LIMIT`, `ON CONFLICT`, `
   through it — `tx.prepare(statement)` takes one prepared on `db`, with nothing compiled or prepared again. `COMMIT`
   waits for what the function left running on `tx`; a rejection or a failed `COMMIT` rolls back and is passed on. `tx`
   after its function settled is an error: *"this transaction is over"*.
-- **The one trap:** a statement run on `db` inside the function waits for the transaction, and the transaction waits
-  for it — it never settles. Inside, it is always `tx` (as with Kysely's and Knex's `trx`).
+- **`db` inside the function is an error** (fundamentool D-094). A statement on `db` there would wait for the
+  transaction, and the transaction for the function — it would never settle. So it is rejected at once, naming the fix:
+
+  ```ts
+  await db.transaction(async (tx) => {
+    await tx.prepare(forgetFile).run({ file });   // tx — inside the transaction
+    return db.prepare(ofFile).all({ file });      // rejects: "… run it on the transaction's own session: tx.prepare(…)"
+  });                                             // and the transaction rolls back, as for any error in it
+  ```
+
+  The same for `db.transaction`, `db.exec` and the rest, and for an outer `tx` inside a nested transaction. Other
+  code's statements still wait, as above: the adapter tells them apart by Node's `AsyncLocalStorage` (the call chain
+  the function was started in). Once the function settled, what it left behind (a timer) may use `db`. Where
+  `AsyncLocalStorage` can't be reached (Node before 22.3, a browser), the check is off and such a call waits forever.
 - **`iterate`** waits for its turn to start, then streams without holding the connection: better-sqlite3 refuses
   another statement on it until the loop ends (*"busy executing a query"*); `node:sqlite` runs it.
 - **Migrations.** Versions are whole numbers from 1, ascending. Each `up(m)` runs in its own transaction (`m` is its
