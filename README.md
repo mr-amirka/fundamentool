@@ -68,7 +68,7 @@ npm run docs:api
 **Timers:** `wait`, `createTimeout`, `createInterval`, `queueProvider`, `sendingQueue`, `withAsyncLock` (ignores calls while one runs — a double tap)  
 **Modules:** `dynamicModule` (an async initializer run once — again after a failure; `import()` of a part loaded on demand)  
 **URL:** `urlParse`, `urlExtend`, `unparam`, `param`, `routeParseProvider`  
-**Strings:** `half`, `trim`, `toLower`, `toUpper`, `lowerFirst`, `upperFirst`, `repeat`, `escapeRegExp`, case converters (`kebabToCamelCase`, `snakeToCamelCase`, …)  
+**Strings:** `pairsProvider` / `pairsSchema` (a list option — `'a, b:c'`, `['a', 'b:c']` or `{ b: 'c' }` — read into `[name, value]` pairs, and its check), `half`, `trim`, `toLower`, `toUpper`, `lowerFirst`, `upperFirst`, `repeat`, `escapeRegExp`, case converters (`kebabToCamelCase`, `snakeToCamelCase`, …)  
 **Objects & arrays:** `merge`, `extend`, `without`, `withoutEmpty`, `pick`, `set`, `get`, `keys`, `values`, `entries`, `fromPairs`, `push`, `pushArray`, `find`, `findIndex`, `indexOf`, `includes`, `some`, `every`, `sort`, `sortBy`, `uniqWith`  
 **Templates:** `templateProvider`, `convertToBreakLineHTML`, `formatTime`, `dateToUTCString`  
 **Misc:** `noop`, `getUniqId`, `tryJsonParse`, `cloneDepth`, `globalContext`, `variants`, `variantsProvider`

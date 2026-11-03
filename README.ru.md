@@ -67,7 +67,8 @@ MIT
 - **События**: `attachEvent`, `EventEmitter`, `subscribe`, `Unsubscriber`, `keyedRegistry`
 - **Асинхронность**: `wait`, `createTimeout`, `createInterval`
 - **Объекты и массивы**: `merge`, `without`, `extend`-подобная логика, `get` по пути
-- **Строки**: `half`, `halfLast` — разбиение по разделителю
+- **Строки**: `half`, `halfLast` — разбиение по разделителю; `pairsProvider` / `pairsSchema` — опция-список (`'a, b:c'`, `['a', 'b:c']` или `{ b: 'c' }`) в пары
+  `[имя, значение]` и её проверка
 - **Прочее**: `noop`, `getUniqId`, `tryJsonParse`, провайдеры (queue, template, router и др.)
 
 Точный список экспортов — в `src/index.ts`. Подробное API — в сгенерированной документации (`npm run docs:api`).

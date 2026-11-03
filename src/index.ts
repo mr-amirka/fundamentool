@@ -119,6 +119,8 @@ export * from './once';
 export * from './onlyBy';
 export * from './padEnd';
 export * from './padStart';
+export * from './pairsProvider';
+export * from './pairsSchema';
 export * from './param';
 export * from './physicRenderProvider';
 export * from './pick';
