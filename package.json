@@ -297,5 +297,12 @@
     "typedoc-plugin-markdown": "^4.11.0",
     "typescript": "^5.9.3",
     "vitepress": "^1.6.4"
+  },
+  "lab": {
+    "layer": "core",
+    "folders": {
+      "src/view": "bindings",
+      "src/router": "domain"
+    }
   }
 }

@@ -18,6 +18,7 @@ function fallbackContext(): any {
 /**
  * Unified access to the global object in any environment.
  *
+ * @runtime any
  * @returns The global object (`globalThis`, `window`, `self`, or `global`).
  * @example
  * GLOBAL_CONTEXT.setTimeout(() => {}, 0);

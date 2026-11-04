@@ -1,0 +1,9 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/tsdoc/v0/tsdoc.schema.json",
+  "extends": ["typedoc/tsdoc.json"],
+  "tagDefinitions": [
+    { "tagName": "@kind", "syntaxKind": "block" },
+    { "tagName": "@differs", "syntaxKind": "block" },
+    { "tagName": "@runtime", "syntaxKind": "block" }
+  ]
+}
