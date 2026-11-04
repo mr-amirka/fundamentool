@@ -40,4 +40,48 @@ describe('toFixed', () => {
     expect(toFixed(0.58)).toBe('.58');
     expect(toFixed(100 * 2 / 3)).toBe('66.67');
   });
+
+  // The fast path must give exactly what the long way gives: every short text is checked against it.
+  test.each([
+    '0',
+    '10',
+    '007',
+    '1.5',
+    '1.25',
+    '1.05',
+    '1.50',
+    '1.125',
+    '.5',
+    '0.5',
+    '00.5',
+    '0.05',
+    '1.',
+    '.',
+    '1..2',
+    '',
+    ' 10',
+    '-10',
+    '1e3',
+    '1234567890123456',
+  ])('text %j: the fast path agrees with the long way', (text) => {
+    const long = (Math.round(+text * 100) * 0.01).toFixed(2).replace(/^0+|\.?0+$/g, '') || '0';
+    if (isNaN(+text * 100)) {
+      expect(() => toFixed(text)).toThrow();
+    } else {
+      expect(toFixed(text)).toBe(long);
+    }
+  });
+
+  test.each([
+    0,
+    -0,
+    7,
+    -5,
+    999999999999999,
+    1e15,
+    1e21,
+    Infinity,
+  ])('whole number %d: the fast path agrees with the long way', (value) => {
+    expect(toFixed(value)).toBe((Math.round(value * 100) * 0.01).toFixed(2).replace(/^0+|\.?0+$/g, '') || '0');
+  });
 });

@@ -160,6 +160,10 @@ describe('cssValuesProvider — math', () => {
       '200%',
     ],
     [
+      '2*$a+1',
+      'calc(2 * var(--a) + 1px)',
+    ],
+    [
       '1/3+10',
       'calc(33.33% + 10px)',
     ],

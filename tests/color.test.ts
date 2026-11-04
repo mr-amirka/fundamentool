@@ -132,3 +132,50 @@ describe('colorRange — the default precision', () => {
     ]);
   });
 });
+
+describe('color — the fast path agrees with the long way', () => {
+  /** The long way: to channels and back. */
+  const long = (v: string) => color.base(color.normalize(v));
+  const HEX = '0123456789abcdefABCDEF';
+
+  test('every code of one and three digits', () => {
+    const misses: string[] = [];
+    let a: string;
+    let b: string;
+    let c: string;
+    for (a of HEX) {
+      long(a)[0] === color(a)[0] || misses.push(a);
+      for (b of HEX) {
+        for (c of HEX) {
+          long(a + b + c)[0] === color(a + b + c)[0] || misses.push(a + b + c);
+        }
+      }
+    }
+    expect(misses).toEqual([]);
+  });
+
+  test('six digits: pairs and a spread of values', () => {
+    const misses: string[] = [];
+    let n = 0;
+    let v: string;
+    for (; n < 0x1000000; n += 4099) {
+      v = n.toString(16).padStart(6, '0');
+      long(v)[0] === color(v)[0] || misses.push(v);
+      v = v.toUpperCase();
+      long(v)[0] === color(v)[0] || misses.push(v);
+    }
+    expect(misses).toEqual([]);
+    expect(color('FF0000')).toEqual(['#f00']);
+    expect(color('FF8000')).toEqual(['#ff8000']);
+  });
+
+  test.each([
+    'G00',
+    'F0G',
+    'ffff0g',
+    'Red',
+  ])('%s is no code: the long way, as before', (v) => {
+    expect(color(v)).toEqual([v[0].toLowerCase() + v.slice(1)]);
+  });
+});
+

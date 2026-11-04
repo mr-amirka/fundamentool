@@ -249,8 +249,6 @@ const KIND_BARE = 0;
 /** Everything else: a number with a unit, a fraction, a variable, a function, a group. */
 const KIND_DIMENSION = 1;
 
-/** A whole value that is zero, with a unit or without: `0`, `-0`, `0px`. Written `0`. */
-const REGEXP_WHOLE_ZERO = /^-?0([a-z%]*)$/;
 
 // The spelling in use: copied from a provider's state when another provider's reader ran last — not per character.
 let current: TState | undefined;
@@ -380,7 +378,8 @@ function stateOf(options: TCssValuesOptions): TState {
     angle: new RegExp('^(.*)((' + escapeRegExp(gradient.radial) + ')' + space + '?([A-Za-z' + space + ']*)|'
       + escapeRegExp(gradient.angle) + '(-?[0-9]+))$', IGNORE_CASE),
     codeStop: new RegExp('^([A-Fa-f0-9]+(\\.[0-9]+)?)(' + stop + '([0-9]+)([a-z%]*))?$', IGNORE_CASE),
-    stop: new RegExp('^' + stop + '([0-9]+)([a-z%]*)', IGNORE_CASE),
+    // Sticky: read where the variable ends, without cutting the rest out.
+    stop: new RegExp(stop + '([0-9]+)([a-z%]*)', IGNORE_CASE + 'y'),
     space: new RegExp(space + '+'),
   };
 }
@@ -417,13 +416,25 @@ function readValue(expr: string, rulesValue: TMathRules): string {
     bareOps = 0;
     return css;
   }
-  const zero = REGEXP_WHOLE_ZERO.exec(expr);
-  if (zero) {
-    zero[1] && checkUnit(zero[1]);
-    return ZERO;
+  // A whole value that is zero, with a unit or without — `0`, `-0`, `0px` — is written `0`.
+  const minus = expr[0] === DASH;
+  const zeroAt = minus ? 1 : 0;
+  if (expr[zeroAt] === ZERO) {
+    let i = zeroAt + 1;
+    let ch: string;
+    for (; i < end; i++) {
+      ch = expr[i];
+      if (!(ch >= LOWER_A && ch <= LOWER_Z || ch === PERCENT)) {
+        break;
+      }
+    }
+    if (i === end) {
+      i > zeroAt + 1 && checkUnit(expr.slice(zeroAt + 1));
+      return ZERO;
+    }
   }
   end || invalid('a value is expected');
-  expr[0] === DASH && expr[1] !== DASH && !rules.negative && throwRule('negative value is not allowed for this property');
+  minus && expr[1] !== DASH && !rules.negative && throwRule('negative value is not allowed for this property');
   const text = readSum();
   pos < end && unexpected();
   return sumOps ? CALC_OPEN + text + CLOSE_PAREN : text;
@@ -483,12 +494,18 @@ function readSum(): string {
  */
 function readProduct(sign: string): string {
   factorFirst = 1;
-  const texts: string[] = [readFactor(sign)];
-  const kinds: number[] = [factorKind];
+  const first = readFactor(sign);
+  const firstKind = factorKind;
+  let ch = src[pos];
+  // One factor — most values: no lists.
+  if (ch !== ASTERISK && ch !== SLASH) {
+    factorKind = firstKind === KIND_DIMENSION && first[0] === OPEN_PAREN ? 1 : 0;
+    return firstKind === KIND_BARE ? lengthText(first) : first;
+  }
+  const texts: string[] = [first];
+  const kinds: number[] = [firstKind];
   const ops: string[] = [];
-  let bare = factorKind === KIND_BARE ? 1 : 0;
-  let group = factorKind === KIND_DIMENSION && texts[0][0] === OPEN_PAREN ? 1 : 0;
-  let ch: string;
+  let bare = firstKind === KIND_BARE ? 1 : 0;
   while (pos < end) {
     ch = src[pos];
     if (ch !== ASTERISK && ch !== SLASH) {
@@ -503,13 +520,14 @@ function readProduct(sign: string): string {
     factorKind === KIND_BARE || (bare = 0);
   }
   const l = texts.length;
-  let text = kinds[0] === KIND_BARE && (bare || l === 1) ? lengthText(texts[0]) : numberText(texts[0], kinds[0]);
+  // `bare` — every factor is a bare number: the first is the length (`10*2` → `10px * 2`).
+  let text = bare ? lengthText(first) : numberText(first, firstKind);
   let i = 1;
   for (; i < l; i++) {
     text += SPACE + ops[i - 1] + SPACE + numberText(texts[i], kinds[i]);
   }
-  l > 1 && (group = 1);
-  factorKind = group;
+  // Operators: `calc` is needed.
+  factorKind = 1;
   return text;
 }
 
@@ -851,6 +869,7 @@ function readStops(
   const open = state.open;
   const close = state.close;
   const nameEnd = state.nameEnd;
+  const stopAfter = state.stop;
   let pos = 0;
   let start: number;
   let item: string;
@@ -891,8 +910,9 @@ function readStops(
       item = v.slice(start, pos);
       v[pos] === nameEnd && pos++;
       colors.push(color(item));
-      m = state.stop.exec(v.slice(pos));
-      m && (pos += m[0].length);
+      stopAfter.lastIndex = pos;
+      m = stopAfter.exec(v);
+      m && (pos = stopAfter.lastIndex);
       stops.push(m ? m[1] + (m[2] || PERCENT) : '');
     } else {
       while (pos < end && (ch = v[pos]) !== join && ch !== variable && ch !== envFirst) {

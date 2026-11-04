@@ -4,6 +4,7 @@ import {
 
 const COMMA = ',';
 const ZERO = '0';
+const HASH = '#';
 
 const regexpTrimZero = /^0+|0+$/g;
 const regexpColor = /^([A-Fa-f0-9]+)(\.[0-9]+)?$/;
@@ -43,6 +44,14 @@ export const color: IColor = (v: string, alt?: boolean): string[] => {
     return [synonym];
   }
 
+  // The commonest codes — one, three or six hex digits, no alpha — are already their result, lower-cased and short.
+  const l = v.length;
+  if (l === 3 || l === 6 || l === 1) {
+    const hex = plainHex(v, l);
+    if (hex) {
+      return [hex];
+    }
+  }
   const m = regexpColor.exec(v);
   if (m) {
     return base(normalize(m[1], m[2]), alt);
@@ -209,5 +218,28 @@ const rgbStringify = color.rgbStringify = (rgb: number[]): string => {
     }
     output[i] = v;
   }
-  return '#' + (oneFlag ? '' + output[0][0] + output[1][0] + output[2][0] : output.join(''));
+  return HASH + (oneFlag ? '' + output[0][0] + output[1][0] + output[2][0] : output.join(''));
 };
+
+/**
+ * The fast path of {@link color}: a code of one, three or six hex digits as `#rgb` / `#rrggbb` — what the long way
+ * (to channels and back) gives, with no arithmetic: `F` → `#fff`, `F00` → `#f00`, `FF0000` → `#f00`, `FF8000` →
+ * `#ff8000`.
+ *
+ * @param v - The code.
+ * @param l - Its length: 1, 3 or 6.
+ * @returns The colour, or `''` if the code has a character that is not a hex digit.
+ */
+function plainHex(v: string, l: number): string {
+  let i = 0;
+  let ch: string;
+  for (; i < l; i++) {
+    ch = v[i];
+    if (!(ch >= ZERO && ch <= '9' || ch >= 'a' && ch <= 'f' || ch >= 'A' && ch <= 'F')) {
+      return '';
+    }
+  }
+  const s = v.toLowerCase();
+  return l === 1 ? HASH + s + s + s : l === 3 ? HASH + s : s[0] === s[1] && s[2] === s[3] && s[4] === s[5]
+    ? HASH + s[0] + s[2] + s[4] : HASH + s;
+}
