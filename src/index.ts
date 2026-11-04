@@ -11,6 +11,7 @@ export * from './assertKnownOptions';
 export * from './attachEvent';
 export * from './describeValue';
 export * from './editDistance';
+export * from './hashText';
 export * from './bind';
 export * from './bindMethods';
 export * from './bracketPairs';
