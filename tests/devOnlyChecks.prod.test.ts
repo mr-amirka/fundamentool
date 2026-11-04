@@ -23,9 +23,11 @@ import { localeViewProvider } from './src/view';
 import { escapedSplitProvider } from './src/escapedSplitProvider';
 import { bracketPairs } from './src/bracketPairs';
 import { cssValuesProvider, mathRules } from './src/css';
+import { applyEdits, parseSource, sourceStringsProvider, syntaxStringsProvider, syntaxValueRanges } from './src/source';
 console.log(createRouter, createNavigator, memoryHistoryPrimitivesProvider, linksProvider, viewHooksProvider,
   withAsyncLock, createSparseCodec, createLocale, createMessages, createI18n, localeViewProvider, escapedSplitProvider,
-  bracketPairs, cssValuesProvider, mathRules);
+  bracketPairs, cssValuesProvider, mathRules, applyEdits, parseSource, sourceStringsProvider, syntaxStringsProvider,
+  syntaxValueRanges);
 `;
 
 /** Texts only the schema library and the option checks hold. */

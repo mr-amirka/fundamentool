@@ -22,6 +22,9 @@
       "css": [
         "dist/css/index.d.ts"
       ],
+      "source": [
+        "dist/source/index.d.ts"
+      ],
       "match": [
         "dist/match/index.d.ts"
       ],
@@ -133,6 +136,12 @@
       "module": "./dist/esm/css/index.js",
       "import": "./dist/esm/css/index.js",
       "default": "./dist/css/index.js"
+    },
+    "./source": {
+      "types": "./dist/source/index.d.ts",
+      "module": "./dist/esm/source/index.js",
+      "import": "./dist/esm/source/index.js",
+      "default": "./dist/source/index.js"
     },
     "./match": {
       "types": "./dist/match/index.d.ts",
