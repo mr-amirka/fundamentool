@@ -40,6 +40,7 @@ npm run docs:api
 | `fundamentool/async` | Асинхронные итераторы, параллельное выполнение, последовательность |
 | `fundamentool/is` | Предикаты типов (`isString`, `isEqual`, `isMatch` и др.) |
 | `fundamentool/schema` | Схемы опций с именами zod: `object`, `array`, `string`, … — проверка, тип и список ключей из одного описания ([README](src/schema/README.ru.md)) |
+| `fundamentool/css` | Значения CSS из короткой записи в нотации вызывающего: математика с единицами (`100%-2*$gap` → `calc(100% - 2 * var(--gap))`), переменные, цвета, градиенты; `cssMediaCondition`, `childCombinator` ([README](src/css/README.ru.md)) |
 | `fundamentool/match` | Фильтр как данные: шаблон, скомпилированный один раз в предикат (`matchProvider`), тот же шаблон деревом для SQL (`normalizeMatch`), операторы, которые проект расширяет (`STANDARD_OPERATORS`) ([README](src/match/README.ru.md)) |
 | `fundamentool/hooks` | Именованные моменты, в которые хост даёт действовать пресетам: четыре вида синхронных хуков (`eachHook`, `waterfallHook`, `bailHook`, `chainHook`), хуки по ключу (`hookMap`), хуки хоста по имени (`namedHooks`), порядок пресетов по их зависимостям (`orderPresets`) ([README](src/hooks/README.ru.md)) |
 | `fundamentool/async/hooks` | Те же виды под теми же именами для обработчиков, которые могут ждать, — обработчик возвращает значение или промис одинаково, `run` возвращает промис — и `parallelHook`, все обработчики сразу ([README](src/async/hooks/README.ru.md)) |

@@ -22,9 +22,10 @@ import { createLocale, createMessages, createI18n } from './src/i18n';
 import { localeViewProvider } from './src/view';
 import { escapedSplitProvider } from './src/escapedSplitProvider';
 import { bracketPairs } from './src/bracketPairs';
+import { cssValuesProvider, mathRules } from './src/css';
 console.log(createRouter, createNavigator, memoryHistoryPrimitivesProvider, linksProvider, viewHooksProvider,
   withAsyncLock, createSparseCodec, createLocale, createMessages, createI18n, localeViewProvider, escapedSplitProvider,
-  bracketPairs);
+  bracketPairs, cssValuesProvider, mathRules);
 `;
 
 /** Texts only the schema library and the option checks hold. */

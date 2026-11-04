@@ -19,6 +19,9 @@
       "schema": [
         "dist/schema/index.d.ts"
       ],
+      "css": [
+        "dist/css/index.d.ts"
+      ],
       "match": [
         "dist/match/index.d.ts"
       ],
@@ -124,6 +127,12 @@
       "module": "./dist/esm/schema/index.js",
       "import": "./dist/esm/schema/index.js",
       "default": "./dist/schema/index.js"
+    },
+    "./css": {
+      "types": "./dist/css/index.d.ts",
+      "module": "./dist/esm/css/index.js",
+      "import": "./dist/esm/css/index.js",
+      "default": "./dist/css/index.js"
     },
     "./match": {
       "types": "./dist/match/index.d.ts",
