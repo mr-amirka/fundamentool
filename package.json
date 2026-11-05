@@ -28,6 +28,9 @@
       "match": [
         "dist/match/index.d.ts"
       ],
+      "vectors": [
+        "dist/vectors/index.d.ts"
+      ],
       "hooks": [
         "dist/hooks/index.d.ts"
       ],
@@ -148,6 +151,12 @@
       "module": "./dist/esm/match/index.js",
       "import": "./dist/esm/match/index.js",
       "default": "./dist/match/index.js"
+    },
+    "./vectors": {
+      "types": "./dist/vectors/index.d.ts",
+      "module": "./dist/esm/vectors/index.js",
+      "import": "./dist/esm/vectors/index.js",
+      "default": "./dist/vectors/index.js"
     },
     "./hooks": {
       "types": "./dist/hooks/index.d.ts",
