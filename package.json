@@ -31,6 +31,9 @@
       "vectors": [
         "dist/vectors/index.d.ts"
       ],
+      "embeddings": [
+        "dist/embeddings/index.d.ts"
+      ],
       "hooks": [
         "dist/hooks/index.d.ts"
       ],
@@ -157,6 +160,12 @@
       "module": "./dist/esm/vectors/index.js",
       "import": "./dist/esm/vectors/index.js",
       "default": "./dist/vectors/index.js"
+    },
+    "./embeddings": {
+      "types": "./dist/embeddings/index.d.ts",
+      "module": "./dist/esm/embeddings/index.js",
+      "import": "./dist/esm/embeddings/index.js",
+      "default": "./dist/embeddings/index.js"
     },
     "./hooks": {
       "types": "./dist/hooks/index.d.ts",
