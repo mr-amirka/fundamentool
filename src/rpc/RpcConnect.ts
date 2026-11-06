@@ -251,9 +251,10 @@ export class RpcConnect {
             },
           );
           isError = 1;
-          result = new Error(`${methodPath}: ${error.toString()}`);
-          result.name = error.name;
-          result.code = error.code;
+          // The method's name, then the error's own message: its class crosses as `name` (fundamentool D-103)
+          result = new Error(`${methodName}: ${error instanceof Error ? error.message : String(error)}`);
+          result.name = error?.name ?? 'Error';
+          result.code = error?.code;
         }
         return [
           isError,

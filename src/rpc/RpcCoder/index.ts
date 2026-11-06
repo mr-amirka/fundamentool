@@ -18,6 +18,16 @@ import {
   isObject,
 } from '../../is/isObject';
 
+/** The standard error classes, by name: what a decoded error is built as. */
+const STANDARD_ERRORS: Record<string, ErrorConstructor | undefined> = {
+  EvalError,
+  RangeError,
+  ReferenceError,
+  SyntaxError,
+  TypeError,
+  URIError,
+};
+
 export * from './RpcFnCoder';
 export * from './RpcSymbolCoder';
 
@@ -407,7 +417,8 @@ export class RpcCoder {
 
         case TRpcEncodedType.Error: {
           const source = decodeObject(encodedValue[1]);
-          const error = new Error(source.message);
+          // A standard class comes back as itself — a `TypeError` stays `instanceof TypeError` (fundamentool D-103)
+          const error = new (STANDARD_ERRORS[source.name] ?? Error)(source.message);
           error.name = source.name;
           (error as any).code = source.code;
           return error;

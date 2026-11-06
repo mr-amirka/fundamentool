@@ -32,15 +32,14 @@ const values = parse('{"id":1}\n{"id":2}');
 
 ### `Decoder`
 
-Transform-поток, который декодирует байтовый поток JSONL-данных в поток распарсенных JavaScript-значений. Каждый входящий чанк разбивается по символу новой строки и разбирается через `JSON.parse`.
+Потоковый декодер JSONL-текста: `write(chunk)` возвращает значения строк, которые этот кусок дописал, `end()` — значение
+последней строки; это `LineDecoder` с `JSON.parse`. Он принимает строки: байты сначала декодируйте (`StringDecoder`).
+Node-поток `Transform` значений — `node.jsonl.TransformFrom` в [`fundamentool/node`](../node/README.md).
 
 ```ts
-import { createReadStream } from 'fs';
-
 const decoder = new Decoder();
-createReadStream('data.jsonl')
-  .pipe(decoder)
-  .on('data', (value) => console.log(value));
+decoder.write('{"a":1}\n{"b"'); // [{ a: 1 }]
+decoder.end('2}');              // [{ b: 2 }]
 ```
 
 ---

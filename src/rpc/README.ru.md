@@ -8,7 +8,7 @@
 |-------------|------------|
 | `fundamentool/rpc` | Универсальное ядро: `RpcClient`, `RpcConnect`, `RpcClientPool`, `RpcCoder` |
 | `fundamentool/rpc/browser` | Browser-воркеры: `RpcClientWorker`, `RpcConnectWorker`, `RpcClientWorkerPool` |
-| `fundamentool/rpc/node` | Node.js-воркеры: `NodeRpcClientWorker`, `NodeRpcConnectWorker`, `NodeRpcClientWorkerPool` |
+| `fundamentool/rpc/node` | Node.js: воркеры (`NodeRpcClientWorker`, `NodeRpcConnectWorker`, `NodeRpcClientWorkerPool`) и `rpcStreamTransport` поверх потока |
 
 ---
 
@@ -99,6 +99,50 @@ import { RpcClientWorker } from 'fundamentool/rpc/browser';
 const worker = new RpcClientWorker(new Worker('./worker.js'));
 const result = await worker.call('compute', [21]); // 42
 worker.destroy();
+```
+
+---
+
+## Поверх Node-потока — сокет, stdio дочернего процесса
+
+`rpcStreamTransport(stream, { head? })` (`fundamentool/rpc/node`) — транспорт поверх любого Node `Duplex`: одно
+JSON-сообщение на строку. Строка, которая не JSON, — предупреждение, и она пропускается. `head` — то, что уже прочитано
+из потока до передачи, например остаток рукопожатия; его строки читаются первыми. Поток остаётся вашим: когда он
+закрылся, уничтожьте клиент или соединение. `client.destroy(reason)` отклоняет все ещё ждущие вызовы с `reason`
+(fundamentool D-103).
+
+```ts
+import * as net from 'node:net';
+import { RpcClient, RpcConnect } from 'fundamentool/rpc';
+import { rpcStreamTransport } from 'fundamentool/rpc/node';
+
+// сервер: по RpcConnect на соединение
+net.createServer((socket) => {
+  const connect = new RpcConnect({
+    exports: { count: async (to: number, onStep: (step: number) => void) => { for (let i = 1; i <= to; i++) onStep(i); return to; } },
+    ...rpcStreamTransport(socket),
+  });
+  socket.on('close', () => connect.destroy());
+}).listen('/tmp/app.sock');
+
+// клиент
+const socket = net.connect('/tmp/app.sock');
+const client = new RpcClient(rpcStreamTransport(socket));
+socket.on('close', () => client.destroy(new Error('сервер ушёл — вызовите снова')));
+await client.call('count', [3, (step: number) => console.log(step)]); // печатает 1, 2, 3; даёт 3
+```
+
+## Ошибки через канал
+
+Метод, который бросил, отклоняет вызов клиента ошибкой с именем исходной — стандартный класс (`TypeError`,
+`RangeError`, …) возвращается этим классом, так что `instanceof TypeError` верно, — и сообщением
+`"метод: её сообщение"`; её `code` тоже передаётся.
+
+```ts
+// сервер: validate: (n) => { throw new TypeError('expects a number'); }
+const error = await client.call('validate', ['x']).catch((e) => e);
+error instanceof TypeError; // true
+error.message;              // 'validate: expects a number'
 ```
 
 ---

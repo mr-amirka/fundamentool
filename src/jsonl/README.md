@@ -32,15 +32,14 @@ const values = parse('{"id":1}\n{"id":2}');
 
 ### `Decoder`
 
-A `Transform` stream that decodes a byte stream of JSONL data into a stream of parsed JavaScript values. Each incoming chunk is split on newline boundaries and parsed with `JSON.parse`.
+A streaming decoder of JSONL text: `write(chunk)` returns the values of the lines the chunk completed, `end()` those of
+the last line — a `LineDecoder` with `JSON.parse`. It takes strings: decode bytes first (`StringDecoder`). For a Node
+`Transform` stream of values, see `node.jsonl.TransformFrom` in [`fundamentool/node`](../node/README.md).
 
 ```ts
-import { createReadStream } from 'fs';
-
 const decoder = new Decoder();
-createReadStream('data.jsonl')
-  .pipe(decoder)
-  .on('data', (value) => console.log(value));
+decoder.write('{"a":1}\n{"b"'); // [{ a: 1 }]
+decoder.end('2}');              // [{ b: 2 }]
 ```
 
 ---

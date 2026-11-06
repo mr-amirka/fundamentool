@@ -8,7 +8,7 @@ Type-safe bidirectional RPC over any message channel (Worker, WebSocket, iframe,
 |-------------|----------|
 | `fundamentool/rpc` | Universal core: `RpcClient`, `RpcConnect`, `RpcClientPool`, `RpcCoder` |
 | `fundamentool/rpc/browser` | Browser workers: `RpcClientWorker`, `RpcConnectWorker`, `RpcClientWorkerPool` |
-| `fundamentool/rpc/node` | Node.js workers: `NodeRpcClientWorker`, `NodeRpcConnectWorker`, `NodeRpcClientWorkerPool` |
+| `fundamentool/rpc/node` | Node.js: workers (`NodeRpcClientWorker`, `NodeRpcConnectWorker`, `NodeRpcClientWorkerPool`) and `rpcStreamTransport` over a stream |
 
 ---
 
@@ -99,6 +99,50 @@ import { RpcClientWorker } from 'fundamentool/rpc/browser';
 const worker = new RpcClientWorker(new Worker('./worker.js'));
 const result = await worker.call('compute', [21]); // 42
 worker.destroy();
+```
+
+---
+
+## Over a Node stream — a socket, a child's stdio
+
+`rpcStreamTransport(stream, { head? })` (`fundamentool/rpc/node`) is the transport over any Node `Duplex`: one JSON
+message per line. A line that is no JSON is warned of and skipped. `head` is what was read from the stream before it
+was handed over, such as a handshake's rest; its lines are read first. The stream stays yours: when it closes, destroy
+the client or the connection. `client.destroy(reason)` rejects every call still waiting with `reason`
+(fundamentool D-103).
+
+```ts
+import * as net from 'node:net';
+import { RpcClient, RpcConnect } from 'fundamentool/rpc';
+import { rpcStreamTransport } from 'fundamentool/rpc/node';
+
+// the server: one RpcConnect per connection
+net.createServer((socket) => {
+  const connect = new RpcConnect({
+    exports: { count: async (to: number, onStep: (step: number) => void) => { for (let i = 1; i <= to; i++) onStep(i); return to; } },
+    ...rpcStreamTransport(socket),
+  });
+  socket.on('close', () => connect.destroy());
+}).listen('/tmp/app.sock');
+
+// the client
+const socket = net.connect('/tmp/app.sock');
+const client = new RpcClient(rpcStreamTransport(socket));
+socket.on('close', () => client.destroy(new Error('the server went away — call again')));
+await client.call('count', [3, (step: number) => console.log(step)]); // logs 1, 2, 3; resolves 3
+```
+
+## Errors across the channel
+
+A method that throws rejects the client's call with an error named as the original — a standard class (`TypeError`,
+`RangeError`, …) comes back as that class, so `instanceof TypeError` holds — and the message `"method: its message"`;
+its `code` crosses too.
+
+```ts
+// server: validate: (n) => { throw new TypeError('expects a number'); }
+const error = await client.call('validate', ['x']).catch((e) => e);
+error instanceof TypeError; // true
+error.message;              // 'validate: expects a number'
 ```
 
 ---

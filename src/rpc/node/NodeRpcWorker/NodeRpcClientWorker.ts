@@ -57,8 +57,8 @@ export class NodeRpcClientWorker extends RpcClient {
    * Unsubscribes from the worker's messages and terminates the underlying
    * `worker_threads.Worker` so it stops keeping the host process alive.
    */
-  destroy() {
-    super.destroy();
+  destroy(reason?: Error) {
+    super.destroy(reason);
     this.worker.terminate().catch(noop);
   }
 }

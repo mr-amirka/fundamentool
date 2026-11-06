@@ -71,8 +71,21 @@ export class RpcClient extends EventEmitter implements IRpcClient {
     return this.taskMap.size;
   }
 
-  destroy() {
+  /**
+   * Stops listening, and rejects every call still waiting — a closed channel answers none of them (fundamentool D-103).
+   *
+   * @param reason - What they reject with; default `Error('Client: destroyed')`.
+   * @example
+   * socket.on('close', () => client.destroy(new Error('the server went away — call again')));
+   */
+  destroy(reason?: Error) {
     this.unsubscriber.unsubscribe();
+    const waiting = [...this.taskMap.values()];
+    this.taskMap.clear();
+    const error = reason ?? new Error('Client: destroyed');
+    for (const task of waiting) {
+      task[0](error, 1);
+    }
     super.destroy();
   }
 

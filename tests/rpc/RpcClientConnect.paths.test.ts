@@ -103,7 +103,7 @@ describe('RpcClient ↔ RpcConnect — every path', () => {
       },
     });
     const failure = await client.call('fail').catch((caught) => caught);
-    expect(failure.message).toBe('fail: AccessError: denied'); // the method's path and the original, as the server wraps it
+    expect(failure.message).toBe('fail: denied'); // the method's name and the original message; the class crosses as `name`
     expect(failure.name).toBe('AccessError');
     expect(failure.code).toBe(403);
   });

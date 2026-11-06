@@ -111,10 +111,10 @@ export class RpcClientPool<Client extends IRpcClient = IRpcClient> extends Event
     this.maxWorkers = selfOptions.maxWorkers || 1;
   }
 
-  /** Destroys all workers in the pool and the pool itself. */
-  destroy() {
+  /** Destroys all workers in the pool and the pool itself; their waiting calls reject with `reason`. */
+  destroy(reason?: Error) {
     for (const worker of this.workers) {
-      worker.destroy();
+      worker.destroy(reason);
     }
     super.destroy();
   }

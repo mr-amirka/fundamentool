@@ -328,8 +328,8 @@ export type TRpcClientOptionsInit = () => TRpcClientOptions;
 export interface IRpcClient extends IEventEmitter<any> {
   /** Returns the number of currently pending calls. */
   taskCount(): number;
-  /** Destroys the client and releases resources. */
-  destroy(): void;
+  /** Destroys the client and releases resources; the calls still waiting reject with `reason`. */
+  destroy(reason?: Error): void;
   /**
    * Calls a remote method and returns a Promise of its result.
    * @param method - Method name exported by `RpcConnect`.
