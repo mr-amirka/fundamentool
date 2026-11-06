@@ -6,6 +6,7 @@ export {
   dot,
   fuseRanks,
   nearest,
+  type TFusedHit,
   type TNearestHit,
   type TVector,
 } from './math';

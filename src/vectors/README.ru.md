@@ -11,7 +11,7 @@ import { nearest, fuseRanks, toBytes, fromBytes, chunkText } from 'fundamentool/
 
 nearest(query, vectors, 3);                         // => [[412, 0.86], [97, 0.84], [5, 0.84]] — [индекс, оценка], лучшие первыми
 nearest(query, vectors, 3, { where: (i) => nodes[i].type === 'function' });  // спрашивается до подсчёта
-fuseRanks([wordHits, meaningHits]);                 // => ['editDistance', 'spaces', 'trim'] — слияние по местам
+fuseRanks([wordHits, meaningHits]);                 // => [['editDistance', 0.0325], ['spaces', 0.0164], …] — слияние по местам
 db.run('INSERT INTO vectors VALUES (?, ?)', [rid, toBytes(vector)]);         // столбец BLOB, и обратно: fromBytes
 chunkText(longSection, { maxWords: 200, overlap: 20 });                      // целые предложения, пока влезают
 ```
@@ -20,10 +20,10 @@ chunkText(longSection, { maxWords: 200, overlap: 20 });                      // 
 |------|------------|
 | `dot(a, b)` | Скалярное произведение — косинус двух единичных векторов, какими их даёт эмбеддер; разная длина в разработке — ошибка |
 | `nearest(query, vectors, k, { where? })` | `k` ближайших, лучшие первыми, кортежами `[индекс, оценка]`; при равных оценках первым — меньший индекс; `where(index)` отсекает до подсчёта |
-| `fuseRanks(lists, { k? })` | Слияние рейтингов (reciprocal rank fusion): место `r` (с 1) добавляет `1 / (k + r)`, `k` по умолчанию 60. Оценки разных поисков не сравнимы (BM25 не ограничен, косинус — не больше 1), места — сравнимы |
+| `fuseRanks(lists, { k? })` | Слияние рейтингов (reciprocal rank fusion): место `r` (с 1) добавляет `1 / (k + r)`, `k` по умолчанию 60; кортежи `[id, оценка]`, лучшие первыми, так что слитые списки вызывающего сравнимы между собой. Оценки разных поисков не сравнимы (BM25 не ограничен, косинус — не больше 1), места — сравнимы |
 | `toBytes(vector)`, `fromBytes(bytes)` | 32-битные числа, little-endian на любой платформе; `Buffer` Node читается со своего смещения |
 | `chunkText(text, { maxWords?, overlap? })` | Куски не длиннее `maxWords` слов (200): целые предложения, пока влезают, последнее повторяется, если не длиннее `overlap` (20); предложение длиннее режется окнами с `overlap` общими словами; `''` → `[]` |
-| `TVector`, `TNearestHit`, `WHERE` | `ArrayLike<number>`; `[индекс, оценка]`; префикс сообщений |
+| `TVector`, `TNearestHit`, `TFusedHit`, `WHERE` | `ArrayLike<number>`; `[индекс, оценка]`; `[id, оценка]`; префикс сообщений |
 
 `nearest` просматривает каждый вектор — 20 000 векторов по 384 числа это несколько миллисекунд. Индекс для миллионов
 (HNSW, `sqlite-vec`) отвечает на тот же вопрос в своём хранилище, когда понадобится.

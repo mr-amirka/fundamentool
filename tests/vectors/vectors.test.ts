@@ -157,8 +157,30 @@ describe('nearest', () => {
 });
 
 describe('fuseRanks', () => {
-  it('merges by rank: in both lists beats first in one', () => {
+  /** The ids alone, best first. */
+  const fusedIds = (...args: Parameters<typeof fuseRanks>): string[] => fuseRanks(...args).map(([id]) => id);
+
+  it('gives each id its fused score: 1 / (k + rank), summed over the lists', () => {
     expect(fuseRanks([
+      [
+        'a',
+        'b',
+      ],
+      ['b'],
+    ])).toEqual([
+      [
+        'b',
+        1 / 62 + 1 / 61,
+      ],
+      [
+        'a',
+        1 / 61,
+      ],
+    ]);
+  });
+
+  it('merges by rank: in both lists beats first in one', () => {
+    expect(fusedIds([
       [
         'editDistance',
         'trim',
@@ -175,7 +197,7 @@ describe('fuseRanks', () => {
   });
 
   it('an id twice in one list counts once, at its first place; equal scores keep the order first seen', () => {
-    expect(fuseRanks([
+    expect(fusedIds([
       [
         'a',
         'a',
@@ -203,14 +225,14 @@ describe('fuseRanks', () => {
       ],
       ['b'],
     ];
-    expect(fuseRanks(lists, {
+    expect(fusedIds(lists, {
       k: 0,
     })).toEqual([
       'b',
       'a',
       'c',
     ]);
-    expect(fuseRanks(lists)).toEqual([
+    expect(fusedIds(lists)).toEqual([
       'b',
       'a',
       'c',
@@ -218,8 +240,8 @@ describe('fuseRanks', () => {
   });
 
   it('no lists, or empty ones: no ids', () => {
-    expect(fuseRanks([])).toEqual([]);
-    expect(fuseRanks([
+    expect(fusedIds([])).toEqual([]);
+    expect(fusedIds([
       [],
       [],
     ])).toEqual([]);

@@ -9,6 +9,9 @@ export type TVector = ArrayLike<number>;
 /** One of `nearest`'s hits: the vector's index in the list and its score, `[index, score]` (`coding.md` § 2). */
 export type TNearestHit = [index: number, score: number];
 
+/** One of `fuseRanks`' hits: the id and its fused score, `[id, score]`. */
+export type TFusedHit = [id: string, score: number];
+
 /** The prefix of the module's messages. */
 export const WHERE = '[fundamentool/vectors]';
 
@@ -92,12 +95,14 @@ export function nearest(
  *
  * @param lists   - The rankings, each its ids best first; an id twice in one list counts at its first place.
  * @param options - `k` (default 60): how much a top place outweighs a lower one — smaller favours the top.
- * @returns The ids, best first; equal scores keep the order in which they were first seen.
+ * @returns `[id, score]` tuples, best first, as `nearest` gives `[index, score]`; equal scores keep the order in which
+ *   they were first seen. The score lets a caller order merged lists of its own against each other.
  * @throws {TypeError} `k` isn't a number ≥ 0.
  * @example
- * fuseRanks([['editDistance', 'trim'], ['spaces', 'editDistance']]); // => ['editDistance', 'spaces', 'trim']
+ * fuseRanks([['editDistance', 'trim'], ['spaces', 'editDistance']]);
+ * // => [['editDistance', 0.0325], ['spaces', 0.0164], ['trim', 0.0161]]
  */
-export function fuseRanks(lists: readonly (readonly string[])[], options: { k?: number } = {}): string[] {
+export function fuseRanks(lists: readonly (readonly string[])[], options: { k?: number } = {}): TFusedHit[] {
   const k = options.k ?? RRF_K;
   if (typeof k !== 'number' || !(k >= 0)) {
     throw new TypeError(`${WHERE} fuseRanks: k is a number ≥ 0, got ${String(k)}`);
@@ -116,5 +121,5 @@ export function fuseRanks(lists: readonly (readonly string[])[], options: { k?: 
     }
   }
   // A Map keeps the order of first insertion, and the sort is stable.
-  return [...scores].sort((a, b) => b[1] - a[1]).map(([id]) => id);
+  return [...scores].sort((a, b) => b[1] - a[1]);
 }
