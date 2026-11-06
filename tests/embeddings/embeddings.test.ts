@@ -42,7 +42,7 @@ describe('createEmbedder', () => {
     });
   });
 
-  it('batches of the model\'s maxBatch, vectors in order, each of unit length', async () => {
+  it('batches of the model\'s maxBatch, shortest first (equal lengths in order); vectors in the texts\' order, each of unit length', async () => {
     const model = fakeModel();
     const vectors = await createEmbedder({
       model,
@@ -55,10 +55,10 @@ describe('createEmbedder', () => {
     });
     expect(model.calls).toEqual([
       [
+        'x',
         'abc',
-        'a b',
       ],
-      ['x'],
+      ['a b'],
     ]);
     expect(vectors.map((vector) => [...vector])).toEqual([
       [

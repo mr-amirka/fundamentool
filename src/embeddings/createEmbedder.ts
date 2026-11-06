@@ -52,8 +52,9 @@ function unit(vector: TVector): Float32Array {
 }
 
 /**
- * An embedder over a model: the texts cut into batches the model takes, every vector checked to be the model's length
- * and scaled to unit length.
+ * An embedder over a model: the texts cut into batches the model takes — shortest first, so a batch's texts are of a
+ * length and none is padded to a much longer one (a third faster on the lab's sections, fundamentool D-102) — every
+ * vector checked to be the model's length, scaled to unit length and given back in the texts' order.
  *
  * @param options - `model` (the port), `batch` (texts per call, at most the model's `maxBatch`).
  * @returns The embedder.
@@ -93,21 +94,28 @@ export function createEmbedder(options: TEmbedderOptions): TEmbedder {
         }
       }
       const signal = embedOptions.signal;
-      const vectors: Float32Array[] = [];
+      const vectors: Float32Array[] = new Array(count);
+      // The texts' indexes by length: a model pads a batch to its longest text, so like lengths go together.
+      const order = Array.from({
+        length: count,
+      }, (_, index) => index).sort((a, b) => texts[a].length - texts[b].length || a - b);
       for (let start = 0; start < count; start += batch) {
         signal?.throwIfAborted();
-        const part = texts.slice(start, start + batch);
+        const indexes = order.slice(start, start + batch);
+        const part = indexes.map((index) => texts[index]);
         const got = await model.embed(
           part, role, signal,
         );
         if (got.length !== part.length) {
           throw new Error(`${where}: ${model.id} gave ${got.length} vectors for ${part.length} texts`);
         }
-        for (const vector of got) {
+        const size = got.length;
+        for (let at = 0; at < size; at++) {
+          const vector = got[at];
           if (vector.length !== model.dim) {
             throw new Error(`${where}: ${model.id} gave a vector of ${vector.length} numbers, its dim is ${model.dim}`);
           }
-          vectors.push(unit(vector));
+          vectors[indexes[at]] = unit(vector);
         }
       }
       return vectors;

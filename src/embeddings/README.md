@@ -26,7 +26,7 @@ nearest(query, vectors, 3);                          // => [[12, 0.71], [3, 0.64
 
 | Member | What it does |
 |--------|--------------|
-| `createEmbedder({ model, batch? })` | The embedder over a model: texts cut into batches of `batch` (default and at most the model's `maxBatch`) |
+| `createEmbedder({ model, batch? })` | The embedder over a model: texts cut into batches of `batch` (default and at most the model's `maxBatch`), shortest first — a model pads a batch to its longest text, so like lengths go together (a third faster on the lab's sections, D-102); the vectors come back in the texts' order |
 | `embedder.embed(texts, { as, signal? })` | The vectors, in order, each of unit length; `as` is `'query'` or `'document'`; `[]` → `[]`; an empty text is refused by its index; a vector of the wrong length is an error naming the model; `signal` stops between batches |
 | `embedder.info` | `{ id, dim }` — store `id` beside each vector: vectors of another model don't compare, and a changed `id` says which to embed again |
 | `TEmbeddingModel` | The port: `{ id, dim, maxBatch, embed(texts, role, signal?) }`. Any object of this shape is a model — one over a remote API an app writes itself (D-098: local first, remote models a door) |
