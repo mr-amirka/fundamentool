@@ -2,6 +2,12 @@
  * The math of `fundamentool/vectors` (fundamentool D-099): the dot product, the nearest vectors and a merge of rankings
  * — pure, sync, run in hot loops over thousands of vectors.
  */
+import {
+  func,
+  lazy,
+  number,
+  object,
+} from '../schema';
 
 /** A vector: the numbers of an embedding, a `Float32Array` from a model or plain numbers. */
 export type TVector = ArrayLike<number>;
@@ -17,6 +23,16 @@ export const WHERE = '[fundamentool/vectors]';
 
 /** The `k` of reciprocal rank fusion: a rank `r` adds `1 / (k + r)`; 60 is the value its authors measured best. */
 const RRF_K = 60;
+
+/** `nearest`'s options, checked in development (lab D-073). */
+const NEAREST = /*#__PURE__*/ lazy(() => object({
+  where: func().optional(),
+}));
+
+/** `fuseRanks`' options, checked in development (lab D-073). */
+const FUSE = /*#__PURE__*/ lazy(() => object({
+  k: number().min(0).optional(),
+}));
 
 /**
  * The dot product of two vectors of one length — the cosine of the angle between them when both are of unit length, as
@@ -59,6 +75,9 @@ export function nearest(
 ): TNearestHit[] {
   if (!Number.isInteger(k) || k < 0) {
     throw new TypeError(`${WHERE} nearest: k is a whole number ≥ 0, got ${String(k)}`);
+  }
+  if (process.env.NODE_ENV !== 'production') {
+    NEAREST().parse(options, `${WHERE} nearest`);
   }
   const where = options.where;
   const best: TNearestHit[] = [];
@@ -103,10 +122,10 @@ export function nearest(
  * // => [['editDistance', 0.0325], ['spaces', 0.0164], ['trim', 0.0161]]
  */
 export function fuseRanks(lists: readonly (readonly string[])[], options: { k?: number } = {}): TFusedHit[] {
-  const k = options.k ?? RRF_K;
-  if (typeof k !== 'number' || !(k >= 0)) {
-    throw new TypeError(`${WHERE} fuseRanks: k is a number ≥ 0, got ${String(k)}`);
+  if (process.env.NODE_ENV !== 'production') {
+    FUSE().parse(options, `${WHERE} fuseRanks`);
   }
+  const k = options.k ?? RRF_K;
   const scores = new Map<string, number>();
   for (const list of lists) {
     const seen = new Set<string>();

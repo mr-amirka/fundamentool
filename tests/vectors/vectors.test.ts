@@ -154,6 +154,19 @@ describe('nearest', () => {
       [1], [[1]], k,
     )).toThrow(`${WHERE} nearest: k is a whole number ≥ 0, got ${String(k)}`);
   });
+
+  it('refuses an unknown option and a filter that is no function', () => {
+    expect(() => nearest(
+      [1], [], 1, {
+        filter: () => true,
+      } as never,
+    )).toThrow(`${WHERE} nearest: unknown option "filter".`);
+    expect(() => nearest(
+      [1], [], 1, {
+        where: true,
+      } as never,
+    )).toThrow(`${WHERE} nearest: "where" expects a function, got boolean true`);
+  });
 });
 
 describe('fuseRanks', () => {
@@ -248,13 +261,28 @@ describe('fuseRanks', () => {
   });
 
   it.each([
-    -1,
-    Number.NaN,
-    '60',
-  ])('k = %p is refused', (k) => {
+    [
+      -1,
+      'number -1',
+    ],
+    [
+      Number.NaN,
+      'number NaN',
+    ],
+    [
+      '60',
+      'string "60"',
+    ],
+  ])('k = %p is refused', (k, got) => {
     expect(() => fuseRanks([], {
       k: k as number,
-    })).toThrow(`${WHERE} fuseRanks: k is a number ≥ 0, got ${String(k)}`);
+    })).toThrow(`${WHERE} fuseRanks: "k" expects a number ≥ 0, got ${got}`);
+  });
+
+  it('refuses an unknown option, naming the nearest', () => {
+    expect(() => fuseRanks([], {
+      K: 1,
+    } as never)).toThrow(`${WHERE} fuseRanks: unknown option "K". Did you mean "k"?`);
   });
 });
 
