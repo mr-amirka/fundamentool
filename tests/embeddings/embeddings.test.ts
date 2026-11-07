@@ -4,6 +4,7 @@
  */
 import {
   createEmbedder,
+  DTYPES,
   KNOWN_MODELS,
   transformersModel,
   WHERE,
@@ -31,6 +32,21 @@ function fakeModel(overrides: Partial<TEmbeddingModel> = {}): TEmbeddingModel & 
     ...overrides,
   };
 }
+
+describe('DTYPES', () => {
+  it('the quantizations the library loads — the type, the options\' check and a config\'s from one list', () => {
+    expect(DTYPES).toEqual([
+      'fp32',
+      'fp16',
+      'q8',
+      'int8',
+      'uint8',
+      'q4',
+      'q4f16',
+      'bnb4',
+    ]);
+  });
+});
 
 describe('createEmbedder', () => {
   it('info: the model\'s id and dim', () => {

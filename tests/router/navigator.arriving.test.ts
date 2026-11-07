@@ -353,13 +353,13 @@ describe('createNavigator — arriving by a link (D-050)', () => {
       const {
         navigator,
       } = setup({}, '/a');
-      await expect(navigator.startOver([])).rejects.toThrow(/startOver: expects a location \(\{ path, query, … \}\) or a non-empty list of them, got array/);
+      await expect(navigator.startOver([])).rejects.toThrow('startOver: expects a non-empty list of locations, got an empty one');
       await expect(navigator.startOver([
         {
           path: '/a',
         },
         5 as never,
-      ])).rejects.toThrow(/non-empty list of them/);
+      ])).rejects.toThrow('startOver: [1] expects a location ({ path, query, … }), got number 5');
       await expect(navigator.startOver({
         path: '/a',
       }, {

@@ -5,7 +5,7 @@
 import {
   nearestKnown as nearestOf,
   unknownOptionText,
-} from '../assertKnownOptions';
+} from '../nearestKnown';
 
 import {
   describeValue,
@@ -386,13 +386,52 @@ export function custom<T>(check: (value: unknown) => boolean, expected: string):
   );
 }
 
-/** One of the schemas (the first that fits). */
+const isPlainObject = (value: unknown): boolean => isObject(value) && !isArray(value);
+
+/** The schemas' kinds a value's own kind fits: a string — `string`, `oneOf`; a list — `array`, `tuple`; … */
+const SHAPES: Record<string, (value: unknown) => boolean> = {
+  string: (value) => typeof value === 'string',
+  oneOf: (value) => typeof value === 'string',
+  boolean: (value) => typeof value === 'boolean',
+  number: (value) => typeof value === 'number',
+  function: isFunction,
+  array: isArray,
+  tuple: isArray,
+  object: isPlainObject,
+  record: isPlainObject,
+};
+
+/**
+ * One of the schemas (the first that fits). When none fits and the value's kind fits one of them alone, its problem is
+ * the message — a near value's "did you mean", a list's place; otherwise "expects A or B".
+ *
+ * @example
+ * const kinds = union([oneOf(['hook', 'class']), array(oneOf(['hook', 'class']))]); // one, or a list
+ * kinds.parse('hok', WHERE);   // TypeError: …: expects one of hook, class, got string "hok". Did you mean "hook"?
+ * kinds.parse(['hok'], WHERE); // TypeError: …: [0] expects one of hook, class, got string "hok". Did you mean "hook"?
+ * kinds.parse(5, WHERE);       // TypeError: …: expects one of the known values or a list, got number 5
+ */
 export function union<const S extends readonly TSchema<unknown>[]>(schemas: S): TSchema<TInfer<S[number]>> {
   const expected = schemas.map((schema) => schema.expected).join(' or ');
   return make(
-    'union', expected, (value, path) => (schemas.some((schema) => !schema.check(value, path)) ? null : wrong(
-      path, expected, value,
-    )),
+    'union', expected, (value, path) => {
+      let fitting: TProblem | null = null;
+      let fits = 0;
+      for (const schema of schemas) {
+        const problem = schema.check(value, path);
+        if (!problem) {
+          return null;
+        }
+        const shape = SHAPES[schema.kind];
+        if (shape !== undefined && shape(value)) {
+          fitting = problem;
+          fits++;
+        }
+      }
+      return fits === 1 ? fitting : wrong(
+        path, expected, value,
+      );
+    },
   );
 }
 

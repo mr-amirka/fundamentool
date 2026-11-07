@@ -65,6 +65,52 @@ describe('schema', () => {
     ]), 4)).toBeNull();
   });
 
+  it('union: the problem of the one branch the value\'s kind fits — "did you mean", a list\'s place', () => {
+    const kind = oneOf([
+      'hook',
+      'class',
+    ]);
+    const kinds = object({
+      kind: union([
+        kind,
+        array(kind),
+      ]).optional(),
+    });
+    expect(messageOf(kinds, {
+      kind: 'hok',
+    })).toBe(`${WHERE}: "kind" expects one of hook, class, got string "hok". Did you mean "hook"?`);
+    expect(messageOf(kinds, {
+      kind: [
+        'class',
+        'hok',
+      ],
+    })).toBe(`${WHERE}: "kind"[1] expects one of hook, class, got string "hok". Did you mean "hook"?`);
+    expect(messageOf(kinds, {
+      kind: 5,
+    })).toBe(`${WHERE}: "kind" expects one of the known values or a list, got number 5`);
+    expect(messageOf(kinds, {
+      kind: ['hook'],
+    })).toBeNull();
+    // Two branches the kind fits, or none whose kind tells (custom, literal): "expects A or B"
+    expect(messageOf(union([
+      string().refine((value) => value.length > 1, 'too short'),
+      oneOf(['x']),
+    ]), 'y')).toBe(`${WHERE}: expects a string or one of the known values, got string "y"`);
+    expect(messageOf(union([
+      custom((value) => value === 1, 'one'),
+      boolean(),
+      func(),
+      number().min(2),
+      object({}),
+      record(string()),
+      tuple([string()]),
+    ]), 0)).toBe(`${WHERE}: expects a number ≥ 2, got number 0`);
+    expect(messageOf(union([
+      custom((value) => value === 1, 'one'),
+      literal(2),
+    ]), 0)).toBe(`${WHERE}: expects one or number 2, got number 0`);
+  });
+
   it('oneOf: a list or a function giving it; a near string — "did you mean"', () => {
     let gates = [
       'onboarding',

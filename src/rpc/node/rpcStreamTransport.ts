@@ -5,19 +5,18 @@ import {
   StringDecoder,
 } from 'node:string_decoder';
 import {
-  assertKnownOptions,
-} from '../../assertKnownOptions';
-import {
   LineDecoder,
 } from '../../LineDecoder';
+import {
+  custom,
+  lazy,
+  object,
+} from '../../schema';
 import type {
   TRpcUnsubscribe,
 } from '../types';
 
 const WHERE = '[fundamentool] rpcStreamTransport';
-
-/** The options' keys. */
-const OPTION_KEYS = ['head'];
 
 /** `rpcStreamTransport`'s options. */
 export type TRpcStreamTransportOptions = {
@@ -32,6 +31,11 @@ export type TRpcStreamTransport = {
   /** Calls the listener with each message read; the stream is read from the first listener on. */
   onMessage(listener: (message: any) => void): TRpcUnsubscribe;
 };
+
+const OPTIONS = /*#__PURE__*/ lazy(() => object({
+  head: custom<Buffer | string>((value) => typeof value === 'string' || Buffer.isBuffer(value), 'a Buffer or a string')
+    .optional(),
+}));
 
 const noUnsubscribe: TRpcUnsubscribe = () => undefined;
 
@@ -57,15 +61,7 @@ const noUnsubscribe: TRpcUnsubscribe = () => undefined;
  */
 export function rpcStreamTransport(stream: Duplex, options: TRpcStreamTransportOptions = {}): TRpcStreamTransport {
   if (process.env.NODE_ENV !== 'production') {
-    assertKnownOptions(
-      WHERE, options, OPTION_KEYS,
-    );
-    const {
-      head,
-    } = options;
-    if (head !== undefined && typeof head !== 'string' && !Buffer.isBuffer(head)) {
-      throw new TypeError(`${WHERE}: "head" expects a Buffer or a string, got ${typeof head}`);
-    }
+    OPTIONS().parse(options, WHERE);
   }
   const listeners = new Set<(message: any) => void>();
   const text = new StringDecoder('utf8');

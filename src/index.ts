@@ -7,7 +7,7 @@ export * from './addOf';
 export * from './aggregate';
 export * from './asAsync';
 export * from './asError';
-export * from './assertKnownOptions';
+export * from './nearestKnown';
 export * from './attachEvent';
 export * from './describeValue';
 export * from './editDistance';

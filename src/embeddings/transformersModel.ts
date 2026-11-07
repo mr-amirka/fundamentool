@@ -38,7 +38,19 @@ export type TPrefixes = {
 };
 
 /** The weights' quantizations the library loads. */
-export type TDtype = 'fp32' | 'fp16' | 'q8' | 'int8' | 'uint8' | 'q4' | 'q4f16' | 'bnb4';
+export const DTYPES = [
+  'fp32',
+  'fp16',
+  'q8',
+  'int8',
+  'uint8',
+  'q4',
+  'q4f16',
+  'bnb4',
+] as const;
+
+/** One of `DTYPES`. */
+export type TDtype = typeof DTYPES[number];
 
 /** What a tensor of the library gives: one list of numbers per text. */
 type TTensorLike = {
@@ -159,16 +171,7 @@ const LIBRARY = "@huggingface/transformers' namespace: { pipeline, AutoTokenizer
 const OPTIONS = /*#__PURE__*/ lazy(() => object({
   library: custom<TTransformersModelOptions['library']>((value) => typeof value === 'function' || isLibrary(value), `${LIBRARY}, or a loader of it`),
   id: string(),
-  dtype: oneOf([
-    'fp32',
-    'fp16',
-    'q8',
-    'int8',
-    'uint8',
-    'q4',
-    'q4f16',
-    'bnb4',
-  ]).optional(),
+  dtype: oneOf(DTYPES).optional(),
   dim: number().int().min(1).optional(),
   pooling: oneOf(POOLINGS).optional(),
   prefixes: object({

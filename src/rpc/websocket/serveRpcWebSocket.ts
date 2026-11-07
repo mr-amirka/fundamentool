@@ -1,12 +1,21 @@
 import {
-  assertKnownOptions,
-} from '../../assertKnownOptions';
-import {
   createTimeout,
 } from '../../createTimeout';
 import {
+  isFunction,
+} from '../../is/isFunction';
+import {
+  isObject,
+} from '../../is/isObject';
+import {
   noop,
 } from '../../noop';
+import {
+  custom,
+  lazy,
+  number,
+  object,
+} from '../../schema';
 import {
   RpcConnect,
 } from '../RpcConnect';
@@ -26,13 +35,6 @@ import type {
 } from './link';
 
 const WHERE = '[fundamentool] serveRpcWebSocket';
-
-/** The options' keys. */
-const OPTION_KEYS = [
-  'server',
-  'exports',
-  'sessionMs',
-];
 
 /** How long a session waits for its client's next socket: a day, as `mn-utils`'s host kept it. */
 const SESSION_MS = 24 * 60 * 60 * 1000;
@@ -73,29 +75,12 @@ type TSession = {
   expire: () => void;
 };
 
-/** Checks the options: an unknown key or a wrong value is an error (`api-input-validation.md`). */
-function checkOptions(options: TServeRpcWebSocketOptions): void {
-  if (process.env.NODE_ENV !== 'production') {
-    if (options === null || typeof options !== 'object') {
-      throw new TypeError(`${WHERE}: options expect an object, got ${String(options)}`);
-    }
-    assertKnownOptions(
-      WHERE, options, OPTION_KEYS,
-    );
-    const {
-      server, exports, sessionMs,
-    } = options;
-    if (server === null || typeof server !== 'object' || typeof server.on !== 'function' || typeof server.off !== 'function') {
-      throw new TypeError(`${WHERE}: "server" expects a WebSocket server (ws's WebSocketServer), got ${String(server)}`);
-    }
-    if (exports === null || typeof exports !== 'object') {
-      throw new TypeError(`${WHERE}: "exports" expects an object of methods, got ${String(exports)}`);
-    }
-    if (sessionMs !== undefined && !(Number.isInteger(sessionMs) && sessionMs > 0)) {
-      throw new TypeError(`${WHERE}: "sessionMs" expects a whole number of ms above 0, got ${String(sessionMs)}`);
-    }
-  }
-}
+const OPTIONS = /*#__PURE__*/ lazy(() => object({
+  server: custom<TRpcWebSocketServer>((value) => isObject(value) && isFunction((value as TRpcWebSocketServer).on)
+    && isFunction((value as TRpcWebSocketServer).off), 'a WebSocket server (ws\'s WebSocketServer)'),
+  exports: custom<TRpcConnectOptionsExports>(isObject, 'an object of methods'),
+  sessionMs: number().int().positive().describe('a whole number of ms above 0').optional(),
+}));
 
 /**
  * Serves `exports` over a WebSocket server to `RpcClientWebSocket`s (fundamentool D-104): one RPC connection per
@@ -118,7 +103,9 @@ function checkOptions(options: TServeRpcWebSocketOptions): void {
  * });
  */
 export function serveRpcWebSocket(options: TServeRpcWebSocketOptions): TRpcWebSocketHost {
-  checkOptions(options);
+  if (process.env.NODE_ENV !== 'production') {
+    OPTIONS().parse(options, WHERE);
+  }
   const {
     server, exports,
   } = options;

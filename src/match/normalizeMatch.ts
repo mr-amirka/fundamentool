@@ -1,6 +1,6 @@
 import {
   nearestKnown,
-} from '../assertKnownOptions';
+} from '../nearestKnown';
 import {
   describeValue,
 } from '../describeValue';

@@ -14,6 +14,7 @@ export {
 } from './rpcModel';
 export {
   KNOWN_MODELS,
+  DTYPES,
   transformersModel,
   type TDtype,
   type TPooling,

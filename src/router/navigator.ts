@@ -150,7 +150,7 @@ export const OPEN_OPTIONS = /*#__PURE__*/ lazy(() => object({
 /** `startOver`'s argument: a location, or a non-empty list of them. */
 const START_OVER = /*#__PURE__*/ lazy(() => union([
   LOCATION(),
-  array(LOCATION()).refine((list) => list.length > 0, 'an empty list'),
+  array(LOCATION()).refine((list) => list.length > 0, 'expects a non-empty list of locations, got an empty one'),
 ]).describe('a location ({ path, query, … }) or a non-empty list of them'));
 
 /** `backToDepth`'s depth. */

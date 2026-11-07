@@ -1,12 +1,19 @@
 import {
-  assertKnownOptions,
-} from '../../assertKnownOptions';
-import {
   createTimeout,
 } from '../../createTimeout';
 import {
+  isArray,
+} from '../../is/isArray';
+import {
   noop,
 } from '../../noop';
+import {
+  custom,
+  func,
+  lazy,
+  number,
+  object,
+} from '../../schema';
 import {
   RpcClient,
 } from '../RpcClient';
@@ -22,14 +29,6 @@ import type {
 } from './link';
 
 const WHERE = '[fundamentool] RpcClientWebSocket';
-
-/** The options' keys. */
-const OPTION_KEYS = [
-  'url',
-  'reconnectMs',
-  'timeout',
-  'WebSocket',
-];
 
 /** How long a client waits before it tries again a server that didn't answer. */
 const RECONNECT_MS = 5000;
@@ -86,36 +85,19 @@ function isAddress(url: unknown): boolean {
   }
 }
 
-/** Checks the options: an unknown key or a wrong value is an error (`api-input-validation.md`). */
-function checkOptions(options: TRpcClientWebSocketOptions): void {
-  if (process.env.NODE_ENV !== 'production') {
-    if (options === null || typeof options !== 'object') {
-      throw new TypeError(`${WHERE}: options expect an object, got ${String(options)}`);
-    }
-    assertKnownOptions(
-      WHERE, options, OPTION_KEYS,
-    );
-    const urls = typeof options.url === 'string' ? [options.url] : options.url;
-    if (!Array.isArray(urls) || urls.length === 0 || !urls.every(isAddress)) {
-      throw new TypeError(`${WHERE}: "url" expects an address or a non-empty list of them, got ${JSON.stringify(options.url)}`);
-    }
-    for (const key of [
-      'reconnectMs',
-      'timeout',
-    ] as const) {
-      const value = options[key];
-      if (value !== undefined && !(Number.isInteger(value) && value >= 0)) {
-        throw new TypeError(`${WHERE}: "${key}" expects a whole number of ms, 0 or more, got ${String(value)}`);
-      }
-    }
-    if (options.WebSocket === undefined && typeof globalThis.WebSocket !== 'function') {
-      throw new TypeError(`${WHERE}: "WebSocket" — this runtime has no global WebSocket (Node before 22): pass ws's`);
-    }
-    if (options.WebSocket !== undefined && typeof options.WebSocket !== 'function') {
-      throw new TypeError(`${WHERE}: "WebSocket" expects a constructor, got ${typeof options.WebSocket}`);
-    }
-  }
-}
+const OPTIONS = /*#__PURE__*/ lazy(() => {
+  const ms = number().int().min(0).describe('a whole number of ms, 0 or more').optional();
+  return object({
+    url: custom<string | readonly string[]>((value) => {
+      const urls = typeof value === 'string' ? [value] : value;
+      return isArray(urls) && urls.length > 0 && urls.every(isAddress);
+    }, 'an address or a non-empty list of them'),
+    reconnectMs: ms,
+    timeout: ms,
+    WebSocket: func().describe('a constructor').optional(),
+  }).refine((options) => options.WebSocket !== undefined || typeof globalThis.WebSocket === 'function',
+    '"WebSocket" — this runtime has no global WebSocket (Node before 22): pass ws\'s');
+});
 
 /**
  * An `RpcClient` over a WebSocket (fundamentool D-104), in a browser and in Node: the server is `serveRpcWebSocket`.
@@ -146,7 +128,9 @@ export class RpcClientWebSocket extends RpcClient {
   private cancelRetry: () => void = noop;
 
   constructor(options: TRpcClientWebSocketOptions) {
-    checkOptions(options);
+    if (process.env.NODE_ENV !== 'production') {
+      OPTIONS().parse(options, WHERE);
+    }
     const link = createRpcLink();
     super({
       postMessage: link.postMessage,

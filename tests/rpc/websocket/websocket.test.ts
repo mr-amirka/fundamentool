@@ -469,7 +469,7 @@ describe('the options checked', () => {
   it.each([
     [
       null,
-      /options expect an object/,
+      /expects an options object/,
     ],
     [
       {
@@ -530,7 +530,7 @@ describe('the options checked', () => {
   it.each([
     [
       undefined,
-      /options expect an object/,
+      /expects an options object/,
     ],
     [
       {
