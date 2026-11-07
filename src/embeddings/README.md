@@ -15,6 +15,8 @@ paradigm).
 - Thousands of texts at once, in batches, fast; stopped midway by an `AbortSignal`.
 - Swap the model — another local one, or a remote API — with no caller changed; know which stored vectors to embed
   again when the model changed.
+- Run the model off the thread that answers — in a worker thread, another process, a server — so a long embedding
+  never holds a search up (`rpcModel`, `modelHandlers`).
 
 fundamentool imports no model library. The caller passes `@huggingface/transformers` in, as `sqliteAdapter(new
 Database(file))` takes its driver; the library is the caller's dependency, and a test passes a fake one.
@@ -40,6 +42,8 @@ nearest(query, vectors, 3);                          // => [[12, 0.71], [3, 0.64
 | `embedder.info` | `{ id, dim }` — store `id` beside each vector: vectors of another model don't compare, and a changed `id` says which to embed again |
 | `TEmbeddingModel` | The port: `{ id, dim, maxBatch, embed(texts, role, signal?) }`. Any object of this shape is a model — one over a remote API an app writes itself (D-098: local first, remote models a door) |
 | `transformersModel({ library, id, dtype?, dim?, pooling?, prefixes?, maxBatch? })` | A model run on this machine. `library` is the namespace, or a loader of it — `() => import('@huggingface/transformers')` keeps the library and its runtime unloaded until a text is embedded. Nothing loads until the first `embed`; calls made during the load share it; a failed load is tried again. `id` is `local:<id>@<dtype>` (`q8` by default) |
+| `modelHandlers(model)` | The model's calls for the side that runs it: `{ embed(texts, role) }`, the vectors as plain arrays — give it to `NodeRpcConnectWorker.run`, or any `fundamentool/rpc` server (D-107) |
+| `rpcModel(info, caller)` | A model whose `embed` crosses to that side: `info` — `{ id, dim, maxBatch }`, known here, so nothing starts until a text is embedded; `caller()` gives the client at each call (`RpcClient`, `NodeRpcClientWorker` — one made on the first call). The signal goes with the call: aborted, it rejects at once, the other side finishing the batch it took. A vector of another length rejects |
 | `KNOWN_MODELS` | The models measured for the lab, with their `dim`, `pooling` and `prefixes`; another id gives its `dim` and `pooling` |
 | `TEmbedRole`, `TDtype`, `TPooling`, `TPrefixes`, `TTransformersLibrary`, `WHERE` | The role; the quantizations; `mean` / `cls` / `last_token` (through the library's `pipeline`) or `sentence` (the model's own `sentence_embedding`, through `AutoTokenizer` and `AutoModel`); the prefixes per role; the part of the library used; the messages' prefix |
 
@@ -47,3 +51,19 @@ A model asks for its texts its own way, and `KNOWN_MODELS` carries it: e5 wants 
 `task: search result | query: ` / `title: none | text: `, Qwen3 an instruction before a query; bge-m3 wants nothing.
 Each model's scores sit on its own scale, so a fixed threshold means nothing across models — merge searches by rank
 (`fuseRanks`), not by score.
+
+### The model in a worker thread
+
+```ts
+// embedWorker.js — the worker: the model and its runtime load here, on the first text
+import { workerData } from 'node:worker_threads';
+import { modelHandlers, transformersModel } from 'fundamentool/embeddings';
+import { NodeRpcConnectWorker } from 'fundamentool/rpc/node';
+NodeRpcConnectWorker.run(modelHandlers(transformersModel({ library: () => import('@huggingface/transformers'), id: workerData.id })));
+
+// the main thread: answers searches while the worker embeds
+const info = transformersModel({ library: () => import('@huggingface/transformers'), id }); // its id, dim, maxBatch — nothing loads
+let worker: NodeRpcClientWorker | undefined;
+const embedder = createEmbedder({ model: rpcModel(info, () => worker ??= new NodeRpcClientWorker('./embedWorker.js', { workerData: { id } })) });
+await embedder.embed(docs, { as: 'document' }); // the batches run in the worker; the main thread stays free
+```

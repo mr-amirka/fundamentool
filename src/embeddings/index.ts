@@ -6,6 +6,13 @@ export {
   createEmbedder,
 } from './createEmbedder';
 export {
+  modelHandlers,
+  rpcModel,
+  type TModelCaller,
+  type TModelHandlers,
+  type TModelInfo,
+} from './rpcModel';
+export {
   KNOWN_MODELS,
   transformersModel,
   type TDtype,

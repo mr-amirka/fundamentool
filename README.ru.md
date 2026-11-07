@@ -44,7 +44,7 @@ npm run docs:api
 | `fundamentool/source` | Строки из исходного кода без его запуска: комментарии заменяются пробелами с сохранением длины, строки, которыми может стать выражение (`on ? 'a' : 'b'` → `a`, `b`), строки в местах по имени (атрибуты, переменные, вызовы) — текстом или парсером TypeScript, переданным аргументом; `sfcParts`, `applyEdits` ([README](src/source/README.ru.md)) |
 | `fundamentool/match` | Фильтр как данные: шаблон, скомпилированный один раз в предикат (`matchProvider`), тот же шаблон деревом для SQL (`normalizeMatch`), операторы, которые проект расширяет (`STANDARD_OPERATORS`) ([README](src/match/README.ru.md)) |
 | `fundamentool/vectors` | Математика над эмбеддингами: `nearest` (ближайшие векторы, с отбором до подсчёта), `fuseRanks` (слияние рейтингов по местам), `toBytes` / `fromBytes`, `chunkText` (целые предложения кусками, которые модель читает целиком) ([README](src/vectors/README.ru.md)) |
-| `fundamentool/embeddings` | Тексты на входе, векторы единичной длины на выходе: `createEmbedder` над портом модели, `transformersModel` — локальная модель, библиотеку передаёт вызывающий ([README](src/embeddings/README.ru.md)) |
+| `fundamentool/embeddings` | Тексты на входе, векторы единичной длины на выходе: `createEmbedder` над портом модели, `transformersModel` — локальная модель, библиотеку передаёт вызывающий; `rpcModel` / `modelHandlers` — модель в потоке-воркере или другом процессе ([README](src/embeddings/README.ru.md)) |
 | `fundamentool/hooks` | Именованные моменты, в которые хост даёт действовать пресетам: четыре вида синхронных хуков (`eachHook`, `waterfallHook`, `bailHook`, `chainHook`), хуки по ключу (`hookMap`), хуки хоста по имени (`namedHooks`), порядок пресетов по их зависимостям (`orderPresets`) ([README](src/hooks/README.ru.md)) |
 | `fundamentool/async/hooks` | Те же виды под теми же именами для обработчиков, которые могут ждать, — обработчик возвращает значение или промис одинаково, `run` возвращает промис — и `parallelHook`, все обработчики сразу ([README](src/async/hooks/README.ru.md)) |
 | `fundamentool/sql` | Запрос как данные: построители простых узлов, `matchWhere` (шаблон `match` как условие с теми же строками), компилятор, у которого виды узлов — цепочки `fundamentool/hooks`, так что диалект — пресет (`sqlite`, `sqliteFts5`), и `sqliteAdapter` — одна асинхронная форма поверх better-sqlite3 и `node:sqlite` с транзакциями и миграциями ([README](src/sql/README.ru.md)) |
@@ -68,7 +68,7 @@ MIT
 - **Модули**: `dynamicModule` — асинхронная инициализация, выполняемая один раз (повторно — после неудачи); `import()` части, загружаемой по требованию
 - **URL**: `urlParse`, `urlExtend`, `unparam`, `param` — разбор и расширение URL, query-строки
 - **Время**: `formatTime`, `normalizeDate`, `getData` — форматирование и нормализация дат
-- **События**: `attachEvent`, `EventEmitter`, `subscribe`, `Unsubscriber`, `keyedRegistry`
+- **События**: `createEvent` (как в effector: `watch`, `map`, `filter`, `prepend` — [README](src/Observable/README.ru.md)), `attachEvent`, `EventEmitter`, `subscribe`, `Unsubscriber`, `keyedRegistry`
 - **Асинхронность**: `wait`, `createTimeout`, `createInterval`
 - **Объекты и массивы**: `merge`, `without`, `extend`-подобная логика, `get` по пути
 - **Строки**: `half`, `halfLast` — разбиение по разделителю; `pairsProvider` / `pairsSchema` — опция-список (`'a, b:c'`, `['a', 'b:c']` или `{ b: 'c' }`) в пары
@@ -97,6 +97,7 @@ MIT
 - **queueProvider** (`queueProvider.ts`): последовательная очередь выполнения асинхронных задач (одна задача за раз).
 - **withAsyncLock** (`withAsyncLock.ts`): асинхронная функция, вызовы которой игнорируются, пока идёт предыдущий (и `minMs` от его начала) — защита от двойного нажатия.
 - **sendingQueue** (`sendingQueue.ts`): очередь промисов с аккумуляцией ошибок и методом `drain()` для ожидания завершения всех.
+- **keyedQueue** (`keyedQueue/`): фоновая работа по ключу — один элемент на ключ, сначала высший приоритет, вытеснение ([README](src/keyedQueue/README.ru.md)).
 
 ### URL, роутинг и HTTP‑окружение
 
