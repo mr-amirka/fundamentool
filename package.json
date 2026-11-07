@@ -301,7 +301,7 @@
     "better-sqlite3": "^12.11.1",
     "esbuild": "^0.28.2",
     "eslint": "^10.9.1",
-    "eslint-config-lab": "github:mr-amirka/eslint-config-lab#38b3da217d3ae356611f8a7300c7b4de960c8c93",
+    "eslint-config-lab": "github:mr-amirka/eslint-config-lab#4a7af1901822e2e22210f847d7c9a5a2958089c2",
     "fast-check": "^4.8.0",
     "globals": "^13.24.0",
     "jest": "^29.7.0",
