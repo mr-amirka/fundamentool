@@ -7,6 +7,15 @@ product of two is their cosine — what a search by meaning ranks by. Async: a m
 calls a network). Its sync half, the math over the vectors, is `fundamentool/vectors` (lab D-050: a module per
 paradigm).
 
+## When you need it
+
+- Turn texts into vectors — for a search by meaning, finding duplicates and near ones, grouping — with a model on this
+  machine: no network, no API key.
+- Embed a query and the documents each the way the model wants (its prefixes per role).
+- Thousands of texts at once, in batches, fast; stopped midway by an `AbortSignal`.
+- Swap the model — another local one, or a remote API — with no caller changed; know which stored vectors to embed
+  again when the model changed.
+
 fundamentool imports no model library. The caller passes `@huggingface/transformers` in, as `sqliteAdapter(new
 Database(file))` takes its driver; the library is the caller's dependency, and a test passes a fake one.
 

@@ -2,6 +2,14 @@
 
 [Русская версия](./README.ru.md)
 
+## When you need it
+
+- A React (or Preact) component that re-renders when a store changes — `useUnit`, as effector-react's; only when its
+  part changes — `useStoreMap`.
+- Links for any router: a real `<a href>` (a new tab, copy the link) whose click goes through the router; a link
+  marked active (`NavLink`).
+- A component that re-renders when the locale changes (`useT` — see `fundamentool/i18n`).
+
 fundamentool's view code is built over a **React-like library the app passes in** (`TViewLibrary`: React, Preact
 `compat`; later fundamentool's own) — fundamentool D-048, D-049. Two providers:
 

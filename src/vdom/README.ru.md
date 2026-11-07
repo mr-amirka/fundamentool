@@ -9,6 +9,12 @@
 React 19 — 67,6 КБ, Preact с `preact/compat` — 8,2 КБ. Библиотеки, написанные для React (MUI, emotion,
 react-transition-group), работают на ней без изменений: у элементов форма и символы `$$typeof` React 19, `ref` — проп.
 
+## Когда нужен
+
+- Библиотека представления с API React, гораздо меньше React (5,6 КБ gzip), для приложения с MUI и emotion —
+  подставляется алиасами бандлера, код приложения не меняется.
+- Компоненты, хуки, контексты, порталы как в React; тесты с `act`.
+
 ```ts
 import { createElement as h, createRoot, useState } from 'fundamentool/vdom';
 

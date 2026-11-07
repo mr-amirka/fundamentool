@@ -5,6 +5,13 @@
 `fundamentool/css` (fundamentool D-095) turns short text into CSS values: math with units, variables, colours,
 gradients. It also builds a media condition and a child combinator.
 
+## When you need it
+
+- Turn a short notation into CSS values: math with units into `calc()`, a variable into `var(--x, fallback)`, a colour
+  with alpha, gradients.
+- A media query for a breakpoint, in the classic (`max-width`) or the range syntax.
+- A CSS-in-JS or utility-class tool that writes CSS from a spelling of its own (minotation).
+
 The core knows CSS and how to read. **The spelling is the caller's**: the group's characters, the variable's, the
 function names and the gradient's pieces. All of it is required; there is no default spelling (lab D-044).
 minotation reads its notation with one spelling (`{…}`, `Min{…}`). A style object in TypeScript can use another

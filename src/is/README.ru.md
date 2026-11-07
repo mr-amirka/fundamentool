@@ -4,6 +4,13 @@
 
 Предикаты типов — runtime type guards с полным TypeScript narrowing.
 
+## Когда нужен
+
+- Проверить тип значения во время выполнения и сузить его в TypeScript: строка, простой объект, массив, промис.
+- Сравнить два значения глубоко (до глубины) или проверить, что объект подходит под шаблон.
+- Проверить email, телефон, URL, хеш.
+- Отличить `Buffer`, `Blob`, `FormData`; видим ли элемент во вьюпорте.
+
 ```ts
 import * as is from 'fundamentool/is';
 import { isString, isEqual, isMatch } from 'fundamentool/is';

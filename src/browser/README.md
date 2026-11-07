@@ -4,6 +4,16 @@
 
 Browser-specific utilities: DOM, WebSocket, images, storage, routing.
 
+## When you need it
+
+- Tell the browser and the platform from the user agent.
+- Wait for the DOM to be ready, open a link, download a file, run a function every animation frame.
+- Load a script on demand; an image's natural size, an image or a blob as base64.
+- Cookies and `localStorage` as reactive stores.
+- Requests over a server's own WebSocket protocol — `{ id, method, data }` — with reconnect. Calls between your own
+  client and server: [`fundamentool/rpc`](../rpc/README.md)'s `RpcClientWebSocket`.
+- Style sheets in the document, the viewport's size; a single-page router over the History API.
+
 ```ts
 import * as browser from 'fundamentool/browser';
 import { wsConnect, cookieStorageProvider } from 'fundamentool/browser';

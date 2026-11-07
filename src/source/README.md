@@ -6,6 +6,15 @@
 component, test ids, route paths, the keys of `t('…')`. It also blanks comments, splits a single-file component into
 its parts, and applies edits by positions.
 
+## When you need it
+
+- Find the strings in source code without running it — class names, test ids, route paths, the keys of `t('…')` — to
+  collect the CSS classes a project uses, or check its translation keys.
+- The strings an expression can be: both branches of a ternary, the right of `&&`, both sides of `||` and `??`.
+- Read code with its comments ignored, the positions kept (comments blanked).
+- Split a `.vue`, `.svelte` or `.astro` file into its markup and its scripts.
+- Rewrite source by positions — several edits applied at once (a codemod, an auto-fix).
+
 The core knows the languages and how to read them. **What a string becomes is the caller's**: each reader writes into
 the caller's list through the caller's `push`. minotation's `push` splits a class list into tokens; another caller
 pushes the string whole.

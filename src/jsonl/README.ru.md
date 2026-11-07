@@ -4,6 +4,13 @@
 
 Утилиты для работы с форматом [JSON Lines](https://jsonlines.org/) (`.jsonl`) — одно JSON-значение на строку.
 
+## Когда нужен
+
+- Записать или прочитать лог, выгрузку или набор данных по одной JSON-записи в строке (`.jsonl`, NDJSON).
+- JSON-записи из текста, приходящего кусками, — сокет, вывод дочернего процесса, — где запись может разрезаться между
+  двумя кусками.
+- Файлы на диске — потоком, дописыванием, слежением за ростом: `jsonl` из `fundamentool/node`.
+
 ```ts
 import * as jsonl from 'fundamentool/jsonl';
 import { parse, stringify, Decoder } from 'fundamentool/jsonl';

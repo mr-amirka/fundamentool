@@ -6,6 +6,13 @@ fundamentool's reactive API keeps to **Effector's behaviour** (fundamentool D-04
 works the same when effector is injected in its place (`TObservableAdapter`), and the ground is laid for fundamentool's
 own Effector (D-048).
 
+## When you need it
+
+- A value that other code and the UI watch and react to on each change — the app's state, a store (as Effector's).
+- A value computed from another, which changes only when its result does.
+- Something that happens — a click, a save, a message — that others subscribe to: an event.
+- Events that update a store (`createApi`); code that works the same over effector's stores.
+
 ```ts
 const $count = createObservable(0);                  // a store — a value that is
 $count.watch((count) => render(count));              // at once with 0, then on every change

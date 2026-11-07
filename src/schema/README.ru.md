@@ -8,6 +8,13 @@
 **Имена и поведение zod**, с правилами лаборатории (`api-input-validation.md`): неизвестный ключ — ошибка с «did you
 mean» (zod его отбрасывает — единственное отличие, намеренное); сообщения «… expects …, got …».
 
+## Когда нужен
+
+- Проверить объект опций функции или фабрики: неизвестный ключ — с «did you mean», неверное значение — с «expects …,
+  got …», — а тип и список ключей из того же описания.
+- Проверка, которая работает только в разработке и выпадает из production-сборки.
+- Валидация конфига или опций плагина как в zod — без zod.
+
 ```ts
 import { lazy, object, array, tuple, string, boolean, func, unknown, type TInfer } from 'fundamentool/schema';
 // или: import * as schema from 'fundamentool/schema'; schema.object(…) — то же, и так же мало в бандле

@@ -8,6 +8,15 @@
 - a compiler whose node kinds are `fundamentool/hooks` chains, so a dialect is a preset;
 - `sqliteAdapter`, one async shape over better-sqlite3 and `node:sqlite`.
 
+## When you need it
+
+- Build SQL queries as data — select, insert, update, delete — every value a parameter, every name quoted: no
+  injection.
+- One async API over SQLite (better-sqlite3 or Node's `node:sqlite`): transactions, migrations by version, prepared
+  statements, pragmas.
+- A `fundamentool/match` filter as a `WHERE` condition; full-text search (FTS5).
+- A SQL dialect added as a preset.
+
 Every value is a parameter and every name is quoted. The builders, `matchWhere` and the compiler are sync — pure work;
 the adapter is async, so a driver that waits (a Worker, PostgreSQL) fits under it with no caller changed (lab D-046).
 

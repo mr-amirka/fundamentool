@@ -6,6 +6,16 @@
 sync, for hot loops over thousands of them. Its async half, the embedder itself, is `fundamentool/embeddings`
 (lab D-050: a module per paradigm).
 
+## When you need it
+
+- Find the stored texts closest in meaning to a query — "similar to this", a search by meaning — among thousands of
+  vectors, filtered by kind before scoring.
+- Merge the results of several searches into one list — a hybrid search, keywords and vectors; two indexes — when their
+  scores don't compare: reciprocal rank fusion (RRF).
+- Keep vectors in a database (an SQLite BLOB column) and read them back.
+- Cut a long text into pieces a model can read — whole sentences, with an overlap — before embedding it.
+- The cosine similarity of two vectors.
+
 ```ts
 import { nearest, fuseRanks, toBytes, fromBytes, chunkText } from 'fundamentool/vectors';
 

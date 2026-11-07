@@ -7,6 +7,14 @@ pattern is plain data, so an agent writes it as JSON, a store writes it as SQL, 
 predicate. The grammar has no words of its own besides `$`-operators, and the operators are a registry a project
 extends (lab D-044: a core and presets).
 
+## When you need it
+
+- Filter records by a pattern written as data — JSON a person or an agent writes: equal, one of a list, ranges,
+  `$not`, nested fields (as MongoDB's queries).
+- Compile a filter once and test many values fast.
+- The same filter in memory and in SQL (through `fundamentool/sql`), giving the same rows.
+- Operators of your own added to the grammar.
+
 ```ts
 import { matchProvider, normalizeMatch, isMatch, STANDARD_OPERATORS, type TMatch, type TMatchOperator } from 'fundamentool/match';
 

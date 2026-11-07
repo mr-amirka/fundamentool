@@ -4,6 +4,16 @@
 
 Browser-специфичные утилиты: DOM, WebSocket, изображения, хранилища, маршрутизация.
 
+## Когда нужен
+
+- Определить браузер и платформу по user agent.
+- Дождаться готовности DOM, открыть ссылку, скачать файл, вызывать функцию на каждом кадре анимации.
+- Загрузить скрипт по требованию; натуральный размер картинки, картинка или blob в base64.
+- Куки и `localStorage` как реактивные сторы.
+- Запросы по собственному WebSocket-протоколу сервера — `{ id, method, data }` — с переподключением. Вызовы между
+  своими клиентом и сервером: `RpcClientWebSocket` из [`fundamentool/rpc`](../rpc/README.ru.md).
+- Стили в документе, размер вьюпорта; роутер одностраничного приложения поверх History API.
+
 ```ts
 import * as browser from 'fundamentool/browser';
 import { wsConnect, cookieStorageProvider } from 'fundamentool/browser';

@@ -7,6 +7,14 @@ moments where presets may act: before a write, after it, when a step has to be r
 Presets add handlers to those moments. The core knows only the mechanism. Everything of a domain is in the presets,
 and the project's own setup is a preset too.
 
+## When you need it
+
+- Let plugins (presets) act at named moments of a library — before a write, after a parse, when a value must be
+  resolved — the core knowing nothing of their domain: an extension point, as webpack's tapable.
+- Handlers that transform a value in turn; all of them told of an event; the first one to answer; a chain of wrappers.
+- Plugins ordered by what they require of each other; hooks by key; a host's hooks by name.
+- Handlers that may wait: [`fundamentool/async/hooks`](../async/hooks/README.md).
+
 ```ts
 import { waterfallHook, eachHook, bailHook, namedHooks, orderPresets, presetSetup, type TPreset } from 'fundamentool/hooks';
 

@@ -4,6 +4,13 @@
 
 Utilities for working with the [JSON Lines](https://jsonlines.org/) format (`.jsonl`) — one JSON value per line.
 
+## When you need it
+
+- Write or read a log, an export or a dataset with one JSON record per line (`.jsonl`, NDJSON).
+- JSON records out of text that arrives in chunks — a socket, a child process's output — where a record may be cut
+  between two chunks.
+- Files on disk — streamed, appended to, followed as they grow: `fundamentool/node`'s `jsonl`.
+
 ```ts
 import * as jsonl from 'fundamentool/jsonl';
 import { parse, stringify, Decoder } from 'fundamentool/jsonl';

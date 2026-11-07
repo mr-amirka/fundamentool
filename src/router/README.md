@@ -2,6 +2,13 @@
 
 [Русская версия](./README.ru.md)
 
+## When you need it
+
+- An address bar and Back / Forward that follow the app — a single-page app's routes, its query parameters, its
+  `#hash` (the History API).
+- Several routers at once — the page's path, and a filter in the entry's own state — their steps not clashing.
+- Pages and windows (a modal, a sheet) over a router: Back closes the top one; a confirmation before leaving.
+
 Three layers (fundamentool D-038, D-039):
 
 ```

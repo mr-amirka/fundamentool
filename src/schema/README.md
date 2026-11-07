@@ -6,6 +6,13 @@
 key list come from it. **A check of options runs only in development** (lab D-023): a production build drops it, the
 schema and this library — see "Only in development" below.
 
+## When you need it
+
+- Check the options object of a function or a factory: an unknown key with "did you mean", a wrong value with "expects
+  …, got …" — and the type and the key list from the same description.
+- A check that runs only in development and drops out of a production build.
+- zod-like validation of a config or a plugin's options, without zod.
+
 **zod's names and behaviour**, with the lab's rules (`api-input-validation.md`): an unknown key is an error with "did
 you mean" (zod strips it — the one difference, on purpose); messages "… expects …, got …".
 

@@ -57,9 +57,9 @@ npm run docs:api
 | `fundamentool/jsonl` | JSON Lines serialization / deserialization |
 | `fundamentool/browser` | Browser utilities: WebSocket, storage, routing, DI providers |
 | `fundamentool/node` | Node.js utilities: file I/O (CSV, JSON, JSONL), hashing, directory scan |
-| `fundamentool/rpc` | RPC core: `RpcClient`, `RpcConnect` (a method reaches its call with `useCall()`), `RpcClientPool`, `RpcCoder` |
+| `fundamentool/rpc` | RPC core: `RpcClient`, `RpcConnect` (a method reaches its call with `useCall()`), `RpcClientPool`, `RpcCoder`; over a WebSocket — `RpcClientWebSocket`, `serveRpcWebSocket` ([README](src/rpc/README.md)) |
 | `fundamentool/rpc/browser` | Browser worker RPC: `RpcClientWorker`, `RpcConnectWorker`, `RpcClientWorkerPool` |
-| `fundamentool/rpc/node` | Node.js worker RPC: `NodeRpcClientWorker`, `NodeRpcConnectWorker`, `NodeRpcClientWorkerPool` |
+| `fundamentool/rpc/node` | Node.js worker RPC: `NodeRpcClientWorker`, `NodeRpcConnectWorker`, `NodeRpcClientWorkerPool`; `rpcStreamTransport` over a socket or stdio |
 
 ---
 

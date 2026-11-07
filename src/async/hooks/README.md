@@ -7,6 +7,13 @@
 a write, a search index updated after it, a resolver reading a store. The same four kinds by the same names, and
 `parallelHook`. A handler may return a value or a promise: the hook awaits both alike.
 
+## When you need it
+
+- A host lets plugins act at named moments, and a plugin's handler may wait — a link checked over the network before a
+  write, a search index updated after it.
+- Every handler run at once and waited for (`parallelHook`), or one after another; the first answer of several
+  resolvers; each handler transforming the value in turn.
+
 ```ts
 import { waterfallHook, eachHook, parallelHook, bailHook, chainHook, namedHooks } from 'fundamentool/async/hooks';
 

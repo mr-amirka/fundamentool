@@ -9,6 +9,12 @@ on a reconciler of its own. It weighs **5.6 KB gzip** for everything an app with
 67.6 KB, Preact with `preact/compat` is 8.2 KB. Libraries written for React (MUI, emotion, react-transition-group)
 run on it unchanged: elements have React 19's shape and `$$typeof` symbols, and `ref` is a prop.
 
+## When you need it
+
+- A view library with React's API, much smaller than React (5.6 KB gzip), for an app with MUI and emotion — put in by
+  the bundler's aliases, the app's code unchanged.
+- Components, hooks, contexts, portals as React's; tests with `act`.
+
 ```ts
 import { createElement as h, createRoot, useState } from 'fundamentool/vdom';
 

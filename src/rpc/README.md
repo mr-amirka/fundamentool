@@ -8,8 +8,8 @@ Type-safe bidirectional RPC over any message channel (Worker, WebSocket, iframe,
 
 - One process, thread or machine calls functions of another and awaits their results: a worker, a background process,
   a server, a web page talking to its backend.
-- A call protocol over a socket, a pipe, a child's stdio or a WebSocket — requests, answers, ids, errors: don't write
-  one, it is here.
+- A request and response protocol between two processes — over a Unix or TCP socket, a pipe, a child's stdio or a
+  WebSocket: requests, answers, ids, errors. Don't write one, it is here.
 - A callback passed to a remote function (progress, a stream of steps), the remote side pushing data to its callers,
   cancelling a remote call (timeout, `AbortSignal`).
 - Errors that keep their class across the channel (`instanceof TypeError` on the caller's side).

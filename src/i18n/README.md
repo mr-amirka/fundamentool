@@ -6,6 +6,15 @@
 components, a game — has **its own set of messages** (`createMessages`), with its own files. A message is read by
 **key** — `t(K.hud.moves, { count })` — and the key is always **a constant** of its set, never a bare string (D-066).
 
+## When you need it
+
+- Translate an app: one locale per app, a set of messages per package, read by key constants — `t(K.hud.moves, { count
+  })`; a missing translation is a compile error.
+- Plurals, numbers, currency, dates, relative time and lists inside the message itself.
+- Tags in a message rendered as components; the locale switched at run time; locales built inline or loaded on demand
+  (a Vite plugin).
+- A set of translations checked in a test (`checkSet`).
+
 ```
 <set folder>/en.ts, ru.ts, de.ts …   the base (`as const`) and its translations — TypeScript
    ↓ build: lexicons() (fundamentool/i18n/vite) — or in memory: sourceOf()

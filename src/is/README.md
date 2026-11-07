@@ -4,6 +4,13 @@
 
 Type predicate utilities — runtime type guards with full TypeScript narrowing.
 
+## When you need it
+
+- Check a value's type at run time and narrow it in TypeScript: a string, a plain object, an array, a promise.
+- Compare two values deeply (to a depth), or check that an object matches a pattern.
+- Validate an email, a phone number, a URL, a hash.
+- Tell a `Buffer`, a `Blob`, `FormData` apart; whether an element is visible in the viewport.
+
 ```ts
 import * as is from 'fundamentool/is';
 import { isString, isEqual, isMatch } from 'fundamentool/is';

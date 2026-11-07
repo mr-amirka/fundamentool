@@ -4,6 +4,14 @@
 
 Node.js-specific utilities for file I/O, hashing, directory scanning, and HTTP requests.
 
+## When you need it
+
+- Read and write CSV and JSON files; a snapshot that survives a crash in the middle of a write.
+- A `.jsonl` file as a stream: write records, read them in batches, follow the lines appended (as `tail -f`).
+- Hash a string or a buffer (sha256, md5).
+- Walk a directory tree and collect the file paths, folders skipped.
+- HTTP requests from a Node script.
+
 ```ts
 import * as node from 'fundamentool/node';
 import { scanPath, searchFiles } from 'fundamentool/node';

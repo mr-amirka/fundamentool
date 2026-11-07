@@ -4,6 +4,15 @@
 
 Async utilities for collections and control flow.
 
+## When you need it
+
+- Run an async function over every item of a list or an object — one after another, or all at once: map, filter, find,
+  reduce.
+- Repeat a task every N ms, each run finished before the next starts.
+- Calls that must not overlap — each waits for the previous (a queue of saves), a delay between them.
+- A debounce that returns a promise; a minimum duration, so a spinner doesn't flicker.
+- Hooks whose handlers may wait: [`fundamentool/async/hooks`](hooks/README.md).
+
 ```ts
 import * as async from 'fundamentool/async';
 import { mapAsync, sequence, intervalAsync } from 'fundamentool/async';
