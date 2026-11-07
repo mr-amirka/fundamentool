@@ -285,4 +285,35 @@ describe('RpcClientPool — options as a function, on, proxy', () => {
     expect(made).toBe(1);
     pool.destroy();
   });
+
+  test('settled: when every client of the pool is (fundamentool D-109)', async () => {
+    let release: () => void = () => {};
+    const slow = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const settledOf = [
+      jest.fn(() => Promise.resolve()),
+      jest.fn(() => slow),
+    ];
+    let i = 0;
+    const pool = new RpcClientPool({
+      maxWorkers: 2,
+      workerProvider: () => ({
+        settled: settledOf[i++],
+        taskCount: () => 0,
+        destroy: () => {},
+      } as any),
+    });
+    pool.getWorkers(2);
+    let done = false;
+    const waiting = pool.settled().then(() => {
+      done = true;
+    });
+    await Promise.resolve();
+    expect(done).toBe(false);
+    release();
+    await waiting;
+    expect(settledOf[0]).toHaveBeenCalled();
+    expect(settledOf[1]).toHaveBeenCalled();
+  });
 });

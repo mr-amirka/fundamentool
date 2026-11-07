@@ -142,6 +142,15 @@ export class RpcClientPool<Client extends IRpcClient = IRpcClient> extends Event
     return this.getWorker().proxy();
   }
 
+  /**
+   * Resolves once every client of the pool is settled (fundamentool D-109).
+   *
+   * @returns When none of them waits on its other end.
+   */
+  async settled() {
+    await Promise.all(this.workers.map((worker) => worker.settled()));
+  }
+
   /** Returns the total number of pending tasks across all workers. */
   taskCount() {
     return this.workers.reduce((a, w) => a + w.taskCount(), 0);

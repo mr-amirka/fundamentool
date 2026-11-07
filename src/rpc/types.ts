@@ -328,6 +328,8 @@ export type TRpcClientOptionsInit = () => TRpcClientOptions;
 export interface IRpcClient extends IEventEmitter<any> {
   /** Returns the number of currently pending calls. */
   taskCount(): number;
+  /** Resolves once nothing waits on the other end — every call answered, a given-up one too (fundamentool D-109). */
+  settled(): Promise<void>;
   /** Destroys the client and releases resources; the calls still waiting reject with `reason`. */
   destroy(reason?: Error): void;
   /**

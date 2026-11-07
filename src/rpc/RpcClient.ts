@@ -62,6 +62,7 @@ export class RpcClient extends EventEmitter implements IRpcClient {
 
   private nextCallbackCallIndex = 0;
   private taskMap = new Map<string, TRpcClientTask>();
+  private settledWaiters: (() => void)[] = [];
   private unsubscriber = new Unsubscriber();
   private proxyInstancePromise: Promise<any> | undefined;
   private postMessage: TRpcClientOptions['postMessage'];
@@ -82,6 +83,38 @@ export class RpcClient extends EventEmitter implements IRpcClient {
 
   taskCount() {
     return this.taskMap.size;
+  }
+
+  /**
+   * Resolves once nothing waits on the other end (fundamentool D-109): every call answered — one given up here (its
+   * timeout, its signal) too, since the other end works on it until it answers —, every subscription and proxy ended,
+   * or the calls lost (`destroy`). At once when none. What a client that ends a worker waits for first: a thread ended
+   * in the middle of a native call can take its process down.
+   *
+   * @returns When `taskCount()` is 0.
+   * @example
+   * controller.abort();                       // the call rejects here at once
+   * await client.settled();                   // the worker has answered it
+   * client.destroy();
+   */
+  settled(): Promise<void> {
+    if (this.taskMap.size === 0) {
+      return Promise.resolve();
+    }
+    return new Promise((resolve) => {
+      this.settledWaiters.push(resolve);
+    });
+  }
+
+  /** Tells the waiters of `settled` when the last task went. */
+  private checkSettled() {
+    if (this.taskMap.size === 0 && this.settledWaiters.length > 0) {
+      const waiters = this.settledWaiters;
+      this.settledWaiters = [];
+      for (const resolve of waiters) {
+        resolve();
+      }
+    }
   }
 
   /**
@@ -110,6 +143,7 @@ export class RpcClient extends EventEmitter implements IRpcClient {
     for (const task of waiting) {
       task[0](reason, 1);
     }
+    this.checkSettled();
   }
 
   call<R = any>(
@@ -307,6 +341,7 @@ export class RpcClient extends EventEmitter implements IRpcClient {
       case TRpcType.Result:
         task[0](coder?.decode(dataArgs[3], false) || dataArgs[3], dataArgs[2]);
         this.taskMap.delete(requestId);
+        this.checkSettled();
         return;
 
       case TRpcType.SubResult: {

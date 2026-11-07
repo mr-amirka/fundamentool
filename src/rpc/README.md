@@ -29,7 +29,10 @@ Type-safe bidirectional RPC over any message channel (Worker, WebSocket, iframe,
 
 **`RpcConnect`** — server side. Receives calls from a client, invokes exported methods, returns results.
 
-**`RpcClient`** — client side. Sends typed method calls over a channel, returns Promises.
+**`RpcClient`** — client side. Sends typed method calls over a channel, returns Promises. `settled()` resolves once
+nothing waits on the other end — a call given up here (its timeout, its signal) counts until the other end answers it,
+since it runs on there (fundamentool D-109): what to wait for before ending a worker, which ended inside a native call
+can take its process down.
 
 **`RpcClientPool`** — distributes calls across a pool of `RpcClient` instances (e.g. multiple workers), routing each call to the least-busy worker.
 
@@ -79,6 +82,7 @@ import { NodeRpcClientWorker } from 'fundamentool/rpc/node';
 
 const worker = new NodeRpcClientWorker('./worker.js');
 const msg = await worker.call('greet', ['world']); // 'hello world'
+await worker.settled(); // every call answered, a given-up one too
 worker.destroy();
 ```
 
