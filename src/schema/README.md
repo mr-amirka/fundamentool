@@ -60,7 +60,7 @@ Don't destructure a namespace object (`const { object } = schema`) — a bundler
 | `number()` + `.min(n)`, `.max(n)`, `.int()`, `.finite()` | a number (not `NaN`) |
 | `literal(value)`, `oneOf(values \| () => values)` | exactly a value; one of strings (a near one — "did you mean") |
 | `custom(check, expected)` | anything a check accepts (`isStore`) |
-| `union([a, b])` | the first that fits |
+| `union([a, b])` | the first that fits; none — the problem of the one whose kind the value has (`union([oneOf(KINDS), array(oneOf(KINDS))])`: `"hok"` → "did you mean", `["hook", "hok"]` → `[1] …`), else "expects A or B" |
 | `array(item)`, `tuple([a, b])`, `record(value)` | a list, fixed places, `{ [name]: value }` |
 | `object(shape)` + `.passthrough()`, `.shape`, `.keys`, `.pick(mask)`, `.omit(mask)` | an options object; `object({ ...BASE.shape, out: string() })` — a wider one, `BASE.omit({ out: true })` — a part |
 | `.optional()`, `.refine(rule, message)`, `.describe(expected)`, `.label(name)` | on any schema |

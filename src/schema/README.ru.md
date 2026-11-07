@@ -59,7 +59,7 @@ export function createHost(options: THostOptions) {
 | `number()` + `.min(n)`, `.max(n)`, `.int()`, `.finite()` | число (не `NaN`) |
 | `literal(value)`, `oneOf(values \| () => values)` | ровно значение; одну из строк (близкая — «did you mean») |
 | `custom(check, expected)` | что примет проверка (`isStore`) |
-| `union([a, b])` | первое подходящее |
+| `union([a, b])` | первое подходящее; ни одного — ошибка того, чей вид у значения (`union([oneOf(KINDS), array(oneOf(KINDS))])`: `"hok"` → «did you mean», `["hook", "hok"]` → `[1] …`), иначе «expects A or B» |
 | `array(item)`, `tuple([a, b])`, `record(value)` | список, фиксированные места, `{ [имя]: значение }` |
 | `object(shape)` + `.passthrough()`, `.shape`, `.keys`, `.pick(mask)`, `.omit(mask)` | объект опций; `object({ ...BASE.shape, out: string() })` — более широкий, `BASE.omit({ out: true })` — часть |
 | `.optional()`, `.refine(rule, message)`, `.describe(expected)`, `.label(name)` | у любой схемы |
