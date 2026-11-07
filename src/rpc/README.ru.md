@@ -4,9 +4,22 @@
 
 Типобезопасный двунаправленный RPC поверх любого канала сообщений (Worker, WebSocket, iframe и т.д.).
 
+## Когда нужен
+
+- Один процесс, поток или машина вызывает функции другого и ждёт результат: воркер, фоновый процесс, сервер,
+  веб-страница и её бэкенд.
+- Протокол вызовов поверх сокета, пайпа, stdio дочернего процесса или WebSocket — запросы, ответы, id, ошибки: не
+  пиши свой, он здесь.
+- Callback, переданный удалённой функции (прогресс, поток шагов), удалённая сторона шлёт данные своим клиентам, отмена
+  удалённого вызова (таймаут, `AbortSignal`).
+- Ошибки, которые сохраняют свой класс через канал (`instanceof TypeError` на стороне вызывающего).
+- Вызовы, которые переживают обрыв соединения: браузерный или Node-клиент сервера по WebSocket, переподключение к
+  следующему из нескольких адресов.
+- Распределение вызовов по пулу воркеров.
+
 | Точка входа | Содержимое |
 |-------------|------------|
-| `fundamentool/rpc` | Универсальное ядро: `RpcClient`, `RpcConnect`, `RpcClientPool`, `RpcCoder` |
+| `fundamentool/rpc` | Универсальное ядро: `RpcClient`, `RpcConnect`, `RpcClientPool`, `RpcCoder`; поверх WebSocket: `RpcClientWebSocket`, `serveRpcWebSocket` |
 | `fundamentool/rpc/browser` | Browser-воркеры: `RpcClientWorker`, `RpcConnectWorker`, `RpcClientWorkerPool` |
 | `fundamentool/rpc/node` | Node.js: воркеры (`NodeRpcClientWorker`, `NodeRpcConnectWorker`, `NodeRpcClientWorkerPool`) и `rpcStreamTransport` поверх потока |
 
@@ -130,6 +143,49 @@ const socket = net.connect('/tmp/app.sock');
 const client = new RpcClient(rpcStreamTransport(socket));
 socket.on('close', () => client.destroy(new Error('сервер ушёл — вызовите снова')));
 await client.call('count', [3, (step: number) => console.log(step)]); // печатает 1, 2, 3; даёт 3
+```
+
+## Поверх WebSocket — браузерный или Node-клиент сервера
+
+`RpcClientWebSocket` (клиент, в браузере и в Node 22+; в старом Node передай `WebSocket` из `ws`) и
+`serveRpcWebSocket` (хост, поверх WebSocket-сервера, который передаёшь ты, — `WebSocketServer` из `ws`) — fundamentool
+D-104, перенесено из `mn-utils`. Вызовы живут в сессии, которая переживает свой сокет: оборвавшийся сокет открывается
+снова сразу (следующий из `url` по очереди; не ответивший пробуется снова через `reconnectMs`, 5 с), и всё, что любая
+сторона отправила за это время — или отправила, а другая не получила, — отправляется снова; вызов это время ждёт. Хост
+потерял сессию (перезапустился, или сокета не было `sessionMs`, сутки) — ждущие вызовы отклоняются с «вызови снова»,
+а `proxy()` запрашивает экспорты заново. `client.destroy()` закрывает сокет, и хост сразу забывает сессию.
+
+```ts
+// сервер
+import { WebSocketServer } from 'ws';
+import { serveRpcWebSocket } from 'fundamentool/rpc';
+
+serveRpcWebSocket({
+  server: new WebSocketServer({ port: 8081 }),
+  exports: {
+    log: (...args: unknown[]) => {
+      console.log(...args);
+      return 'Доставлено!';
+    },
+    info: async (text: string, callback: (text: string) => void) => {
+      console.info(text);
+      await callback('на сервере!');
+      throw new Error('ошибка!');
+    },
+  },
+});
+
+// клиент — пример из mn-utils
+import { RpcClientWebSocket } from 'fundamentool/rpc';
+
+const client = new RpcClientWebSocket({ url: ['ws://localhost:8081'] });
+const { log, info } = await client.proxy();
+
+log('Vasya!').then((response) => console.log({ vasyaResponse: response })); // { vasyaResponse: 'Доставлено!' }
+info('Пупкин!', (text: string) => console.log('Выполнил колбэк с: ', text)) // Выполнил колбэк с:  на сервере!
+  .then((response) => console.log({ pupkinResponse: response }), (error) => console.error(error)); // Error: info: ошибка!
+log('уже второй!');
+client.destroy(); // когда закончил: `terminate` из mn-utils
 ```
 
 ## Ошибки через канал

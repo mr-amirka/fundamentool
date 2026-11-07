@@ -4,9 +4,22 @@
 
 Type-safe bidirectional RPC over any message channel (Worker, WebSocket, iframe, etc.).
 
+## When you need it
+
+- One process, thread or machine calls functions of another and awaits their results: a worker, a background process,
+  a server, a web page talking to its backend.
+- A call protocol over a socket, a pipe, a child's stdio or a WebSocket — requests, answers, ids, errors: don't write
+  one, it is here.
+- A callback passed to a remote function (progress, a stream of steps), the remote side pushing data to its callers,
+  cancelling a remote call (timeout, `AbortSignal`).
+- Errors that keep their class across the channel (`instanceof TypeError` on the caller's side).
+- Calls that survive a dropped connection: a browser or a Node client of a server over a WebSocket, reconnecting to
+  the next of several addresses.
+- Spreading calls over a pool of workers.
+
 | Entry point | Contents |
 |-------------|----------|
-| `fundamentool/rpc` | Universal core: `RpcClient`, `RpcConnect`, `RpcClientPool`, `RpcCoder` |
+| `fundamentool/rpc` | Universal core: `RpcClient`, `RpcConnect`, `RpcClientPool`, `RpcCoder`; over a WebSocket: `RpcClientWebSocket`, `serveRpcWebSocket` |
 | `fundamentool/rpc/browser` | Browser workers: `RpcClientWorker`, `RpcConnectWorker`, `RpcClientWorkerPool` |
 | `fundamentool/rpc/node` | Node.js: workers (`NodeRpcClientWorker`, `NodeRpcConnectWorker`, `NodeRpcClientWorkerPool`) and `rpcStreamTransport` over a stream |
 
@@ -130,6 +143,50 @@ const socket = net.connect('/tmp/app.sock');
 const client = new RpcClient(rpcStreamTransport(socket));
 socket.on('close', () => client.destroy(new Error('the server went away — call again')));
 await client.call('count', [3, (step: number) => console.log(step)]); // logs 1, 2, 3; resolves 3
+```
+
+## Over a WebSocket — a browser or Node client of a server
+
+`RpcClientWebSocket` (a client, in a browser and in Node 22+; older Node passes `ws`'s `WebSocket`) and
+`serveRpcWebSocket` (the host, over a WebSocket server you pass in — `ws`'s `WebSocketServer`) — fundamentool D-104,
+ported from `mn-utils`. The calls live in a session that outlasts its socket: a socket that drops is opened again at
+once (the next of the `url`s in turn; one that doesn't answer is tried again after `reconnectMs`, 5 s), and whatever
+either end sent meanwhile — or sent and the other didn't get — is sent again; a call waits through it. A host that
+lost the session (it restarted, or the socket stayed away `sessionMs`, a day) — the calls waiting reject with "call
+again", and `proxy()` asks for the exports again. `client.destroy()` closes the socket and the host forgets the
+session at once.
+
+```ts
+// the server
+import { WebSocketServer } from 'ws';
+import { serveRpcWebSocket } from 'fundamentool/rpc';
+
+serveRpcWebSocket({
+  server: new WebSocketServer({ port: 8081 }),
+  exports: {
+    log: (...args: unknown[]) => {
+      console.log(...args);
+      return 'Delivered!';
+    },
+    info: async (text: string, callback: (text: string) => void) => {
+      console.info(text);
+      await callback('on the server!');
+      throw new Error('a mistake!');
+    },
+  },
+});
+
+// the client — mn-utils's example
+import { RpcClientWebSocket } from 'fundamentool/rpc';
+
+const client = new RpcClientWebSocket({ url: ['ws://localhost:8081'] });
+const { log, info } = await client.proxy();
+
+log('Vasya!').then((response) => console.log({ vasyaResponse: response })); // { vasyaResponse: 'Delivered!' }
+info('Pupkin!', (text: string) => console.log('Ran the callback with:', text)) // Ran the callback with: on the server!
+  .then((response) => console.log({ pupkinResponse: response }), (error) => console.error(error)); // Error: info: a mistake!
+log('the second one!');
+client.destroy(); // when done: mn-utils's `terminate`
 ```
 
 ## Errors across the channel

@@ -80,13 +80,23 @@ export class RpcClient extends EventEmitter implements IRpcClient {
    */
   destroy(reason?: Error) {
     this.unsubscriber.unsubscribe();
+    this.lose(reason ?? new Error('Client: destroyed'));
+    super.destroy();
+  }
+
+  /**
+   * The channel lost the calls in flight — a new session on its other end (fundamentool D-104): every call still
+   * waiting rejects with `reason`, and the next `proxy()` asks for the exports again. The client keeps listening.
+   *
+   * @param reason - What they reject with.
+   */
+  protected lose(reason: Error) {
     const waiting = [...this.taskMap.values()];
     this.taskMap.clear();
-    const error = reason ?? new Error('Client: destroyed');
+    this.proxyInstancePromise = undefined;
     for (const task of waiting) {
-      task[0](error, 1);
+      task[0](reason, 1);
     }
-    super.destroy();
   }
 
   call<R = any>(

@@ -4,3 +4,4 @@ export * from './RpcConnect';
 export * from './RpcClient';
 export * from './RpcClientPool';
 
+export * from './websocket';

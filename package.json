@@ -297,6 +297,7 @@
     "@types/node": "^20.11.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.7",
+    "@types/ws": "^8.18.1",
     "better-sqlite3": "^12.11.1",
     "esbuild": "^0.28.2",
     "eslint": "^10.9.1",
@@ -314,7 +315,8 @@
     "typedoc": "^0.28.19",
     "typedoc-plugin-markdown": "^4.11.0",
     "typescript": "^5.9.3",
-    "vitepress": "^1.6.4"
+    "vitepress": "^1.6.4",
+    "ws": "^8.21.3"
   },
   "lab": {
     "layer": "core",
