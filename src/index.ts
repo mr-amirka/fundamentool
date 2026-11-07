@@ -97,6 +97,7 @@ export * from './includes';
 export * from './indexOf';
 export * from './invoke';
 export * from './kebabToCamelCase';
+export * from './keyedQueue';
 export * from './keyedRegistry';
 export * from './keys';
 export * from './last';
