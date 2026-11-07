@@ -315,6 +315,81 @@ describe('RpcClientWebSocket and serveRpcWebSocket', () => {
     expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('RpcClientWebSocket'), '{broken');
   });
 
+  it('proxy() fails for good — its timeout, the server away: the client is closed, no socket left trying', async () => {
+    let made = 0;
+    // A WebSocket that counts the sockets opened
+    class Counted extends WsSocket {
+      constructor(url: string) {
+        made++;
+        super(url);
+      }
+    }
+    const lonely = client({
+      url: DEAD,
+      reconnectMs: 10,
+      timeout: 50,
+      WebSocket: Counted as any,
+    });
+    await expect(lonely.proxy()).rejects.toThrow('proxy: The method execution timeout has been reached');
+    const after = made;
+    await wait(60);
+    expect(made).toBe(after);
+  });
+
+  it('proxy() of a server that offers nothing to call: the client closed, the host forgets it; a nested one counts', async () => {
+    host = serveRpcWebSocket({
+      server,
+      exports: {
+        answer: 42,
+      } as any,
+    });
+    await expect(client({
+      url: address(),
+    }).proxy()).rejects.toThrow('offers nothing to call');
+    await until(() => host?.sessions() === 0);
+    host.close();
+    host = serveRpcWebSocket({
+      server,
+      exports: {
+        math: {
+          add: (a: number, b: number) => a + b,
+        },
+      } as any,
+    });
+    const {
+      math,
+    } = await client({
+      url: address(),
+    }).proxy();
+    await expect(math.add(2, 3)).resolves.toBe(5);
+  });
+
+  it('a session lost during the handshake is no failure: proxy() asks again on the next socket', async () => {
+    // A first server that welcomes, takes the handshake and drops — a host restarting just then
+    server.once('connection', (socket) => {
+      socket.once('message', () => {
+        socket.send(JSON.stringify([
+          TRpcFrame.Hello,
+          'gone',
+          0,
+        ]));
+        socket.once('message', () => {
+          host = serveRpcWebSocket({
+            server,
+            exports: EXAMPLE,
+          });
+          socket.terminate();
+        });
+      });
+    });
+    const {
+      log,
+    } = await client({
+      url: address(),
+    }).proxy();
+    await expect(log('again')).resolves.toBe('Delivered: again');
+  });
+
   it('a client destroyed before its socket opened: the calls reject, no session stays', async () => {
     host = serveRpcWebSocket({
       server,

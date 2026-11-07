@@ -37,6 +37,31 @@ const RECONNECT_MS = 5000;
 /** `readyState` of an open socket. */
 const OPEN = 1;
 
+/** The errors of a session lost on the host's side: a call of it may simply be made again. */
+const lostErrors = new WeakSet<Error>();
+
+/** The key `RpcClient.proxy()` adds to the exports itself. */
+const TERMINATE = 'terminate';
+
+/** Whether the exports hold a function to call — at any depth, `proxy()`'s own `terminate` aside. */
+function hasFunctions(value: unknown, top = true): boolean {
+  if (typeof value === 'function') {
+    return true;
+  }
+  if (value === null || typeof value !== 'object') {
+    return false;
+  }
+  for (const [
+    key,
+    item,
+  ] of Object.entries(value)) {
+    if (!(top && key === TERMINATE) && hasFunctions(item, false)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /** A `WebSocket` constructor: the browser's, Node's (22+), or `ws`'s. */
 export type TRpcWebSocketConstructor = new (url: string) => TRpcWebSocket;
 
@@ -99,6 +124,10 @@ function checkOptions(options: TRpcClientWebSocketOptions): void {
  * A server that lost the session (it restarted, the session expired) — the calls waiting reject with "call again", and
  * `proxy()` asks for the exports again.
  *
+ * `proxy()` closes the client when it fails for good — the `timeout` passed, the server answered an error — or the
+ * server offers nothing to call: no socket stays alive that no one can stop, so the one-line form is safe (D-104's
+ * note, `mn-utils`'s rule). A session lost meanwhile is no failure: it asks again on the next socket.
+ *
  * @example
  * const client = new RpcClientWebSocket({ url: ['ws://localhost:8081'] });
  * const { log, info } = await client.proxy();
@@ -149,6 +178,35 @@ export class RpcClientWebSocket extends RpcClient {
     super.destroy(reason);
   }
 
+  /**
+   * The server's exports as functions — and `terminate`, which ends this handshake only (`destroy()` closes the client).
+   * Fails for good (the `timeout`, a server's error) or nothing to call — the client is closed, then it rejects.
+   *
+   * @returns The exports.
+   * @example
+   * const { log } = await new RpcClientWebSocket({ url, timeout: 5000 }).proxy(); // no socket left behind on a failure
+   */
+  async proxy(): Promise<Record<string, any>> {
+    for (;;) {
+      let exports: Record<string, any>;
+      try {
+        exports = await super.proxy();
+      } catch (error) {
+        if (lostErrors.has(error as Error)) {
+          continue;
+        }
+        this.destroy(error as Error);
+        throw error;
+      }
+      if (!hasFunctions(exports)) {
+        const error = new Error(`${WHERE}: the server offers nothing to call — the client is closed`);
+        this.destroy(error);
+        throw error;
+      }
+      return exports;
+    }
+  }
+
   /** Opens a socket to the next address; when it drops, the next one — at once if it was welcomed, else later. */
   private connect() {
     const url = this.urls[this.next++ % this.urls.length];
@@ -178,7 +236,9 @@ export class RpcClientWebSocket extends RpcClient {
         if (this.session !== null && session !== this.session) {
           // The calls of the old session have no one to answer them; their messages are dropped with them
           this.link.reset();
-          this.lose(new Error(`${WHERE}: the server lost the session (it restarted, or the session expired) — call again`));
+          const lost = new Error(`${WHERE}: the server lost the session (it restarted, or the session expired) — call again`);
+          lostErrors.add(lost);
+          this.lose(lost);
         }
         this.session = session;
         welcomed = true;

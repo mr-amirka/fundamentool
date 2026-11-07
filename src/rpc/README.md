@@ -156,6 +156,12 @@ lost the session (it restarted, or the socket stayed away `sessionMs`, a day) �
 again", and `proxy()` asks for the exports again. `client.destroy()` closes the socket and the host forgets the
 session at once.
 
+`proxy()` closes the client itself when it fails for good — the `timeout` passed, the server answered an error — or
+the server offers nothing to call: no socket stays alive that no one can stop, so the one-line
+`const { log } = await new RpcClientWebSocket({ url, timeout: 5000 }).proxy();` is safe. A
+session lost during the handshake is no failure: it asks again on the next socket. `call()` never closes the client.
+The client's `timeout` covers every call, and `proxy()`'s handshake — not the proxy's functions after it.
+
 ```ts
 // the server
 import { WebSocketServer } from 'ws';

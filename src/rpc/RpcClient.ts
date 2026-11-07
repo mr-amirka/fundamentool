@@ -31,8 +31,21 @@ import {
 import {
   createTimeout,
 } from '../createTimeout';
+import {
+  noop,
+} from '../noop';
 
 const ABORT = 'abort';
+
+/** A call given up — its timeout, its signal: the error `RpcClient` rejects it with. */
+function abortError(method: string, message: string): Error {
+  const error = new Error(`${method}: ${message}`);
+  error.name = 'AbortError';
+  (error as any).code = 20;
+  return error;
+}
+
+const TIMEOUT_REACHED = 'The method execution timeout has been reached';
 
 /**
  * RPC client that sends typed method calls over a message channel
@@ -129,9 +142,15 @@ export class RpcClient extends EventEmitter implements IRpcClient {
 
     let terminate: any;
     return this.proxyInstancePromise = new Promise((resolve, reject) => {
+      // The client's timeout covers the handshake — the exports coming —, not the meta call, which lives until `terminate`
+      const cancel = this.timeout ? createTimeout(() => {
+        this.proxyInstancePromise = undefined;
+        reject(abortError('proxy', TIMEOUT_REACHED));
+      }, this.timeout) : noop;
       this.callBase(
         TRpcType.MetaCall, 'proxy', [
           (exports: any) => {
+            cancel();
             const originTerminate = exports.terminate;
             resolve({
               ...exports,
@@ -148,7 +167,11 @@ export class RpcClient extends EventEmitter implements IRpcClient {
             });
           },
         ],
-      ).catch(reject);
+      ).catch((error) => {
+        cancel();
+        this.proxyInstancePromise = undefined;
+        reject(error);
+      });
     });
   }
 
@@ -197,27 +220,23 @@ export class RpcClient extends EventEmitter implements IRpcClient {
         new Map(),
       ]);
 
-      if (options) {
-        const timeout = options.timeout || this.timeout;
-        const {
-          signal,
-        } = options;
+      // The client's own timeout covers every call without options too — not the proxy's meta call (see `proxy`)
+      if (options || (this.timeout && type !== TRpcType.MetaCall)) {
+        const timeout = options?.timeout || this.timeout;
+        const signal = options?.signal;
 
         const abort = (message: string) => {
-          const error = new Error(`${method}: ${message}`);
-          error.name = 'AbortError';
-          (error as any).code = 20;
-          reject(error);
+          reject(abortError(method, message));
         };
 
         timeout && unsubscriber.add(createTimeout(() => {
-          abort('The method execution timeout has been reached');
+          abort(TIMEOUT_REACHED);
           this.sendEvent(requestId, ABORT);
         }, timeout));
 
         signal && [
           ...RpcClient.DEFAULT_EVENTS,
-          ...(options.events || []),
+          ...(options?.events || []),
         ].forEach((eventName) => {
           unsubscriber.add(attachEvent(
             signal, eventName, (e: Event) => {

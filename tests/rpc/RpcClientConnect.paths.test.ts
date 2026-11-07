@@ -201,6 +201,40 @@ describe('RpcClient ↔ RpcConnect — every path', () => {
     await flush(70);
   });
 
+  it('the client\'s own timeout covers a call with no options and the proxy\'s handshake — not the proxy after it', async () => {
+    const {
+      client,
+    } = pair({
+      slow: () => new Promise((resolve) => {
+        setTimeout(resolve, 60);
+      }),
+      add: (a: number, b: number) => a + b,
+    }, {
+      timeout: 10,
+    });
+    await expect(client.call('slow')).rejects.toThrow('slow: The method execution timeout has been reached');
+    const proxy = await client.proxy();
+    await flush(30);
+    await expect(proxy.add(1, 2)).resolves.toBe(3);
+    await flush(70);
+
+    // No server answers: the handshake times out, and the next proxy() asks again
+    const alone = new RpcClient({
+      postMessage: () => () => undefined,
+      onMessage: () => () => undefined,
+      timeout: 10,
+    });
+    const first = alone.proxy();
+    await expect(first).rejects.toMatchObject({
+      name: 'AbortError',
+      message: 'proxy: The method execution timeout has been reached',
+    });
+    const second = alone.proxy();
+    expect(second).not.toBe(first);
+    alone.destroy(new Error('gone'));
+    await expect(second).rejects.toThrow('gone');
+  });
+
   it('an AbortSignal and the events asked for reach the server task\'s signal, with their detail', async () => {
     const heard: unknown[] = [];
     const {
