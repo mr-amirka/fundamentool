@@ -55,6 +55,7 @@ npm run docs:api
 | `fundamentool/join` | String join helpers |
 | `fundamentool/split` | String split helpers |
 | `fundamentool/jsonl` | JSON Lines serialization / deserialization |
+| `fundamentool` → `tupleLog` | A log of records as tuples — the type first, the fields by place, the names once in a schema; versions read through each version's `up`, a file only appended ([README](src/tupleLog/README.md)) |
 | `fundamentool/browser` | Browser utilities: WebSocket, storage, routing, DI providers |
 | `fundamentool/node` | Node.js utilities: file I/O (CSV, JSON, JSONL), hashing, directory scan |
 | `fundamentool/rpc` | RPC core: `RpcClient`, `RpcConnect` (a method reaches its call with `useCall()`), `RpcClientPool`, `RpcCoder`; over a WebSocket — `RpcClientWebSocket`, `serveRpcWebSocket` ([README](src/rpc/README.md)) |

@@ -98,6 +98,7 @@ export * from './indexOf';
 export * from './invoke';
 export * from './kebabToCamelCase';
 export * from './keyedQueue';
+export * from './tupleLog';
 export * from './keyedRegistry';
 export * from './keys';
 export * from './last';

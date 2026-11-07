@@ -53,6 +53,7 @@ npm run docs:api
 | `fundamentool/join` | Утилиты склейки строк |
 | `fundamentool/split` | Утилиты разбиения строк |
 | `fundamentool/jsonl` | Сериализация JSON Lines |
+| `fundamentool` → `tupleLog` | Журнал записей кортежами — сначала тип, затем поля по местам, имена один раз в схеме; версии читаются через `up` каждой версии, файл только дописывается ([README](src/tupleLog/README.ru.md)) |
 | `fundamentool/browser` | Browser-утилиты (WebSocket, хранилище, роутинг, DI-провайдеры) |
 | `fundamentool/node` | Node.js-утилиты (файловый ввод-вывод, хеш, обход директорий) |
 | `fundamentool/rpc` | RPC-ядро: `RpcClient`, `RpcConnect` (метод видит свой вызов через `useCall()`), `RpcClientPool`, `RpcCoder`; поверх WebSocket — `RpcClientWebSocket`, `serveRpcWebSocket` ([README](src/rpc/README.ru.md)) |
