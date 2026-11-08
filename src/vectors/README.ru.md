@@ -14,16 +14,19 @@
   их оценки несравнимы: reciprocal rank fusion (RRF).
 - Хранить векторы в базе (BLOB-колонка SQLite) и читать их обратно.
 - Разрезать длинный текст на куски, которые модель прочтёт, — целыми предложениями, с перекрытием — перед эмбеддингом.
+- Разрезать структурированный текст — документ Markdown, ответ в чате с кодом и списками — по его блокам: блок кода,
+  пункт списка, таблица не рвутся, а кусок из середины раздела говорит, какой это раздел.
 - Косинусная близость двух векторов.
 
 ```ts
-import { nearest, fuseRanks, toBytes, fromBytes, chunkText } from 'fundamentool/vectors';
+import { nearest, fuseRanks, toBytes, fromBytes, chunkText, chunkBlocks } from 'fundamentool/vectors';
 
 nearest(query, vectors, 3);                         // => [[412, 0.86], [97, 0.84], [5, 0.84]] — [индекс, оценка], лучшие первыми
 nearest(query, vectors, 3, { where: (i) => nodes[i].type === 'function' });  // спрашивается до подсчёта
 fuseRanks([wordHits, meaningHits]);                 // => [['editDistance', 0.0325], ['spaces', 0.0164], …] — слияние по местам
 db.run('INSERT INTO vectors VALUES (?, ?)', [rid, toBytes(vector)]);         // столбец BLOB, и обратно: fromBytes
 chunkText(longSection, { maxWords: 200, overlap: 20 });                      // целые предложения, пока влезают
+chunkBlocks(readBlocks(reply), { maxWords: 200, overlap: 20 });              // целые блоки — readBlocks: markdown-tree
 ```
 
 | Член | Что делает |
@@ -33,6 +36,8 @@ chunkText(longSection, { maxWords: 200, overlap: 20 });                      // 
 | `fuseRanks(lists, { k? })` | Слияние рейтингов (reciprocal rank fusion): место `r` (с 1) добавляет `1 / (k + r)`, `k` по умолчанию 60; кортежи `[id, оценка]`, лучшие первыми, так что слитые списки вызывающего сравнимы между собой. Оценки разных поисков не сравнимы (BM25 не ограничен, косинус — не больше 1), места — сравнимы |
 | `toBytes(vector)`, `fromBytes(bytes)` | 32-битные числа, little-endian на любой платформе; `Buffer` Node читается со своего смещения |
 | `chunkText(text, { maxWords?, overlap? })` | Куски не длиннее `maxWords` слов (200): целые предложения, пока влезают, последнее повторяется, если не длиннее `overlap` (20); предложение длиннее режется окнами с `overlap` общими словами; `''` → `[]` |
+| `chunkBlocks(blocks, { maxWords?, overlap? })` | Блоки текста (`TTextBlock`: `{ text, context?, keepWithNext? }`, от читателя) — куски не длиннее `maxWords` слов: целые блоки, пока влезают, через пустую строку; кусок, открывающийся внутри раздела, начинается с его `context` (не длиннее `overlap` слов); блок `keepWithNext` (заголовок) уходит со следующим; блок перед разрезом повторяется, если не длиннее `overlap`; слишком длинный блок режет `chunkText`. Знает блоки, не Markdown |
+| `wordsOf(text)` | Слова текста, как их считают обе функции, — отрезки между пробелами: влезет ли текст в один кусок |
 | `TVector`, `TNearestHit`, `TFusedHit`, `WHERE` | `ArrayLike<number>`; `[индекс, оценка]`; `[id, оценка]`; префикс сообщений |
 
 `nearest` просматривает каждый вектор — 20 000 векторов по 384 числа это несколько миллисекунд. Индекс для миллионов

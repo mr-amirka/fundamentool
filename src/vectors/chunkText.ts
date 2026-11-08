@@ -25,8 +25,39 @@ const OPTIONS = /*#__PURE__*/ lazy(() => object({
 const SENTENCE_END = /(?<=[.!?…])\s+|\n\s*\n/;
 const SPACE = /\s+/;
 
-/** A text's words. */
-const wordsOf = (text: string): string[] => text.split(SPACE).filter((word) => word !== '');
+/**
+ * A text's words, as `chunkText` and `chunkBlocks` count them: the runs between spaces.
+ *
+ * @param text - The text.
+ * @returns Its words; `[]` for a text of spaces.
+ * @example
+ * wordsOf(' One  tool.\n'); // => ['One', 'tool.']
+ */
+export const wordsOf = (text: string): string[] => text.split(SPACE).filter((word) => word !== '');
+
+/**
+ * The options of a cut into pieces, checked (in development) and with their defaults: `[maxWords, overlap]`.
+ *
+ * @param name    - The function's name, for the messages.
+ * @param options - `maxWords`, `overlap`.
+ * @returns `[maxWords, overlap]`.
+ * @throws {TypeError} An unknown option, a value not a whole number, `overlap` not below `maxWords`.
+ */
+export function windowOf(name: string, options: TChunkTextOptions): [maxWords: number, overlap: number] {
+  if (process.env.NODE_ENV !== 'production') {
+    OPTIONS().parse(options, `${WHERE} ${name}`);
+  }
+  const {
+    maxWords = 200, overlap = 20,
+  } = options;
+  if (overlap >= maxWords) {
+    throw new TypeError(`${WHERE} ${name}: overlap is below maxWords, got overlap ${overlap} and maxWords ${maxWords}`);
+  }
+  return [
+    maxWords,
+    overlap,
+  ];
+}
 
 /**
  * A text cut into pieces of at most `maxWords` words, for a model that reads a limited length. Whole sentences go into a
@@ -42,15 +73,10 @@ const wordsOf = (text: string): string[] => text.split(SPACE).filter((word) => w
  * // => ['One two.', 'Three four five.', 'Six.']
  */
 export function chunkText(text: string, options: TChunkTextOptions = {}): string[] {
-  if (process.env.NODE_ENV !== 'production') {
-    OPTIONS().parse(options, `${WHERE} chunkText`);
-  }
-  const {
-    maxWords = 200, overlap = 20,
-  } = options;
-  if (overlap >= maxWords) {
-    throw new TypeError(`${WHERE} chunkText: overlap is below maxWords, got overlap ${overlap} and maxWords ${maxWords}`);
-  }
+  const [
+    maxWords,
+    overlap,
+  ] = windowOf('chunkText', options);
   if (wordsOf(text).length <= maxWords) {
     return text.trim() === '' ? [] : [text];
   }
