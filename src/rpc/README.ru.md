@@ -223,11 +223,16 @@ await client.call('run', [(progress: number) => {
 }]);
 ```
 
-Серверная сторона также может отправлять события:
+События сервера — двумя путями:
 
 ```ts
-// подписка на клиенте
-await client.subscribe('update', (data) => console.log(data));
+// on: экспорт сервера `ticks(args)` получает колбэки и возвращает свою отписку
+const stop = client.on('ticks', [(value: number) => console.log(value)]);
+stop(); // выполняется отписка сервера
+
+// subscribe: каждый `useCall().dispatch(data)`, отправленный этому клиенту, — слушатели пула слышат каждого воркера
+const off = client.subscribe((data) => console.log(data));
+off();
 ```
 
 ---

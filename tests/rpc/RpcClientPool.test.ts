@@ -3,6 +3,7 @@ import {
 } from '../../src/rpc/RpcClient';
 import {
   RpcConnect,
+  useCall,
 } from '../../src/rpc/RpcConnect';
 import {
   RpcClientPool,
@@ -99,6 +100,7 @@ describe('RpcClientPool', () => {
         call: () => new Promise(() => {}),
         on: () => () => {},
         proxy: () => new Promise(() => {}),
+        subscribe: () => () => undefined,
         taskCount: () => 2,
         destroy: () => {},
       } as any),
@@ -120,6 +122,7 @@ describe('RpcClientPool', () => {
             call: () => Promise.resolve(),
             on: () => () => {},
             proxy: () => Promise.resolve(),
+            subscribe: () => () => undefined,
             taskCount: () => 0,
             destroy: () => {},
           } as any;
@@ -149,6 +152,7 @@ describe('RpcClientPool', () => {
           call: () => Promise.resolve(),
           on: () => () => {},
           proxy: () => Promise.resolve(),
+          subscribe: () => () => undefined,
           taskCount: () => taskCounts[idx],
           destroy: () => {},
         } as any;
@@ -171,6 +175,7 @@ describe('RpcClientPool', () => {
           call: () => Promise.resolve(),
           on: () => () => {},
           proxy: () => Promise.resolve(),
+          subscribe: () => () => undefined,
           taskCount: () => 0,
           destroy: () => {},
         } as any;
@@ -192,6 +197,7 @@ describe('RpcClientPool', () => {
           call: () => Promise.resolve(),
           on: () => () => {},
           proxy: () => Promise.resolve(),
+          subscribe: () => () => undefined,
           taskCount: () => 1,
           destroy: () => destroyed.push(i),
         } as any;
@@ -204,6 +210,23 @@ describe('RpcClientPool', () => {
       1,
       2,
     ]);
+  });
+
+  test('a pool hears its workers\' dispatches', async () => {
+    const {
+      pool, cleanup,
+    } = makeServer({
+      report: (name: string) => {
+        useCall().dispatch(`${name} 1/1`);
+        return name;
+      },
+    });
+    const heard: unknown[] = [];
+    const stop = pool.subscribe((data) => heard.push(data));
+    expect(await pool.call('report', ['a'])).toBe('a');
+    stop();
+    expect(heard).toEqual(['a 1/1']);
+    cleanup();
   });
 
   test('multiple calls resolve correctly via pool', async () => {
@@ -244,6 +267,7 @@ describe('RpcClientPool — options as a function, on, proxy', () => {
             return unsubscribe;
           },
           proxy: () => Promise.resolve(api),
+          subscribe: () => () => undefined,
           taskCount: () => 1, // busy: still the only one
           destroy: () => undefined,
         } as any;
@@ -276,6 +300,7 @@ describe('RpcClientPool — options as a function, on, proxy', () => {
         made++;
         return {
           call: () => Promise.resolve(),
+          subscribe: () => () => undefined,
           taskCount: () => 0,
           destroy: () => undefined,
         } as any;
@@ -300,6 +325,7 @@ describe('RpcClientPool — options as a function, on, proxy', () => {
       maxWorkers: 2,
       workerProvider: () => ({
         settled: settledOf[i++],
+        subscribe: () => () => undefined,
         taskCount: () => 0,
         destroy: () => {},
       } as any),

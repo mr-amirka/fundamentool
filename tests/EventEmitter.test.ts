@@ -20,6 +20,26 @@ describe('EventEmitter', () => {
     expect(fn).toHaveBeenCalledTimes(1);
   });
 
+  test('once doesn\'t skip the listener after it; one added during a call hears the next', () => {
+    const em = new TestEmitter();
+    const heard: string[] = [];
+    em.once((value) => heard.push(`once ${value}`));
+    em.subscribe((value) => {
+      heard.push(`other ${value}`);
+      if (value === 1) {
+        em.subscribe((next) => heard.push(`late ${next}`));
+      }
+    });
+    em.fire(1);
+    em.fire(2);
+    expect(heard).toEqual([
+      'once 1',
+      'other 1',
+      'other 2',
+      'late 2',
+    ]);
+  });
+
   test('once calls listener once then unsubscribes', () => {
     const em = new TestEmitter();
     const fn = jest.fn();

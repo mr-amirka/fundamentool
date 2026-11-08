@@ -30,9 +30,8 @@ export class EventEmitter<T = any> implements IEventEmitter<T> {
   }
 
   protected emit(data: T) {
-    const {
-      listeners,
-    } = this;
+    // A copy: a listener removed during the call (every `once`) leaves the rest in place; one added hears the next
+    const listeners = this.listeners && this.listeners.slice();
     if (listeners) {
       let i = 0;
       const len = listeners.length;

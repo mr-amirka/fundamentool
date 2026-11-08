@@ -32,6 +32,15 @@ export class RpcClientPool<Client extends IRpcClient = IRpcClient> extends Event
   private workers: Client[] = [];
   private workerProvider: () => Client;
 
+  /** A new worker whose server dispatches the pool's listeners hear too. */
+  private spawn(): Client {
+    const worker = this.workerProvider();
+    worker.subscribe((data) => {
+      this.emit(data);
+    });
+    return worker;
+  }
+
   /**
    * Pre-creates exactly `count` workers (cycling through slots up to `maxWorkers`).
    * Useful in tests to ensure workers exist before attaching servers.
@@ -50,7 +59,7 @@ export class RpcClientPool<Client extends IRpcClient = IRpcClient> extends Event
     let wi = 0;
     while (i < count) {
       wi = i % maxWorkers;
-      output[i] = workers[wi] || (workers[wi] = this.workerProvider());
+      output[i] = workers[wi] || (workers[wi] = this.spawn());
       i++;
     }
 
@@ -81,7 +90,7 @@ export class RpcClientPool<Client extends IRpcClient = IRpcClient> extends Event
       worker = workers[i];
 
       if (!worker) {
-        return workers[i] = this.workerProvider();
+        return workers[i] = this.spawn();
       }
 
       taskCount = worker.taskCount();

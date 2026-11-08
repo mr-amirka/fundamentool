@@ -224,11 +224,16 @@ await client.call('run', [(progress: number) => {
 }]);
 ```
 
-Server-side can also emit events:
+A server's events, two ways:
 
 ```ts
-// subscribe on client
-await client.subscribe('update', (data) => console.log(data));
+// on: the server's exported `ticks(args)` gets the callbacks and returns its own unsubscribe
+const stop = client.on('ticks', [(value: number) => console.log(value)]);
+stop(); // the server's unsubscribe runs
+
+// subscribe: every `useCall().dispatch(data)` sent to this client — a pool's listeners hear each worker's
+const off = client.subscribe((data) => console.log(data));
+off();
 ```
 
 ---
