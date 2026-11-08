@@ -68,7 +68,7 @@ npm run docs:api
 
 ### Universal (`fundamentool`)
 
-**Events:** `createEvent` (effector's: `watch`, `map`, `filter`, `prepend` — [README](src/createEvent/README.md)), `attachEvent`, `EventEmitter` (Node's pattern, kept light — prefer `createEvent`), `subscribe`, `Unsubscriber`, `keyedRegistry` (subscriptions by key)  
+**Events:** `createEvent` (effector's: `watch`, `map`, `filter`, `prepend` — [README](src/createEvent/README.md)), `attachEvent`, `EventEmitter` (the base class of a class with an event model — [README](src/EventEmitter/README.md)), `subscribe`, `Unsubscriber`, `keyedRegistry` (subscriptions by key)  
 **Store:** `createStore`, `createApi`, `TStoreAdapter` — reactive store with optional DI (swap implementation via `deps`)  
 **Timers:** `wait`, `createTimeout`, `createInterval`, `queueProvider`, `sendingQueue`, `keyedQueue` (background work by key: one item per key, the highest priority first, preemption — [README](src/keyedQueue/README.md)), `withAsyncLock` (ignores calls while one runs — a double tap)  
 **Modules:** `dynamicModule` (an async initializer run once — again after a failure; `import()` of a part loaded on demand)  

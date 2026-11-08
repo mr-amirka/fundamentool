@@ -3,14 +3,14 @@
 [Русская версия](./README.ru.md)
 
 An event as Effector's (fundamentool D-049, D-105): something that happens, passed from where it happens to whoever
-acts on it. This is the lab's event; `EventEmitter` is kept as a light utility for code that expects Node's pattern
-(D-111). Stores are [`createObservable`](../createObservable/README.md).
+acts on it. A class that *is* an emitter — has an event model of its own — extends
+[`EventEmitter`](../EventEmitter/README.md) instead (D-111). Stores are [`createObservable`](../createObservable/README.md).
 
 ## When you need it
 
 - Something that happens — a click, a save, a message, a file an agent just edited — that others subscribe to.
 - A trigger narrowed (`filter`) or reshaped (`map`, `prepend`) on its way to whoever acts on it.
-- A class that owns an event: a private `createEvent()`, a public `watch`.
+- A unit that several events are made from: narrowed, reshaped, feeding a store (`createApi`).
 
 ```ts
 const saved = createEvent<string>();                 // an event — something that happens

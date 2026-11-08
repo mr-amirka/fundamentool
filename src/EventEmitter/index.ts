@@ -6,14 +6,16 @@ import type {
 type TListener<T> = (event: T) => void;
 
 /**
- * A small typed event emitter, Node's familiar pattern: a class that owns its event fires it (`emit` is protected),
- * others `subscribe`. Kept as a light utility for any consumer (fundamentool D-111). **Within the lab prefer
- * `createEvent`** (`fundamentool`'s Effector-shaped event): callable, `watch` → `Unsubscribe`, derived events (`map`,
- * `filter`, `prepend`) — it covers every case of this class.
+ * A typed event emitter — the base class of a class with an event model (fundamentool D-111): the class extends it,
+ * fires with the protected `emit`, and its users `subscribe` / `once`. One of the most expected patterns, kept as a
+ * light abstraction for the library's users and the lab alike (`RpcClient`, `RpcClientPool` are emitters).
  *
- * The listeners' list is replaced on `subscribe` and on unsubscribing, never changed in place: an `emit` reads the list
- * it starts with and copies nothing; a listener removed during it (every `once`) still hears it, one added hears the
- * next.
+ * Beside it, `createEvent` is a standalone event in Effector's shape (callable, `watch`, derived events `map` /
+ * `filter` / `prepend`) — for an app's units of state and events. A class that *is* an emitter extends this one.
+ *
+ * The listeners' list is replaced on `subscribe` and on unsubscribing, never changed in place (D-112): an `emit` reads
+ * the list it starts with and copies nothing; a listener removed during it (every `once`) still hears it, one added
+ * hears the next.
  *
  * @example
  * class Saver extends EventEmitter<string> {
