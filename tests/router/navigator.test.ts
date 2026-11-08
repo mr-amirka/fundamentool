@@ -15,7 +15,7 @@ import {
 } from 'react';
 import {
   createObservable,
-} from '../../src/Observable';
+} from '../../src/createObservable';
 import {
   createNavigator,
 } from '../../src/router';

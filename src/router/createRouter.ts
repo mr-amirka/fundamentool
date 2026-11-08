@@ -26,7 +26,7 @@ import type {
 } from '../keyValueStorage';
 import {
   createEvent,
-} from '../Observable';
+} from '../createEvent';
 import type {
   TParams,
 } from '../unparam';

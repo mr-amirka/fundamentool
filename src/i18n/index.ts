@@ -5,10 +5,10 @@
 // in memory by `sourceOf` (tests, Node).
 import {
   createObservable,
-} from '../Observable';
+} from '../createObservable';
 import type {
   Observable,
-} from '../Observable';
+} from '../createObservable';
 import {
   templateProvider,
 } from '../templateProvider';

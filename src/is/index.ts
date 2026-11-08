@@ -33,5 +33,6 @@ export * from './isPromise';
 export * from './isRegExp';
 export * from './isSafeNumber';
 export * from './isStandardObject';
+export * from './isStore';
 export * from './isString';
 export * from './isVisibleInViewportProvider';

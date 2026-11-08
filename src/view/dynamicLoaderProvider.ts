@@ -18,10 +18,10 @@ import {
 } from '../dynamicModule';
 import {
   createObservable,
-} from '../Observable';
+} from '../createObservable';
 import type {
   Observable,
-} from '../Observable';
+} from '../createObservable';
 
 const WHERE = '[fundamentool] dynamicLoaderProvider';
 

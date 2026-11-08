@@ -1,6 +1,6 @@
 import {
   createEvent,
-} from './Observable';
+} from './createEvent';
 
 import type {
   TKeyValueChange,

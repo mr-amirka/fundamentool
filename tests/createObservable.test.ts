@@ -1,12 +1,12 @@
 import {
   createApi,
-  createEvent,
+} from '../src/createApi';
+import {
   createObservable,
-  isStore,
-} from '../src/Observable';
+} from '../src/createObservable';
 import type {
   TObservableAdapter,
-} from '../src/Observable';
+} from '../src/createObservable';
 
 describe('createObservable', () => {
   test('getState — returns initial value', () => {
@@ -175,163 +175,6 @@ describe('createObservable', () => {
   });
 });
 
-describe('createEvent', () => {
-  test('calling it hands the payload to its watchers and returns it; watch fires on calls only (D-049)', () => {
-    const saved = createEvent<string>();
-    const seen: string[] = [];
-    const stop = saved.watch((id) => seen.push(id));
-    expect(seen).toEqual([]); // nothing at subscription
-    expect(saved('a')).toBe('a');
-    stop.unsubscribe();
-    saved('b');
-    expect(seen).toEqual(['a']);
-  });
-
-  test('map and filter: events derived from it — each fires when the source does, with its result or not at all', () => {
-    const edited = createEvent<string>();
-    const seen: string[] = [];
-    const docs = edited.filter({
-      fn: (file) => file.endsWith('.md'),
-    }).map((file) => file.toUpperCase());
-    docs.watch((file) => seen.push(file));
-    edited('a.ts');
-    edited('b.md');
-    expect(seen).toEqual(['B.MD']);
-  });
-
-  test('filter with a type guard narrows the payload', () => {
-    const came = createEvent<string | number>();
-    const numbers: number[] = [];
-    came.filter({
-      fn: (value): value is number => typeof value === 'number',
-    }).watch((value) => numbers.push(value + 1));
-    came('x');
-    came(1);
-    expect(numbers).toEqual([2]);
-  });
-
-  test('a derived event follows its source only while watched: the last unwatch lets go, the next watch takes it again',
-    () => {
-      const edited = createEvent<number>();
-      const calls: number[] = [];
-      const doubled = edited.map((n) => {
-        calls.push(n);
-        return n * 2;
-      });
-      edited(1);
-      expect(calls).toEqual([]); // unwatched: nothing computed
-      const seen: number[] = [];
-      const first = doubled.watch((n) => seen.push(n));
-      const second = doubled.watch((n) => seen.push(-n));
-      edited(2);
-      first();
-      edited(3);
-      second();
-      second(); // twice is harmless
-      edited(4);
-      expect(calls).toEqual([
-        2,
-        3,
-      ]);
-      expect(seen).toEqual([
-        4,
-        -4,
-        -6,
-      ]);
-      doubled.watch((n) => seen.push(n));
-      edited(5);
-      expect(seen.at(-1)).toBe(10);
-    });
-
-  test('prepend: an event that calls this one with its function\'s result — its own watchers hear what it was given',
-    () => {
-      const saved = createEvent<string>();
-      const ids: string[] = [];
-      saved.watch((id) => ids.push(id));
-      const savedNote = saved.prepend((note: { id: string }) => note.id);
-      const notes: string[] = [];
-      savedNote.watch((note) => notes.push(note.id));
-      expect(savedNote({
-        id: 'n1',
-      })).toEqual({
-        id: 'n1',
-      });
-      expect(ids).toEqual(['n1']);
-      expect(notes).toEqual(['n1']);
-    });
-
-  test('a watcher of a derived event that throws is logged; the others still hear', () => {
-    const error = jest.spyOn(console, 'error').mockImplementation(() => undefined);
-    const came = createEvent<number>();
-    const seen: number[] = [];
-    const mapped = came.map((n) => n + 1);
-    mapped.watch(() => {
-      throw new Error('boom');
-    });
-    mapped.watch((n) => seen.push(n));
-    came(1);
-    expect(seen).toEqual([2]);
-    expect(error).toHaveBeenCalledWith('Observable:watcher:error', expect.any(Error));
-    error.mockRestore();
-  });
-});
-
-describe('createApi', () => {
-  test('its members are events: callable (they return the payload), watchable — the store already updated', () => {
-    const store = createObservable(0);
-    const api = createApi(store, {
-      add: (state, n: number) => state + n,
-    });
-    const seen: number[] = [];
-    api.add.watch((n) => seen.push(store.getState() * 10 + n));
-    expect(api.add(2)).toBe(2);
-    expect(seen).toEqual([22]);
-  });
-
-  test('dispatches action to store', () => {
-    const store = createObservable({
-      count: 0,
-    });
-    const api = createApi(store, {
-      increment: (state, n: number) => ({
-        ...state,
-        count: state.count + n,
-      }),
-      reset: (state) => ({
-        ...state,
-        count: 0,
-      }),
-    });
-    api.increment(3);
-    expect(store.getState().count).toBe(3);
-    api.reset(undefined);
-    expect(store.getState().count).toBe(0);
-  });
-
-  test('multiple actions update store independently', () => {
-    const store = createObservable({
-      a: 0,
-      b: 0,
-    });
-    const api = createApi(store, {
-      setA: (state, v: number) => ({
-        ...state,
-        a: v,
-      }),
-      setB: (state, v: number) => ({
-        ...state,
-        b: v,
-      }),
-    });
-    api.setA(10);
-    api.setB(20);
-    expect(store.getState()).toEqual({
-      a: 10,
-      b: 20,
-    });
-  });
-});
-
 describe('TObservableAdapter — DI', () => {
   test('custom adapter is called instead of built-in', () => {
     const calls: string[] = [];
@@ -356,23 +199,5 @@ describe('TObservableAdapter — DI', () => {
       'createObservable',
       'createApi',
     ]);
-  });
-});
-
-describe('isStore', () => {
-  it('a store has getState and watch — fundamentool\'s, a derived one, any alike (effector\'s); an event isn\'t one', () => {
-    const $count = createObservable(0);
-    expect(isStore($count)).toBe(true);
-    expect(isStore($count.map((count) => count + 1))).toBe(true);
-    expect(isStore({
-      getState: () => 1,
-      watch: () => () => undefined,
-    })).toBe(true);
-    expect(isStore(createEvent())).toBe(false);
-    expect(isStore(null)).toBe(false);
-    expect(isStore(true)).toBe(false);
-    expect(isStore({
-      getState: () => 1,
-    })).toBe(false);
   });
 });

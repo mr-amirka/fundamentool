@@ -31,8 +31,11 @@ export * from './convertToBreakLineHTML';
 export * from './cookieStorageProvider';
 export * from './copyTextToClipboard';
 export * from './create';
+export * from './createApi';
+export * from './createEvent';
 export * from './createInterval';
 export * from './createLimitedTimeProcess';
+export * from './createObservable';
 export * from './createTimeout';
 export * as csv from './csv';
 export * from './cssPropertiesParseSimple';
@@ -165,7 +168,6 @@ export * from './sortBy';
 export * from './SparseCodec';
 export * from './stackProvider';
 export * from './startsWith';
-export * from './Observable';
 export * from './storeProvider';
 export * from './stripTags';
 export * from './stylesRenderProvider';
@@ -193,6 +195,10 @@ export * from './values';
 export * from './variants';
 export * from './variantsProvider';
 export * from './wait';
+export type {
+  Unsubscribe,
+  Watcher,
+} from './watchers';
 export * from './withAsyncLock';
 export * from './withDefer';
 export * from './withDelay';

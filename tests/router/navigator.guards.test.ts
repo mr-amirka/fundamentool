@@ -17,7 +17,7 @@ import {
 } from 'react';
 import {
   createObservable,
-} from '../../src/Observable';
+} from '../../src/createObservable';
 import type {
   TLinkProps,
 } from '../../src/view';

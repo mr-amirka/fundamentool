@@ -40,6 +40,7 @@ import { isString, isEqual, isMatch } from 'fundamentool/is';
 | `isObjectLike(v)` | объектоподобное значение (ненулевой объект или функция) |
 | `isPlainObject(v)` | чистый объект `{}` (через `Object` или без конструктора) |
 | `isStandardObject(v)` | стандартный объект (не Date, RegExp и т.д.) |
+| `isStore(v)` | стор: `getState` + `watch` (`createObservable` fundamentool или стор effector); событие — нет |
 | `isArray(v)` | `Array.isArray(v)` |
 | `isArrayLike(v)` | имеет числовое свойство `length` |
 | `isCollection(v)` | массив или plain object |

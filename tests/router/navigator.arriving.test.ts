@@ -8,10 +8,10 @@
  */
 import {
   createObservable,
-} from '../../src/Observable';
+} from '../../src/createObservable';
 import type {
   ObservableWritable,
-} from '../../src/Observable';
+} from '../../src/createObservable';
 import {
   createNavigator,
 } from '../../src/router';

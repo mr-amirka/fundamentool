@@ -15,8 +15,10 @@ import {
 } from 'react';
 import {
   createApi,
+} from '../../src/createApi';
+import {
   createObservable,
-} from '../../src/Observable';
+} from '../../src/createObservable';
 import {
   createRouter,
   memoryHistoryPrimitivesProvider,

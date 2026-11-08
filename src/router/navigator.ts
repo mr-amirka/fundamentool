@@ -22,7 +22,7 @@ import {
 } from '../keyedRegistry';
 import {
   isStore,
-} from '../Observable';
+} from '../is/isStore';
 import {
   viewLibraryShape,
 } from '../view/library';
@@ -84,8 +84,10 @@ import type {
 } from './routeTable';
 import type {
   TStore,
+} from '../createObservable';
+import type {
   Unsubscribe,
-} from '../Observable/types';
+} from '../watchers';
 import type {
   TBackOptions,
   TEnterGuard,

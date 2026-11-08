@@ -40,6 +40,22 @@ describe('EventEmitter', () => {
     ]);
   });
 
+  test('an unsubscribe twice, or after destroy, does nothing; a subscribe after destroy hears nothing', () => {
+    const em = new TestEmitter();
+    const fn = jest.fn();
+    const off = em.subscribe(fn);
+    const kept = em.subscribe(fn);
+    off();
+    off();
+    em.fire(1);
+    expect(fn).toHaveBeenCalledTimes(1);
+    em.destroy();
+    kept();
+    em.subscribe(fn)();
+    em.fire(2);
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
   test('once calls listener once then unsubscribes', () => {
     const em = new TestEmitter();
     const fn = jest.fn();

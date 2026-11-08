@@ -69,7 +69,7 @@ MIT
 - **Модули**: `dynamicModule` — асинхронная инициализация, выполняемая один раз (повторно — после неудачи); `import()` части, загружаемой по требованию
 - **URL**: `urlParse`, `urlExtend`, `unparam`, `param` — разбор и расширение URL, query-строки
 - **Время**: `formatTime`, `normalizeDate`, `getData` — форматирование и нормализация дат
-- **События**: `createEvent` (как в effector: `watch`, `map`, `filter`, `prepend` — [README](src/Observable/README.ru.md)), `attachEvent`, `EventEmitter`, `subscribe`, `Unsubscriber`, `keyedRegistry`
+- **События**: `createEvent` (как в effector: `watch`, `map`, `filter`, `prepend` — [README](src/createEvent/README.ru.md)), `attachEvent`, `EventEmitter` (паттерн Node, лёгкая утилита — лучше `createEvent`), `subscribe`, `Unsubscriber`, `keyedRegistry`
 - **Асинхронность**: `wait`, `createTimeout`, `createInterval`
 - **Объекты и массивы**: `merge`, `without`, `extend`-подобная логика, `get` по пути
 - **Строки**: `half`, `halfLast` — разбиение по разделителю; `pairsProvider` / `pairsSchema` — опция-список (`'a, b:c'`, `['a', 'b:c']` или `{ b: 'c' }`) в пары

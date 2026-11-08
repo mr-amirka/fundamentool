@@ -19,7 +19,7 @@ import {
 } from '../is/isFunction';
 import type {
   Observable,
-} from '../Observable/types';
+} from '../createObservable';
 import type {
   TUrlProps,
 } from '../urlParse';

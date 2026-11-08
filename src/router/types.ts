@@ -3,7 +3,7 @@ import type {
   Observable,
   TObservableAdapter,
   TStore,
-} from '../Observable/types';
+} from '../createObservable';
 import type {
   TKeyValueStorage,
 } from '../keyValueStorage';

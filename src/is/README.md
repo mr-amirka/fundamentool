@@ -40,6 +40,7 @@ import { isString, isEqual, isMatch } from 'fundamentool/is';
 | `isObjectLike(v)` | object-like (non-null object or function) |
 | `isPlainObject(v)` | plain `{}` object (own constructor or `Object`) |
 | `isStandardObject(v)` | standard object (not Date, RegExp, etc.) |
+| `isStore(v)` | a store: `getState` + `watch` (fundamentool's `createObservable` or effector's); an event isn't one |
 | `isArray(v)` | `Array.isArray(v)` |
 | `isArrayLike(v)` | has numeric `length` property |
 | `isCollection(v)` | array or plain object |

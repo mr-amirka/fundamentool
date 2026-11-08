@@ -9,10 +9,10 @@ import {
 } from '../is/isFunction';
 import {
   isStore,
-} from '../Observable';
+} from '../is/isStore';
 import type {
   TStore,
-} from '../Observable/types';
+} from '../createObservable';
 import {
   viewLibraryShape,
 } from './library';

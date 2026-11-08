@@ -2,7 +2,7 @@
 // `cookieStorageProvider` and a router's `params` — one shape, so any of them is `storeProvider`'s port.
 import type {
   Unsubscribe,
-} from './Observable/types';
+} from './watchers';
 
 /** A change of one key: its new value (`undefined` / `null` — removed). */
 export type TKeyValueChange = {

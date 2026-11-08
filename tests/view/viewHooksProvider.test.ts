@@ -24,12 +24,16 @@ import {
 } from 'preact/test-utils';
 import {
   createApi,
+} from '../../src/createApi';
+import {
   createEvent,
+} from '../../src/createEvent';
+import {
   createObservable,
-} from '../../src/Observable';
+} from '../../src/createObservable';
 import type {
   Observable,
-} from '../../src/Observable';
+} from '../../src/createObservable';
 import {
   viewHooksProvider,
 } from '../../src/view';

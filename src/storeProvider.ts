@@ -6,7 +6,7 @@ import {
 } from './is/isEqual';
 import type {
   ObservableWritable,
-} from './Observable/types';
+} from './createObservable';
 
 /** Key-value persistence port (e.g. `localStorage`, a settings file) `storeProvider` reads/writes through. */
 export type TStorage = {
