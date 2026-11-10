@@ -337,6 +337,12 @@ export type TFts5QueryOptions = {
   prefix?: boolean | 'both';
 };
 
+/** `fts5Phrase`'s options. */
+export type TFts5PhraseOptions = {
+  /** `true` — `"in foc"*`, the last word a prefix: the phrase as typed so far. */
+  prefix?: boolean;
+};
+
 /** What a run of a writing statement did. */
 export type TRunResult = {
   /** Rows changed. */

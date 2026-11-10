@@ -22,6 +22,7 @@ import {
 } from './options';
 import type {
   TDialectHost,
+  TFts5PhraseOptions,
   TFts5QueryOptions,
   TJsonGetNode,
   TMatchOpNode,
@@ -449,4 +450,33 @@ export function fts5Query(words: readonly string[], options?: TFts5QueryOptions)
     throw new TypeError(`${WHERE} fts5Query: no words — FTS5 can't match an empty query`);
   }
   return terms.join(OR);
+}
+
+/**
+ * FTS5's query text for a phrase: its words in order, one quoted string (`"` doubled) — the rows holding them adjacent,
+ * as the table's tokenizer splits them (`"in focus"` holds "in-focus" under `unicode61`).
+ *
+ * @param words - The phrase's words, in order; empty ones are left out.
+ * @param options - `prefix`: `true` — `"in foc"*`, its last word a prefix.
+ * @returns The text, bound as a parameter of `textMatch`.
+ * @throws {TypeError} no word.
+ * @example
+ * fts5Phrase(['in', 'focus']); // => '"in focus"'
+ * fts5Phrase(['в', 'фокус'], { prefix: true }); // => '"в фокус"*'
+ */
+export function fts5Phrase(words: readonly string[], options?: TFts5PhraseOptions): string {
+  checkOptions('fts5Phrase', options);
+  const kept: string[] = [];
+  for (const word of words) {
+    if (typeof word !== 'string') {
+      throw new TypeError(`${WHERE} fts5Phrase: expects words, got ${describeValue(word)}`);
+    }
+    if (word !== '') {
+      kept.push(word.replace(/"/g, '""'));
+    }
+  }
+  if (kept.length === 0) {
+    throw new TypeError(`${WHERE} fts5Phrase: no words — FTS5 can't match an empty phrase`);
+  }
+  return `"${kept.join(' ')}"${options?.prefix ? '*' : ''}`;
 }

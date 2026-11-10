@@ -41,6 +41,7 @@ export {
   sqlDialect,
 } from './compiler';
 export {
+  fts5Phrase,
   fts5Query,
   jsonPath,
   sqlite,

@@ -65,7 +65,7 @@ await db.transaction(async (tx) => {            // BEGIN … COMMIT; отказ 
 | `matchWhere(pattern, { field, operators? })` | Шаблон `match` как условие с теми же строками, что у `matchProvider` |
 | `sqlCompiler({ presets })` | `compile(node)` → `{ text, params, names }`, `bind(compiled, values)`, `ident(name)`, `functions` |
 | `sqlDialect({ name, requires?, setup(d) })` | Диалект или пресет над ним, с проверкой |
-| `sqlite`, `sqliteFts5`, `textMatch`, `fts5Query` | Диалект SQLite, `MATCH` из FTS5 над ним, текст запроса FTS5 из слов |
+| `sqlite`, `sqliteFts5`, `textMatch`, `fts5Query`, `fts5Phrase` | Диалект SQLite, `MATCH` из FTS5 над ним, текст запроса FTS5 из слов и из фразы — её слов подряд, по порядку |
 | `sqliteAdapter(instance, { presets })` | `prepare` (синхронно) → `all` / `get` / `run` / `iterate`; `exec`, `transaction`, `migrate`, `pragma`, `tableColumns` — каждый промис; `compiler`, `instance` |
 | `sqliteErrorCode(error)` | `SQLITE_BUSY`, `SQLITE_CONSTRAINT_PRIMARYKEY`, … — от любого из драйверов |
 

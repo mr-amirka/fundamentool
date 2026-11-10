@@ -73,6 +73,10 @@ const FTS5_QUERY_OPTIONS = /*#__PURE__*/ lazy(() => object({
   ]).optional(),
 }));
 
+const FTS5_PHRASE_OPTIONS = /*#__PURE__*/ lazy(() => object({
+  prefix: boolean().optional(),
+}));
+
 const TRANSACTION_OPTIONS = /*#__PURE__*/ lazy(() => object({
   immediate: boolean().optional(),
 }));
@@ -88,6 +92,7 @@ const SCHEMAS = {
   sqlDialect: DIALECT,
   matchWhere: MATCH_WHERE_OPTIONS,
   fts5Query: FTS5_QUERY_OPTIONS,
+  fts5Phrase: FTS5_PHRASE_OPTIONS,
   transaction: TRANSACTION_OPTIONS,
 };
 

@@ -64,7 +64,7 @@ await db.transaction(async (tx) => {            // BEGIN … COMMIT; a rejection
 | `matchWhere(pattern, { field, operators? })` | A `match` pattern as a condition with the same rows as `matchProvider` |
 | `sqlCompiler({ presets })` | `compile(node)` → `{ text, params, names }`, `bind(compiled, values)`, `ident(name)`, `functions` |
 | `sqlDialect({ name, requires?, setup(d) })` | A dialect or a preset over one, checked |
-| `sqlite`, `sqliteFts5`, `textMatch`, `fts5Query` | The SQLite dialect, FTS5's `MATCH` over it, FTS5's query text from words |
+| `sqlite`, `sqliteFts5`, `textMatch`, `fts5Query`, `fts5Phrase` | The SQLite dialect, FTS5's `MATCH` over it, FTS5's query text from words, and from a phrase — its words adjacent, in order |
 | `sqliteAdapter(instance, { presets })` | `prepare` (sync) → `all` / `get` / `run` / `iterate`; `exec`, `transaction`, `migrate`, `pragma`, `tableColumns` — each a promise; `compiler`, `instance` |
 | `sqliteErrorCode(error)` | `SQLITE_BUSY`, `SQLITE_CONSTRAINT_PRIMARYKEY`, … — from either driver |
 

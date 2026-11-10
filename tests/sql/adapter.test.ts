@@ -15,6 +15,7 @@ import {
   desc,
   eq,
   fn,
+  fts5Phrase,
   fts5Query,
   insertInto,
   jsonPath,
@@ -586,6 +587,55 @@ describe.each(DRIVERS)('sqliteAdapter over %s (S9–S12)', (_name, open) => {
       changes: 2,
     });
   });
+
+  test('FTS5: fts5Phrase — the words adjacent, in order; the last one a prefix', async () => {
+    const fts = adapterOf(open, {
+      presets: [sqliteFts5],
+    });
+    await fts.exec('CREATE VIRTUAL TABLE docs USING fts5(name, body)');
+    const add = fts.prepare(insertInto('docs', {
+      values: {
+        name: param('name'),
+        body: param('body'),
+      },
+    }));
+    await add.run({
+      name: 'term',
+      body: 'kept in-focus for development',
+    });
+    await add.run({
+      name: 'css',
+      body: 'in a :focus state',
+    });
+    await add.run({
+      name: 'ru',
+      body: 'держать в фокусе для развития',
+    });
+    const find = fts.prepare<{ name: string }>(selectFrom('docs', {
+      columns: ['name'],
+      where: textMatch('docs', param('query')),
+    }));
+    expect((await find.all({
+      query: fts5Phrase([
+        'in',
+        'focus',
+      ]),
+    })).map((row) => row.name)).toEqual(['term']);
+    expect((await find.all({
+      query: fts5Phrase([
+        'в',
+        'фокус',
+      ], {
+        prefix: true,
+      }),
+    })).map((row) => row.name)).toEqual(['ru']);
+    await expect(find.all({
+      query: fts5Phrase([
+        'focus',
+        'in',
+      ]),
+    })).resolves.toEqual([]);
+  });
 });
 
 describe('sqliteAdapter\'s own checks', () => {
@@ -729,6 +779,22 @@ describe('fts5Query and jsonPath', () => {
     expect(() => fts5Query(['a'], {
       prefix: 'yes',
     } as never)).toThrow('[fundamentool/sql] fts5Query');
+  });
+
+  test('a phrase\'s query text', () => {
+    expect(fts5Phrase([
+      'in',
+      '',
+      'fo"cus',
+    ])).toBe('"in fo""cus"');
+    expect(fts5Phrase(['в'], {
+      prefix: true,
+    })).toBe('"в"*');
+    expect(() => fts5Phrase([''])).toThrow('[fundamentool/sql] fts5Phrase: no words — FTS5 can\'t match an empty phrase');
+    expect(() => fts5Phrase([1 as never])).toThrow('[fundamentool/sql] fts5Phrase: expects words');
+    expect(() => fts5Phrase(['a'], {
+      prefix: 'both',
+    } as never)).toThrow('[fundamentool/sql] fts5Phrase');
   });
 
   test('a JSON path', () => {
