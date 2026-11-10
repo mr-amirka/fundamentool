@@ -72,7 +72,7 @@ MIT
 - **События**: `createEvent` (как в effector: `watch`, `map`, `filter`, `prepend` — [README](src/createEvent/README.ru.md)), `attachEvent`, `EventEmitter` (базовый класс для класса с событийной моделью — [README](src/EventEmitter/README.ru.md)), `subscribe`, `Unsubscriber`, `keyedRegistry`
 - **Асинхронность**: `wait`, `createTimeout`, `createInterval`
 - **Объекты и массивы**: `merge`, `without`, `extend`-подобная логика, `get` по пути
-- **Строки**: `half`, `halfLast` — разбиение по разделителю; `pairsProvider` / `pairsSchema` — опция-список (`'a, b:c'`, `['a', 'b:c']` или `{ b: 'c' }`) в пары
+- **Строки**: `half`, `halfLast` — разбиение по разделителю; `splitSentences` — предложения текста (разрез после `.` `!` `?` `…` и пробела и на пустой строке); `pairsProvider` / `pairsSchema` — опция-список (`'a, b:c'`, `['a', 'b:c']` или `{ b: 'c' }`) в пары
   `[имя, значение]` и её проверка
 - **Прочее**: `noop`, `getUniqId`, `tryJsonParse`, провайдеры (queue, template, router и др.)
 

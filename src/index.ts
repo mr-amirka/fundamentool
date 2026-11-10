@@ -213,5 +213,6 @@ export * from './is';
 export * from './async';
 export * from './join';
 export * from './split';
+export * from './splitSentences';
 export * from './jsonl';
 export * from './rpc';

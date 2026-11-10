@@ -5,6 +5,9 @@ import {
   object,
 } from '../schema';
 import {
+  splitSentences,
+} from '../splitSentences';
+import {
   WHERE,
 } from './math';
 
@@ -21,8 +24,6 @@ const OPTIONS = /*#__PURE__*/ lazy(() => object({
   overlap: number().int().min(0).optional(),
 }));
 
-/** Where a sentence ends: after `.`, `!`, `?` or `…` and a space, or at a blank line. */
-const SENTENCE_END = /(?<=[.!?…])\s+|\n\s*\n/;
 const SPACE = /\s+/;
 
 /**
@@ -94,11 +95,8 @@ export function chunkText(text: string, options: TChunkTextOptions = {}): string
       currentWords = 0;
     }
   };
-  for (const sentence of text.split(SENTENCE_END)) {
+  for (const sentence of splitSentences(text)) {
     const words = wordsOf(sentence);
-    if (words.length === 0) {
-      continue;
-    }
     if (words.length > maxWords) {
       flush();
       const stride = maxWords - overlap;
@@ -119,7 +117,7 @@ export function chunkText(text: string, options: TChunkTextOptions = {}): string
         currentWords = carried;
       }
     }
-    current.push(sentence.trim());
+    current.push(sentence);
     currentWords += words.length;
   }
   flush();
