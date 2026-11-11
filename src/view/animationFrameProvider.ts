@@ -83,7 +83,15 @@ function createLoop(callback: TLoop['callback'], options: TLoop['options']): TLo
 
   const tick = (delta: number, time: number): void => {
     clock = time;
-    loop.callback(delta, time);
+    try {
+      loop.callback(delta, time);
+    } catch (error) {
+      // The loop ended with the throw (`createAnimationFrame`): stopped as by `pause()`, so `isPlaying()` says so and
+      // a render doesn't restart a callback that fails — `play()` does
+      stop = 0;
+      wish = false;
+      throw error;
+    }
   };
 
   function halt(): void {
@@ -167,7 +175,8 @@ export function animationFrameProvider(library: TAnimationFrameDeps) {
    * @param callback - Called with `(delta, time)`, both ms.
    * @param options - `active` (true), `autoplay` (true), `interval` (0), `maxDelta` (250), `clamp` (false), `frame`.
    * @returns `[play, pause, isPlaying]` — the same tuple on every render. `isPlaying()` is `false` after `pause()` and
-   *   while `active` is `false`; `play()` while `active` is `false` marks the wish: the loop starts when it turns true.
+   *   while `active` is `false`, and after the callback throws (the loop stops as by `pause()`, the error goes up);
+   *   `play()` while `active` is `false` marks the wish: the loop starts when it turns true.
    * @example
    * useAnimationFrame((delta) => api.rotate({ y: delta * 0.24 }), { active: !reduced && !dialogOpen });
    * // stops itself from inside its frame

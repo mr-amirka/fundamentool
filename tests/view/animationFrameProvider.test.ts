@@ -312,6 +312,33 @@ describe.each([
     expect(playback()[2]()).toBe(false);
   });
 
+  test('a callback that throws stops the loop as pause() does; a render keeps it stopped, play() goes on', () => {
+    let calls = 0;
+    const failing = () => {
+      calls++;
+      if (calls === 2) {
+        throw new Error('broken frame');
+      }
+    };
+    const {
+      clock,
+      tick,
+      playback,
+      render,
+    } = setup(failing);
+    tick(0);
+    // outside `act`: a throw inside it leaves React's test scope broken for the next tests; the frame renders nothing
+    expect(() => clock.tick(16)).toThrow('broken frame');
+    expect(clock.pending.size).toBe(0);
+    expect(playback()[2]()).toBe(false);
+    render(failing);
+    expect(clock.pending.size).toBe(0);
+    library.act(playback()[0]);
+    expect(playback()[2]()).toBe(true);
+    tick(16);
+    expect(calls).toBe(3);
+  });
+
   test('autoplay: false — still until play()', () => {
     const callback = jest.fn();
     const {
