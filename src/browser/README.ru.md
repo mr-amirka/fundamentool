@@ -38,7 +38,7 @@ import { wsConnect, cookieStorageProvider } from 'fundamentool/browser';
 | `openLink(url, target?)` | Открывает ссылку в новой вкладке |
 | `download(url, filename)` | Скачивает файл по ссылке |
 | `getDataLink(blob, type?)` | Создаёт blob-ссылку для скачивания |
-| `createAnimationFrame(fn, interval?)` | Цикл на `requestAnimationFrame` с интервалом; возвращает функцию остановки |
+| `createAnimationFrame(fn, options?)` | Цикл кадров: `fn(delta, time)` на каждом кадре, по меткам времени самих кадров; первый кадр даёт `delta` 0, кадр длиннее `maxDelta` (250 мс) даёт 0 — или `maxDelta` при `clamp`; `interval` копит кадры, пока не наберётся; `time` — откуда начинаются часы; `frame: { request, cancel }` — откуда берутся кадры (по умолчанию браузерные). Возвращает остановку: отменяет запрошенный кадр. Хук над ним — `useAnimationFrame` ([`src/view/`](../view/README.ru.md)) |
 | `nextFrame(fn)` | Вызывает `fn` один раз на следующем кадре анимации; возвращает функцию отмены |
 
 ---

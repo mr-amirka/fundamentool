@@ -38,7 +38,7 @@ import { wsConnect, cookieStorageProvider } from 'fundamentool/browser';
 | `openLink(url, target?)` | Opens a URL in a new tab |
 | `download(url, filename)` | Triggers a file download |
 | `getDataLink(blob, type?)` | Creates a blob URL for downloading |
-| `createAnimationFrame(fn, interval?)` | `requestAnimationFrame` loop with an interval; returns a stop function |
+| `createAnimationFrame(fn, options?)` | A frame loop: `fn(delta, time)` every frame, by the frames' own timestamps; the first frame gives `delta` 0, a frame longer than `maxDelta` (250 ms) gives 0 — or `maxDelta` with `clamp`; `interval` sums the frames until it is reached; `time` — where the clock starts; `frame: { request, cancel }` — where the frames come from (default the browser's). Returns its stop: cancels the frame asked for. The hook over it: `useAnimationFrame` ([`src/view/`](../view/README.md)) |
 | `nextFrame(fn)` | Runs `fn` once on the next animation frame; returns a cancel function |
 
 ---

@@ -24,7 +24,9 @@ import { escapedSplitProvider } from './src/escapedSplitProvider';
 import { bracketPairs } from './src/bracketPairs';
 import { cssValuesProvider, mathRules } from './src/css';
 import { applyEdits, parseSource, sourceStringsProvider, syntaxStringsProvider, syntaxValueRanges } from './src/source';
-console.log(createRouter, createNavigator, memoryHistoryPrimitivesProvider, linksProvider, viewHooksProvider,
+import { createAnimationFrame } from './src/browser/createAnimationFrame';
+import { animationFrameProvider } from './src/view';
+console.log(createAnimationFrame, animationFrameProvider, createRouter, createNavigator, memoryHistoryPrimitivesProvider, linksProvider, viewHooksProvider,
   withAsyncLock, createSparseCodec, createLocale, createMessages, createI18n, localeViewProvider, escapedSplitProvider,
   bracketPairs, cssValuesProvider, mathRules, applyEdits, parseSource, sourceStringsProvider, syntaxStringsProvider,
   syntaxValueRanges);

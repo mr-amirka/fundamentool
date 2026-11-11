@@ -1,4 +1,4 @@
-# Привязки к виду: хуки, читающие сторы, ссылки для любого роутера
+# Привязки к виду: хуки, читающие сторы, ссылки для любого роутера, цикл кадров
 
 [English version](./README.md)
 
@@ -9,9 +9,11 @@
 - Ссылки для любого роутера: настоящий `<a href>` (новая вкладка, копирование ссылки), чей клик идёт через роутер;
   активная ссылка (`NavLink`).
 - Компонент, который перерисовывается при смене локали (`useT` — см. `fundamentool/i18n`).
+- Что-то, что движется каждый кадр — вращение, полёт, спрайт, — останавливается состоянием и событием и никогда не
+  прыгает после паузы или скрытой вкладки (`useAnimationFrame`).
 
 Код вида в fundamentool строится поверх **React-подобной библиотеки, которую передаёт приложение** (`TViewLibrary`:
-React, Preact `compat`; позже — своя в fundamentool) — fundamentool D-048, D-049. Два провайдера:
+React, Preact `compat`; позже — своя в fundamentool) — fundamentool D-048, D-049. По провайдеру на утилиту:
 
 ```ts
 const LIBRARY = {
@@ -21,6 +23,7 @@ const LIBRARY = {
 };
 export const { useUnit, useStoreMap } = viewHooksProvider(LIBRARY);   // один раз, в зависимостях приложения
 export const { Link, NavLink } = linksProvider({ router, ...LIBRARY });
+export const { useAnimationFrame } = animationFrameProvider(LIBRARY);
 ```
 
 ## `useUnit`, `useStoreMap` — имена и формы effector-react
@@ -70,6 +73,50 @@ const confirming = useStoreMap({
 `Link` перерисовывается, только когда меняется его цель (у абсолютного `href` — никогда); `NavLink` — только когда
 меняется отметка.
 
+## `useAnimationFrame` — цикл кадров в компоненте
+
+`animationFrameProvider({ useRef, useEffect })` даёт `useAnimationFrame(callback, options?)` — цикл
+`createAnimationFrame` ([`src/browser/`](../browser/README.ru.md)) для компонента: `callback(delta, time)` на каждом
+кадре, `delta` 0 на первом кадре после каждого старта, кадр длиннее `maxDelta` (250 мс: скрытая вкладка, зависание)
+пропускается, а при `clamp: true` считается за `maxDelta`. `time` — сумма выданных дельт, продолжается после любой
+остановки. Вызывается колбэк последнего рендера — без `deps`. Размонтирование отменяет запрошенный кадр.
+
+Два способа остановить, раздельно: **состояние** — `active` (по умолчанию `true`), пишется в рендере; **событие** —
+`pause()` из обработчика или изнутри колбэка. Цикл идёт, пока позволяют оба. Возвращает `TPlayback`,
+`[play, pause, isPlaying]` — один и тот же кортеж на каждом рендере.
+
+```tsx
+export const { useAnimationFrame } = animationFrameProvider(LIBRARY);   // один раз, в зависимостях приложения
+
+// стоит, пока его закрывает окно или игрок попросил меньше движения; продолжает с того же угла
+useAnimationFrame((delta) => api.rotate({ y: delta * 0.24 }), { active: !reduced && !dialogOpen });
+
+// останавливается сам: рендер не нужен
+const [, pause] = useAnimationFrame((delta) => {
+  position = Math.min(position + delta * 0.5, target);
+  if (position === target) {
+    pause();
+  }
+});
+
+// кнопка паузы; монета, которая крутится только под указателем
+const [play, pause, isPlaying] = useAnimationFrame(tick);
+<button onClick={() => (isPlaying() ? pause() : play())} />
+const [spin, still] = useAnimationFrame(turn, { autoplay: false });
+<div onPointerEnter={spin} onPointerLeave={still} />
+
+// спрайт по 12 картинок в секунду на любом экране: один вызов на ~83 накопленные мс
+useAnimationFrame(() => sprite.next(), { interval: 1000 / 12 });
+```
+
+- Опции: `active` (true), `autoplay` (true; `false` — стоит до `play()`) и опции цикла `interval` (0), `maxDelta`
+  (250), `clamp` (false), `frame`. Смена опций цикла перезапускает его; часы продолжаются.
+- `isPlaying()` — идут ли кадры сейчас: `false` после `pause()` и пока `active` равен `false`, даже после `play()`;
+  тогда `play()` отмечает желание, и цикл стартует, когда `active` станет true.
+- Уменьшение движения читает вызывающий (он отличает декоративное вращение от индикатора прогресса): передайте его в
+  `active`.
+- Опции проверяются при монтировании, в разработке; неизвестный ключ или неверное значение — ошибка.
+
 ## `useT`, `LocaleProvider`, `<Text>` — привязки локали
 
 `localeViewProvider(React)` — см. [`fundamentool/i18n`](../i18n/README.ru.md#react--fundamentool-его-привязки-view): `useT(set)`
@@ -108,5 +155,6 @@ await wgDynamicPreload().catch(() => wgDynamicRetry());
 | `library.ts` | `TViewLibrary`, `VIEW_LIBRARY_KEYS`, `viewLibraryShape` (библиотека как форма схемы, `fundamentool/schema`) |
 | `viewHooksProvider.ts` | `useUnit`, `useStoreMap` |
 | `linksProvider.ts` | `Link`, `NavLink` |
+| `animationFrameProvider.ts` | `useAnimationFrame`, `TPlayback` — цикл кадров в компоненте, над `createAnimationFrame` |
 | `localeViewProvider.ts` | `useT`, `useLocale`, `LocaleProvider`, `Text` — привязки локали (`fundamentool/i18n`) |
 | `dynamicLoaderProvider.ts` | `dynamicLoaderProvider` — части в отдельных файлах: `module`, `component`, реестр (web-games D-100) |

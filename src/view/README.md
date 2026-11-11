@@ -1,4 +1,4 @@
-# View bindings: hooks that read stores, links for any router
+# View bindings: hooks that read stores, links for any router, a frame loop
 
 [Русская версия](./README.ru.md)
 
@@ -9,9 +9,11 @@
 - Links for any router: a real `<a href>` (a new tab, copy the link) whose click goes through the router; a link
   marked active (`NavLink`).
 - A component that re-renders when the locale changes (`useT` — see `fundamentool/i18n`).
+- Something that moves every frame — a spin, a flight, a sprite — stopped by a state and by an event, never jumping
+  after a pause or a hidden tab (`useAnimationFrame`).
 
 fundamentool's view code is built over a **React-like library the app passes in** (`TViewLibrary`: React, Preact
-`compat`; later fundamentool's own) — fundamentool D-048, D-049. Two providers:
+`compat`; later fundamentool's own) — fundamentool D-048, D-049. A provider per utility:
 
 ```ts
 const LIBRARY = {
@@ -21,6 +23,7 @@ const LIBRARY = {
 };
 export const { useUnit, useStoreMap } = viewHooksProvider(LIBRARY);   // once, in the app's deps
 export const { Link, NavLink } = linksProvider({ router, ...LIBRARY });
+export const { useAnimationFrame } = animationFrameProvider(LIBRARY);
 ```
 
 ## `useUnit`, `useStoreMap` — effector-react's names and shapes
@@ -70,6 +73,49 @@ a path of the app (nor marks a `NavLink`).
 A `Link` re-renders only when its own target changes (an absolute `href` never does); a `NavLink` — only when its mark
 flips.
 
+## `useAnimationFrame` — a frame loop in a component
+
+`animationFrameProvider({ useRef, useEffect })` gives `useAnimationFrame(callback, options?)`: `createAnimationFrame`'s
+loop ([`src/browser/`](../browser/README.md)) for a component — `callback(delta, time)` every frame, `delta` 0 on the
+first frame after every start, a frame longer than `maxDelta` (250 ms: a hidden tab, a stall) skipped, or counted as
+`maxDelta` with `clamp: true`. `time` is the sum of the deltas given and continues across every stop. The callback of
+the latest render is called — no `deps`. Unmount cancels the frame asked for.
+
+Two ways to stop it, kept apart: a **state** — `active` (default `true`), written in the render; an **event** —
+`pause()` from a handler or from inside the callback. The loop runs while both allow it. It returns `TPlayback`,
+`[play, pause, isPlaying]` — the same tuple on every render.
+
+```tsx
+export const { useAnimationFrame } = animationFrameProvider(LIBRARY);   // once, in the app's deps
+
+// stops while a window covers it, or the player asked for reduced motion; goes on from the same angle
+useAnimationFrame((delta) => api.rotate({ y: delta * 0.24 }), { active: !reduced && !dialogOpen });
+
+// ends itself: no render needed
+const [, pause] = useAnimationFrame((delta) => {
+  position = Math.min(position + delta * 0.5, target);
+  if (position === target) {
+    pause();
+  }
+});
+
+// a pause button; a coin that spins only under the pointer
+const [play, pause, isPlaying] = useAnimationFrame(tick);
+<button onClick={() => (isPlaying() ? pause() : play())} />
+const [spin, still] = useAnimationFrame(turn, { autoplay: false });
+<div onPointerEnter={spin} onPointerLeave={still} />
+
+// a sprite at 12 pictures a second on any screen: one call per ~83 ms gathered
+useAnimationFrame(() => sprite.next(), { interval: 1000 / 12 });
+```
+
+- Options: `active` (true), `autoplay` (true; `false` — still until `play()`), and the loop's `interval` (0), `maxDelta`
+  (250), `clamp` (false), `frame`. A change of the loop's options restarts it; its clock goes on.
+- `isPlaying()` — whether frames come now: `false` after `pause()`, and while `active` is `false` even after `play()`;
+  `play()` then marks the wish, and the loop starts when `active` turns true.
+- Reduced motion is the caller's to read (it knows a decorative spin from a progress bar): pass it into `active`.
+- The options are checked at mount, in development; an unknown key or a bad value throws.
+
 ## `useT`, `LocaleProvider`, `<Text>` — the locale's bindings
 
 `localeViewProvider(React)` — see [`fundamentool/i18n`](../i18n/README.md#react--fundamentool-its-view-bindings): `useT(set)` re-renders a
@@ -108,5 +154,6 @@ await wgDynamicPreload().catch(() => wgDynamicRetry());
 | `library.ts` | `TViewLibrary`, `VIEW_LIBRARY_KEYS`, `viewLibraryShape` (the library as a schema shape, `fundamentool/schema`) |
 | `viewHooksProvider.ts` | `useUnit`, `useStoreMap` |
 | `linksProvider.ts` | `Link`, `NavLink` |
+| `animationFrameProvider.ts` | `useAnimationFrame`, `TPlayback` — a frame loop in a component, over `createAnimationFrame` |
 | `localeViewProvider.ts` | `useT`, `useLocale`, `LocaleProvider`, `Text` — the locale's bindings (`fundamentool/i18n`) |
 | `dynamicLoaderProvider.ts` | `dynamicLoaderProvider` — parts in files of their own: `module`, `component`, the registry (web-games D-100) |
