@@ -108,3 +108,36 @@ describe('describeValue — a long string', () => {
     expect(describeValue('y'.repeat(60))).toBe(`string "${'y'.repeat(60)}"`);
   });
 });
+
+describe('nearestKnown — a swap of two neighbouring letters is one edit', () => {
+  it.each([
+    [
+      'statsu',
+      [
+        'state',
+        'status',
+      ],
+      'status',
+    ],
+    [
+      'hedaing',
+      [
+        'heading',
+        'hiding',
+      ],
+      'heading',
+    ],
+    [
+      'tpye',
+      [
+        'type',
+        'tape',
+      ],
+      'type',
+    ],
+  ])('%s → %s', (
+    key, known, expected,
+  ) => {
+    expect(nearestKnown(key, known)).toBe(expected);
+  });
+});

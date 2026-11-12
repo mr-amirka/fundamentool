@@ -10,6 +10,7 @@ export * from './asError';
 export * from './nearestKnown';
 export * from './attachEvent';
 export * from './describeValue';
+export * from './alignmentDistance';
 export * from './editDistance';
 export * from './hashText';
 export * from './bind';

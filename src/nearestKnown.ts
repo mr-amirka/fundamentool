@@ -5,12 +5,12 @@
  */
 
 import {
-  editDistance,
-} from './editDistance';
+  alignmentDistance,
+} from './alignmentDistance';
 
 /**
- * The name of `known` nearest to `key` (case aside, at most two edits away) — the "did you mean" of an error; `''` —
- * none is near.
+ * The name of `known` nearest to `key` (case aside, at most two edits away, a swap of two neighbouring letters one edit —
+ * `alignmentDistance`) — the "did you mean" of an error; `''` — none is near.
  *
  * @example
  * nearestKnown('onbording', ['onboarding', 'signIn']); // => 'onboarding'
@@ -20,7 +20,7 @@ export function nearestKnown(key: string, known: readonly string[]): string {
   let best = '';
   let bestDistance = 3;
   for (const candidate of known) {
-    const distance = editDistance(
+    const distance = alignmentDistance(
       key.toLowerCase(), candidate.toLowerCase(), 2,
     );
     if (distance < bestDistance) {
