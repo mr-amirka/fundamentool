@@ -129,8 +129,18 @@ export type TJoinNode = {
   readonly on: TSqlNode;
 };
 
-/** A source of rows: a table's name, a table with an alias, a join. */
-export type TFrom = string | TTableNode | TJoinNode;
+/**
+ * The keys of a JSON object as rows, one key each, in a column `key` read through the alias: `jsonKeys(col('n.attrs'),
+ * 'j')` beside the table it reads, `col('j.key')`. No standard SQL writes it; each dialect does (`json_each` in SQLite).
+ */
+export type TJsonKeysNode = {
+  readonly kind: 'json-keys';
+  readonly of: TSqlNode;
+  readonly as: string;
+};
+
+/** A source of rows: a table's name, a table with an alias, a join, a JSON object's keys. */
+export type TFrom = string | TTableNode | TJoinNode | TJsonKeysNode;
 
 /** `selectFrom`'s options. */
 export type TSelectOptions = {

@@ -15,6 +15,7 @@ import {
   isSqlNode,
   join,
   jsonGet,
+  jsonKeys,
   leftJoin,
   like,
   lt,
@@ -181,6 +182,17 @@ describe('the base forms, through sqlite (B12: the text per node)', () => {
         'b',
         'x/%',
       ],
+    ],
+    [
+      'jsonKeys: a JSON object\'s keys as rows, joined to the table it reads',
+      selectFrom(join(
+        table('nodes', 'n'), jsonKeys(col('n.attrs'), 'j'), and(),
+      ), {
+        distinct: true,
+        columns: [col('j.key')],
+      }),
+      'SELECT DISTINCT "j"."key" FROM "nodes" AS "n" JOIN json_each(CASE WHEN json_type("n"."attrs") = \'object\' THEN "n"."attrs" END) AS "j" ON 1 = 1',
+      [],
     ],
     [
       'jsonGet: a bare key, a quoted one, the whole value',
@@ -458,6 +470,11 @@ describe('the builders\' own checks', () => {
       'inList without a list',
       () => inList(col('a'), 'x' as never),
       '[fundamentool/sql] inList: expects a list',
+    ],
+    [
+      'jsonKeys without an alias',
+      () => jsonKeys(col('a'), '' as never),
+      '[fundamentool/sql] jsonKeys: expects an alias',
     ],
     [
       'jsonGet with a number',

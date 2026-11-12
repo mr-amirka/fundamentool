@@ -3,12 +3,16 @@ import {
   col,
   eq,
   insertInto,
+  join,
   jsonGet,
+  jsonKeys,
   param,
   selectFrom,
   sqlCompiler,
   sqlDialect,
+  table,
   type TJsonGetNode,
+  type TJsonKeysNode,
 } from '../../src/sql';
 
 /**
@@ -22,6 +26,7 @@ const postgres = sqlDialect({
     d.node('json-get', (node: TJsonGetNode, c) => (node.path.length === 1
       ? `${c.compile(node.of)}->>${c.literal(node.path[0])}`
       : `${c.compile(node.of)}#>>${c.literal(`{${node.path.join(',')}}`)}`));
+    d.node('json-keys', (node: TJsonKeysNode, c) => `jsonb_object_keys(CASE WHEN jsonb_typeof(${c.compile(node.of)}) = 'object' THEN ${c.compile(node.of)} END) AS ${c.ident(node.as)}(key)`);
   },
 });
 
@@ -80,5 +85,13 @@ describe('a PostgreSQL dialect over the shared base', () => {
       },
       returning: ['path'],
     })).text).toBe('INSERT INTO "files" ("path", "mtime") VALUES ($1, $2) ON CONFLICT ("path") DO UPDATE SET "mtime" = excluded."mtime" RETURNING "path"');
+  });
+  test('a JSON object\'s keys as rows: the dialect writes jsonKeys, the base only joins it', () => {
+    expect(compiler.compile(selectFrom(join(
+      table('nodes', 'n'), jsonKeys(col('n.attrs'), 'j'), and(),
+    ), {
+      distinct: true,
+      columns: [col('j.key')],
+    })).text).toBe('SELECT DISTINCT "j"."key" FROM "nodes" AS "n" JOIN jsonb_object_keys(CASE WHEN jsonb_typeof("n"."attrs") = \'object\' THEN "n"."attrs" END) AS "j"(key) ON 1 = 1');
   });
 });

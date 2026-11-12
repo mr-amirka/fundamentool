@@ -23,6 +23,7 @@ import type {
   TIsNullNode,
   TJoinNode,
   TJsonGetNode,
+  TJsonKeysNode,
   TLikeNode,
   TLogicNode,
   TNotNode,
@@ -383,6 +384,27 @@ export function table(name: string, as?: string): TTableNode {
   return {
     kind: 'table',
     name,
+    as,
+  };
+}
+
+/**
+ * The keys of a JSON object as a source of rows (a table-valued function in SQLite), one row per key, its one column
+ * `key` read through `as`. Joined to the table whose column it reads, it lists the keys that column's objects hold.
+ *
+ * @param of - The JSON column (or expression); a value that isn't an object gives no rows.
+ * @param as - The alias its column `key` is read through.
+ * @example
+ * selectFrom(join(table('nodes', 'n'), jsonKeys(col('n.attrs'), 'j'), and()), { distinct: true, columns: [col('j.key')] });
+ * // SQLite: SELECT DISTINCT "j"."key" FROM "nodes" AS "n" JOIN json_each(CASE WHEN json_type("n"."attrs") = 'object' THEN "n"."attrs" END) AS "j" ON 1 = 1
+ */
+export function jsonKeys(of: TSqlExpr, as: string): TJsonKeysNode {
+  if (typeof as !== 'string' || as === '') {
+    throw fail('jsonKeys', `expects an alias, got ${describeValue(as)}`);
+  }
+  return {
+    kind: 'json-keys',
+    of: expr(of),
     as,
   };
 }

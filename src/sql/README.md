@@ -60,7 +60,7 @@ await db.transaction(async (tx) => {            // BEGIN … COMMIT; a rejection
 | `deleteFrom(table, { where, returning })` | A `DELETE` |
 | `col`, `param`, `raw`, `fn`, `valueNode` | A column (`'u.kind'` → `"u"."kind"`), a named parameter, trusted text, a call, a value |
 | `and`, `or`, `not`, `eq`, `ne`, `lt`, `lte`, `gt`, `gte`, `inList`, `like`, `isNull` | Conditions; `eq(x, null)` is an error (`isNull` is the form) |
-| `jsonGet(of, path)`, `alias`, `asc`, `desc`, `table`, `join`, `leftJoin` | A JSON field, a named column, order, sources of rows |
+| `jsonGet(of, path)`, `alias`, `asc`, `desc`, `table`, `join`, `leftJoin`, `jsonKeys(of, as)` | A JSON field, a named column, order, sources of rows; a JSON object's keys as rows (`col(`${as}.key`)`), written by the dialect |
 | `matchWhere(pattern, { field, operators? })` | A `match` pattern as a condition with the same rows as `matchProvider` |
 | `sqlCompiler({ presets })` | `compile(node)` → `{ text, params, names }`, `bind(compiled, values)`, `ident(name)`, `functions` |
 | `sqlDialect({ name, requires?, setup(d) })` | A dialect or a preset over one, checked |

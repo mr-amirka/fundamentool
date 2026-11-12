@@ -61,7 +61,7 @@ await db.transaction(async (tx) => {            // BEGIN … COMMIT; отказ 
 | `deleteFrom(table, { where, returning })` | `DELETE` |
 | `col`, `param`, `raw`, `fn`, `valueNode` | Столбец (`'u.kind'` → `"u"."kind"`), именованный параметр, доверенный текст, вызов, значение |
 | `and`, `or`, `not`, `eq`, `ne`, `lt`, `lte`, `gt`, `gte`, `inList`, `like`, `isNull` | Условия; `eq(x, null)` — ошибка (форма для этого — `isNull`) |
-| `jsonGet(of, path)`, `alias`, `asc`, `desc`, `table`, `join`, `leftJoin` | Поле JSON, столбец с именем, порядок, источники строк |
+| `jsonGet(of, path)`, `alias`, `asc`, `desc`, `table`, `join`, `leftJoin`, `jsonKeys(of, as)` | Поле JSON, столбец с именем, порядок, источники строк; ключи объекта JSON строками (`col(`${as}.key`)`), их пишет диалект |
 | `matchWhere(pattern, { field, operators? })` | Шаблон `match` как условие с теми же строками, что у `matchProvider` |
 | `sqlCompiler({ presets })` | `compile(node)` → `{ text, params, names }`, `bind(compiled, values)`, `ident(name)`, `functions` |
 | `sqlDialect({ name, requires?, setup(d) })` | Диалект или пресет над ним, с проверкой |

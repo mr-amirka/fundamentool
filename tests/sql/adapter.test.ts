@@ -10,6 +10,7 @@ import {
 } from 'node:path';
 import {
   alias,
+  and,
   col,
   deleteFrom,
   desc,
@@ -18,10 +19,13 @@ import {
   fts5Phrase,
   fts5Query,
   insertInto,
+  join,
+  jsonKeys,
   jsonPath,
   param,
   raw,
   selectFrom,
+  table,
   sqliteAdapter,
   sqliteErrorCode,
   sqliteFts5,
@@ -49,6 +53,23 @@ describe.each(DRIVERS)('sqliteAdapter over %s (S9–S12)', (_name, open) => {
   beforeEach(async () => {
     db = adapterOf(open);
     await db.exec('CREATE TABLE agents (id TEXT PRIMARY KEY, mode TEXT NOT NULL DEFAULT \'passive\')');
+  });
+
+  test('jsonKeys lists the keys a JSON column\'s objects hold, once each; a value not an object gives none', async () => {
+    await db.exec('CREATE TABLE things (attrs TEXT NOT NULL)');
+    await db.exec('INSERT INTO things VALUES (\'{"status":"a","at":"x"}\'), (\'{"status":"b","my key":1}\'), (\'{}\'), (\'[1,2]\')');
+    const keys = await db.prepare<{ key: string }>(selectFrom(join(
+      table('things', 't'), jsonKeys(col('t.attrs'), 'j'), and(),
+    ), {
+      distinct: true,
+      columns: [col('j.key')],
+      orderBy: ['j.key'],
+    })).all();
+    expect(keys.map((row) => row.key)).toEqual([
+      'at',
+      'my key',
+      'status',
+    ]);
   });
 
   test('prepare once, run with named values: run, all, get, iterate — each a promise', async () => {

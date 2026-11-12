@@ -19,6 +19,7 @@ export {
   isSqlNode,
   join,
   jsonGet,
+  jsonKeys,
   leftJoin,
   like,
   lt,

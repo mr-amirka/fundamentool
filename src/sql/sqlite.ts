@@ -25,6 +25,7 @@ import type {
   TFts5PhraseOptions,
   TFts5QueryOptions,
   TJsonGetNode,
+  TJsonKeysNode,
   TMatchOpNode,
   TSelectNode,
   TSqlContext,
@@ -356,7 +357,7 @@ function fundamentoolRegexp(
 }
 
 /**
- * SQLite as a dialect (fundamentool D-088): booleans bound as `1` / `0`, `json_extract` for `jsonGet`, `LIMIT -1` before
+ * SQLite as a dialect (fundamentool D-088): booleans bound as `1` / `0`, `json_extract` for `jsonGet`, `json_each` for `jsonKeys`, `LIMIT -1` before
  * an `OFFSET` alone, and `match`'s standard operators written with their meaning kept (card §4.2) — the functions
  * `fundamentool_lower` and `fundamentool_regexp` they call are in `compiler.functions`, installed by `sqliteAdapter`.
  *
@@ -369,6 +370,11 @@ export const sqlite: TSqlDialect = {
   setup(d: TDialectHost) {
     d.primitive('value', (value, next) => (typeof value === 'boolean' ? Number(value) : next()));
     d.node('json-get', (node: TJsonGetNode, c) => `json_extract(${c.compile(node.of)}, ${c.literal(jsonPath(node.path))})`);
+    d.node('json-keys', (node: TJsonKeysNode, c) => {
+      const of = c.compile(node.of);
+      // An array's indexes aren't keys: a value not an object reads as no rows.
+      return `json_each(CASE WHEN json_type(${of}) = 'object' THEN ${of} END) AS ${c.ident(node.as)}`;
+    });
     d.node('select', (node: TSelectNode, c) => (node.offset !== undefined && node.limit === undefined
       ? c.base({
         ...node,
